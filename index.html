@@ -4486,7 +4486,7 @@ const DA=[{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1},{dr:-1,dc:-1},{dr:-1
 let G={};
 let HISTORY=[];
 let reviewMode=false,reviewIdx=0;
-let isSpectating=false,spectatorChannel=null; // état du mode spectateur (déclaré ici pour être visible de initGame ci-dessous)
+let isSpectating=false,spectatorChannel=null,spectatorPollInterval=null; // état du mode spectateur (déclaré ici pour être visible de initGame ci-dessous)
 
 function initGame(){
   if(isSpectating) stopSpectating(); // on lançait une nouvelle partie en étant encore "abonné" à la partie qu'on regardait
@@ -8410,6 +8410,25 @@ async function spectateGame(gameId){
       filter: `id=eq.${gameId}`
     }, payload => applySpectatorState(payload.new, whitePseudo, blackPseudo))
     .subscribe();
+
+  // Filet de sécurité : si les policies RLS de Supabase limitent la
+  // réception temps réel aux deux joueurs de la partie (cas fréquent),
+  // le canal ci-dessus peut ne jamais recevoir d'événement pour un
+  // spectateur tiers. On interroge donc aussi la partie à intervalle
+  // régulier, pour garantir un affichage "en direct" même sans Realtime.
+  startSpectatorPolling(gameId, whitePseudo, blackPseudo);
+}
+
+function startSpectatorPolling(gameId, whitePseudo, blackPseudo){
+  stopSpectatorPolling();
+  spectatorPollInterval = setInterval(async function(){
+    if(!isSpectating){ stopSpectatorPolling(); return; }
+    const { data: row, error } = await supa.from('online_games').select('*').eq('id', gameId).single();
+    if(!error && row) applySpectatorState(row, whitePseudo, blackPseudo);
+  }, 1500);
+}
+function stopSpectatorPolling(){
+  if(spectatorPollInterval){ clearInterval(spectatorPollInterval); spectatorPollInterval=null; }
 }
 
 function applySpectatorState(row, whitePseudo, blackPseudo){
@@ -8433,6 +8452,7 @@ function applySpectatorState(row, whitePseudo, blackPseudo){
 function stopSpectating(){
   isSpectating = false;
   if(spectatorChannel){ supa.removeChannel(spectatorChannel); spectatorChannel=null; }
+  stopSpectatorPolling();
   var spBar = document.getElementById('spectator-bar');
   if(spBar) spBar.style.display='none';
 }
