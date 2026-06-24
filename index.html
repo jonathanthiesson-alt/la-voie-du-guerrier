@@ -134,6 +134,13 @@ body{background:#09080a;color:var(--ink-text);font-family:'Cinzel',serif;min-hei
 .overlay{position:absolute;inset:0;background:rgba(0,0,0,.88);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:100;animation:fadeIn .4s ease;backdrop-filter:blur(4px)}
 .overlay.active{display:flex}
 .modal-box{background:linear-gradient(160deg,#1e1208 0%,#110a04 100%);border:1px solid var(--parchment-dark);border-radius:6px;padding:26px 22px;text-align:center;max-width:300px;width:92%;box-shadow:0 8px 32px rgba(0,0,0,.7);position:relative}
+/* Écran de fin de partie (et coinflip/décompte qui réutilisent le même
+   overlay) : pas de carte encadrée façon site web — le contenu flotte
+   directement sur le fond sombre flouté, comme l'écran d'accueil. */
+#game-overlay .modal-box{background:transparent;border:none;box-shadow:none;border-radius:0;max-width:340px;padding:10px 20px}
+#game-overlay .modal-title{font-family:'Cinzel Decorative',serif;font-size:34px;font-weight:700;letter-spacing:3px;background:linear-gradient(180deg,#f0c040 0%,#d4a017 50%,#8b6020 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 2px 10px rgba(212,160,23,.55));animation:flicker 4s infinite;margin-bottom:10px}
+#game-overlay .menu-divider{display:none}
+#game-overlay .modal-reason{font-size:17px;opacity:.85}
 .modal-close-btn{position:absolute;top:9px;right:9px;background:transparent;border:1px solid rgba(200,169,110,.3);color:var(--parchment);font-size:14px;width:26px;height:26px;border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 .modal-close-btn:hover{border-color:var(--gold);color:var(--gold-bright)}
 .modal-title{font-family:'Cinzel',serif;font-size:24px;font-weight:900;color:var(--gold-bright);text-align:center;margin-bottom:6px;letter-spacing:2px;text-shadow:var(--glow-gold)}
@@ -1649,7 +1656,6 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <button class="modal-close-btn" onclick="startReviewMode()" title="Analyser">&#128269;</button>
       <div class="crown-icon" id="overlay-crown">&#128081;</div>
       <div class="modal-title" id="overlay-title">VICTOIRE</div>
-      <div class="menu-divider"></div>
       <div class="modal-reason" id="overlay-reason">&#8212;</div>
       <div class="endgame-stats" id="endgame-stats"></div>
       <div class="endgame-verdict" id="endgame-verdict"></div>
@@ -2685,8 +2691,21 @@ const PIECE_SKINS = {
 var pieceSkins = {
   player1: {epeiste:'e0', shield:'s0', sword:'w0', color:'#c8a96e', opacity:0.9},
   player2: {epeiste:'e0', shield:'s0', sword:'w0', color:'#c8a96e', opacity:0.9},
-  opponent:{epeiste:'e0', shield:'s0', sword:'w0', color:'#c8a96e', opacity:0.9}
+  opponent:{epeiste:'e0', shield:'s0', sword:'w0', color:'#c8a96e', opacity:0.9},
+  // Ces deux entrées ne sont JAMAIS persistées en localStorage (volontairement
+  // absentes de savePieceSkins) : elles sont remplies à la volée depuis le
+  // profil Supabase de chaque joueur quand on entre en partie en ligne ou en
+  // mode spectateur, pour afficher SES vrais pions, pas un défaut local.
+  onlineWhite:{epeiste:'e0', shield:'s0', sword:'w0', color:'#c8a96e', opacity:0.9},
+  onlineBlack:{epeiste:'e0', shield:'s0', sword:'w0', color:'#c8a96e', opacity:0.9}
 };
+
+// Applique un skin reçu du réseau (ligne 'piece_skin' du profil distant) dans
+// l'un des deux emplacements volatils ci-dessus, avec repli sur les valeurs
+// par défaut si le joueur distant n'a encore jamais rien personnalisé.
+function applyRemoteSkin(slotKey, skinData){
+  pieceSkins[slotKey] = Object.assign({epeiste:'e0',shield:'s0',sword:'w0',color:'#c8a96e',opacity:0.9}, skinData||{});
+}
 
 
 // Convertit une couleur hex en filtre CSS approximatif
@@ -2732,6 +2751,20 @@ function getPieceSkin(role, type){
 }
 
 function getSkinRole(color){
+  // Partie EN LIGNE : mes propres pièces restent gérées localement
+  // (player1, instantané, pas d'aller-retour réseau) — seules celles de
+  // l'adversaire viennent de son profil Supabase (onlineWhite/onlineBlack),
+  // puisque "player2" est réservé au 2e joueur d'une partie locale à deux
+  // sur le même appareil et n'a aucun sens ici.
+  if(typeof G!=='undefined' && G.onlineGameId){
+    if(color===G.bottomColor) return 'player1';
+    return color==='white' ? 'onlineWhite' : 'onlineBlack';
+  }
+  // Mode SPECTATEUR : aucun des deux joueurs n'est moi — les deux skins
+  // viennent du réseau.
+  if(typeof isSpectating!=='undefined' && isSpectating){
+    return color==='white' ? 'onlineWhite' : 'onlineBlack';
+  }
   // bottomColor = player1, topColor = player2 (ou opponent si vsAI)
   if(color===G.bottomColor) return 'player1';
   if(G.vsAI) return 'opponent';
@@ -5548,11 +5581,23 @@ var _skinPickerRole = 'player1';
 var _currentSkinTab = 'p1';
 var _tabToRole = {p1:'player1', opp:'opponent', p2:'player2'};
 
+// Synchronise mon choix "Mes Pions" vers mon profil Supabase, pour que les
+// autres joueurs voient mes VRAIES pièces en partie en ligne / spectateur.
+// No-op silencieux si on n'est pas connecté (les parties locales/IA n'ont
+// jamais besoin du réseau).
+async function syncMySkinToCloud(){
+  if(typeof currentUser==='undefined' || !currentUser) return;
+  if(typeof supa==='undefined' || !supa) return;
+  try{ await supa.from('profiles').update({ piece_skin: pieceSkins.player1 }).eq('id', currentUser.id); }
+  catch(e){}
+}
+
 function onSkinColorChange(hex){
   var role=_tabToRole[_currentSkinTab]||'player1';
   if(!pieceSkins[role])pieceSkins[role]={};
   pieceSkins[role].color=hex;
   savePieceSkins();
+  if(role==='player1') syncMySkinToCloud();
   // Mettre à jour le picker visuel
   var cp=document.getElementById('skin-color-picker');
   if(cp)cp.value=hex;
@@ -5568,6 +5613,7 @@ function onSkinOpacityChange(val){
   if(!pieceSkins[role])pieceSkins[role]={};
   pieceSkins[role].opacity=val/100;
   savePieceSkins();
+  if(role==='player1') syncMySkinToCloud();
   var el=document.getElementById('skin-opacity-val');
   if(el)el.textContent=val+'%';
   if(typeof renderBoard==='function'&&typeof G!=='undefined'&&G.board)renderBoard();
@@ -5660,6 +5706,7 @@ function openSkinPicker(role, type){
       if(!pieceSkins[role])pieceSkins[role]={};
       pieceSkins[role][cat]=skin.id;
       savePieceSkins();
+      if(role==='player1') syncMySkinToCloud();
       refreshSkinPreviews();
       // Rafraîchir plateau + aperçu
       if(typeof renderBoard==='function'&&typeof G!=='undefined'&&G.board)renderBoard();
@@ -8170,6 +8217,7 @@ async function onlineLoadSession(jumpToMenu){
   await onlineSetOnlineStatus(true);
   startHeartbeat();
   subscribeToChallenges();
+  syncMySkinToCloud(); // garantit que mon profil reflète bien mes pions actuels, même si je les avais personnalisés avant cette mise à jour
   // Ne change d'écran que suite à une action explicite (connexion/
   // inscription) — pas lors de la reconnexion silencieuse au démarrage
   // de l'application, qui ne doit pas écraser l'écran d'accueil normal.
@@ -8304,11 +8352,13 @@ async function spectateGame(gameId){
     return;
   }
   const [{ data: whiteP }, { data: blackP }] = await Promise.all([
-    supa.from('profiles').select('pseudo').eq('id', game.white_player_id).single(),
-    supa.from('profiles').select('pseudo').eq('id', game.black_player_id).single()
+    supa.from('profiles').select('pseudo,piece_skin').eq('id', game.white_player_id).single(),
+    supa.from('profiles').select('pseudo,piece_skin').eq('id', game.black_player_id).single()
   ]);
   const whitePseudo = whiteP ? whiteP.pseudo : 'Blancs';
   const blackPseudo = blackP ? blackP.pseudo : 'Noirs';
+  applyRemoteSkin('onlineWhite', whiteP && whiteP.piece_skin);
+  applyRemoteSkin('onlineBlack', blackP && blackP.piece_skin);
 
   stopTimer(); reviewMode = true; HISTORY = [];
   isSpectating = true;
@@ -8538,8 +8588,11 @@ async function enterOnlineGame(gameId, whitePlayerId, gameState, turn, timerSeco
   }
   var opponentPseudo = 'Adversaire';
   if(oppId){
-    const { data: oppProfile } = await supa.from('profiles').select('pseudo').eq('id', oppId).single();
-    if(oppProfile) opponentPseudo = oppProfile.pseudo;
+    const { data: oppProfile } = await supa.from('profiles').select('pseudo,piece_skin').eq('id', oppId).single();
+    if(oppProfile){
+      opponentPseudo = oppProfile.pseudo;
+      applyRemoteSkin(opponentColor==='white' ? 'onlineWhite' : 'onlineBlack', oppProfile.piece_skin);
+    }
   }
 
   var botLabel='<span class="player-color-dot bot"></span>'+escapeHtml(currentUser.pseudo);
