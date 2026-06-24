@@ -1483,7 +1483,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
   <!-- Bouton COMMENCER -->
   <div style="width:100%;padding:0 24px 12px;position:relative;z-index:1">
-    <button class="home-btn-primary" style="width:100%;font-size:16px;padding:18px;margin:0;letter-spacing:5px" onclick="showScreen('menu');playSound('menu')">COMMENCER</button>
+    <button class="home-btn-primary" style="width:100%;font-size:16px;padding:18px;margin:0;letter-spacing:5px" onclick="enterMainMenu()">COMMENCER</button>
   </div>
 
   <!-- Profil strip (grade) -->
@@ -4490,6 +4490,7 @@ let isSpectating=false,spectatorChannel=null,spectatorPollInterval=null; // éta
 
 function initGame(){
   if(isSpectating) stopSpectating(); // on lançait une nouvelle partie en étant encore "abonné" à la partie qu'on regardait
+  if(currentSoloGameId) finishSoloGameBroadcast(null); // partie IA précédente quittée sans être terminée : on ferme sa diffusion avant d'en ouvrir une nouvelle
   stopTimer();reviewMode=false;HISTORY=[];
   document.getElementById('review-bar').style.display='none';
   document.getElementById('game-overlay').classList.remove('active');
@@ -4533,6 +4534,7 @@ function initGame(){
     _chapterId:savedChId,_chapterXp:savedChXp
   };
   setupBoard();
+  if(G.vsAI) startSoloGameBroadcast(); // visible "EN COMBAT" + spectable pour les autres joueurs connectés
   // Noms personnalisés
   var p1name=PP.name||'Joueur';
   var p2name=G.vsAI?(ADVERSARIES[G.advId]?getAdvDisplayName(G.advId):(PP.p2name||'Joueur 2')):(PP.p2name||'Joueur 2');
@@ -4648,6 +4650,8 @@ function triggerTimeout(){
     // un timeout ne serait détecté que localement chez le client qui
     // décompte, sans jamais être transmis à l'autre joueur.
     pushOnlineMove(true, w);
+  } else if(currentSoloGameId){
+    finishSoloGameBroadcast(w);
   }
   endGame(w,t('msg_timeout')+(w==='white'?t('color_white'):t('color_black'))+t('msg_timeout_win'))
 }
@@ -5456,11 +5460,12 @@ function scheduleAI(){
     if(G.gameOver){G.aiThinking=false;return}
     const aiColor=G.topColor||'black';
     const moves=allMoves(aiColor,G.board,G.stacks,G.lastMoved,G.lastPush,G.lastMovedByColor);
-    if(!moves.length){G.aiThinking=false;endGame(G.bottomColor,t('msg_no_moves'));return}
+    if(!moves.length){G.aiThinking=false;if(currentSoloGameId)finishSoloGameBroadcast(G.bottomColor);endGame(G.bottomColor,t('msg_no_moves'));return}
     const chosen=adv.play(moves,G.board,G.stacks,G.lastMoved,G.lastPush);
     if(chosen){
       const won=execMove(chosen.fr,chosen.fc,chosen.tr,chosen.tc,chosen.action);
       G.aiThinking=false;renderBoard();
+      if(currentSoloGameId) pushSoloGameMove(won, aiColor);
       if(won){pushHistory();endGame(aiColor,t('color_'+(aiColor==='white'?'white':'black'))+' '+t('msg_slay'))}
       else{pushHistory();switchTurn()}
     }else{G.aiThinking=false;switchTurn()}
@@ -7479,6 +7484,8 @@ function executeDrop(r,c){
   if(G.onlineGameId){
     var movedColor=G.turn;
     pushOnlineMove(won, movedColor);
+  } else if(G.vsAI && currentSoloGameId){
+    pushSoloGameMove(won, G.turn);
   }
   if(won){pushHistory();endGame(G.turn,(G.turn==='white'?t('color_white'):t('color_black'))+' '+t('msg_slay'))}
   else{pushHistory();switchTurn()}
@@ -8006,6 +8013,7 @@ let supa = null;
 let currentUser = null;       // { id, pseudo }
 let onlineSubscriptions = []; // canaux temps réel actifs, pour nettoyage
 let currentOnlineGameId = null;
+let currentSoloGameId = null; // partie EN LIGNE contre l'IA diffusée pour la présence "en combat" (voir startSoloGameBroadcast)
 let myColorOnline = null;     // 'white' ou 'black' dans la partie en ligne en cours
 
 // Notification non-bloquante : remplace alert() partout dans le flux
@@ -8224,6 +8232,22 @@ async function onlineLoadSession(jumpToMenu){
   if(jumpToMenu) showScreen('menu');
 }
 
+// Appelée au clic sur "COMMENCER" (écran d'accueil → menu principal).
+// La restauration de session tente déjà de se faire silencieusement au
+// chargement de la page (DOMContentLoaded), mais ce clic n'arrive
+// jamais avant que ce premier appel soit lancé — on le redéclenche ici
+// par sécurité (idempotent) pour garantir que currentUser, le heartbeat
+// de présence et la synchro des pions sont bien actifs dès l'entrée
+// dans le menu, et non seulement après un clic explicite sur "Jouer en
+// ligne". C'est ce qui permet aux autres joueurs de me voir "en ligne"
+// (et de voir mes parties, y compris contre l'IA) dès que je commence
+// à jouer, sans attendre que j'aille moi-même sur l'écran en ligne.
+function enterMainMenu(){
+  showScreen('menu');
+  playSound('menu');
+  if(supa && !currentUser) onlineLoadSession(false).catch(function(){});
+}
+
 // ── Présence ("qui est en ligne") ──────────────────────────────
 async function onlineSetOnlineStatus(isOnline){
   if(!currentUser) return;
@@ -8298,10 +8322,14 @@ async function refreshOnlinePlayersList(){
   // par pseudo au sein d'un même statut — les joueurs disponibles ou
   // observables doivent apparaître en premier dans la liste.
   const tierRank = {combat:0, online:1, away:2, offline:3};
-  const rows = data.map(p => ({
-    p: p,
-    tier: combatMap[p.id] ? 'combat' : presenceTier(p)
-  })).sort((a,b) => (tierRank[a.tier]-tierRank[b.tier]) || a.p.pseudo.localeCompare(b.p.pseudo));
+  const rows = data.map(p => {
+    const presence = presenceTier(p);
+    // Une partie marquée "active" peut être orpheline (app fermée sans
+    // terminer la partie) : si le joueur est par ailleurs réellement
+    // porté disparu, on ne l'affiche pas comme éternellement en combat.
+    const inCombat = !!combatMap[p.id] && presence !== 'offline';
+    return { p: p, tier: inCombat ? 'combat' : presence };
+  }).sort((a,b) => (tierRank[a.tier]-tierRank[b.tier]) || a.p.pseudo.localeCompare(b.p.pseudo));
 
   listEl.innerHTML = rows.map(row => {
     const p = row.p, tier = row.tier, gameId = combatMap[p.id];
@@ -8351,14 +8379,30 @@ async function spectateGame(gameId){
     refreshOnlinePlayersList();
     return;
   }
-  const [{ data: whiteP }, { data: blackP }] = await Promise.all([
-    supa.from('profiles').select('pseudo,piece_skin').eq('id', game.white_player_id).single(),
-    supa.from('profiles').select('pseudo,piece_skin').eq('id', game.black_player_id).single()
-  ]);
-  const whitePseudo = whiteP ? whiteP.pseudo : 'Blancs';
-  const blackPseudo = blackP ? blackP.pseudo : 'Noirs';
-  applyRemoteSkin('onlineWhite', whiteP && whiteP.piece_skin);
-  applyRemoteSkin('onlineBlack', blackP && blackP.piece_skin);
+  // Côté IA (partie solo diffusée) : pas de profil à charger, on affiche
+  // le nom réel de l'adversaire IA si on l'a (soloAdvId stocké à la création).
+  var advName = 'IA';
+  var soloAdvId = game.game_state && game.game_state.soloAdvId;
+  if(soloAdvId!==undefined && soloAdvId!==null && typeof ADVERSARIES!=='undefined' && ADVERSARIES[soloAdvId]){
+    advName = getAdvDisplayName(soloAdvId);
+  }
+  var whitePseudo, blackPseudo;
+  if(game.white_player_id){
+    const { data: whiteP } = await supa.from('profiles').select('pseudo,piece_skin').eq('id', game.white_player_id).single();
+    whitePseudo = whiteP ? whiteP.pseudo : 'Blancs';
+    applyRemoteSkin('onlineWhite', whiteP && whiteP.piece_skin);
+  } else {
+    whitePseudo = advName;
+    applyRemoteSkin('onlineWhite', null);
+  }
+  if(game.black_player_id){
+    const { data: blackP } = await supa.from('profiles').select('pseudo,piece_skin').eq('id', game.black_player_id).single();
+    blackPseudo = blackP ? blackP.pseudo : 'Noirs';
+    applyRemoteSkin('onlineBlack', blackP && blackP.piece_skin);
+  } else {
+    blackPseudo = advName;
+    applyRemoteSkin('onlineBlack', null);
+  }
 
   stopTimer(); reviewMode = true; HISTORY = [];
   isSpectating = true;
@@ -8557,6 +8601,7 @@ async function onChallengeAccepted(challengeRow){
 
 async function enterOnlineGame(gameId, whitePlayerId, gameState, turn, timerSeconds){
   if(isSpectating) stopSpectating(); // on rejoint une vraie partie : on n'est plus simple spectateur
+  if(currentSoloGameId) finishSoloGameBroadcast(null); // pareil si on quittait une partie IA en cours pour rejoindre une vraie partie en ligne
   currentOnlineGameId = gameId;
   myColorOnline = (currentUser.id === whitePlayerId) ? 'white' : 'black';
   var opponentColor = (myColorOnline==='white') ? 'black' : 'white';
@@ -8721,6 +8766,54 @@ async function pushOnlineMove(won, movedColor){
   await supa.from('online_games').update(update).eq('id', currentOnlineGameId);
 }
 
+// ── Diffusion des parties SOLO (contre l'IA) ─────────────────────
+// Permet aux autres joueurs connectés de voir que je suis "en combat"
+// même hors d'une vraie partie en ligne, et de pouvoir éventuellement
+// regarder. On réutilise la table online_games : black_player_id reste
+// NULL (= pas de second humain, c'est l'IA). Nécessite que la colonne
+// black_player_id de online_games accepte NULL côté Supabase :
+//   alter table public.online_games alter column black_player_id drop not null;
+// Silencieux si on n'est pas connecté (le jeu solo fonctionne toujours
+// sans compte, comme avant).
+async function startSoloGameBroadcast(){
+  if(!currentUser || !supa) return;
+  try{
+    const humanIsWhite = (G.bottomColor === 'white'); // le joueur humain n'est pas toujours Blanc en solo (tirage au sort)
+    const { data, error } = await supa.from('online_games').insert({
+      white_player_id: humanIsWhite ? currentUser.id : null,
+      black_player_id: humanIsWhite ? null : currentUser.id,
+      game_state: { board: G.board, stacks: G.stacks, lastMoved: G.lastMoved, lastMovedByColor: G.lastMovedByColor, soloAdvId: G.advId },
+      turn: G.turn,
+      timer_seconds: settings.timerSeconds
+    }).select().single();
+    if(!error && data) currentSoloGameId = data.id;
+  }catch(e){}
+}
+
+// Appelée après chaque coup (mien OU celui de l'IA) dans une partie solo
+// diffusée. movedColor = couleur qui vient de jouer.
+async function pushSoloGameMove(won, movedColor){
+  if(!currentSoloGameId) return;
+  const id = currentSoloGameId;
+  const nextTurn = won ? movedColor : (movedColor==='white' ? 'black' : 'white');
+  const update = {
+    game_state: { board: G.board, stacks: G.stacks, lastMoved: G.lastMoved, lastMovedByColor: G.lastMovedByColor, soloAdvId: G.advId },
+    turn: nextTurn,
+    updated_at: new Date().toISOString()
+  };
+  if(won){ update.status='finished'; update.winner=movedColor; currentSoloGameId=null; }
+  try{ await supa.from('online_games').update(update).eq('id', id); }catch(e){}
+}
+
+// Clôture la diffusion solo sans passer par un coup gagnant (timeout,
+// nouvelle partie lancée sans avoir terminé la précédente, etc.)
+async function finishSoloGameBroadcast(winner){
+  if(!currentSoloGameId) return;
+  const id = currentSoloGameId;
+  currentSoloGameId = null;
+  try{ await supa.from('online_games').update({ status:'finished', winner: winner||null }).eq('id', id); }catch(e){}
+}
+
 function cleanupOnlineSubscriptions(){
   onlineSubscriptions.forEach(ch => supa.removeChannel(ch));
   onlineSubscriptions = [];
@@ -8730,6 +8823,7 @@ function cleanupOnlineSubscriptions(){
 // Empêche de fermer la page sans repasser hors-ligne proprement (best effort).
 window.addEventListener('beforeunload', () => {
   if(currentUser) onlineSetOnlineStatus(false);
+  if(currentSoloGameId) supa.from('online_games').update({status:'finished'}).eq('id', currentSoloGameId);
 });
 
 </script>
