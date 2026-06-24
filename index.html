@@ -1107,6 +1107,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 .presence-badge .presence-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
 .presence-badge.is-online{color:#8fe89a;background:rgba(76,175,80,.14)}
 .presence-badge.is-online .presence-dot{background:#4caf50;box-shadow:0 0 6px #4caf50}
+.presence-badge.is-away{color:#ffe680;background:rgba(220,190,40,.14)}
+.presence-badge.is-away .presence-dot{background:#e0c428;box-shadow:0 0 6px #e0c428}
 .presence-badge.is-combat{color:#ffc080;background:rgba(255,152,0,.14)}
 .presence-badge.is-combat .presence-dot{background:#ff9800;box-shadow:0 0 6px #ff9800}
 .presence-badge.is-offline{color:#ff9a9a;background:rgba(224,80,80,.14)}
@@ -8077,7 +8079,15 @@ async function handleAnalyseClick(){
 
 async function handleMenuClick(){
   await signalRematchLeave();
-  showScreen('menu');
+  if(G.onlineGameId && currentUser){
+    // On quitte une partie EN LIGNE : retour à la liste des joueurs (pas
+    // au menu principal), pour pouvoir relancer un défi immédiatement.
+    showScreen('online-menu');
+    refreshOnlinePlayersList();
+    var op=document.getElementById('online-my-pseudo'); if(op) op.textContent='Connecté : '+currentUser.pseudo;
+  } else {
+    showScreen('menu');
+  }
 }
 
 function initSupabase(){
@@ -8201,16 +8211,29 @@ function stopOnlinePlayersAutoRefresh(){
   if(onlinePlayersRefreshInterval){ clearInterval(onlinePlayersRefreshInterval); onlinePlayersRefreshInterval=null; }
 }
 
+// Calcule le statut de présence d'un profil à partir de last_seen :
+// - "online"  (vert)  : signal de vie il y a 3 minutes ou moins
+// - "away"    (jaune)  : entre 3 et 10 minutes — l'app a pu se mettre en
+//   veille / perdre le réseau sans déconnexion propre
+// - "offline" (rouge) : plus de 10 minutes, ou déconnexion explicite
+//   (is_online===false, posée par onlineLogOut)
+function presenceTier(p){
+  if(p.is_online === false) return 'offline';
+  if(!p.last_seen) return 'offline';
+  var diffMin = (Date.now() - new Date(p.last_seen).getTime()) / 60000;
+  if(diffMin <= 3) return 'online';
+  if(diffMin <= 10) return 'away';
+  return 'offline';
+}
+
 async function refreshOnlinePlayersList(){
   if(!currentUser) return;
   const listEl = document.getElementById('online-players-list');
   if(!listEl) return;
   listEl.innerHTML = '<div style="text-align:center;opacity:.5;padding:12px">Chargement…</div>';
   const { data, error } = await supa.from('profiles')
-    .select('id,pseudo,xp,wins,losses,is_online')
-    .neq('id', currentUser.id)
-    .order('is_online', { ascending: false })
-    .order('pseudo');
+    .select('id,pseudo,xp,wins,losses,is_online,last_seen')
+    .neq('id', currentUser.id);
   if(error){ listEl.innerHTML = '<div style="text-align:center;opacity:.5">Erreur de chargement.</div>'; return; }
   if(!data.length){ listEl.innerHTML = '<div style="text-align:center;opacity:.5;padding:12px">Aucun autre joueur pour le moment.</div>'; return; }
 
@@ -8223,14 +8246,26 @@ async function refreshOnlinePlayersList(){
     combatMap[g.black_player_id] = g.id;
   });
 
-  listEl.innerHTML = data.map(p => {
-    const gameId = combatMap[p.id];
+  // Tri : en combat puis en ligne puis absent puis porté disparu, et
+  // par pseudo au sein d'un même statut — les joueurs disponibles ou
+  // observables doivent apparaître en premier dans la liste.
+  const tierRank = {combat:0, online:1, away:2, offline:3};
+  const rows = data.map(p => ({
+    p: p,
+    tier: combatMap[p.id] ? 'combat' : presenceTier(p)
+  })).sort((a,b) => (tierRank[a.tier]-tierRank[b.tier]) || a.p.pseudo.localeCompare(b.p.pseudo));
+
+  listEl.innerHTML = rows.map(row => {
+    const p = row.p, tier = row.tier, gameId = combatMap[p.id];
     var badge, action;
-    if(gameId){
+    if(tier === 'combat'){
       badge = '<span class="presence-badge is-combat"><span class="presence-dot"></span>EN COMBAT</span>';
       action = '<button class="btn-watch" onclick="spectateGame(\''+gameId+'\')">&#128065; Regarder</button>';
-    } else if(p.is_online){
-      badge = '<span class="presence-badge is-online"><span class="presence-dot"></span>ONLINE</span>';
+    } else if(tier === 'online'){
+      badge = '<span class="presence-badge is-online"><span class="presence-dot"></span>EN LIGNE</span>';
+      action = '<button class="btn-challenge" onclick="openChallengeConfigPopup(\''+p.id+'\',\''+escapeHtml(p.pseudo)+'\')">Défier</button>';
+    } else if(tier === 'away'){
+      badge = '<span class="presence-badge is-away"><span class="presence-dot"></span>ABSENT</span>';
       action = '<button class="btn-challenge" onclick="openChallengeConfigPopup(\''+p.id+'\',\''+escapeHtml(p.pseudo)+'\')">Défier</button>';
     } else {
       badge = '<span class="presence-badge is-offline"><span class="presence-dot"></span>PORTÉ DISPARU</span>';
