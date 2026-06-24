@@ -1,0 +1,252 @@
+{
+  "directed": false,
+  "multigraph": false,
+  "graph": {},
+  "nodes": [
+    {
+      "label": "index.js",
+      "file_type": "code",
+      "source_file": "index.js",
+      "source_location": "L1",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "index.js",
+      "id": "index",
+      "community_name": "Community 0"
+    },
+    {
+      "label": "inset()",
+      "file_type": "code",
+      "source_file": "index.js",
+      "source_location": "L406",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "inset()",
+      "id": "index_inset",
+      "community_name": "Community 0"
+    },
+    {
+      "label": "sc()",
+      "file_type": "code",
+      "source_file": "index.js",
+      "source_location": "L3877",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "sc()",
+      "id": "index_sc",
+      "community_name": "Community 0"
+    },
+    {
+      "label": "pick()",
+      "file_type": "code",
+      "source_file": "index.js",
+      "source_location": "L4023",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "pick()",
+      "id": "index_pick",
+      "community_name": "Community 0"
+    },
+    {
+      "label": "makeCollapsibleV2()",
+      "file_type": "code",
+      "source_file": "index.js",
+      "source_location": "L4126",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "makecollapsiblev2()",
+      "id": "index_makecollapsiblev2",
+      "community_name": "Community 0"
+    },
+    {
+      "label": "makeCollapsible()",
+      "file_type": "code",
+      "source_file": "index.js",
+      "source_location": "L4193",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "makecollapsible()",
+      "id": "index_makecollapsible",
+      "community_name": "Community 0"
+    },
+    {
+      "label": "logToDisp()",
+      "file_type": "code",
+      "source_file": "index.js",
+      "source_location": "L4852",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "logtodisp()",
+      "id": "index_logtodisp",
+      "community_name": "Community 0"
+    },
+    {
+      "label": "cx()",
+      "file_type": "code",
+      "source_file": "index.js",
+      "source_location": "L4857",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "cx()",
+      "id": "index_cx",
+      "community_name": "Community 0"
+    },
+    {
+      "label": "cy()",
+      "file_type": "code",
+      "source_file": "index.js",
+      "source_location": "L4858",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "cy()",
+      "id": "index_cy",
+      "community_name": "Community 0"
+    },
+    {
+      "label": "score()",
+      "file_type": "code",
+      "source_file": "index.js",
+      "source_location": "L5309",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "score()",
+      "id": "index_score",
+      "community_name": "Community 0"
+    },
+    {
+      "label": "catch()",
+      "file_type": "code",
+      "source_file": "index.js",
+      "source_location": "L6117",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "catch()",
+      "id": "index_catch",
+      "community_name": "Community 0"
+    },
+    {
+      "label": "nextCount()",
+      "file_type": "code",
+      "source_file": "index.js",
+      "source_location": "L7086",
+      "_origin": "ast",
+      "community": 0,
+      "norm_label": "nextcount()",
+      "id": "index_nextcount",
+      "community_name": "Community 0"
+    }
+  ],
+  "links": [
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "index.js",
+      "source_location": "L6117",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "index",
+      "target": "index_catch"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "index.js",
+      "source_location": "L4857",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "index",
+      "target": "index_cx"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "index.js",
+      "source_location": "L4858",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "index",
+      "target": "index_cy"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "index.js",
+      "source_location": "L406",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "index",
+      "target": "index_inset"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "index.js",
+      "source_location": "L4852",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "index",
+      "target": "index_logtodisp"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "index.js",
+      "source_location": "L4193",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "index",
+      "target": "index_makecollapsible"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "index.js",
+      "source_location": "L4126",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "index",
+      "target": "index_makecollapsiblev2"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "index.js",
+      "source_location": "L7086",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "index",
+      "target": "index_nextcount"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "index.js",
+      "source_location": "L4023",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "index",
+      "target": "index_pick"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "index.js",
+      "source_location": "L3877",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "index",
+      "target": "index_sc"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "index.js",
+      "source_location": "L5309",
+      "weight": 1.0,
+      "confidence_score": 1.0,
+      "source": "index",
+      "target": "index_score"
+    }
+  ],
+  "hyperedges": []
+}

@@ -1,0 +1,27 @@
+{
+  "communities": {
+    "0": [
+      "index",
+      "index_catch",
+      "index_cx",
+      "index_cy",
+      "index_inset",
+      "index_logtodisp",
+      "index_makecollapsible",
+      "index_makecollapsiblev2",
+      "index_nextcount",
+      "index_pick",
+      "index_sc",
+      "index_score"
+    ]
+  },
+  "cohesion": {
+    "0": 0.16666666666666666
+  },
+  "gods": [],
+  "surprises": [],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}
