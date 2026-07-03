@@ -1,0 +1,308 @@
+{
+  "epeiste": [
+    {
+      "id": "e8",
+      "label": "Kabuto Filet",
+      "file": "e8.png"
+    },
+    {
+      "id": "e9",
+      "label": "Kabuto Globe",
+      "file": "e9.png"
+    },
+    {
+      "id": "e10",
+      "label": "Oni Sombre",
+      "file": "e10.png"
+    },
+    {
+      "id": "e11",
+      "label": "Casque Calme",
+      "file": "e11.png"
+    },
+    {
+      "id": "e12",
+      "label": "Cyber Casque",
+      "file": "e12.png"
+    },
+    {
+      "id": "e13",
+      "label": "Ninja Chapeau",
+      "file": "e13.png"
+    },
+    {
+      "id": "e14",
+      "label": "Phénix Samouraï",
+      "file": "e14.png"
+    },
+    {
+      "id": "e15",
+      "label": "Sakura Guerrier",
+      "file": "e15.png"
+    },
+    {
+      "id": "e16",
+      "label": "Cyber Samouraï 2",
+      "file": "e16.png"
+    },
+    {
+      "id": "e17",
+      "label": "Dragon Lune",
+      "file": "e17.png"
+    },
+    {
+      "id": "e18",
+      "label": "Oni Cornes",
+      "file": "e18.png"
+    },
+    {
+      "id": "e19",
+      "label": "Tigre",
+      "file": "e19.png"
+    },
+    {
+      "id": "e20",
+      "label": "Casque T",
+      "file": "e20.png"
+    },
+    {
+      "id": "e21",
+      "label": "Soleil Levant",
+      "file": "e21.png"
+    },
+    {
+      "id": "e22",
+      "label": "Aigle",
+      "file": "e22.png"
+    },
+    {
+      "id": "e23",
+      "label": "Lotus Geisha",
+      "file": "e23.png"
+    },
+    {
+      "id": "e24",
+      "label": "Lune Éclairs",
+      "file": "e24.png"
+    },
+    {
+      "id": "e25",
+      "label": "Crabe",
+      "file": "e25.png"
+    },
+    {
+      "id": "e26",
+      "label": "Ninja Conique",
+      "file": "e26.png"
+    },
+    {
+      "id": "e27",
+      "label": "Cristaux",
+      "file": "e27.png"
+    }
+  ],
+  "shield": [
+    {
+      "id": "s2",
+      "label": "Oval Vagues",
+      "file": "s2.png"
+    },
+    {
+      "id": "s3",
+      "label": "Tonneau",
+      "file": "s3.png"
+    },
+    {
+      "id": "s4",
+      "label": "Fuji Lune",
+      "file": "s4.png"
+    },
+    {
+      "id": "s5",
+      "label": "Dragon",
+      "file": "s5.png"
+    },
+    {
+      "id": "s6",
+      "label": "Oval Soleil",
+      "file": "s6.png"
+    },
+    {
+      "id": "s7",
+      "label": "Hexagone",
+      "file": "s7.png"
+    },
+    {
+      "id": "s8",
+      "label": "Sakura",
+      "file": "s8.png"
+    },
+    {
+      "id": "s9",
+      "label": "Asa-no-ha",
+      "file": "s9.png"
+    },
+    {
+      "id": "s10",
+      "label": "Tomoe",
+      "file": "s10.png"
+    },
+    {
+      "id": "s11",
+      "label": "Écailles",
+      "file": "s11.png"
+    },
+    {
+      "id": "s12",
+      "label": "Vagues",
+      "file": "s12.png"
+    },
+    {
+      "id": "s13",
+      "label": "Chrysanthème",
+      "file": "s13.png"
+    },
+    {
+      "id": "s14",
+      "label": "Phénix",
+      "file": "s14.png"
+    },
+    {
+      "id": "s15",
+      "label": "Bambou",
+      "file": "s15.png"
+    },
+    {
+      "id": "s16",
+      "label": "Paulownia",
+      "file": "s16.png"
+    },
+    {
+      "id": "s17",
+      "label": "Nuages",
+      "file": "s17.png"
+    },
+    {
+      "id": "s18",
+      "label": "Saule",
+      "file": "s18.png"
+    },
+    {
+      "id": "s19",
+      "label": "Tortue",
+      "file": "s19.png"
+    },
+    {
+      "id": "s20",
+      "label": "Samouraï",
+      "file": "s20.png"
+    },
+    {
+      "id": "s21",
+      "label": "Kamon",
+      "file": "s21.png"
+    }
+  ],
+  "sword": [
+    {
+      "id": "w2",
+      "label": "Katana",
+      "file": "w2.png"
+    },
+    {
+      "id": "w3",
+      "label": "Garde Orbe",
+      "file": "w3.png"
+    },
+    {
+      "id": "w4",
+      "label": "Garde Orbe 2",
+      "file": "w4.png"
+    },
+    {
+      "id": "w5",
+      "label": "Dragon",
+      "file": "w5.png"
+    },
+    {
+      "id": "w6",
+      "label": "Épée Droite",
+      "file": "w6.png"
+    },
+    {
+      "id": "w7",
+      "label": "Claymore",
+      "file": "w7.png"
+    },
+    {
+      "id": "w8",
+      "label": "Épée Large",
+      "file": "w8.png"
+    },
+    {
+      "id": "w9",
+      "label": "Rapière",
+      "file": "w9.png"
+    },
+    {
+      "id": "w10",
+      "label": "Épée Longue",
+      "file": "w10.png"
+    },
+    {
+      "id": "w11",
+      "label": "Épée Feu",
+      "file": "w11.png"
+    },
+    {
+      "id": "w12",
+      "label": "Cimeterre",
+      "file": "w12.png"
+    },
+    {
+      "id": "w13",
+      "label": "Épée Cristal",
+      "file": "w13.png"
+    },
+    {
+      "id": "w14",
+      "label": "Lame Fine",
+      "file": "w14.png"
+    },
+    {
+      "id": "w15",
+      "label": "Épée Ornée",
+      "file": "w15.png"
+    },
+    {
+      "id": "w16",
+      "label": "Lame Vague",
+      "file": "w16.png"
+    },
+    {
+      "id": "w17",
+      "label": "Lame Scie",
+      "file": "w17.png"
+    },
+    {
+      "id": "w18",
+      "label": "Épée Dragon",
+      "file": "w18.png"
+    },
+    {
+      "id": "w19",
+      "label": "Lame Phénix",
+      "file": "w19.png"
+    },
+    {
+      "id": "w20",
+      "label": "Couteau",
+      "file": "w20.png"
+    },
+    {
+      "id": "w21",
+      "label": "Épée Flèche",
+      "file": "w21.png"
+    }
+  ]
+}
