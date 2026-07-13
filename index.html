@@ -5014,16 +5014,15 @@ function makePieceSVG(skin, sz, piece){
       var mf = getPieceLogoFilter(pieceColor, currentPiecesTheme||'standard');
       fstyle = (mf && mf!=='none') ? 'filter:'+mf+';' : '';
     }
-    // Orientation du WurmzSkin — règle simple et vérifiée en conditions
-    // réelles : on pivote de 180° UNIQUEMENT mes propres pièces sur MON
-    // écran (rôle « player1 »). Les mêmes pièces rendues chez l'adversaire
-    // (rôles distants onlineWhite/onlineBlack) sont déjà dans le bon sens
-    // et ne doivent PAS être touchées.
+    // Orientation du WurmzSkin — le médaillon est déjà dans le bon sens
+    // pour mes propres pièces (rôle « player1 ») : ne PAS le pivoter.
+    // Ce sont les pièces distantes (onlineWhite/onlineBlack/opponent) qui
+    // doivent être pivotées de 180° pour rester lisibles de mon côté.
     // Le bouton ↻ (userPrefs.wurmzFlip) inverse cette règle si besoin.
     if(skin._wurmz){
       var estAMoi = (skin._wurmzRole === 'player1');
       var inverse = !!(userPrefs && userPrefs.wurmzFlip);
-      if(estAMoi !== inverse){   // XOR : inversable d'un clic
+      if(estAMoi === inverse){   // XOR inversé : inversable d'un clic
         fstyle += 'transform:rotate(180deg);';
       }
     }
@@ -12903,7 +12902,7 @@ function renderSkinIconRow(role, pieceColor, theme, size){
         // que ce qu'on voit ici soit ce qu'on aura en partie.
         var estAMoiP = (skin._wurmzRole === 'player1');
         var inverseP = !!(userPrefs && userPrefs.wurmzFlip);
-        if(estAMoiP !== inverseP) pfs='transform:rotate(180deg);';
+        if(estAMoiP === inverseP) pfs='transform:rotate(180deg);';
       }
       svgContent='<img src="'+skin.b64+'" width="'+isz+'" height="'+isz+'" style="object-fit:contain;opacity:'+(skin._wurmz?'1':'.95')+';'+pfs+'" />';
     } else if(skin.svg){
