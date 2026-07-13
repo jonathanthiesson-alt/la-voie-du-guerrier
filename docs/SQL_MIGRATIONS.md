@@ -60,18 +60,11 @@ end $$;
 | 15 | **`fix_rls_gameplay`** | 🔑 A réparé le matchmaking (RLS bloquait `matchmaking_queue`) |
 | 16 | `tournaments_v2` | Plafonds par cadence, rondes adaptatives, délais, forfaits |
 | 17 | `wurmz_skin_sync` | Colonne `wurmz_skin` + RPC protégé |
-
-### 🔴 À EXÉCUTER (dans cet ordre)
-
-| # | Script | Pourquoi |
-|---|---|---|
 | 18 | `tournaments_v3.sql` | **Parties réelles** + nettoyage des tournois zombies |
 | 19 | `tournaments_notify.sql` | Notification de partie prête à l'adversaire |
 | 20 | `tournaments_claim.sql` | **Réservation atomique du créateur** (évite la double création) |
-| 21 | `tournaments_attach_fix.sql` | **Dernier livré** — attachement à toute épreuve |
-
-> ⚠️ Ces 4 scripts sont la tentative de correction du bug tournoi en cours.
-> Voir `TESTING.md`.
+| 21 | `tournaments_attach_fix.sql` | Attachement à toute épreuve (notification isolée) |
+| 22 | `tournaments_fix_uuid_mismatch.sql` | 🔑 **A réparé le lancement des parties de tournoi** — `online_games.id` (uuid) vs `tournament_pairings.online_game_id` (bigint) : cast systématiquement en échec, l'attachement n'aboutissait jamais. Voir `TESTING.md`. |
 
 ---
 

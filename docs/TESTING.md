@@ -2,9 +2,9 @@
 
 ---
 
-# 🔴 BUG EN COURS : les tournois ne lancent pas la partie
+# 🟢 BUG RÉSOLU (corrigé, pas encore re-testé en conditions réelles) : les tournois ne lancent pas la partie
 
-**C'est le point chaud. À reprendre en priorité.**
+**Correctif appliqué le 2026-07-13, à confirmer par un test à 2 comptes.**
 
 ## Symptôme observé (test réel, 2 comptes : PC + téléphone)
 
@@ -57,15 +57,37 @@ il libère la réservation au bout de ~15 s si le créateur décroche.
 transaction**. Si l'insert échouait (contrainte sur `type`, colonne absente…),
 **toute la fonction échouait** → la partie n'était jamais rattachée à
 l'appariement → l'adversaire ne la trouvait pas et créait la sienne.
-→ `tournaments_attach_fix.sql` (**dernier livré, à exécuter**) : l'attachement
-est fait **en premier**, la notification est isolée dans un bloc d'exception.
+→ `tournaments_attach_fix.sql` : l'attachement est fait **en premier**, la
+notification est isolée dans un bloc d'exception.
 → Côté client : `createTournamentOnlineGame()` crée la partie, **l'attache**,
 *puis* seulement y entre. **L'ordre est capital.**
 
+### 5. 🔑 LA VRAIE CAUSE RACINE : décalage de type `bigint` / `uuid`
+Confirmé en interrogeant directement la base : **tous** les appariements de
+tournoi passés (y compris ceux résolus par timeout) avaient
+`online_game_id = null`. Aucun n'avait jamais réussi à s'attacher, y compris
+après les correctifs 1 à 4 ci-dessus.
+
+`online_games.id` est de type **uuid**. Mais `tournament_pairings.online_game_id`
+était en **bigint**, tout comme le paramètre `p_game_id` de
+`tournament_attach_game()` et `tournament_report_from_game()`. Quand le client
+appelait `tournament_attach_game(pairingId, g.id)` avec `g.id` un uuid, le cast
+vers bigint échouait **systématiquement côté PostgreSQL** — la fonction
+n'était jamais exécutée, `online_game_id` restait null pour toujours, et
+l'adversaire attendait indéfiniment une partie qu'il ne trouverait jamais.
+
+→ `tournaments_fix_uuid_mismatch.sql` : colonne et paramètres passés en uuid.
+→ Correctif client associé (`index.html`, `renderMyPairing`) : le bouton
+« Rejoindre la partie en cours » injectait `p.online_game_id` **sans
+guillemets** dans l'attribut `onclick`. Un uuid contient des tirets ; non
+guillemeté, JS les interprète comme des soustractions entre identifiants →
+erreur de syntaxe muette au clic. Maintenant guillemeté.
+
 ## État à la reprise
 
-Le dernier correctif (`tournaments_attach_fix.sql` + `createTournamentOnlineGame`)
-**n'a pas encore été testé par Jonathan**.
+Le correctif uuid/bigint (`tournaments_fix_uuid_mismatch.sql` + guillemetage
+du bouton « Rejoindre ») **a été appliqué mais n'a pas encore été re-testé
+par Jonathan en conditions réelles (2 comptes)**.
 
 ## Pistes si ça bloque encore
 

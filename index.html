@@ -4371,7 +4371,10 @@ async function renderMyPairing(tournamentId, round, deadline){
       // ── LE POINT CLÉ : on lance une VRAIE partie ──
       var expire = deadline && (new Date(deadline) <= Date.now());
       if(p.online_game_id){
-        html += '<button class="btn" style="width:100%;font-size:12px;padding:9px" onclick="joinTournamentGame('+p.online_game_id+','+p.pairing_id+')">⚔ Rejoindre la partie en cours</button>';
+        // online_game_id est un uuid (contient des tirets) : il DOIT être
+        // guillemeté dans l'attribut onclick, sinon JS lit les tirets comme
+        // des soustractions entre identifiants -> erreur de syntaxe muette.
+        html += '<button class="btn" style="width:100%;font-size:12px;padding:9px" onclick="joinTournamentGame(\''+p.online_game_id+'\','+p.pairing_id+')">⚔ Rejoindre la partie en cours</button>';
       } else {
         html += '<button class="btn" style="width:100%;font-size:12px;padding:9px" onclick="startTournamentGame('+p.pairing_id+')">⚔ Jouer la partie</button>';
       }
