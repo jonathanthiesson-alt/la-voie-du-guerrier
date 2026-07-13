@@ -1,0 +1,138 @@
+# Migrations SQL
+
+Tous les scripts sont **idempotents** : on peut les rejouer sans risque.
+
+---
+
+## ⚠️ Pièges Supabase à connaître avant de toucher au SQL
+
+### L'éditeur exécute tout dans UNE transaction
+Si la **dernière** instruction échoue, **tout est annulé** — y compris les
+`alter table` du début. C'est déjà arrivé : le script `tournaments_v2.sql` a
+planté sur la vue (erreur 42P16) et **aucune colonne n'avait été créée**, alors
+que tout le reste semblait valide.
+
+**Après une erreur, toujours revérifier** que les colonnes existent vraiment.
+
+### L'onglet actif
+Le bouton « Run » exécute **l'onglet actif**, pas celui où on vient de coller.
+Vérifier avant de lancer.
+
+### `create or replace view` — erreur 42P16
+Ne peut ni réordonner ni renommer les colonnes d'une vue existante.
+→ `drop view if exists ma_vue;` **avant** de recréer.
+
+### `create or replace function` — changement de type de retour
+→ `drop function if exists ma_fonction(types);` **avant**.
+
+### Wrapper les opérations conditionnelles
+```sql
+do $$
+begin
+  if to_regclass('public.ma_table') is not null then
+    execute 'alter table ...';
+  end if;
+end $$;
+```
+
+---
+
+## Ordre d'exécution
+
+### ✅ Déjà exécutés (confirmés par Jonathan)
+
+| # | Script | Contenu |
+|---|---|---|
+| 1 | `economy_multimode` | Monnaies par mode |
+| 2 | `daily_loop` | Défi du jour, quêtes, streak |
+| 3 | `training_mode` | Défis, rating de défi, Rush |
+| 4 | `ai_opponents` | Galerie IA, sceaux |
+| 5 | `league_weekly` | Ligue, groupes, points |
+| 6 | `tournaments_part1_tables` | Tables tournois |
+| 7 | `tournaments_part2_functions` | Fonctions tournois v1 |
+| 8 | `guilds` | Guildes |
+| 9 | `enable_rls_security` | RLS |
+| 10 | `seasons_and_milestones` | Saisons, paliers |
+| 11 | `analytics_dashboard` | Télémétrie, rétention |
+| 12 | `economy_fix_shiitake` | Shiitake + Koku jamais gagné |
+| 13 | `admin_panel` | Panneau admin (récompenses/conversion/événements) |
+| 14 | `game_administration` | Joueurs, modération, live-ops, audit |
+| 15 | **`fix_rls_gameplay`** | 🔑 A réparé le matchmaking (RLS bloquait `matchmaking_queue`) |
+| 16 | `tournaments_v2` | Plafonds par cadence, rondes adaptatives, délais, forfaits |
+| 17 | `wurmz_skin_sync` | Colonne `wurmz_skin` + RPC protégé |
+
+### 🔴 À EXÉCUTER (dans cet ordre)
+
+| # | Script | Pourquoi |
+|---|---|---|
+| 18 | `tournaments_v3.sql` | **Parties réelles** + nettoyage des tournois zombies |
+| 19 | `tournaments_notify.sql` | Notification de partie prête à l'adversaire |
+| 20 | `tournaments_claim.sql` | **Réservation atomique du créateur** (évite la double création) |
+| 21 | `tournaments_attach_fix.sql` | **Dernier livré** — attachement à toute épreuve |
+
+> ⚠️ Ces 4 scripts sont la tentative de correction du bug tournoi en cours.
+> Voir `TESTING.md`.
+
+---
+
+## Diagnostic RLS
+
+Une table avec **RLS activée et ZÉRO politique** est **totalement bloquée**, en
+lecture comme en écriture, **silencieusement**. Le bouton « Run and enable RLS »
+de Supabase a déjà cassé le matchmaking de cette façon.
+
+```sql
+select
+  c.relname as table_name,
+  c.relrowsecurity as rls_active,
+  (select count(*) from pg_policies p
+     where p.schemaname='public' and p.tablename=c.relname) as nb_policies,
+  case
+    when c.relrowsecurity and (select count(*) from pg_policies p
+        where p.schemaname='public' and p.tablename=c.relname) = 0
+      then '⚠ BLOQUÉE (RLS sans politique)'
+    when c.relrowsecurity then 'RLS + politiques'
+    else 'pas de RLS'
+  end as etat
+from pg_class c
+join pg_namespace n on n.oid = c.relnamespace
+where n.nspname='public' and c.relkind='r'
+order by 4 desc, 1;
+```
+
+### ✅ Exception normale
+**`admin_audit_log` est en « RLS sans politique » PAR CONCEPTION.**
+On n'y accède que via des RPC `SECURITY DEFINER`. **Ne pas « corriger ».**
+
+---
+
+## Requête de contrôle des tournois
+
+```sql
+select
+  to_regproc('public.tournament_create')          as fn_create,
+  to_regproc('public.tournament_claim_creation')  as fn_claim,
+  to_regproc('public.tournament_attach_game')     as fn_attach,
+  to_regproc('public.tournament_cleanup')         as fn_cleanup,
+  to_regproc('public.tournament_claim_forfeit')   as fn_forfeit,
+  (select count(*) from information_schema.columns
+     where table_name='tournaments'
+       and column_name in ('max_players','round_deadline','round_minutes')) as cols_tournaments,
+  (select count(*) from information_schema.columns
+     where table_name='tournament_pairings'
+       and column_name in ('online_game_id','creator_claimed_by')) as cols_pairings;
+```
+
+Attendu : toutes les fonctions nommées, `cols_tournaments = 3`, `cols_pairings = 2`.
+
+---
+
+## Sécurité — principes
+
+- Le rôle admin vient de **`profiles.is_admin`** (colonne en base), **pas** d'une
+  liste de pseudos en dur (usurpable si un compte change de nom).
+- **Tous les RPC d'administration appellent `is_admin_user()`** côté serveur.
+  Trafiquer le client ne sert à rien.
+- Le drapeau `wurmz_skin` est refusé par le serveur à tout compte dont le pseudo
+  n'est pas `Wurmz` (RPC `set_wurmz_skin`).
+- Toute action admin est tracée dans **`admin_audit_log`**.
