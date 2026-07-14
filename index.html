@@ -9003,9 +9003,10 @@ function stopArenaMatchmakingSearch(resetUI){
 }
 
 // Crée le match d'Arène (BO3) ET sa première manche (online_games).
-async function createArenaMatch(whitePlayerId, blackPlayerId, timerSeconds){
+async function createArenaMatch(whitePlayerId, blackPlayerId, timerSeconds, ranked){
   const { data: match, error } = await supa.from('arena_matches').insert({
-    white_player_id: whitePlayerId, black_player_id: blackPlayerId, timer_seconds: timerSeconds
+    white_player_id: whitePlayerId, black_player_id: blackPlayerId, timer_seconds: timerSeconds,
+    ranked: (ranked!==false)
   }).select().single();
   if(error){ showToast('Impossible de créer le match d\'Arène : '+error.message, true); return; }
   await createArenaRound(match, 1);
@@ -9780,6 +9781,7 @@ async function sendLeagueChatMessage(){
 // ══════════════════════════════════════════════════════
 let _dmPollInterval = null;
 let _dmCurrentFriendId = null;
+let _dmCurrentFriendPseudo = null;
 
 let _messagingCurrentTab = 'friends';
 let _leagueChatPollInterval = null;
@@ -10002,8 +10004,9 @@ async function refreshFriendsList(){
       var badge = unreadCount ? '<span style="background:#e74c3c;color:#fff;border-radius:8px;min-width:16px;height:16px;padding:0 3px;font-family:VT323,monospace;font-size:11px;line-height:16px;text-align:center;box-shadow:0 0 4px rgba(231,76,60,.8);margin-left:7px;display:inline-block">'+(unreadCount>9?'9+':unreadCount)+'</span>' : '';
       var safePseudo = (pseudoMap[otherId]||'?').replace(/'/g,"\\'");
       return '<div class="game-history-row" onclick="openDmThread(\''+otherId+'\',\''+safePseudo+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;border-bottom:1px solid rgba(200,168,110,.12);cursor:pointer">'
-        + '<span style="font-family:VT323,monospace;font-size:14px;display:flex;align-items:center">'+(pseudoMap[otherId]||'?')+badge+'</span>'
+        + '<span onclick="event.stopPropagation();viewPlayerProfile(\''+otherId+'\')" style="font-family:VT323,monospace;font-size:14px;display:flex;align-items:center;text-decoration:underline;text-decoration-color:rgba(200,168,110,.35)" title="Voir la carte de combattant">'+(pseudoMap[otherId]||'?')+badge+'</span>'
         + '<span style="display:flex;align-items:center;gap:10px">'
+        + '<span onclick="event.stopPropagation();openChallengeConfigPopup(\''+otherId+'\',\''+safePseudo+'\')" style="color:var(--gold-bright);opacity:.8" title="D&#233;fier">&#9876;</span>'
         + '<span style="color:var(--gold);opacity:.6">&#128172;</span>'
         + '<span onclick="event.stopPropagation();removeFriend(\''+r.id+'\',\''+safePseudo+'\')" style="color:#e05050;opacity:.6;padding:2px 4px" title="Retirer cet ami">&#10005;</span>'
         + '</span></div>';
@@ -10077,6 +10080,7 @@ async function removeFriend(friendshipId, pseudo){
 }
 function openDmThread(friendId, friendPseudo){
   _dmCurrentFriendId = friendId;
+  _dmCurrentFriendPseudo = friendPseudo;
   var modal = document.getElementById('dm-modal');
   var title = document.getElementById('dm-title');
   if(title) title.textContent = '&#128172; '+friendPseudo;
@@ -11333,6 +11337,11 @@ function endGame(winner,reason){
   logTelemetryEvent('game_end', { vsAI: vsAI, advId: advId, online: !!G.onlineGameId, won: playerWon, durationMs: durationMs, pushCount: pushCount, captureCount: captureCount });
 
   var isOnlineGame=!!G.onlineGameId;
+  // Défi "pour le fun" entre amis (voir openChallengeConfigPopup) : la
+  // partie se joue normalement mais ELO, monnaies et XP ne bougent pas.
+  // Par défaut true pour tout le reste (matchmaking, tournoi, amical non
+  // choisi) — seul un défi explicitement non-classé positionne G.ranked=false.
+  var isRanked=(G.ranked!==false);
   // Capturé AVANT que le report de résultat ne remette G.tournamentPairingId
   // à null plus bas — sert à adapter l'écran de fin (pas de revanche, retour
   // au tournoi plutôt qu'au menu) et reste lisible après coup par
@@ -11389,12 +11398,15 @@ function endGame(winner,reason){
         if(nt2Html){ vEl.innerHTML=nt2Html; vEl.style.display='block'; }
       }
     }
-    if(typeof displayXpGainWithEventBonus==='function') displayXpGainWithEventBonus(xpGain);
+    if(typeof displayXpGainWithEventBonus==='function') displayXpGainWithEventBonus(isRanked?xpGain:0);
     else { var xr2f=document.getElementById('xp-gain-row'); if(xr2f) xr2f.style.display='none'; }
-
-    // ELO — uniquement en partie en ligne, jamais IA ni local.
+    // ELO / monnaies / points de Ligue — uniquement en partie en ligne
+    // CLASSÉE (jamais IA, local, Arène, ni un défi "pour le fun").
     var erEl=document.getElementById('elo-gain-row');
-    if(isOnlineGame && !G.arenaMatchId){
+    if(isOnlineGame && !G.arenaMatchId && !isRanked){
+      if(erEl){ erEl.innerHTML='🤝 Partie amicale — aucun impact sur l\'ELO'; erEl.style.display='block'; }
+    }
+    if(isOnlineGame && !G.arenaMatchId && isRanked){
       applyOnlineEloUpdate(playerWon).then(function(eloRes){
         if(eloRes && erEl){
           var delta=eloRes.newElo-eloRes.oldElo;
@@ -11437,8 +11449,11 @@ function endGame(winner,reason){
             }
           }).catch(function(){});
       }
+    }
+    if(isOnlineGame && !G.arenaMatchId){
       // Fenêtre de 2 minutes pour proposer une revanche — inutile en
-      // tournoi (l'appariement suisse décide déjà qui affronte qui).
+      // tournoi (l'appariement suisse décide déjà qui affronte qui), mais
+      // valable pour une partie amicale (l'ELO n'est de toute façon pas concerné).
       if(!isTournamentGame) startRematchTimer();
     } else if(erEl && !G.arenaMatchId){ erEl.style.display='none'; }
   }
@@ -15640,13 +15655,17 @@ function showToast(message, isError){
 // choisi (clic sur "Défier" dans la liste) ; reste à choisir le timer
 // puis confirmer — ordre plus ergonomique que l'ancien sélecteur global.
 let challengeConfigTimer = 5;
+let challengeConfigMode = 'quick';
+let challengeConfigRanked = true;
 function openChallengeConfigPopup(playerId, playerPseudo){
   const popup = document.getElementById('challenge-config-popup');
   if(!popup) return;
   popup.dataset.targetId = playerId;
   popup.dataset.targetPseudo = playerPseudo;
   document.getElementById('challenge-config-pseudo').textContent = 'Défier '+playerPseudo+' ?';
-  selectChallengeTimer(5); // valeur par défaut à chaque ouverture
+  selectChallengeTimer(5);     // valeurs par défaut à chaque ouverture
+  selectChallengeMode('quick');
+  selectChallengeRanked(true);
   popup.classList.add('active');
 }
 function closeChallengeConfigPopup(){
@@ -15660,12 +15679,28 @@ function selectChallengeTimer(t){
     if(el) el.classList.toggle('selected', v===t);
   });
 }
+function selectChallengeMode(m){
+  challengeConfigMode = m;
+  var elQ=document.getElementById('cfgmode-quick'), elA=document.getElementById('cfgmode-arena');
+  if(elQ) elQ.classList.toggle('selected', m==='quick');
+  if(elA) elA.classList.toggle('selected', m==='arena');
+}
+function selectChallengeRanked(ranked){
+  challengeConfigRanked = ranked;
+  var el1=document.getElementById('cfgranked-1'), el0=document.getElementById('cfgranked-0');
+  if(el1) el1.classList.toggle('selected', ranked);
+  if(el0) el0.classList.toggle('selected', !ranked);
+  var hint=document.getElementById('challenge-config-ranked-hint');
+  if(hint) hint.textContent = ranked
+    ? 'Compte pour l\'ELO, les gains et l\'XP.'
+    : 'Pour le fun : aucun effet sur l\'ELO, les gains ou l\'XP.';
+}
 async function confirmSendChallenge(){
   const popup = document.getElementById('challenge-config-popup');
   const targetId = popup.dataset.targetId;
   const targetPseudo = popup.dataset.targetPseudo;
   popup.classList.remove('active');
-  await sendChallenge(targetId, targetPseudo, challengeConfigTimer);
+  await sendChallenge(targetId, targetPseudo, challengeConfigTimer, challengeConfigMode, challengeConfigRanked);
 }
 
 // ── Système de revanche après une partie en ligne ───────────────
@@ -15833,7 +15868,7 @@ async function launchRematchGame(){
   const oldGameId = G.onlineGameId;
   // Récupère l'id de l'adversaire depuis l'ancienne partie pour
   // reconstituer correctement les deux joueurs de la nouvelle.
-  const { data: oldGame } = await supa.from('online_games').select('white_player_id,black_player_id,timer_seconds').eq('id', oldGameId).single();
+  const { data: oldGame } = await supa.from('online_games').select('white_player_id,black_player_id,timer_seconds,ranked').eq('id', oldGameId).single();
   if(!oldGame){ showToast('Impossible de lancer la revanche.', true); return; }
   var oldOpponentId = (myColorOnline==='white') ? oldGame.black_player_id : oldGame.white_player_id;
   // Couleurs retirées au sort à CHAQUE revanche (contrairement à l'Arène,
@@ -15841,7 +15876,8 @@ async function launchRematchGame(){
   // matchmaking, où chaque nouvelle recherche est déjà un tirage indépendant).
   var iAmWhite = Math.random()<0.5;
   stopRematchTimer();
-  await createOnlineGame(iAmWhite?currentUser.id:oldOpponentId, iAmWhite?oldOpponentId:currentUser.id, oldGame.timer_seconds);
+  // La revanche garde le même statut classé/amical que la partie d'origine.
+  await createOnlineGame(iAmWhite?currentUser.id:oldOpponentId, iAmWhite?oldOpponentId:currentUser.id, oldGame.timer_seconds, oldGame.ranked);
   await supa.from('online_games').update({ rematch_game_id: G.onlineGameId }).eq('id', oldGameId);
 }
 
@@ -16834,9 +16870,10 @@ let challengePopupDeadline = null;
 let challengePopupTimerInterval = null;
 let challengePopupExpired = false;
 
-async function sendChallenge(challengedId, challengedPseudo, timerSeconds){
+async function sendChallenge(challengedId, challengedPseudo, timerSeconds, mode, ranked){
   const { error } = await supa.from('challenges').insert({
-    challenger_id: currentUser.id, challenged_id: challengedId, timer_seconds: timerSeconds
+    challenger_id: currentUser.id, challenged_id: challengedId, timer_seconds: timerSeconds,
+    mode: (mode==='arena') ? 'arena' : 'quick', ranked: (ranked!==false)
   });
   if(error){ showToast('Impossible d\'envoyer le défi : '+error.message, true); return; }
   showToast('Défi envoyé à '+challengedPseudo+' ('+timerSeconds+'s/coup) !');
@@ -16960,7 +16997,9 @@ async function showChallengePopup(challenge){
   const text = document.getElementById('challenge-popup-text');
   if(!popup || !text) return;
   const timerLabel = challenge.timer_seconds ? (' ('+challenge.timer_seconds+'s/coup)') : '';
-  text.textContent = (challenger ? challenger.pseudo : 'Un joueur') + ' vous défie en duel !' + timerLabel;
+  const modeLabel = challenge.mode==='arena' ? ' — Arène' : ' — Partie rapide';
+  const rankedLabel = challenge.ranked===false ? ' 🤝 amicale' : ' ⚔ classée';
+  text.textContent = (challenger ? challenger.pseudo : 'Un joueur') + ' vous défie en duel !' + timerLabel + modeLabel + rankedLabel;
   popup.dataset.challengeId = challenge.id;
   popup.dataset.challengerId = challenge.challenger_id;
   popup.dataset.timerSeconds = challenge.timer_seconds || 5;
@@ -17050,7 +17089,16 @@ async function respondToChallengeCore(challengeId, challengerId, timerSeconds, a
     // "le challenger prend les Blancs") — c'est le joueur qui ACCEPTE qui
     // crée la partie, donc c'est lui qui fait le tirage, une seule fois.
     var iAmWhite = Math.random()<0.5;
-    await createOnlineGame(iAmWhite?currentUser.id:challengerId, iAmWhite?challengerId:currentUser.id, timerSeconds);
+    var whiteId = iAmWhite?currentUser.id:challengerId, blackId = iAmWhite?challengerId:currentUser.id;
+    // mode/ranked relus depuis la ligne fraîchement mise à jour (updRows),
+    // jamais depuis un paramètre client : c'est la table qui fait foi, pas
+    // ce que l'UI affichait au moment du clic.
+    var row = updRows[0];
+    if(row && row.mode === 'arena'){
+      await createArenaMatch(whiteId, blackId, timerSeconds, row.ranked);
+    } else {
+      await createOnlineGame(whiteId, blackId, timerSeconds, row ? row.ranked : true);
+    }
   }
 }
 // Acceptation / refus rapides depuis une carte du bandeau, sans ouvrir le
@@ -17061,7 +17109,7 @@ function quickRespondChallenge(event, challengeId, challengerId, timerSeconds, a
 }
 
 // ── Création et synchronisation de la partie en ligne ──────────
-async function createOnlineGame(whitePlayerId, blackPlayerId, timerSeconds){
+async function createOnlineGame(whitePlayerId, blackPlayerId, timerSeconds, ranked){
   settings.timerSeconds = timerSeconds || 5; // AVANT initGame(), pour que G.timeLeft soit correct dès la création
   settings._onlineBottomColor = (currentUser.id === whitePlayerId) ? 'white' : 'black';
   settings._buildingOnlineGame = true;
@@ -17072,12 +17120,13 @@ async function createOnlineGame(whitePlayerId, blackPlayerId, timerSeconds){
     black_player_id: blackPlayerId,
     game_state: { board: G.board, stacks: G.stacks, lastMoved: G.lastMoved, lastMovedByColor: G.lastMovedByColor },
     turn: G.turn,
-    timer_seconds: settings.timerSeconds
+    timer_seconds: settings.timerSeconds,
+    ranked: (ranked!==false)
   }).select().single();
   if(error){ pieceInputLocked = false; showToast('Impossible de créer la partie : '+error.message, true); return; }
   // Le créateur applique directement l'état qu'il vient de générer
   // (inutile de le refetch, on l'a déjà localement).
-  await enterOnlineGame(data.id, whitePlayerId, { board: G.board, stacks: G.stacks, lastMoved: G.lastMoved, lastMovedByColor: G.lastMovedByColor }, G.turn, settings.timerSeconds);
+  await enterOnlineGame(data.id, whitePlayerId, { board: G.board, stacks: G.stacks, lastMoved: G.lastMoved, lastMovedByColor: G.lastMovedByColor }, G.turn, settings.timerSeconds, data.ranked);
 }
 
 // Appelée chez le CHALLENGER quand son défi vient d'être accepté : il
@@ -17096,7 +17145,15 @@ async function onChallengeAccepted(challengeRow){
     .limit(1)
     .single();
   if(error || !game){ showToast('Impossible de rejoindre la partie. Réessayez depuis le menu en ligne.', true); return; }
-  await enterOnlineGame(game.id, game.white_player_id, game.game_state, game.turn, game.timer_seconds);
+  // Défi accepté en mode Arène : la partie trouvée est la 1re manche d'un
+  // arena_matches — il faut entrer par enterArenaMatch (BO3, récompenses en
+  // Koku) plutôt que par un enterOnlineGame générique, sinon le challenger
+  // se retrouve dans une partie "normale" sans les règles/l'UI d'Arène.
+  if(game.arena_match_id){
+    const { data: match } = await supa.from('arena_matches').select('*').eq('id', game.arena_match_id).single();
+    if(match){ await enterArenaMatch(match, game); return; }
+  }
+  await enterOnlineGame(game.id, game.white_player_id, game.game_state, game.turn, game.timer_seconds, game.ranked);
 }
 
 // ── Bandeau des défis reçus (écran "Jouer en ligne") ────────────────
@@ -17126,15 +17183,18 @@ async function refreshIncomingChallengesBanner(){
       var eloCol = (typeof ELO_TIMER_COLUMN!=='undefined' && ELO_TIMER_COLUMN[c.timer_seconds]) || 'elo_5s';
       return {
         id: c.id, challenger_id: c.challenger_id, timer_seconds: c.timer_seconds||5,
+        mode: c.mode||'quick', ranked: c.ranked!==false,
         created_at: c.created_at, pseudo: p?p.pseudo:'Un joueur', elo: p?(p[eloCol]==null?1200:p[eloCol]):1200
       };
     });
     box.style.display='flex';
     box.innerHTML = _challengeBannerCache.map(function(c){
+      var modeTag = c.mode==='arena' ? 'Arène' : 'Partie rapide';
+      var rankedTag = c.ranked ? '⚔ classée' : '🤝 amicale';
       return '<div class="challenge-banner-card">'
         + '<div class="challenge-banner-info" onclick="reopenChallengePopupFromBanner(\''+c.id+'\')">'
         + '<div class="challenge-banner-pseudo">&#9876; '+escapeHtml(c.pseudo)+'</div>'
-        + '<div class="challenge-banner-meta">ELO '+c.elo+' &middot; '+c.timer_seconds+'s/coup &middot; <span id="challenge-banner-timer-'+c.id+'"></span></div>'
+        + '<div class="challenge-banner-meta">ELO '+c.elo+' &middot; '+c.timer_seconds+'s/coup &middot; '+modeTag+' &middot; '+rankedTag+' &middot; <span id="challenge-banner-timer-'+c.id+'"></span></div>'
         + '</div>'
         + '<div class="challenge-banner-actions">'
         + '<button class="btn-quick-accept" title="Accepter" onclick="quickRespondChallenge(event,\''+c.id+'\',\''+c.challenger_id+'\','+c.timer_seconds+',true)">&#10003;</button>'
@@ -17183,7 +17243,7 @@ async function closeMyOtherActiveOnlineGames(excludeGameId){
   }catch(e){}
 }
 
-async function enterOnlineGame(gameId, whitePlayerId, gameState, turn, timerSeconds){
+async function enterOnlineGame(gameId, whitePlayerId, gameState, turn, timerSeconds, ranked){
   _pendingBotIdx = null; // partie en ligne réelle, pas un bot de galerie
   if(isSpectating) stopSpectating(); // on rejoint une vraie partie : on n'est plus simple spectateur
   if(currentSoloGameId) finishSoloGameBroadcast(null); // pareil si on quittait une partie IA en cours pour rejoindre une vraie partie en ligne
@@ -17241,7 +17301,8 @@ async function enterOnlineGame(gameId, whitePlayerId, gameState, turn, timerSeco
     bottomColor: myColorOnline, topColor: opponentColor,
     pushCount: 0, captureCount: 0, startTime: Date.now(), _gameToken: Date.now(),
     messageLog: [],
-    onlineGameId: gameId, onlineMyColor: myColorOnline, _matchStarted: false
+    onlineGameId: gameId, onlineMyColor: myColorOnline, _matchStarted: false,
+    ranked: (ranked!==false)
   };
 
   // Récupère le pseudo de l'adversaire pour l'affichage (les deux IDs
@@ -17410,7 +17471,7 @@ function applyRemoteGameState(row){
 async function joinRematchGame(newGameId){
   const { data: game, error } = await supa.from('online_games').select('*').eq('id', newGameId).single();
   if(error || !game){ showToast('Impossible de rejoindre la revanche.', true); return; }
-  await enterOnlineGame(game.id, game.white_player_id, game.game_state, game.turn, game.timer_seconds);
+  await enterOnlineGame(game.id, game.white_player_id, game.game_state, game.turn, game.timer_seconds, game.ranked);
 }
 
 // Appelée après chaque coup LOCAL en mode en ligne (hook côté executeDrop).
@@ -17839,9 +17900,11 @@ window.addEventListener('beforeunload', () => {
 </div>
 
 <div id="dm-modal" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.88);z-index:310;flex-direction:column;padding:16px;box-sizing:border-box">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0">
-    <div id="dm-title" style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold-bright);letter-spacing:1px">&#128172;</div>
-    <button onclick="closeDmThread()" style="background:transparent;border:1px solid rgba(200,168,110,.3);color:var(--parchment);width:30px;height:30px;border-radius:4px;cursor:pointer;font-size:16px">&#10005;</button>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0;gap:8px">
+    <div id="dm-title" style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold-bright);letter-spacing:1px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">&#128172;</div>
+    <button onclick="viewPlayerProfile(_dmCurrentFriendId)" title="Voir la carte de combattant" style="background:transparent;border:1px solid rgba(200,168,110,.3);color:var(--gold-bright);width:30px;height:30px;border-radius:4px;cursor:pointer;font-size:14px;flex-shrink:0">&#128100;</button>
+    <button onclick="openChallengeConfigPopup(_dmCurrentFriendId, _dmCurrentFriendPseudo)" title="D&#233;fier" style="background:transparent;border:1px solid rgba(200,168,110,.3);color:var(--gold-bright);width:30px;height:30px;border-radius:4px;cursor:pointer;font-size:14px;flex-shrink:0">&#9876;</button>
+    <button onclick="closeDmThread()" style="background:transparent;border:1px solid rgba(200,168,110,.3);color:var(--parchment);width:30px;height:30px;border-radius:4px;cursor:pointer;font-size:16px;flex-shrink:0">&#10005;</button>
   </div>
   <div id="dm-messages" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:rgba(0,0,0,.3);border:1px solid rgba(200,168,110,.15);border-radius:6px;padding:10px;display:flex;flex-direction:column"></div>
   <div style="display:flex;gap:6px;margin-top:8px;flex-shrink:0">
@@ -17932,12 +17995,27 @@ window.addEventListener('beforeunload', () => {
     <div class="menu-divider"></div>
     <div class="modal-reason" id="challenge-config-pseudo" style="margin-bottom:14px">—</div>
     <div class="option-group">
+      <div class="option-label">Mode</div>
+      <div class="option-row">
+        <div class="opt-btn selected" id="cfgmode-quick" onclick="selectChallengeMode('quick')">Partie rapide</div>
+        <div class="opt-btn" id="cfgmode-arena" onclick="selectChallengeMode('arena')">Ar&#232;ne (BO3)</div>
+      </div>
+    </div>
+    <div class="option-group">
       <div class="option-label">Timer par coup</div>
       <div class="option-row">
         <div class="opt-btn" id="cfgtimer-3" onclick="selectChallengeTimer(3)">3s</div>
         <div class="opt-btn selected" id="cfgtimer-5" onclick="selectChallengeTimer(5)">5s</div>
         <div class="opt-btn" id="cfgtimer-10" onclick="selectChallengeTimer(10)">10s</div>
       </div>
+    </div>
+    <div class="option-group">
+      <div class="option-label">Enjeu</div>
+      <div class="option-row">
+        <div class="opt-btn selected" id="cfgranked-1" onclick="selectChallengeRanked(true)">&#9876; Comp&#233;titive</div>
+        <div class="opt-btn" id="cfgranked-0" onclick="selectChallengeRanked(false)">&#129309; Amicale</div>
+      </div>
+      <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.6;margin-top:4px" id="challenge-config-ranked-hint">Compte pour l'ELO, les gains et l'XP.</div>
     </div>
     <div style="display:flex;gap:10px;margin-top:16px">
       <button class="btn" style="flex:1" onclick="confirmSendChallenge()">Envoyer le d&#233;fi</button>
