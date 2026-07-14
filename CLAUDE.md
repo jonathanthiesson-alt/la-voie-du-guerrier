@@ -153,8 +153,10 @@ Le programme de compétitivité (8 phases, calqué sur chess.com) est **terminé
 navigation, boucle quotidienne, entraînement, adversaires IA, compétition
 (ligue/tournois/classements/guildes), social, économie/saisons, télémétrie.
 
-**Bug en cours** : les tournois ne parviennent pas à lancer la partie entre
-deux joueurs. Voir `docs/TESTING.md` — c'est le point chaud, tout y est détaillé.
+**Tournois : résolus et validés en conditions réelles (2026-07-14).**
+Automatisation serveur complète (pg_cron), clôture des inscriptions réservée
+au créateur, forfaits automatiques. **Prochain sujet : les guildes** (test à
+2 comptes). Voir `docs/TESTING.md` pour les protocoles et les leçons apprises.
 
 Voir `docs/ROADMAP.md` pour les 6 axes.
 

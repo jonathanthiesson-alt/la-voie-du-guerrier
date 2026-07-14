@@ -11,14 +11,15 @@ comptes, avant d'ajouter quoi que ce soit.
 
 | État | Sujet |
 |---|---|
-| 🔴 | **Tournois : la partie ne se lance pas** ← bloquant, voir `TESTING.md` |
-| ☐ | Guildes (adhésion, approbation, défis inter-guildes) |
-| ☐ | Ligue (points, classement de groupe) |
+| ☐ | **Guildes** (adhésion, approbation, défis inter-guildes) ← prochain |
+| ☐ | Ligue (points, classement de groupe) — ⚠ code des points modifié le 2026-07-14, à re-tester |
+| ☐ | Défis entre amis (profil, Arène/rapide, compétitif/amical) — codé le 2026-07-14, à valider à 2 comptes |
 | ☐ | Paliers de monnaie cliquables |
 | ☐ | Boucle quotidienne (défi du jour, quêtes, streak, Rush) |
 | ☐ | Partage de partie |
+| ✅ | **Tournois** — automatisés côté serveur (pg_cron), validés le 2026-07-14 |
 | ✅ | Matchmaking (réparé : RLS + fenêtre ELO élargissante) |
-| ✅ | Défis entre joueurs |
+| ✅ | Défis entre joueurs (liste en ligne) |
 | ✅ | WurmzSkin |
 
 **Règle** : ne pas passer à l'AXE suivant tant que l'AXE 1 n'est pas propre.

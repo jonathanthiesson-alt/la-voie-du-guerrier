@@ -65,6 +65,9 @@ end $$;
 | 20 | `tournaments_claim.sql` | **Réservation atomique du créateur** (évite la double création) |
 | 21 | `tournaments_attach_fix.sql` | Attachement à toute épreuve (notification isolée) |
 | 22 | `tournaments_fix_uuid_mismatch.sql` | 🔑 **A réparé le lancement des parties de tournoi** — `online_games.id` (uuid) vs `tournament_pairings.online_game_id` (bigint) : cast systématiquement en échec, l'attachement n'aboutissait jamais. Voir `TESTING.md`. |
+| 23 | `tournaments_auto.sql` | **Automatisation serveur** : `tournament_close_registration` (créateur seul), révocation de `tournament_start_next_round` aux clients, grâce 90 s avant double-forfait, `tournament_round_matches`, tick `pg_cron` toutes les 20 s |
+| 24 | `tournaments_claim_race.sql` | Réservation de création durcie : `creator_claimed_at`, libération refusée par le serveur avant 10 s (fin de la double création de partie) |
+| 25 | `friend_challenges.sql` | Défis entre amis : colonnes `challenges.mode`/`ranked`, `online_games.ranked`, `arena_matches.ranked` ; `record_arena_round_win` ne verse plus de Koku en Arène amicale |
 
 ---
 
