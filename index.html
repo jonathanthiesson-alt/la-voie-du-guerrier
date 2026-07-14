@@ -4312,18 +4312,29 @@ async function renderTournamentDetail(id){
         ? '<div style="text-align:center;padding:8px;font-family:VT323,monospace;font-size:12px;color:#f08080">🔒 Tournoi complet ('+tn.max_players+' joueurs)</div>'
         : '<button class="btn" style="width:100%;font-size:12px;padding:9px;margin-bottom:6px" onclick="registerTournament('+id+')">✍ S\'inscrire</button>';
     }
-    if(tn.status!=='finished' && actifs>=2){
-      html += '<button class="btn" style="width:100%;font-size:12px;padding:9px;margin-bottom:6px" onclick="startTournamentRound('+id+')">▶ '+(tn.current_round===0?'Lancer la 1re ronde':'Ronde suivante')+'</button>';
-      if(tn.current_round===0){
-        var nbRondes = Math.max(2, Math.ceil(Math.log2(Math.max(2,tn.players))));
-        var maxR = (TOURNAMENT_CADENCES[tn.timer_seconds]||{}).rounds || 5;
-        if(nbRondes>maxR) nbRondes = maxR;
-        html += '<div style="text-align:center;font-family:VT323,monospace;font-size:10px;opacity:.5;margin-bottom:6px">'
-          + tn.players+' inscrits → '+nbRondes+' rondes de '+tn.round_minutes+' min max</div>';
-      }
+    // La ronde 1 (clôture des inscriptions) est déclenchée par le
+    // créateur uniquement ; les rondes suivantes s'enchaînent seules,
+    // côté serveur (pg_cron), sans action d'aucun joueur.
+    if(tn.status==='open' && tn.created_by===currentUser.id && actifs>=2){
+      html += '<button class="btn" style="width:100%;font-size:12px;padding:9px;margin-bottom:6px" onclick="closeTournamentRegistration('+id+')">▶ Clôturer les inscriptions et démarrer</button>';
+      var nbRondes = Math.max(2, Math.ceil(Math.log2(Math.max(2,tn.players))));
+      var maxR = (TOURNAMENT_CADENCES[tn.timer_seconds]||{}).rounds || 5;
+      if(nbRondes>maxR) nbRondes = maxR;
+      html += '<div style="text-align:center;font-family:VT323,monospace;font-size:10px;opacity:.5;margin-bottom:6px">'
+        + tn.players+' inscrits → '+nbRondes+' rondes de '+tn.round_minutes+' min max</div>';
+    } else if(tn.status==='open' && amIn){
+      html += '<div style="text-align:center;font-family:VT323,monospace;font-size:11px;opacity:.5;margin-bottom:6px">En attente que le créateur clôture les inscriptions…</div>';
+    } else if(tn.status==='running'){
+      var rondesRestantes = Math.max(0, tn.total_rounds - tn.current_round);
+      html += '<div style="text-align:center;font-family:VT323,monospace;font-size:10px;opacity:.5;margin-bottom:6px">'
+        + (rondesRestantes>0 ? rondesRestantes+' ronde'+(rondesRestantes>1?'s':'')+' restante'+(rondesRestantes>1?'s':'')+' après celle-ci' : 'Dernière ronde')
+        + ' · la ronde suivante démarre automatiquement</div>';
     }
     // Mes appariements de la ronde courante
-    if(tn.current_round>0){ html += await renderMyPairing(id, tn.current_round, tn.round_deadline); }
+    if(tn.current_round>0){
+      html += await renderMyPairing(id, tn.current_round, tn.round_deadline);
+      html += await renderRoundMatches(id, tn.current_round);
+    }
     // Classement
     html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;margin:8px 0 4px;letter-spacing:1px">CLASSEMENT</div>';
     var rangActif = 0;
@@ -4557,18 +4568,53 @@ async function registerTournament(id){
     renderTournamentDetail(id);
   }catch(e){ showToast('Erreur d\'inscription.', true); }
 }
-async function startTournamentRound(id){
+// Clôture les inscriptions et lance la 1re ronde — réservé au créateur
+// (vérifié aussi côté serveur dans tournament_close_registration).
+// Les rondes suivantes s'enchaînent seules via le tick pg_cron serveur
+// (tournament_cleanup) : plus aucun bouton client ne les déclenche.
+async function closeTournamentRegistration(id){
   try{
-    const { data } = await supa.rpc('tournament_start_next_round', { p_tournament_id: id });
+    const { data } = await supa.rpc('tournament_close_registration', { p_tournament_id: id });
     if(data && data.finished){ showToast('🏆 Tournoi terminé ! Récompenses distribuées.', false); }
     else if(data && data.ok){ showToast('Ronde '+data.round+'/'+(data.total_rounds||'?')+' lancée !', false); }
-    else if(data && data.reason==='round_in_progress'){
-      showToast('⏳ '+data.pending+' partie(s) en cours. Attendez la fin du délai.', true);
-    }
+    else if(data && data.reason==='forbidden'){ showToast('Seul le créateur peut démarrer ce tournoi.', true); }
     else if(data && data.reason==='not_enough_players'){ showToast('Il faut au moins 2 joueurs.', true); }
-    else showToast('Impossible de lancer la ronde.', true);
+    else showToast('Impossible de démarrer le tournoi.', true);
     renderTournamentDetail(id);
   }catch(e){ showToast('Erreur.', true); }
+}
+// Liste des matchs de la ronde en cours : en cours / en attente / terminés.
+async function renderRoundMatches(tournamentId, round){
+  try{
+    const { data } = await supa.rpc('tournament_round_matches', { p_tournament_id: tournamentId, p_round: round });
+    var matches = (data && data.matches) || [];
+    if(!matches.length) return '';
+    var groups = { ongoing:[], pending:[], finished:[], bye:[] };
+    matches.forEach(function(m){ (groups[m.state]||groups.pending).push(m); });
+    var nbTermines = groups.finished.length + groups.bye.length;
+    var nbTotal = matches.length;
+    var html = '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;margin:8px 0 4px;letter-spacing:1px">RONDE '+round+' — '+nbTermines+'/'+nbTotal+' matchs terminés</div>';
+    function resultLabel(m){
+      if(m.result==='bye') return 'Exempté';
+      if(m.result==='timeout') return 'Forfait (non joué)';
+      if(m.result==='draw') return 'Nulle';
+      if(m.result==='white') return escapeHtml(m.white_pseudo||'?')+' gagne';
+      if(m.result==='black') return escapeHtml(m.black_pseudo||'?')+' gagne';
+      return '';
+    }
+    function row(m, badge, color){
+      var vs = m.black_pseudo ? (escapeHtml(m.white_pseudo||'?')+' vs '+escapeHtml(m.black_pseudo||'?')) : escapeHtml(m.white_pseudo||'?');
+      var res = resultLabel(m);
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 9px;background:rgba(0,0,0,.2);border-radius:5px;margin-bottom:4px">'
+        + '<span style="font-family:VT323,monospace;font-size:12px;color:var(--parchment)">'+vs+'</span>'
+        + '<span style="font-family:VT323,monospace;font-size:10px;color:'+color+'">'+badge+(res?' · '+res:'')+'</span>'
+      + '</div>';
+    }
+    groups.ongoing.forEach(function(m){ html += row(m, '🟢 En cours', 'var(--gold-bright)'); });
+    groups.pending.forEach(function(m){ html += row(m, '🟡 En attente', 'var(--parchment)'); });
+    groups.finished.concat(groups.bye).forEach(function(m){ html += row(m, '⚪ Terminé', 'var(--parchment)'); });
+    return html;
+  }catch(e){ console.error('[tournoi] liste des matchs :', e); return ''; }
 }
 // Réclame la victoire quand l'adversaire ne s'est pas présenté (délai écoulé).
 // L'absent est déclaré abandonniste et exclu des rondes suivantes ; le
