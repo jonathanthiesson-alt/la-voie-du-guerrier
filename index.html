@@ -25,7 +25,11 @@ body.bottomnav-visible #bottom-nav{display:flex}
 #bottom-nav button.active .bn-icon{transform:scale(1.18);text-shadow:0 0 8px rgba(212,160,23,.6)}
 /* Décale le contenu des écrans pour ne pas passer sous la barre */
 body.bottomnav-visible .screen{padding-bottom:70px}
-body.bottomnav-visible #screen-amis .panel,body.bottomnav-visible #screen-messaging .panel,body.bottomnav-visible #screen-online-menu .panel{max-height:calc(100vh - 132px)!important}
+/* Généralisé à TOUS les panneaux d'écran (boutique, ligue, tournoi, guilde,
+   entraînement...) : leurs max-height inline (100vh - 70/80/90px), combinés
+   au padding-top de l'écran, faisaient descendre leur bord bas sous la
+   barre de navigation. Seuls amis/messaging/online-menu étaient traités. */
+body.bottomnav-visible .screen .panel{max-height:calc(100vh - 132px)!important}
 /* Les écrans à en-tête fixe + corps défilant (padding:0 sur .screen, donc
    non couverts par la règle padding-bottom:70px ci-dessus) gèrent leur
    propre scroll interne : il faut leur donner la même marge pour que leur
@@ -11687,11 +11691,33 @@ function backToChallengeScreen(){
 function affToLog(a){var rows=G.rows||5;return (G.bottomColor==='black')?a:(rows-1-a);}
 function getCellSize(){
   const cols=G.cols||5;
-  const appW=document.getElementById('app').clientWidth-24-34; // -28 : place réservée aux repères de ligne (1-5)
+  const rows=G.rows||5;
+  const app=document.getElementById('app');
+  const appW=app.clientWidth-24-34; // -34 : place réservée aux repères de ligne (1-5)
   const base=Math.floor(appW/cols);
-  if(displayPrefs.boardSize==='small')return Math.min(base,52);
-  if(displayPrefs.boardSize==='large')return Math.min(base,82);
-  return Math.min(base,72);
+  // La largeur ne suffit pas : #screen-game est en overflow:hidden, et les
+  // modes qui ajoutent des éléments verticaux (bulle Musashi en campagne,
+  // bandeau de leçon...) rognaient le BAS du plateau. On mesure donc la
+  // hauteur réellement consommée par tout ce qui n'est pas le plateau, et
+  // on plafonne aussi la taille de case par la hauteur restante.
+  var baseH = Infinity;
+  var scr=document.getElementById('screen-game');
+  if(scr && app.clientHeight){
+    var chrome=0;
+    Array.prototype.forEach.call(scr.children, function(el){
+      if(el.querySelector && el.querySelector('#board-grid')) return; // le conteneur du plateau lui-même
+      var st=window.getComputedStyle(el);
+      if(st.display==='none' || st.position==='absolute' || st.position==='fixed') return; // overlays, barres flottantes
+      chrome += el.offsetHeight;
+    });
+    // -55 : padding/bordure du board-wrapper, repères de colonnes, marges.
+    var availH = app.clientHeight - chrome - 55;
+    if(availH > 100) baseH = Math.floor(availH/rows);
+  }
+  var cs = Math.min(base, baseH);
+  if(displayPrefs.boardSize==='small')return Math.min(cs,52);
+  if(displayPrefs.boardSize==='large')return Math.min(cs,82);
+  return Math.min(cs,72);
 }
 
 function renderBoard(overrideLM,isRev){
