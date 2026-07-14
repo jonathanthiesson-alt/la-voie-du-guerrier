@@ -35,6 +35,15 @@ body.bottomnav-visible .screen .profile-body::after,
 body.bottomnav-visible .screen .theme-scroll::after,
 body.bottomnav-visible .screen .rules-body::after,
 body.bottomnav-visible .screen .sub-scroll::after{content:'';display:block;flex-shrink:0;height:66px}
+/* Les MODALES plein écran (position:absolute;inset:0, z-index < 800) passent
+   SOUS la barre de navigation : leur bas — champ de saisie du chat, dernières
+   lignes des listes — était recouvert et inutilisable. !important requis pour
+   battre leur padding inline. */
+body.bottomnav-visible #dm-modal,
+body.bottomnav-visible #notifications-modal,
+body.bottomnav-visible #game-history-modal,
+body.bottomnav-visible #combat-card-modal,
+body.bottomnav-visible #skin-picker-modal{padding-bottom:calc(72px + env(safe-area-inset-bottom,0px))!important}
 .screen.active{display:flex}
 /* Défilement vertical pour tout écran dont le contenu dépasse la hauteur
    visible. overflow-y:auto n'affiche la barre que si nécessaire ; sur les
@@ -1896,11 +1905,11 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     </div>
     <div id="daily-quests-list" style="display:flex;flex-direction:column;gap:5px;margin-bottom:6px"></div>
     <!-- Barre de progression Shiitake (paliers du mode quotidien) -->
-    <div style="position:relative;height:36px;margin:0 4px 8px">
+    <div style="position:relative;height:48px;margin:0 4px 8px">
       <div style="position:absolute;top:0;left:0;right:0;height:9px;background:rgba(0,0,0,.4);border-radius:5px;overflow:hidden;border:1px solid rgba(180,140,90,.25)">
         <div id="play-shiitake-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#6a4a2a,#c89050);transition:width .4s ease"></div>
       </div>
-      <div id="play-shiitake-milestones" style="position:absolute;top:13px;left:0;right:0;height:22px"></div>
+      <div id="play-shiitake-milestones" style="position:absolute;top:13px;left:0;right:0;height:34px"></div>
     </div>
 
     <div style="display:flex;gap:6px;margin-bottom:4px">
@@ -17677,11 +17686,11 @@ window.addEventListener('beforeunload', () => {
       <div style="font-family:VT323,monospace;font-size:14px;color:var(--gold-bright)">🍃 <span class="shiso-display">0</span> <span style="font-size:10px;opacity:.6">Shiso</span></div>
     </div>
     <!-- Barre de progression Shiso (paliers 30/75/150) -->
-    <div style="position:relative;height:34px;margin:0 4px 10px">
+    <div style="position:relative;height:48px;margin:0 4px 10px">
       <div style="position:absolute;top:0;left:0;right:0;height:10px;background:rgba(0,0,0,.4);border-radius:5px;overflow:hidden;border:1px solid rgba(100,180,80,.25)">
         <div id="mm-shiso-progress-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#3a7a2a,#6abf40);transition:width .4s ease"></div>
       </div>
-      <div id="mm-shiso-milestones" style="position:absolute;top:14px;left:0;right:0;height:20px"></div>
+      <div id="mm-shiso-milestones" style="position:absolute;top:14px;left:0;right:0;height:34px"></div>
     </div>
     <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.5;text-align:center;margin-bottom:8px">Victoire : +2 🍃 · Défaite : +1 🍃 · Récompenses à 30/75/150</div>
     <div class="menu-divider"></div>
@@ -17800,11 +17809,11 @@ window.addEventListener('beforeunload', () => {
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 8px;flex-shrink:0">
       <div style="font-family:VT323,monospace;font-size:14px;color:var(--gold-bright)">🏮 <span class="mon-display">0</span> <span style="font-size:10px;opacity:.6">Mon</span></div>
     </div>
-    <div style="position:relative;height:34px;margin:0 4px 6px;flex-shrink:0">
+    <div style="position:relative;height:48px;margin:0 4px 6px;flex-shrink:0">
       <div style="position:absolute;top:0;left:0;right:0;height:10px;background:rgba(0,0,0,.4);border-radius:5px;overflow:hidden;border:1px solid rgba(255,140,0,.25)">
         <div id="tournament-mon-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#7a3a00,#e07a00);transition:width .4s ease"></div>
       </div>
-      <div id="tournament-mon-milestones" style="position:absolute;top:14px;left:0;right:0;height:20px"></div>
+      <div id="tournament-mon-milestones" style="position:absolute;top:14px;left:0;right:0;height:34px"></div>
     </div>
     <div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.5;text-align:center;margin-bottom:6px;flex-shrink:0">Système suisse · 🏮 +2 par victoire · Koku au podium (20/12/6)</div>
     <div class="menu-divider" style="flex-shrink:0"></div>
@@ -17819,11 +17828,11 @@ window.addEventListener('beforeunload', () => {
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 8px;flex-shrink:0">
       <div style="font-family:VT323,monospace;font-size:14px;color:var(--gold-bright)">🐉 <span class="ryu-display">0</span> <span style="font-size:10px;opacity:.6">Ryu</span></div>
     </div>
-    <div style="position:relative;height:34px;margin:0 4px 6px;flex-shrink:0">
+    <div style="position:relative;height:48px;margin:0 4px 6px;flex-shrink:0">
       <div style="position:absolute;top:0;left:0;right:0;height:10px;background:rgba(0,0,0,.4);border-radius:5px;overflow:hidden;border:1px solid rgba(80,180,80,.2)">
         <div id="guild-ryu-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#0a4a0a,#2ab02a);transition:width .4s ease"></div>
       </div>
-      <div id="guild-ryu-milestones" style="position:absolute;top:14px;left:0;right:0;height:20px"></div>
+      <div id="guild-ryu-milestones" style="position:absolute;top:14px;left:0;right:0;height:34px"></div>
     </div>
     <div class="menu-divider" style="flex-shrink:0"></div>
     <div id="guild-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
@@ -17840,11 +17849,11 @@ window.addEventListener('beforeunload', () => {
       <div style="font-family:VT323,monospace;font-size:14px;color:var(--gold-bright)">🌸 <span class="hanafuda-display">0</span> <span style="font-size:10px;opacity:.6">Hanafuda</span></div>
     </div>
     <!-- Barre de progression Hanafuda (paliers 30/75/150) -->
-    <div style="position:relative;height:34px;margin:0 4px 8px">
+    <div style="position:relative;height:48px;margin:0 4px 8px">
       <div style="position:absolute;top:0;left:0;right:0;height:10px;background:rgba(0,0,0,.4);border-radius:5px;overflow:hidden;border:1px solid rgba(220,100,150,.25)">
         <div id="events-hanafuda-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#6a1a3a,#e05090);transition:width .4s ease"></div>
       </div>
-      <div id="events-hanafuda-milestones" style="position:absolute;top:14px;left:0;right:0;height:20px"></div>
+      <div id="events-hanafuda-milestones" style="position:absolute;top:14px;left:0;right:0;height:34px"></div>
     </div>
     <div class="menu-divider"></div>
     <!-- Contenu à venir -->
