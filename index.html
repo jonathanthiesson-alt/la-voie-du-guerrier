@@ -2325,9 +2325,9 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
         <div class="ach-list" id="profile-achievements"></div>
       </div>
     </div>
+    <button class="btn btn-small" style="margin-top:14px;width:100%" onclick="openGameHistoryModal(currentUser&&currentUser.id, currentUser&&currentUser.pseudo)" data-i18n="profile_last_battles">&#9876; Derniers combats</button>
+    <button class="btn btn-small" style="margin-top:14px;width:100%;border-color:rgba(200,80,80,.4);color:#f08080" onclick="openResetModal()" data-i18n="profile_reset">&#9888; R&#233;initialiser le profil</button>
   </div>
-<button class="btn btn-small" style="margin-top:14px" onclick="openGameHistoryModal(currentUser&&currentUser.id, currentUser&&currentUser.pseudo)" data-i18n="profile_last_battles">&#9876; Derniers combats</button>
-<button class="btn btn-small" style="margin-top:14px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="openResetModal()" data-i18n="profile_reset">&#9888; R&#233;initialiser le profil</button>
 
 <!-- Modale "Progression des grades" — échelle complète des 9 grades,
      grade actuel mis en évidence, déjà atteints cochés. Remplace
@@ -5013,18 +5013,9 @@ function makePieceSVG(skin, sz, piece){
       var mf = getPieceLogoFilter(pieceColor, currentPiecesTheme||'standard');
       fstyle = (mf && mf!=='none') ? 'filter:'+mf+';' : '';
     }
-    // Orientation du WurmzSkin — le médaillon est déjà dans le bon sens
-    // pour mes propres pièces (rôle « player1 ») : ne PAS le pivoter.
-    // Ce sont les pièces distantes (onlineWhite/onlineBlack/opponent) qui
-    // doivent être pivotées de 180° pour rester lisibles de mon côté.
-    // Le bouton ↻ (userPrefs.wurmzFlip) inverse cette règle si besoin.
-    if(skin._wurmz){
-      var estAMoi = (skin._wurmzRole === 'player1');
-      var inverse = !!(userPrefs && userPrefs.wurmzFlip);
-      if(estAMoi === inverse){   // XOR inversé : inversable d'un clic
-        fstyle += 'transform:rotate(180deg);';
-      }
-    }
+    // Orientation du WurmzSkin — le médaillon (asset b64) est déjà dans le
+    // bon sens tel quel, pour mes propres pièces comme pour celles de
+    // l'adversaire : aucune rotation à appliquer, quel que soit le rôle.
     var op = skin._wurmz ? '1' : '.95';
     return '<div style="'+center+'"><img src="'+skin.b64+'" width="'+isz+'" height="'+isz+'" style="object-fit:contain;opacity:'+op+';'+fstyle+'" draggable="false"/></div>';
   }
@@ -12896,13 +12887,9 @@ function renderSkinIconRow(role, pieceColor, theme, size){
         var cd3=getPieceColorData(pieceColor, theme);
         var pf=cd3?pngLogoFilter(cd3.icon):'none';
         pfs=(pf&&pf!=='none')?'filter:'+pf+';':'';
-      } else {
-        // L'aperçu applique EXACTEMENT la même règle que le plateau, pour
-        // que ce qu'on voit ici soit ce qu'on aura en partie.
-        var estAMoiP = (skin._wurmzRole === 'player1');
-        var inverseP = !!(userPrefs && userPrefs.wurmzFlip);
-        if(estAMoiP === inverseP) pfs='transform:rotate(180deg);';
       }
+      // L'aperçu applique EXACTEMENT la même règle que le plateau : aucune
+      // rotation, l'asset est déjà dans le bon sens pour tous les rôles.
       svgContent='<img src="'+skin.b64+'" width="'+isz+'" height="'+isz+'" style="object-fit:contain;opacity:'+(skin._wurmz?'1':'.95')+';'+pfs+'" />';
     } else if(skin.svg){
       var cd2=getPieceColorData(pieceColor, theme);
