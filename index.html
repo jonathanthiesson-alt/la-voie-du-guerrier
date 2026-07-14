@@ -9972,10 +9972,10 @@ async function refreshFriendsList(){
     accepted.forEach(function(r){ otherIds.push(r.requester_id===currentUser.id?r.addressee_id:r.requester_id); });
     incoming.forEach(function(r){ otherIds.push(r.requester_id); });
     outgoing.forEach(function(r){ otherIds.push(r.addressee_id); });
-    var pseudoMap = {};
+    var pseudoMap = {}, profMap = {};
     if(otherIds.length){
-      const { data: profs } = await supa.from('profiles').select('id,pseudo').in('id', otherIds);
-      (profs||[]).forEach(function(p){ pseudoMap[p.id]=p.pseudo; });
+      const { data: profs } = await supa.from('profiles').select('id,pseudo,is_online,last_seen').in('id', otherIds);
+      (profs||[]).forEach(function(p){ pseudoMap[p.id]=p.pseudo; profMap[p.id]=p; });
     }
     // Pastille de message non lu par ami — un simple décompte côté client
     // (le volume de messages reste petit, pas besoin d'un GROUP BY serveur).
@@ -10001,13 +10001,21 @@ async function refreshFriendsList(){
     html += accepted.map(function(r){
       var otherId = r.requester_id===currentUser.id?r.addressee_id:r.requester_id;
       var unreadCount = unreadBySender[otherId]||0;
-      var badge = unreadCount ? '<span style="background:#e74c3c;color:#fff;border-radius:8px;min-width:16px;height:16px;padding:0 3px;font-family:VT323,monospace;font-size:11px;line-height:16px;text-align:center;box-shadow:0 0 4px rgba(231,76,60,.8);margin-left:7px;display:inline-block">'+(unreadCount>9?'9+':unreadCount)+'</span>' : '';
+      // Pastille de non-lus posée sur le coin de l'icône 💬 (parent en
+      // position:relative), façon badge d'app mobile.
+      var badge = unreadCount ? '<span style="position:absolute;top:-6px;right:-9px;background:#e74c3c;color:#fff;border-radius:8px;min-width:15px;height:15px;padding:0 3px;font-family:VT323,monospace;font-size:10px;line-height:15px;text-align:center;box-shadow:0 0 4px rgba(231,76,60,.8)">'+(unreadCount>9?'9+':unreadCount)+'</span>' : '';
       var safePseudo = (pseudoMap[otherId]||'?').replace(/'/g,"\\'");
+      // Voyant vert = ami réellement connecté (même règle que la liste
+      // "Jouer en ligne" : signal de vie < 3 min via presenceTier).
+      // Aucun voyant si hors ligne/absent — sobre, comme demandé.
+      var tier = profMap[otherId] ? presenceTier(profMap[otherId]) : 'offline';
+      var onlineDot = (tier==='online')
+        ? '<span style="width:8px;height:8px;border-radius:50%;background:#4caf50;box-shadow:0 0 6px #4caf50;display:inline-block;margin-right:7px;flex-shrink:0" title="En ligne"></span>' : '';
       return '<div class="game-history-row" onclick="openDmThread(\''+otherId+'\',\''+safePseudo+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:9px 10px;border-bottom:1px solid rgba(200,168,110,.12);cursor:pointer">'
-        + '<span onclick="event.stopPropagation();viewPlayerProfile(\''+otherId+'\')" style="font-family:VT323,monospace;font-size:14px;display:flex;align-items:center;text-decoration:underline;text-decoration-color:rgba(200,168,110,.35)" title="Voir la carte de combattant">'+(pseudoMap[otherId]||'?')+badge+'</span>'
+        + '<span onclick="event.stopPropagation();viewPlayerProfile(\''+otherId+'\')" style="font-family:VT323,monospace;font-size:14px;display:flex;align-items:center;text-decoration:underline;text-decoration-color:rgba(200,168,110,.35)" title="Voir la carte de combattant">'+onlineDot+(pseudoMap[otherId]||'?')+'</span>'
         + '<span style="display:flex;align-items:center;gap:10px">'
         + '<span onclick="event.stopPropagation();openChallengeConfigPopup(\''+otherId+'\',\''+safePseudo+'\')" style="color:var(--gold-bright);opacity:.8" title="D&#233;fier">&#9876;</span>'
-        + '<span style="color:var(--gold);opacity:.6">&#128172;</span>'
+        + '<span style="color:var(--gold);opacity:.6;position:relative;display:inline-block">&#128172;'+badge+'</span>'
         + '<span onclick="event.stopPropagation();removeFriend(\''+r.id+'\',\''+safePseudo+'\')" style="color:#e05050;opacity:.6;padding:2px 4px" title="Retirer cet ami">&#10005;</span>'
         + '</span></div>';
     }).join('');
