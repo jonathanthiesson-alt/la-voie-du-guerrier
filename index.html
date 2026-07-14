@@ -4199,6 +4199,10 @@ function infoBtnHtml(key){
 // ══════════════════════════════════════════════════════
 var _currentTournamentId = null;
 var _currentTournamentRound = 0;
+// Mémorise le tournoi de la dernière partie jouée, pour que le bouton
+// "Menu" de l'écran de fin y ramène — capturé dans endGame() avant que
+// _currentTournamentId ne soit potentiellement remis à zéro ailleurs.
+var _lastGameTournamentId = null;
 async function refreshTournamentScreen(){
   refreshAllCurrencyDisplays();
   refreshTournamentProgress();
@@ -4506,13 +4510,20 @@ function waitForTournamentGame(pairingId){
         joinTournamentGame(st.online_game_id, pairingId);
         return;
       }
-      // Au bout de ~20 s sans partie : l'adversaire a probablement décroché.
-      // On libère sa réservation et on crée nous-même.
+      // Au bout de ~15 s sans partie : l'adversaire a peut-être décroché.
+      // Le SERVEUR décide seul si la réservation est vraiment périmée
+      // (≥10 s, voir tournament_release_stale_claim) — si l'adversaire est
+      // juste lent (réseau) plutôt qu'absent, la libération est refusée et
+      // on continue simplement d'attendre au lieu de créer une seconde
+      // partie en parallèle.
       if(essais >= 10){   // ~15 s
-        stopTournamentWait();
-        await supa.rpc('tournament_release_stale_claim', { p_pairing_id: pairingId });
-        showToast('Votre adversaire ne répond pas — vous lancez la partie.', false);
-        startTournamentGame(pairingId);
+        const { data: rel } = await supa.rpc('tournament_release_stale_claim', { p_pairing_id: pairingId });
+        if(rel && rel.ok && rel.released){
+          stopTournamentWait();
+          showToast('Votre adversaire ne répond pas — vous lancez la partie.', false);
+          startTournamentGame(pairingId);
+        }
+        // sinon : pas encore périmée côté serveur, on repasse au prochain tour
       }
     }catch(e){ /* on retente au prochain tour */ }
   }, 1500);
@@ -11309,6 +11320,12 @@ function endGame(winner,reason){
   logTelemetryEvent('game_end', { vsAI: vsAI, advId: advId, online: !!G.onlineGameId, won: playerWon, durationMs: durationMs, pushCount: pushCount, captureCount: captureCount });
 
   var isOnlineGame=!!G.onlineGameId;
+  // Capturé AVANT que le report de résultat ne remette G.tournamentPairingId
+  // à null plus bas — sert à adapter l'écran de fin (pas de revanche, retour
+  // au tournoi plutôt qu'au menu) et reste lisible après coup par
+  // handleMenuClick, appelé bien après que G ait été remis à zéro.
+  var isTournamentGame=!!G.tournamentPairingId;
+  if(isTournamentGame) _lastGameTournamentId = _currentTournamentId;
   if(isOnlineGame && typeof saveOnlineGameToHistory==='function') saveOnlineGameToHistory(winner);
   var xpGain=computeXpGain(playerWon,vsAI,advId,isOnlineGame,durationMs,pushCount);
 
@@ -11407,10 +11424,15 @@ function endGame(winner,reason){
             }
           }).catch(function(){});
       }
-      // Fenêtre de 2 minutes pour proposer une revanche (voir startRematchTimer).
-      startRematchTimer();
+      // Fenêtre de 2 minutes pour proposer une revanche — inutile en
+      // tournoi (l'appariement suisse décide déjà qui affronte qui).
+      if(!isTournamentGame) startRematchTimer();
     } else if(erEl && !G.arenaMatchId){ erEl.style.display='none'; }
   }
+  // Le bouton Revanche n'a pas de sens en tournoi (pas de matchmaking
+  // libre) : masqué, et remis visible sinon pour les parties suivantes.
+  var rmBtn=document.getElementById('rematch-btn');
+  if(rmBtn) rmBtn.style.display = isTournamentGame ? 'none' : '';
   var overlayDelay=(G.captureCount>0)?4000:0;
   setTimeout(function(){
     document.getElementById('game-overlay').classList.add('active');
@@ -15822,7 +15844,14 @@ async function handleAnalyseClick(){
 
 async function handleMenuClick(){
   await signalRematchLeave();
-  if(G.onlineGameId && currentUser){
+  if(_lastGameTournamentId && currentUser){
+    // On quitte une partie DE TOURNOI : retour sur ce tournoi (classement,
+    // prochain appariement), pas la liste des joueurs en ligne.
+    var tid = _lastGameTournamentId;
+    _lastGameTournamentId = null;
+    showScreen('tournament');
+    openTournament(tid);
+  } else if(G.onlineGameId && currentUser){
     // On quitte une partie EN LIGNE : retour à la liste des joueurs (pas
     // au menu principal), pour pouvoir relancer un défi immédiatement.
     showScreen('online-menu');
