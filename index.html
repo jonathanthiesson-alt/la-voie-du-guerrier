@@ -9953,15 +9953,28 @@ function buyKokuPackage(amount){
   showToast('Le paiement r&#233;el n\'est pas encore connect&#233; (int&#233;gration &#224; faire c&#244;t&#233; serveur) — bouton d\'aper&#231;u de l\'interface uniquement.', true);
 }
 
+var _friendsPollInterval = null;
 async function openFriendsScreen(){
   showScreen('messaging');
   if(!currentUser) return;
   refreshFriendsList();
+  // Présence + non-lus rafraîchis toutes les 5 s tant que l'écran est
+  // ouvert. Le rendu silencieux (pas de placeholder "Chargement…", swap
+  // du HTML seulement s'il a changé) évite tout clignotement.
+  if(_friendsPollInterval) clearInterval(_friendsPollInterval);
+  _friendsPollInterval = setInterval(function(){
+    var scr = document.getElementById('screen-messaging');
+    if(!scr || !scr.classList.contains('active') || !currentUser){
+      clearInterval(_friendsPollInterval); _friendsPollInterval = null;
+      return;
+    }
+    refreshFriendsList(true);
+  }, 5000);
 }
-async function refreshFriendsList(){
+async function refreshFriendsList(silent){
   var list = document.getElementById('friends-list');
   if(!list || !currentUser) return;
-  list.innerHTML = '<div style="text-align:center;padding:16px;font-family:VT323,monospace;color:var(--parchment);opacity:.5">'+t('history_loading')+'</div>';
+  if(!silent) list.innerHTML = '<div style="text-align:center;padding:16px;font-family:VT323,monospace;color:var(--parchment);opacity:.5">'+t('history_loading')+'</div>';
   try{
     const { data: rows } = await supa.from('friendships').select('*')
       .or('requester_id.eq.'+currentUser.id+',addressee_id.eq.'+currentUser.id);
@@ -10025,9 +10038,15 @@ async function refreshFriendsList(){
         return '<div style="padding:6px 10px;font-family:VT323,monospace;font-size:13px;opacity:.6">'+(pseudoMap[r.addressee_id]||'?')+' — '+t('friends_pending')+'</div>';
       }).join('');
     }
-    list.innerHTML = html;
+    // Swap seulement si le contenu a changé : réécrire un innerHTML
+    // identique toutes les 5 s ferait clignoter la liste (et casserait
+    // un éventuel appui en cours sur mobile).
+    if(list.innerHTML !== html) list.innerHTML = html;
   }catch(e){
-    list.innerHTML = '<div style="text-align:center;padding:16px;font-family:VT323,monospace;color:var(--parchment);opacity:.6">Amis indisponible — script SQL exécuté ?</div>';
+    // Sur un poll silencieux, on garde la liste affichée telle quelle
+    // plutôt que de la remplacer par un message d'erreur (réseau qui
+    // hoquette = simple tour de poll manqué).
+    if(!silent) list.innerHTML = '<div style="text-align:center;padding:16px;font-family:VT323,monospace;color:var(--parchment);opacity:.6">Amis indisponible — script SQL exécuté ?</div>';
   }
 }
 async function sendFriendRequestByPseudo(){
@@ -10103,7 +10122,7 @@ function closeDmThread(){
   if(_dmPollInterval){ clearInterval(_dmPollInterval); _dmPollInterval=null; }
   _dmCurrentFriendId = null;
   if(typeof refreshMessagingBadge==='function') refreshMessagingBadge();
-  if(typeof refreshFriendsList==='function') refreshFriendsList();
+  if(typeof refreshFriendsList==='function') refreshFriendsList(true);
 }
 async function loadDmThread(){
   if(!_dmCurrentFriendId || !currentUser) return;
@@ -16987,7 +17006,7 @@ function subscribeToDirectMessages(){
         loadDmThread();
       } else {
         refreshMessagingBadge();
-        if(typeof refreshFriendsList==='function' && document.getElementById('friends-list')) refreshFriendsList();
+        if(typeof refreshFriendsList==='function' && document.getElementById('friends-list')) refreshFriendsList(true);
       }
     })
     .subscribe();
