@@ -7367,7 +7367,7 @@ function initMusashiAvatars(){
 function playStartSfx(){
   if(!userPrefs.sound) return;
   var sfx = document.getElementById('start-sfx');
-  if(sfx){ sfx.currentTime = 0; sfx.volume = 0.8; sfx.play().catch(function(){}); }
+  if(sfx){ sfx.currentTime = 0; sfx.volume = 0.8*(typeof userPrefs.soundVolume==='number'?userPrefs.soundVolume:1); sfx.play().catch(function(){}); }
 }
 
 // ── Bottom navigation ────────────────────────────────────────────
@@ -11189,7 +11189,8 @@ function attemptPlayMusic(el, label){
         // Vérifie que la situation est toujours d'actualité avant de
         // rejouer (le combat n'est peut-être plus en cours, la musique du
         // menu peut-être déjà relancée par ailleurs, etc.)
-        if(el.id==='fight-music' && !_fightMusicActive) return;
+        if(el.id==='fight-music' && (!_fightMusicActive || !userPrefs.fightMusic)) return;
+        if(el.id==='menu-music' && (!_menuMusicIntended || !userPrefs.menuMusic)) return;
         if(!el.paused) return;
         el.play().catch(function(err2){ console.warn('[audio] '+label+' : 2e tentative aussi refusée', err2&&err2.name); });
       };
@@ -11273,7 +11274,10 @@ function playEndgameSfx(immediate){
   if(!userPrefs.sound) return;
   var sfx = document.getElementById('endgame-sfx');
   if(!sfx) return;
-  function fire(){ try{ sfx.currentTime = 0; sfx.volume = 1; sfx.play().catch(function(err){ console.warn('endgame-sfx: lecture impossible', err); }); }catch(e){} }
+  // muted=false défensif : si le déverrouillage initial (unlockAllAudio) a
+  // été interrompu avant de restaurer l'état, le son resterait muet à vie.
+  // Volume aligné sur le réglage utilisateur (était 1 en dur).
+  function fire(){ try{ sfx.currentTime = 0; sfx.muted = false; sfx.volume = (typeof userPrefs.soundVolume==='number'?userPrefs.soundVolume:1); sfx.play().catch(function(err){ console.warn('endgame-sfx: lecture impossible', err); }); }catch(e){} }
   if(immediate) fire(); else setTimeout(fire, 1500);
 }
 function endGame(winner,reason){
@@ -14561,7 +14565,7 @@ function runCombatCountdown(onDone){
   ov.classList.add('active');
   var sfx = document.getElementById('countdown-sfx');
   if(sfx && userPrefs.sound){
-    try{ sfx.currentTime = 0; sfx.volume = 1; sfx.play().catch(function(){}); }catch(e){}
+    try{ sfx.currentTime = 0; sfx.volume = (typeof userPrefs.soundVolume==='number'?userPrefs.soundVolume:1); sfx.play().catch(function(){}); }catch(e){}
   }
   haptic('select');
   var counts = [5,4,3,2,1];
@@ -16221,6 +16225,10 @@ function unlockAllAudio(){
   // comme .paused passe à false dès l'appel play() (avant même que le son
   // ne soit audible), startMenuMusic() croyait la musique déjà lancée et
   // ne faisait rien — la mettant silencieusement en pause pour de bon.
+  // Une seule fois par session : re-déverrouiller n'apporte rien et
+  // multiplie les fenêtres de course décrites ci-dessous.
+  if(unlockAllAudio._done) return;
+  unlockAllAudio._done = true;
   ['endgame-sfx','fight-music'].forEach(function(id){
     var el = document.getElementById(id);
     if(!el) return;
@@ -16228,15 +16236,27 @@ function unlockAllAudio(){
       el.src = FIGHT_SONGS[0]; // il faut une source valide pour que le déverrouillage compte
     }
     if(!el.src) return;
-    var wasMuted = el.muted;
+    var wasMuted = el.muted, wasVolume = el.volume;
+    function restore(){ try{ el.pause(); el.currentTime = 0; el.muted = wasMuted; el.volume = wasVolume; }catch(e){} }
     try{
       el.muted = true;
+      el.volume = 0; // double filet : muted seul ne suffisait pas dans tous les cas
       var p = el.play();
-      if(p && p.catch) p.catch(function(err){ console.warn('[audio] déverrouillage de #'+id+' refusé', err&&err.name); });
-    }catch(e){ console.warn('[audio] déverrouillage de #'+id+' a levé une exception', e); }
-    setTimeout(function(){
-      try{ el.pause(); el.currentTime = 0; el.muted = wasMuted; }catch(e){}
-    }, 120);
+      if(p && p.then){
+        // La pause se fait quand la lecture a RÉELLEMENT démarré (résolution
+        // de la promesse), jamais sur un setTimeout aveugle : avec l'ancien
+        // délai fixe de 120 ms, un fichier pas encore tamponné démarrait
+        // APRÈS la pause, muted déjà restauré — le son de fin de combat
+        // partait alors en clair à l'arrivée au menu (audible surtout quand
+        // la musique du menu, qui le masquait, est désactivée).
+        p.then(restore).catch(function(err){
+          restore();
+          console.warn('[audio] déverrouillage de #'+id+' refusé', err&&err.name);
+        });
+      } else {
+        setTimeout(restore, 120); // très vieux navigateurs : play() sans promesse
+      }
+    }catch(e){ restore(); console.warn('[audio] déverrouillage de #'+id+' a levé une exception', e); }
   });
 }
 async function enterMainMenu(){
