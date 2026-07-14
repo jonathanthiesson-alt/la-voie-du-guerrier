@@ -117,6 +117,13 @@ body.ui-sumi .player-bar{background:#211a28;border-bottom:none}
 body.ui-sumi .player-bar.active-bar{border-left-color:#d8422a;background:#2b2135;box-shadow:none}
 body.ui-sumi .board-wrapper{border-color:#d9a441;outline:none;box-shadow:none;background-image:none}
 body.ui-sumi .game-history-row:hover{background:rgba(216,66,42,.08)}
+/* Bandes de ciel Sumi — la signature du thème : un paysage japonais plat
+   (à la Tartakovsky) en tête de chaque grand écran. Invisible en thème
+   Classique. Les marges négatives compensent le padding:18px du .panel
+   pour que le ciel soit bord à bord. */
+.sumi-sky{display:none}
+body.ui-sumi .sumi-sky{display:block;position:relative;height:92px;margin:-18px -18px 12px;overflow:hidden;flex-shrink:0}
+body.ui-sumi .sumi-sky svg{position:absolute;inset:0;width:100%;height:100%;display:block}
 /* Onglets du panneau d'administration */
 .adm-tab{flex:1;background:rgba(0,0,0,.25);border:1px solid rgba(200,168,110,.2);border-radius:5px;padding:6px 3px;font-family:VT323,monospace;font-size:11px;color:var(--parchment);cursor:pointer}
 .adm-tab.active{background:rgba(160,90,220,.25);border-color:rgba(160,90,220,.6);color:#c58aff}
@@ -1904,6 +1911,14 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 <!-- ═══════════ JOUER (écran unifié, onglet principal de la bottom-nav) ═══════════ -->
 <div id="screen-play" class="screen" style="justify-content:flex-start;padding-top:14px">
   <div class="panel" style="max-width:330px;width:100%">
+    <!-- Ciel Sumi : mont Fuji au crépuscule (visible en thème Sumi uniquement) -->
+    <div class="sumi-sky"><svg viewBox="0 0 300 92" preserveAspectRatio="none" aria-hidden="true">
+      <rect width="300" height="92" fill="#e8863a"/>
+      <circle cx="242" cy="26" r="19" fill="#d8422a"/>
+      <polygon points="10,92 128,26 152,26 290,92" fill="#16121c"/>
+      <polygon points="98,44 128,26 152,26 184,44 172,39 160,46 148,38 136,46 124,39 112,46" fill="#ede3cb"/>
+      <polygon points="0,92 50,74 110,86 190,78 300,86 300,92" fill="#211a28" opacity=".9"/>
+    </svg></div>
     <!-- Header joueur persistant -->
     <div onclick="showScreen('profile')" style="display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.25);border-radius:8px;padding:8px 12px;margin-bottom:12px;cursor:pointer">
       <span id="play-grade-icon" style="font-family:'Noto Serif JP',serif;font-size:24px;color:var(--gold)">侍</span>
@@ -2143,6 +2158,18 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 <div id="screen-campaigns" class="screen">
   <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('menu')">&#8617; MENU</button></div>
   <div class="panel" style="max-width:360px">
+    <!-- Ciel Sumi : toit de dojo dans la brume (campagne) -->
+    <div class="sumi-sky"><svg viewBox="0 0 300 92" preserveAspectRatio="none" aria-hidden="true">
+      <rect width="300" height="92" fill="#8a7fa8"/>
+      <circle cx="252" cy="26" r="16" fill="#ede3cb" opacity=".75"/>
+      <polygon points="88,52 212,52 196,30 104,30" fill="#16121c"/>
+      <polygon points="80,52 88,44 212,44 220,52" fill="#16121c"/>
+      <rect x="104" y="52" width="10" height="40" fill="#16121c"/>
+      <rect x="186" y="52" width="10" height="40" fill="#16121c"/>
+      <rect x="128" y="60" width="44" height="32" fill="#16121c" opacity=".85"/>
+      <polygon points="0,92 70,78 140,88 230,76 300,86 300,92" fill="#211a28"/>
+      <rect x="0" y="64" width="300" height="7" fill="#ede3cb" opacity=".12"/>
+    </svg></div>
     <div class="menu-title" style="font-size:20px"><span style="font-family:Noto Serif JP,serif;font-size:18px;vertical-align:middle;margin-right:4px">巻</span>CAMPAGNES</div>
     <div class="menu-divider"></div>
     <div id="campaigns-list"></div>
@@ -17937,6 +17964,16 @@ window.addEventListener('beforeunload', () => {
 <!-- ═══════════ TOURNOI ═══════════ -->
 <div id="screen-tournament" class="screen" style="justify-content:flex-start;padding-top:14px">
   <div class="panel" style="max-width:330px;width:100%;max-height:calc(100vh - 90px);display:flex;flex-direction:column;overflow:hidden">
+    <!-- Ciel Sumi : torii sous la lune (compétition) -->
+    <div class="sumi-sky"><svg viewBox="0 0 300 92" preserveAspectRatio="none" aria-hidden="true">
+      <rect width="300" height="92" fill="#b23a52"/>
+      <circle cx="66" cy="30" r="21" fill="#ede3cb" opacity=".92"/>
+      <polygon points="128,92 143,34 151,34 146,92" fill="#16121c"/>
+      <polygon points="196,92 179,34 187,34 202,92" fill="#16121c"/>
+      <polygon points="112,46 218,46 214,38 116,38" fill="#16121c"/>
+      <polygon points="122,30 208,30 214,22 116,22" fill="#16121c"/>
+      <polygon points="0,92 60,68 120,84 210,74 300,84 300,92" fill="#211a28"/>
+    </svg></div>
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px;flex-shrink:0">&#127942; TOURNOI</div><button onclick="showModeInfo('tournament')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
     <!-- Monnaie du Tournoi : 🏮 Mon (sceau de clan) -->
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 8px;flex-shrink:0">
@@ -18018,6 +18055,18 @@ window.addEventListener('beforeunload', () => {
 <div id="screen-messaging" class="screen" style="justify-content:flex-start;padding-top:54px">
   <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('menu')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
   <div class="panel" style="max-width:340px;max-height:calc(100vh - 70px);display:flex;flex-direction:column;overflow:hidden">
+    <!-- Ciel Sumi : bambouseraie à l'aube (social) -->
+    <div class="sumi-sky"><svg viewBox="0 0 300 92" preserveAspectRatio="none" aria-hidden="true">
+      <rect width="300" height="92" fill="#7a9b6d"/>
+      <circle cx="150" cy="34" r="18" fill="#ede3cb" opacity=".85"/>
+      <rect x="34" y="0" width="9" height="92" fill="#16121c"/>
+      <rect x="70" y="0" width="7" height="92" fill="#16121c" opacity=".85"/>
+      <rect x="228" y="0" width="9" height="92" fill="#16121c"/>
+      <rect x="262" y="0" width="6" height="92" fill="#16121c" opacity=".8"/>
+      <polygon points="43,22 96,12 96,17 43,27" fill="#16121c" opacity=".7"/>
+      <polygon points="228,40 176,30 176,35 228,45" fill="#16121c" opacity=".7"/>
+      <polygon points="0,92 80,84 170,90 260,82 300,88 300,92" fill="#211a28"/>
+    </svg></div>
     <div class="menu-title" style="font-size:18px;flex-shrink:0" data-i18n="menu_messaging">&#128172; MESSAGERIE</div>
     <div class="menu-divider" style="flex-shrink:0"></div>
     <div style="display:flex;gap:5px;margin-bottom:8px;flex-shrink:0">
@@ -18056,6 +18105,17 @@ window.addEventListener('beforeunload', () => {
     <div class="shop-koku-badge"><span class="koku-ideogram">石</span> <span class="koku-balance-display">0</span></div>
   </div>
   <div class="panel" style="max-width:340px;max-height:calc(100vh - 70px);display:flex;flex-direction:column;overflow:hidden">
+    <!-- Ciel Sumi : lanterne de pierre au couchant (marché) -->
+    <div class="sumi-sky"><svg viewBox="0 0 300 92" preserveAspectRatio="none" aria-hidden="true">
+      <rect width="300" height="92" fill="#c96a2e"/>
+      <circle cx="220" cy="30" r="17" fill="#d8422a"/>
+      <polygon points="52,92 56,60 72,60 76,92" fill="#16121c"/>
+      <polygon points="48,60 80,60 76,48 52,48" fill="#16121c"/>
+      <polygon points="44,48 84,48 64,34" fill="#16121c"/>
+      <rect x="60" y="26" width="8" height="8" fill="#16121c"/>
+      <polygon points="57,55 71,55 69,50 59,50" fill="#e8863a"/>
+      <polygon points="0,92 70,80 150,88 230,78 300,88 300,92" fill="#211a28"/>
+    </svg></div>
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px;flex-shrink:0">&#9925; BOUTIQUE &#9925;</div><button onclick="showModeInfo('shop')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
     <div class="menu-divider" style="flex-shrink:0"></div>
     <div style="display:flex;gap:5px;margin-bottom:10px;flex-shrink:0">
