@@ -2244,7 +2244,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <div class="modal-btn-row" style="margin-top:10px">
         <button class="btn btn-small" onclick="handleRematchClick()" id="rematch-btn"><span id="rematch-indicator" class="rematch-dot"></span>Revanche<span id="rematch-timer-label" class="rematch-timer-label"></span></button>
         <button class="btn btn-small" onclick="handleAnalyseClick()" style="font-size:11px">&#128269; Analyse</button>
-        <button class="btn btn-small btn-danger" onclick="handleMenuClick()">&#8962; Menu</button>
+        <button class="btn btn-small btn-danger" onclick="handleMenuClick()" id="endgame-menu-btn">&#8962; Menu</button>
       </div>
       <button class="btn btn-small" onclick="shareGameResult()" style="font-size:11px;margin-top:6px;width:100%">&#128228; <span data-i18n="share_result">Partager le résultat</span></button>
     </div>
@@ -4484,14 +4484,19 @@ async function createTournamentOnlineGame(pairingId, whiteId, blackId, timerSeco
     return joinTournamentGame(att.game_id, pairingId);
   }
 
-  G.tournamentPairingId = pairingId;
-  G.tournamentGameId = g.id;
   showToast('⚔ Partie lancée — votre adversaire est prévenu.', false);
 
-  // Maintenant seulement, on entre dans la partie.
+  // enterOnlineGame() fait `G = {...}` (remplacement complet, pas une
+  // fusion, voir enterArenaMatch) : poser les champs de tournoi AVANT
+  // l'appel les ferait écraser silencieusement. On les pose donc APRÈS —
+  // c'était le bug : côté créateur (ce chemin-ci), le rapport de résultat
+  // et le retour au tournoi en fin de partie ne se déclenchaient jamais,
+  // puisque G.tournamentPairingId redevenait null juste après avoir été posé.
   await enterOnlineGame(g.id, whiteId,
     { board:G.board, stacks:G.stacks, lastMoved:G.lastMoved, lastMovedByColor:G.lastMovedByColor },
     G.turn, settings.timerSeconds);
+  G.tournamentPairingId = pairingId;
+  G.tournamentGameId = g.id;
 }
 
 // Sonde l'appariement jusqu'à ce que la partie existe, puis la rejoint.
@@ -11228,6 +11233,14 @@ function playEndgameSfx(immediate){
   if(immediate) fire(); else setTimeout(fire, 1500);
 }
 function endGame(winner,reason){
+  // Garde anti-double-appel centralisée : un appel tardif (écho temps réel
+  // du même coup, second déclencheur redondant...) rejouerait toute la
+  // fonction — stats, gains XP, ET l'overlay de fin, qui réapparaîtrait
+  // alors instantanément une 2e fois SANS le délai habituel (le délai est
+  // calculé sur G.captureCount de la partie qui vient de se terminer, pas
+  // sur un état "déjà affiché"). Un seul point de garde, plutôt que de la
+  // dupliquer à chaque site d'appel distant.
+  if(G.gameOver) return;
   if(typeof stopFightMusic==='function') stopFightMusic();
   if(G.arenaMatchId){ handleArenaEndGame(winner, reason); return; }
   G.gameOver=true;G.winner=winner;stopTimer();
@@ -11433,6 +11446,8 @@ function endGame(winner,reason){
   // libre) : masqué, et remis visible sinon pour les parties suivantes.
   var rmBtn=document.getElementById('rematch-btn');
   if(rmBtn) rmBtn.style.display = isTournamentGame ? 'none' : '';
+  var menuBtn=document.getElementById('endgame-menu-btn');
+  if(menuBtn) menuBtn.innerHTML = isTournamentGame ? '&#8962; Retour au tournoi' : '&#8962; Menu';
   var overlayDelay=(G.captureCount>0)?4000:0;
   setTimeout(function(){
     document.getElementById('game-overlay').classList.add('active');
@@ -14536,7 +14551,7 @@ function startCoinFlipSequence(onDone) {
 function restoreGameOverlayTemplate(){
   var ov = document.getElementById('game-overlay');
   var box2 = ov && ov.querySelector('.modal-box');
-  if(box2) box2.innerHTML = '<button class="modal-close-btn" onclick="startReviewMode()" title="Analyser">&#128269;</button>\n      <div class="crown-icon" id="overlay-crown">&#128081;</div>\n      <div class="modal-title" id="overlay-title">VICTOIRE</div>\n      <div class="modal-reason" id="overlay-reason">&#8212;</div>\n      <div class="endgame-stats" id="endgame-stats"></div>\n      <div class="endgame-verdict" id="endgame-verdict"></div>\n      <div class="xp-gain-row" id="xp-gain-row" style="display:none">\n        <div class="xp-gain-label">XP</div>\n        <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xp-bar-anim" style="width:0%"></div></div>\n        <div class="xp-gain-val" id="xp-gain-val">+0</div>\n      </div>\n      <div id="xp-bonus-label" style="display:none;text-align:center;font-family:\'VT323\',monospace;font-size:13px;color:#ffd75e;margin:-4px 0 8px;text-shadow:0 0 6px rgba(255,215,94,.5)"></div>\n      <div id="elo-gain-row" style="display:none;font-family:\'VT323\',monospace;font-size:13px;color:var(--gold-bright);text-align:center;margin:2px 0 6px"></div>\n      <div id="rematch-fled-message" class="modal-reason" style="display:none;color:#ff8888"></div>\n      <div class="modal-btn-row" style="margin-top:10px">\n        <button class="btn btn-small" onclick="handleRematchClick()" id="rematch-btn"><span id="rematch-indicator" class="rematch-dot"></span>Revanche<span id="rematch-timer-label" class="rematch-timer-label"></span></button>\n        <button class="btn btn-small" onclick="handleAnalyseClick()" style="font-size:11px">&#128269; Analyse</button>\n        <button class="btn btn-small btn-danger" onclick="handleMenuClick()">&#8962; Menu</button>\n      </div>';
+  if(box2) box2.innerHTML = '<button class="modal-close-btn" onclick="startReviewMode()" title="Analyser">&#128269;</button>\n      <div class="crown-icon" id="overlay-crown">&#128081;</div>\n      <div class="modal-title" id="overlay-title">VICTOIRE</div>\n      <div class="modal-reason" id="overlay-reason">&#8212;</div>\n      <div class="endgame-stats" id="endgame-stats"></div>\n      <div class="endgame-verdict" id="endgame-verdict"></div>\n      <div class="xp-gain-row" id="xp-gain-row" style="display:none">\n        <div class="xp-gain-label">XP</div>\n        <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xp-bar-anim" style="width:0%"></div></div>\n        <div class="xp-gain-val" id="xp-gain-val">+0</div>\n      </div>\n      <div id="xp-bonus-label" style="display:none;text-align:center;font-family:\'VT323\',monospace;font-size:13px;color:#ffd75e;margin:-4px 0 8px;text-shadow:0 0 6px rgba(255,215,94,.5)"></div>\n      <div id="elo-gain-row" style="display:none;font-family:\'VT323\',monospace;font-size:13px;color:var(--gold-bright);text-align:center;margin:2px 0 6px"></div>\n      <div id="rematch-fled-message" class="modal-reason" style="display:none;color:#ff8888"></div>\n      <div class="modal-btn-row" style="margin-top:10px">\n        <button class="btn btn-small" onclick="handleRematchClick()" id="rematch-btn"><span id="rematch-indicator" class="rematch-dot"></span>Revanche<span id="rematch-timer-label" class="rematch-timer-label"></span></button>\n        <button class="btn btn-small" onclick="handleAnalyseClick()" style="font-size:11px">&#128269; Analyse</button>\n        <button class="btn btn-small btn-danger" onclick="handleMenuClick()" id="endgame-menu-btn">&#8962; Menu</button>\n      </div>';
 }
 
 // Même décompte que le mode local (voir runCombatCountdown, 5,4,3,2,1
