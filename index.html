@@ -3542,8 +3542,11 @@ function haptic(tp){
   // le plugin natif @capacitor/haptics lors du portage. Fonctionne déjà
   // normalement sur Android/Chrome.
   try{
-    const p={tap:[5],select:[10],move:[15],push:[30],capture:[40,20,40],victory:[50,30,50,30,100],defeat:[80]};
-    navigator.vibrate(p[tp]||[20]);
+    // Durées revues à la hausse : les valeurs historiques (5/10/15 ms)
+    // étaient sous le seuil perceptible de la plupart des moteurs de
+    // vibration Android — d'où l'impression que "ça n'a jamais marché".
+    const p={tap:[15],select:[20],move:[25],push:[40],capture:[45,25,45],victory:[50,30,50,30,100],defeat:[80]};
+    navigator.vibrate(p[tp]||[25]);
   }catch(e){ /* certains navigateurs mobiles lèvent une exception si vibrate() est appelé trop fréquemment ou hors contexte d'interaction utilisateur */ }
 }
 // Vibration très légère sur les boutons de l'interface (menus, réglages,
@@ -3625,6 +3628,9 @@ function toggleSetting(k){userPrefs[k]=!userPrefs[k];savePrefs();updateToggles()
       if(activeId2==='screen-game' && _fightMusicActive){ var el=document.getElementById('fight-music'); if(el){ el.volume=userPrefs.fightMusicVolume; attemptPlayMusic(el,'fight-music'); } }
     }
   }
+  // Vibration de test à l'activation : le joueur sait tout de suite si son
+  // appareil vibre réellement (impossible sur Safari iOS, voir haptic()).
+  if(k==='haptic' && userPrefs.haptic) haptic('capture');
 }
 // Volume des effets sonores (bruitages synthétisés + fichiers audio courts :
 // démarrage, décompte, fin de partie). 0 à 1, appliqué immédiatement.
@@ -17512,6 +17518,11 @@ function applyRemoteGameState(row){
   renderBoard();
   if(typeof animateLastMoveSlide==='function' && row.game_state.lastMoved && row.game_state.lastMoved.color !== myColorOnline){
     animateLastMoveSlide();
+    // Léger tic quand L'ADVERSAIRE joue (mon propre coup vibre déjà au
+    // relâchement du geste, voir onDragEnd). Fonctionne sur Chrome Android
+    // après la première interaction (activation "collante") ; ignoré
+    // silencieusement là où vibrer hors geste est interdit.
+    if(typeof haptic==='function') haptic('move');
   }
   document.getElementById('status-bar').textContent = (G.turn===myColorOnline) ? 'À vous de jouer !' : 'En attente de l\'adversaire…';
   // Animation de combat + jauge de tendance pour le coup distant qui
