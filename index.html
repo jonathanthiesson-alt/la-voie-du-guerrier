@@ -1792,6 +1792,12 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 <!-- HOME -->
 <div id="screen-home" class="screen active">
 
+  <!-- Bascule de thème d'interface (Classique ⇄ Sumi), accessible sans
+       entrer dans les menus — le libellé affiche le thème VERS lequel on
+       bascule. Aussi réglable dans Apparence et Affichage. -->
+  <button id="home-theme-btn" onclick="setUiTheme(document.body.classList.contains('ui-sumi')?'classic':'sumi')"
+    style="position:absolute;top:max(12px,env(safe-area-inset-top,0px));left:12px;z-index:5;background:rgba(0,0,0,.35);border:1px solid rgba(200,168,110,.4);border-radius:5px;color:var(--gold-bright);font-family:'VT323',monospace;font-size:13px;letter-spacing:1px;padding:7px 11px;cursor:pointer">☯ Thème</button>
+
   <!-- Son joué au clic sur COMMENCER -->
   <audio id="start-sfx" preload="auto" src="sounds/start.mp3"></audio>
   <!-- Décompte de début de combat (5,4,3,2,1 → Hajime à la 5e seconde) -->
