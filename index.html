@@ -25,11 +25,15 @@ body.bottomnav-visible #bottom-nav{display:flex}
 #bottom-nav button.active .bn-icon{transform:scale(1.18);text-shadow:0 0 8px rgba(212,160,23,.6)}
 /* Décale le contenu des écrans pour ne pas passer sous la barre */
 body.bottomnav-visible .screen{padding-bottom:70px}
-/* Généralisé à TOUS les panneaux d'écran (boutique, ligue, tournoi, guilde,
-   entraînement...) : leurs max-height inline (100vh - 70/80/90px), combinés
-   au padding-top de l'écran, faisaient descendre leur bord bas sous la
-   barre de navigation. Seuls amis/messaging/online-menu étaient traités. */
-body.bottomnav-visible .screen .panel{max-height:calc(100vh - 132px)!important}
+/* Généralisé aux panneaux À DÉFILEMENT INTERNE (boutique, ligue, tournoi,
+   guilde, entraînement... reconnaissables à leur overflow:hidden inline) :
+   leurs max-height inline (100vh - 70/80/90px), combinés au padding-top de
+   l'écran, faisaient descendre leur bord bas sous la barre de navigation.
+   ⚠ Ne PAS l'appliquer aux panneaux sans scroll interne (menu Jouer,
+   campagnes...) : plafonner leur hauteur fait déborder le contenu sous la
+   limite sans aucun moyen de l'atteindre — c'est l'écran entier qui
+   défile pour eux, déjà protégé par le padding-bottom:70px ci-dessus. */
+body.bottomnav-visible .screen .panel[style*="overflow:hidden"]{max-height:calc(100vh - 132px)!important}
 /* Les écrans à en-tête fixe + corps défilant (padding:0 sur .screen, donc
    non couverts par la règle padding-bottom:70px ci-dessus) gèrent leur
    propre scroll interne : il faut leur donner la même marge pour que leur
@@ -2082,6 +2086,15 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <span style="color:var(--gold);opacity:.6;font-size:16px">&#8250;</span>
     </div>
 
+    <!-- Thème d'interface : Classique ou Sumi (aussi dans Apparence) -->
+    <div style="padding:13px 0;border-bottom:1px solid rgba(200,169,110,.15)">
+      <span class="settings-label">&#9775; Th&#232;me d'interface</span>
+      <div style="display:flex;gap:7px;margin-top:9px">
+        <div class="opt-btn selected uitheme-btn" data-theme="classic" onclick="setUiTheme('classic')">Classique</div>
+        <div class="opt-btn uitheme-btn" data-theme="sumi" onclick="setUiTheme('sumi')">墨 Sumi</div>
+      </div>
+    </div>
+
     <!-- Couleur d'ambiance des ciels du thème Sumi -->
     <div id="sumi-sky-setting" style="padding:13px 0;border-bottom:1px solid rgba(200,169,110,.15)">
       <span class="settings-label">&#9968; Ciel Sumi
@@ -3177,8 +3190,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
     <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold);letter-spacing:3px;opacity:.7;margin-bottom:6px;padding:3px 0;border-bottom:1px solid rgba(200,168,110,.15)">⛩ TH&#200;ME D'INTERFACE</div>
     <div style="display:flex;gap:7px;margin-bottom:12px">
-      <div class="opt-btn selected" id="uitheme-classic" onclick="setUiTheme('classic')">Classique</div>
-      <div class="opt-btn" id="uitheme-sumi" onclick="setUiTheme('sumi')">墨 Sumi</div>
+      <div class="opt-btn selected uitheme-btn" data-theme="classic" onclick="setUiTheme('classic')">Classique</div>
+      <div class="opt-btn uitheme-btn" data-theme="sumi" onclick="setUiTheme('sumi')">墨 Sumi</div>
     </div>
 
     <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold);letter-spacing:3px;opacity:.7;margin-bottom:6px;padding:3px 0;border-bottom:1px solid rgba(200,168,110,.15)">⚔ PIONS</div>
@@ -8886,10 +8899,12 @@ function setUiTheme(v){
   updateUiThemeButtons();
 }
 function updateUiThemeButtons(){
+  // Le sélecteur existe à DEUX endroits (Apparence + Affichage) : mise à
+  // jour par classe pour que les deux restent synchronisés.
   var isSumi = document.body.classList.contains('ui-sumi');
-  var bc=document.getElementById('uitheme-classic'), bs=document.getElementById('uitheme-sumi');
-  if(bc) bc.classList.toggle('selected', !isSumi);
-  if(bs) bs.classList.toggle('selected', isSumi);
+  document.querySelectorAll('.uitheme-btn').forEach(function(b){
+    b.classList.toggle('selected', (b.dataset.theme==='sumi') === isSumi);
+  });
 }
 // Couleur d'ambiance des ciels Sumi. null = « Auto » : chaque écran garde
 // sa teinte propre (fallback var(--sumi-sky,#...) dans chaque SVG).
@@ -12985,7 +13000,7 @@ function closeSkinPicker(){
 // Refresh des previews intégré dans showScreen existant — patch direct
 var _pieceSkinShowHook = function(id){
   if(id==='piece-skins'){setTimeout(function(){refreshSkinPreviews();renderPiecePreview();updateLayoutPreviews();updateBoardPreview();updateWurmzSkinToggle();if(typeof updateUiThemeButtons==='function')updateUiThemeButtons();},80);}
-  if(id==='display'){try{setSumiSky(localStorage.getItem('vtl_sumi_sky')||null);}catch(e){}}
+  if(id==='display'){try{setSumiSky(localStorage.getItem('vtl_sumi_sky')||null);updateUiThemeButtons();}catch(e){}}
   if(id==='environnement'){setTimeout(initEnvironScreen,80);}
   if(id==='identite'){setTimeout(initIdentiteScreen,80);}
 };
