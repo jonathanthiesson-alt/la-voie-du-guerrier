@@ -130,6 +130,11 @@ body.ui-sumi .game-history-row:hover{background:rgba(216,66,42,.08)}
    (à la Tartakovsky) en tête de chaque grand écran. Invisible en thème
    Classique. Les marges négatives compensent le padding:18px du .panel
    pour que le ciel soit bord à bord. */
+/* Ciel Sumi de l'écran d'accueil : bandeau paysage plein cadre derrière
+   le logo, fondu dans le fond par ses silhouettes d'encre. */
+#sumi-home-sky{display:none}
+body.ui-sumi #sumi-home-sky{display:block;position:absolute;top:0;left:0;right:0;height:240px;z-index:0;pointer-events:none;overflow:hidden}
+body.ui-sumi #sumi-home-sky svg{width:100%;height:100%;display:block}
 .sumisky-swatch{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid rgba(200,168,110,.25)}
 .sumisky-swatch.selected,#sumisky-auto.selected{border-color:var(--gold-bright);box-shadow:0 0 6px rgba(212,160,23,.6)}
 .sumi-sky{display:none}
@@ -1818,6 +1823,18 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <path d="M9 3v3a2 2 0 0 1-2 2H4m13-5v3a2 2 0 0 0 2 2h3M3 16h3a2 2 0 0 1 2 2v3m13-5h-3a2 2 0 0 0-2 2v3" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   </div>
+
+  <!-- Ciel Sumi de l'accueil : grand Fuji au soleil rouge, dont les
+       silhouettes d'encre (#16121c) se fondent sans couture dans le fond
+       de l'écran — visible en thème Sumi uniquement. -->
+  <div id="sumi-home-sky" aria-hidden="true"><svg viewBox="0 0 390 240" preserveAspectRatio="xMidYMax slice">
+    <rect width="390" height="240" fill="var(--sumi-sky,#e8863a)"/>
+    <circle cx="292" cy="74" r="46" fill="#d8422a"/>
+    <polygon points="-30,240 176,108 214,108 420,240" fill="#16121c"/>
+    <polygon points="118,144 176,108 214,108 268,144 252,136 236,146 220,134 204,146 188,136 172,146 156,134 140,146" fill="#ede3cb"/>
+    <polygon points="0,240 70,196 150,224 240,190 330,222 390,200 390,240" fill="#211a28"/>
+    <polygon points="0,240 120,226 260,238 390,224 390,240" fill="#16121c"/>
+  </svg></div>
 
   <!-- Kanji watermark 道 -->
   <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-52%);font-family:'Noto Serif JP',serif;font-size:min(320px,55vmin);color:rgba(200,168,110,.07);user-select:none;pointer-events:none;line-height:1;font-weight:700;z-index:0">&#36947;</div>
@@ -18028,8 +18045,9 @@ window.addEventListener('beforeunload', () => {
 </div>
 
 <!-- ═══════════ TOURNOI ═══════════ -->
-<div id="screen-tournament" class="screen" style="justify-content:flex-start;padding-top:14px">
-  <div class="panel" style="max-width:330px;width:100%;max-height:calc(100vh - 90px);display:flex;flex-direction:column;overflow:hidden">
+<div id="screen-tournament" class="screen" style="justify-content:flex-start;padding-top:54px">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('menu')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
+  <div class="panel" style="max-width:330px;width:100%;max-height:calc(100vh - 110px);display:flex;flex-direction:column;overflow:hidden">
     <!-- Ciel Sumi : torii sous la lune (compétition) -->
     <div class="sumi-sky"><svg viewBox="0 0 300 92" preserveAspectRatio="none" aria-hidden="true">
       <rect width="300" height="92" fill="var(--sumi-sky,#b23a52)"/>
@@ -18058,8 +18076,9 @@ window.addEventListener('beforeunload', () => {
 </div>
 
 <!-- ═══════════ GUILDE ═══════════ -->
-<div id="screen-guild" class="screen" style="justify-content:flex-start;padding-top:14px">
-  <div class="panel" style="max-width:330px;width:100%;max-height:calc(100vh - 90px);display:flex;flex-direction:column;overflow:hidden">
+<div id="screen-guild" class="screen" style="justify-content:flex-start;padding-top:54px">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('menu')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
+  <div class="panel" style="max-width:330px;width:100%;max-height:calc(100vh - 110px);display:flex;flex-direction:column;overflow:hidden">
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px;flex-shrink:0">&#128737; GUILDE</div><button onclick="showModeInfo('guild')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 8px;flex-shrink:0">
       <div style="font-family:VT323,monospace;font-size:14px;color:var(--gold-bright)">🐉 <span class="ryu-display">0</span> <span style="font-size:10px;opacity:.6">Ryu</span></div>
