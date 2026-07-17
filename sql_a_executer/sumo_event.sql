@@ -88,17 +88,27 @@ end $function$;
 grant execute on function public.record_sumo_round_win(uuid, text) to authenticated;
 
 -- ── Classement SUMO ────────────────────────────────────────────────
--- score = fame × (1 + ratio de victoires) : à ratio 100 %, la Fame
--- affichée au classement est doublée. fame_balance reste la monnaie
--- brute (dépensable), le bonus n'existe qu'au classement.
+-- score = fame × (1 + ratio de victoires × montée en puissance).
+-- Le bonus de ratio ne se débloque PAS d'un coup : il monte à chaque
+-- partie jouée (min(parties,35)/35, soit ~2,9 % du plein bonus par
+-- partie) et n'atteint son plein effet qu'à 35 parties. Sans ça, un
+-- joueur à 1 victoire / 1 partie afficherait un ratio de 100 % et
+-- doublerait sa Fame au classement — le palier force un ratio
+-- statistiquement exploitable pour le classement général du tournoi.
+-- fame_balance reste la monnaie brute (dépensable), le bonus n'existe
+-- qu'au classement.
 drop view if exists public.sumo_leaderboard;
 create view public.sumo_leaderboard as
 select
   p.id, p.pseudo,
   p.fame_balance                               as fame,
   p.sumo_wins, p.sumo_losses,
+  (p.sumo_wins + p.sumo_losses)                as games,
   round(p.sumo_wins::numeric / (p.sumo_wins + p.sumo_losses), 3)                as ratio,
-  round(p.fame_balance * (1 + p.sumo_wins::numeric / (p.sumo_wins + p.sumo_losses))) as score
+  -- part du bonus débloquée (0 → 1), pleine à 35 parties
+  round(least(p.sumo_wins + p.sumo_losses, 35) / 35.0, 3)                       as bonus_unlock,
+  round(p.fame_balance * (1 + (p.sumo_wins::numeric / (p.sumo_wins + p.sumo_losses))
+                              * (least(p.sumo_wins + p.sumo_losses, 35) / 35.0))) as score
 from profiles p
 where (p.sumo_wins + p.sumo_losses) > 0
 order by score desc, fame desc;

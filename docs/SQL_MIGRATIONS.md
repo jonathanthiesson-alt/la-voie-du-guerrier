@@ -81,7 +81,7 @@ end $$;
 
 | # | Script | Contenu |
 |---|---|---|
-| 28 | `sumo_event.sql` | **Événement SUMO (jusqu'au 31 août)** : colonnes `mode`/`elo` sur les tables Arène (le SUMO réutilise toute l'infra Arène), monnaie Fame 心 (`profiles.fame_balance` + `sumo_wins`/`sumo_losses`), RPC `record_sumo_round_win` (montants en dur serveur : +2/+1, coupés après le 31 août), vue `sumo_leaderboard` (score = fame × (1 + ratio de victoires)). ⚠ Tant qu'il n'est pas passé, l'écran SUMO affiche « SUMO indisponible » — l'Arène classique, elle, ne nomme jamais les nouvelles colonnes (filtres côté client). |
+| 28 | `sumo_event.sql` | **Événement SUMO (jusqu'au 31 août)** : colonnes `mode`/`elo` sur les tables Arène (le SUMO réutilise toute l'infra Arène), monnaie Fame 心 (`profiles.fame_balance` + `sumo_wins`/`sumo_losses`), RPC `record_sumo_round_win` (montants en dur serveur : +2/+1, coupés après le 31 août), vue `sumo_leaderboard` (score = fame × (1 + ratio de victoires × min(parties,35)/35) — le bonus de ratio monte à chaque partie et n'est plein qu'à 35 parties, pour un ratio statistiquement exploitable). ⚠ Tant qu'il n'est pas passé, l'écran SUMO affiche « SUMO indisponible » — l'Arène classique, elle, ne nomme jamais les nouvelles colonnes (filtres côté client). |
 
 ---
 
