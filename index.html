@@ -187,6 +187,23 @@ body.ui-wurmz .home-title{background:linear-gradient(180deg,#e9d6a0,#c9a24b 55%,
 #wurmz-home-emblem{display:none}
 body.ui-wurmz #wurmz-home-emblem{display:block}
 body.ui-wurmz #home-logo{display:none}
+/* ══ MODE SUMO (événement) ══
+   Le plateau perd son cadre rectangulaire : le combat se joue dans un
+   dohyō circulaire. Les repères de cases (lettres/chiffres) restent où
+   ils sont, "dans le vide", pour lire les positions. */
+body.sumo-game .board-wrapper{border:none;outline:none;box-shadow:none;background:none;background-image:none;overflow:visible;position:relative}
+body.sumo-game .board-grid{position:relative;z-index:2}
+#sumo-ring{position:absolute;border-radius:50%;pointer-events:none;z-index:1;
+  /* tawara : le double anneau de paille tressée qui délimite le ring */
+  border:5px double #b9915a;
+  box-shadow:0 0 0 3px rgba(90,60,25,.55), 0 0 26px rgba(0,0,0,.5), inset 0 0 40px rgba(0,0,0,.45);
+  background:radial-gradient(circle at 50% 42%, rgba(216,196,150,.12), rgba(120,90,45,.07) 60%, rgba(0,0,0,.28) 100%)}
+.sumo-fallen{opacity:.42;filter:grayscale(.45);pointer-events:none}
+body.ui-sumi.sumo-game #sumo-ring{border-color:#d9a441;box-shadow:0 0 0 3px rgba(217,164,65,.35), inset 0 0 40px rgba(0,0,0,.5)}
+body.ui-wurmz.sumo-game #sumo-ring{border-color:#c9a24b;box-shadow:0 0 0 3px rgba(201,162,75,.4), 0 0 24px rgba(201,162,75,.18), inset 0 0 40px rgba(0,0,0,.55)}
+/* L'artwork Sumi de l'écran SUMO existe aussi en version Wurmz : mêmes
+   silhouettes, re-teintées or sur noir par un simple filtre. */
+body.ui-wurmz #screen-sumo .sumi-sky{display:block;filter:sepia(1) hue-rotate(8deg) saturate(1.6) brightness(.75)}
 
 /* Onglets du panneau d'administration */
 .adm-tab{flex:1;background:rgba(0,0,0,.25);border:1px solid rgba(200,168,110,.2);border-radius:5px;padding:6px 3px;font-family:VT323,monospace;font-size:11px;color:var(--parchment);cursor:pointer}
@@ -4160,11 +4177,11 @@ function applyRemoteSkin(slotKey, skinData, wurmzFlag){
 // mais on ne le traite jamais comme une source fiable pour dépenser :
 // toute dépense passe par les RPC atomiques spend_koku / unlock_skin_pack
 // qui vérifient le VRAI solde côté serveur.
-var shopState = { koku: 0, ownedPacks: [], shiso: 0, tamashii: 0, mon: 0, ryu: 0, hanafuda: 0, shiitake: 0 };
+var shopState = { koku: 0, ownedPacks: [], shiso: 0, tamashii: 0, mon: 0, ryu: 0, hanafuda: 0, shiitake: 0, fame: 0 };
 function loadShopStateCache(){
   try{
     var s = localStorage.getItem('vtl_shop_cache');
-    if(s){ var parsed = JSON.parse(s); shopState.koku = parsed.koku||0; shopState.ownedPacks = parsed.ownedPacks||[]; shopState.shiso=parsed.shiso||0; shopState.tamashii=parsed.tamashii||0; shopState.mon=parsed.mon||0; shopState.ryu=parsed.ryu||0; shopState.hanafuda=parsed.hanafuda||0; shopState.shiitake=parsed.shiitake||0; }
+    if(s){ var parsed = JSON.parse(s); shopState.koku = parsed.koku||0; shopState.ownedPacks = parsed.ownedPacks||[]; shopState.shiso=parsed.shiso||0; shopState.tamashii=parsed.tamashii||0; shopState.mon=parsed.mon||0; shopState.ryu=parsed.ryu||0; shopState.hanafuda=parsed.hanafuda||0; shopState.shiitake=parsed.shiitake||0; shopState.fame=parsed.fame||0; }
   }catch(e){}
 }
 function saveShopStateCache(){
@@ -4180,6 +4197,7 @@ function applyShopStateFromProfile(profile){
   shopState.ryu        = (profile.ryu_balance!=null)       ? profile.ryu_balance       : shopState.ryu;
   shopState.hanafuda   = (profile.hanafuda_balance!=null)  ? profile.hanafuda_balance  : shopState.hanafuda;
   shopState.shiitake   = (profile.shiitake_balance!=null)  ? profile.shiitake_balance  : shopState.shiitake;
+  shopState.fame       = (profile.fame_balance!=null)      ? profile.fame_balance      : shopState.fame;
   if(profile.claimed_milestones) _claimedMilestones = profile.claimed_milestones;
   saveShopStateCache();
   refreshKokuDisplays();
@@ -4203,7 +4221,9 @@ var MODE_CURRENCIES = [
   { key:'mon',      icon:'🏮', name:'Mon',      cls:'mon-display'      },
   { key:'ryu',      icon:'🐉', name:'Ryu',      cls:'ryu-display'      },
   { key:'hanafuda', icon:'🌸', name:'Hanafuda', cls:'hanafuda-display' },
-  { key:'shiitake', icon:'🍄', name:'Shiitake', cls:'shiitake-display' }
+  { key:'shiitake', icon:'🍄', name:'Shiitake', cls:'shiitake-display' },
+  // Fame 心 (kokoro, le cœur) — monnaie de l'événement SUMO, été 2026.
+  { key:'fame',     icon:'💗', name:'Fame',     cls:'fame-display'     }
 ];
 function refreshAllCurrencyDisplays(){
   MODE_CURRENCIES.forEach(function(c){
@@ -4330,6 +4350,18 @@ var MODE_INFO = {
       ['Format', 'Match en 3 manches (BO3). Le premier à 2 manches gagnées remporte le match.'],
       ['Récompenses', 'Elles dépendent de la cadence : 3s → 4 ⚔ · 5s → 3 ⚔ · 10s → 2 ⚔. Plus c\'est rapide, plus ça rapporte.'],
       ['À savoir', 'Les manches s\'enchaînent automatiquement. Ne quitte pas entre deux manches, tu perdrais le match.']
+    ]
+  },
+  sumo: {
+    titre: '🌗 SUMO',
+    monnaie: '💗 Fame (心)',
+    sections: [
+      ['But', 'Événement d\'été, jusqu\'au 31 août. Le plateau perd ses murs : le combat se joue dans un dohyō circulaire, et les poussées peuvent faire TOMBER les pions hors du ring.'],
+      ['Règle du ring', 'Un pion éjecté ne revient JAMAIS en jeu (il reste visible en transparence au bord du cercle). Éjecter l\'Épéiste adverse hors du ring fait gagner la manche — exactement comme une capture.'],
+      ['Format', 'Match en 3 manches (BO3), comme l\'Arène : le premier à 2 manches gagnées l\'emporte.'],
+      ['Appariement', 'Le matchmaking te met SYSTÉMATIQUEMENT face au joueur au niveau (ELO) le plus proche du tien.'],
+      ['Fame', 'Victoire de match : +2 💗 · Défaite : +1 💗. Au classement, un bonus en pourcentage s\'ajoute selon ton RATIO de victoires : plus tu gagnes souvent, plus ta légende enfle.'],
+      ['À savoir', 'L\'anti-retour et toutes les autres règles restent identiques. Seuls les murs ont disparu — méfie-toi de ton dos.']
     ]
   },
   tournament: {
@@ -7690,7 +7722,7 @@ var NAV_TAB_MAP = {
   play:'bn-play', menu:'bn-play', 'online-hub':'bn-play', matchmaking:'bn-play', arena:'bn-play',
   local:'bn-play', tournament:'bn-play', guild:'bn-play', league:'bn-play', leaderboard:'bn-play',
   training:'bn-play', opponents:'bn-play',
-  'online-menu':'bn-play', clock:'bn-play', rules:'bn-play', devlog:'bn-play', 'events-mode':'bn-play',
+  'online-menu':'bn-play', clock:'bn-play', rules:'bn-play', devlog:'bn-play', 'events-mode':'bn-play', sumo:'bn-play',
   campaigns:'bn-campaign', 'campaign-dojo':'bn-campaign', citations:'bn-campaign',
   shop:'bn-shop', events:'bn-shop',
   amis:'bn-social', messaging:'bn-social', 'public-profile':'bn-social',
@@ -8564,7 +8596,7 @@ function openPlayerAdmin(pid){
   if(!p) return;
   _adminSelectedPlayer = p;
   var body = document.getElementById('admin-body');
-  var CURS = [{k:'koku',i:'石'},{k:'shiso',i:'🌿'},{k:'tamashii',i:'⚔'},{k:'mon',i:'🏮'},{k:'ryu',i:'🐉'},{k:'hanafuda',i:'🌸'},{k:'shiitake',i:'🍄'}];
+  var CURS = [{k:'koku',i:'石'},{k:'shiso',i:'🌿'},{k:'tamashii',i:'⚔'},{k:'mon',i:'🏮'},{k:'ryu',i:'🐉'},{k:'hanafuda',i:'🌸'},{k:'shiitake',i:'🍄'},{k:'fame',i:'💗'}];
   var html = '<button class="adm-btn" style="margin-bottom:8px" onclick="renderAdminPlayers()">↩ Liste</button>';
   html += '<div style="font-family:\'Cinzel\',serif;font-size:15px;color:var(--gold-bright);text-align:center;margin-bottom:2px">'+escapeHtml(p.pseudo||'?')+'</div>';
   html += '<div style="font-family:VT323,monospace;font-size:10px;opacity:.5;text-align:center;margin-bottom:10px">'
@@ -9035,6 +9067,7 @@ function showScreen(id){
   if(id==='game'){ if(typeof stopMenuMusic==='function') stopMenuMusic(); }
   if(id==='home'){ if(typeof stopMenuMusic==='function') stopMenuMusic(); if(typeof stopFightMusic==='function') stopFightMusic(); }
   if(id==='arena'){ refreshKokuDisplays(); refreshArenaKokuProgress(); refreshAllCurrencyDisplays(); }
+  if(id==='sumo'){ refreshAllCurrencyDisplays(); }
   if(id==='online-hub'){ refreshKokuDisplays(); refreshAllCurrencyDisplays(); }
   if(id==='tournament'){ refreshTournamentScreen(); }
   if(id==='guild'){      _guildView='auto'; refreshGuildScreen(); }
@@ -9433,7 +9466,7 @@ async function pollArenaMatchmaking(timerSeconds){
     const { data: myMatches } = await supa.from('arena_matches')
       .select('*').or('white_player_id.eq.'+currentUser.id+',black_player_id.eq.'+currentUser.id)
       .eq('status','active').order('created_at',{ascending:false}).limit(1);
-    if(myMatches && myMatches.length){
+    if(myMatches && myMatches.length && (myMatches[0].mode||'arena')==='arena'){
       var m = myMatches[0];
       var ageMs = Date.now() - new Date(m.created_at).getTime();
       if(ageMs < 20000){
@@ -9445,8 +9478,12 @@ async function pollArenaMatchmaking(timerSeconds){
     const { data: candidates } = await supa.from('arena_matchmaking_queue')
       .select('*').eq('timer_seconds', timerSeconds).neq('player_id', currentUser.id)
       .order('joined_at', {ascending:true}).limit(5);
-    if(candidates && candidates.length){
-      var opp = candidates[0];
+    // Filtre SUMO côté client (pas de .eq('mode',...) : la colonne `mode`
+    // n'existe qu'après le script SQL sumo — la nommer dans la requête
+    // casserait l'Arène classique tant qu'il n'est pas passé).
+    var _arenaCands = (candidates||[]).filter(function(c){ return (c.mode||'arena')==='arena'; });
+    if(_arenaCands.length){
+      var opp = _arenaCands[0];
       if(currentUser.id < opp.player_id){
         await supa.from('arena_matchmaking_queue').delete().in('player_id',[currentUser.id, opp.player_id]);
         var iAmWhite = Math.random()<0.5;
@@ -9466,6 +9503,103 @@ function stopArenaMatchmakingSearch(resetUI){
     var cancelBtn = document.getElementById('arena-mm-cancel-btn'); if(cancelBtn) cancelBtn.style.display='none';
     var statusEl = document.getElementById('arena-mm-status'); if(statusEl) statusEl.textContent='';
   }
+}
+
+// ══════════════════════════════════════════════════════
+// SUMO — événement estival (jusqu'au 31 août)
+// ══════════════════════════════════════════════════════
+// Réutilise TOUTE l'infrastructure Arène (mêmes tables, mêmes manches BO3,
+// même enchaînement "Prêt"/15s) avec mode='sumo' — seule la physique du
+// plateau change (poussées éjectantes, voir G.sumoMode) et la récompense
+// (Fame 心 au lieu de Tamashii). Différence de matchmaking voulue :
+// l'appariement se fait TOUJOURS au niveau (ELO) le plus proche, pas au
+// premier arrivé.
+let _sumoPollInterval = null;
+let _sumoSearching = false;
+
+async function startSumoMatchmakingSearch(timerSeconds){
+  if(!currentUser){ showToast('Connectez-vous pour participer au SUMO.', true); return; }
+  stopSumoMatchmakingSearch(false);
+  _sumoSearching = true;
+  document.querySelectorAll('.sumo-timer-btn').forEach(function(b){ b.classList.toggle('selected', parseInt(b.textContent,10)===timerSeconds); b.style.pointerEvents='none'; b.style.opacity='.5'; });
+  var cancelBtn = document.getElementById('sumo-mm-cancel-btn'); if(cancelBtn) cancelBtn.style.display='block';
+  var statusEl = document.getElementById('sumo-mm-status');
+  if(statusEl) statusEl.textContent = t('mm_searching');
+  // Mon ELO de la cadence choisie : c'est la clé de l'appariement au plus
+  // proche niveau. select('*') (règle CLAUDE.md — chemin critique).
+  var myElo = 1200;
+  try{
+    const { data: prof } = await supa.from('profiles').select('*').eq('id', currentUser.id).single();
+    if(prof && prof['elo_'+timerSeconds+'s']!=null) myElo = prof['elo_'+timerSeconds+'s'];
+  }catch(e){}
+  try{ await supa.from('arena_matchmaking_queue').delete().eq('player_id', currentUser.id); }catch(e){}
+  const { error } = await supa.from('arena_matchmaking_queue').insert({
+    player_id: currentUser.id, pseudo: currentUser.pseudo, timer_seconds: timerSeconds,
+    mode: 'sumo', elo: myElo
+  });
+  if(error){
+    if(statusEl) statusEl.textContent = '';
+    showToast('SUMO indisponible (script SQL sumo_event exécuté ?).', true);
+    stopSumoMatchmakingSearch(true);
+    return;
+  }
+  pollSumoMatchmaking(timerSeconds, myElo);
+  _sumoPollInterval = setInterval(function(){ pollSumoMatchmaking(timerSeconds, myElo); }, 2500);
+}
+
+async function pollSumoMatchmaking(timerSeconds, myElo){
+  if(!_sumoSearching || !currentUser) return;
+  try{
+    // Un adversaire a peut-être déjà créé le match SUMO pour nous.
+    const { data: myMatches } = await supa.from('arena_matches')
+      .select('*').or('white_player_id.eq.'+currentUser.id+',black_player_id.eq.'+currentUser.id)
+      .eq('status','active').order('created_at',{ascending:false}).limit(1);
+    if(myMatches && myMatches.length && myMatches[0].mode==='sumo'){
+      var m = myMatches[0];
+      var ageMs = Date.now() - new Date(m.created_at).getTime();
+      if(ageMs < 20000){
+        stopSumoMatchmakingSearch(false);
+        await enterArenaMatch(m);
+        return;
+      }
+    }
+    const { data: candidates } = await supa.from('arena_matchmaking_queue')
+      .select('*').eq('timer_seconds', timerSeconds).neq('player_id', currentUser.id)
+      .order('joined_at', {ascending:true}).limit(20);
+    // SYSTÉMATIQUEMENT l'adversaire au niveau le plus proche — pas le plus
+    // ancien dans la file : on trie les candidats sumo par écart d'ELO.
+    var sumoCands = (candidates||[]).filter(function(c){ return c.mode==='sumo'; });
+    if(sumoCands.length){
+      sumoCands.sort(function(a,b){ return Math.abs((a.elo||1200)-myElo) - Math.abs((b.elo||1200)-myElo); });
+      var opp = sumoCands[0];
+      if(currentUser.id < opp.player_id){
+        await supa.from('arena_matchmaking_queue').delete().in('player_id',[currentUser.id, opp.player_id]);
+        var iAmWhite = Math.random()<0.5;
+        stopSumoMatchmakingSearch(false);
+        await createSumoMatch(iAmWhite?currentUser.id:opp.player_id, iAmWhite?opp.player_id:currentUser.id, timerSeconds);
+      }
+    }
+  }catch(e){}
+}
+
+function stopSumoMatchmakingSearch(resetUI){
+  _sumoSearching = false;
+  if(_sumoPollInterval){ clearInterval(_sumoPollInterval); _sumoPollInterval=null; }
+  if(currentUser){ try{ supa.from('arena_matchmaking_queue').delete().eq('player_id', currentUser.id).then(function(){},function(){}); }catch(e){} }
+  if(resetUI!==false){
+    document.querySelectorAll('.sumo-timer-btn').forEach(function(b){ b.classList.remove('selected'); b.style.pointerEvents=''; b.style.opacity=''; });
+    var cancelBtn = document.getElementById('sumo-mm-cancel-btn'); if(cancelBtn) cancelBtn.style.display='none';
+    var statusEl = document.getElementById('sumo-mm-status'); if(statusEl) statusEl.textContent='';
+  }
+}
+
+async function createSumoMatch(whitePlayerId, blackPlayerId, timerSeconds){
+  const { data: match, error } = await supa.from('arena_matches').insert({
+    white_player_id: whitePlayerId, black_player_id: blackPlayerId,
+    timer_seconds: timerSeconds, mode: 'sumo'
+  }).select().single();
+  if(error){ showToast('Impossible de créer le match SUMO : '+error.message, true); return; }
+  await createArenaRound(match, 1);
 }
 
 // Crée le match d'Arène (BO3) ET sa première manche (online_games).
@@ -9495,9 +9629,13 @@ async function createArenaRound(match, roundNumber){
   settings._buildingOnlineGame = true;
   pieceInputLocked = true;
   initGame();
+  // SUMO : le drapeau vit dans game_state (pas de colonne dédiée) — les
+  // deux clients activent la physique du ring en lisant la manche.
+  var _sumoRound = (match.mode === 'sumo');
   const { data, error } = await supa.from('online_games').insert({
     white_player_id: whiteId, black_player_id: blackId,
-    game_state: { board: G.board, stacks: G.stacks, lastMoved: G.lastMoved, lastMovedByColor: G.lastMovedByColor },
+    game_state: Object.assign({ board: G.board, stacks: G.stacks, lastMoved: G.lastMoved, lastMovedByColor: G.lastMovedByColor },
+      _sumoRound ? { sumo: true, sumoFallen: [] } : {}),
     turn: G.turn, timer_seconds: match.timer_seconds,
     // online_games.ranked vaut `true` par DÉFAUT en base : sans le reporter
     // depuis le match, les manches 2 et 3 d'une Arène amicale repartaient
@@ -9584,9 +9722,12 @@ async function resolveArenaRoundEnd(winnerColor){
   var result;
   if(iWon){
     try{
-      const { data, error } = await supa.rpc('record_arena_round_win', {
-        p_arena_match_id: match.id, p_winner_color: winnerColor, p_timer_seconds: match.timer_seconds
-      });
+      // SUMO : RPC d\u00e9di\u00e9 \u2014 pas de Koku/Tamashii, mais de la Fame \u5fc3 vers\u00e9e
+      // aux DEUX joueurs \u00e0 la fin du match (2 au vainqueur, 1 au vaincu).
+      var _rpcName = (match.mode==='sumo') ? 'record_sumo_round_win' : 'record_arena_round_win';
+      const { data, error } = await supa.rpc(_rpcName, (match.mode==='sumo')
+        ? { p_arena_match_id: match.id, p_winner_color: winnerColor }
+        : { p_arena_match_id: match.id, p_winner_color: winnerColor, p_timer_seconds: match.timer_seconds });
       if(error) throw error;
       result = data;
     }catch(e){
@@ -9605,6 +9746,8 @@ async function resolveArenaRoundEnd(winnerColor){
     });
     G.arenaMatch = match;
     if(result.tokens_awarded){ shopState.tamashii = (shopState.tamashii||0) + result.tokens_awarded; saveShopStateCache(); refreshAllCurrencyDisplays(); refreshArenaKokuProgress(); }
+    // SUMO : la Fame n'est versée qu'au match décidé (fame_awarded = 2).
+    if(result.fame_awarded){ shopState.fame = (shopState.fame||0) + result.fame_awarded; saveShopStateCache(); refreshAllCurrencyDisplays(); }
   } else {
     // J'ai perdu la manche : je n'appelle PAS le RPC (le gagnant s'en
     // charge, une seule fois) — je poll jusqu'à ce que la base reflète
@@ -9627,6 +9770,11 @@ async function resolveArenaRoundEnd(winnerColor){
       }catch(e){}
     }
     if(!result) result = { wins_white:match.wins_white, wins_black:match.wins_black, match_done:false, round_number:match.round_number };
+    // SUMO : le RPC du gagnant a déjà crédité ma Fame de consolation (+1)
+    // côté serveur — on ne fait que refléter localement, sans écrire en base.
+    if(match.mode==='sumo' && result.match_done){
+      shopState.fame = (shopState.fame||0) + 1; saveShopStateCache(); refreshAllCurrencyDisplays();
+    }
   }
   showArenaRoundEndOverlay(result, match);
 }
@@ -9643,13 +9791,18 @@ function showArenaRoundEndOverlay(result, match){
     // Analyse (sélecteur de manches) disponible et SANS bouton Revanche —
     // il faut repasser par le matchmaking de l'Arène pour un nouveau match.
     var iWonMatch = (result.winner_id === currentUser.id);
+    // SUMO : m\u00eame \u00e9cran de fin, mais habillage Fame et retour vers l'\u00e9cran SUMO.
+    var _isSumo = (match && match.mode==='sumo');
     box.innerHTML =
       '<div class="crown-icon">'+(iWonMatch?'&#127942;':'&#128128;')+'</div>'
-      +'<div class="modal-title">'+(iWonMatch?'VICTOIRE D\u2019AR\u00c8NE !':'D\u00c9FAITE D\u2019AR\u00c8NE')+'</div>'
-      +'<div class="modal-reason">Match termin\u00e9 '+myWins+' &#8211; '+oppWins+'<br>&#9876; '+(shopState.tamashii||0)+' Tamashii au total</div>'
+      +'<div class="modal-title">'+(_isSumo?(iWonMatch?'VICTOIRE SUMO !':'D\u00c9FAITE SUMO'):(iWonMatch?'VICTOIRE D\u2019AR\u00c8NE !':'D\u00c9FAITE D\u2019AR\u00c8NE'))+'</div>'
+      +'<div class="modal-reason">Match termin\u00e9 '+myWins+' &#8211; '+oppWins+'<br>'
+      +(_isSumo?('&#128151; '+(shopState.fame||0)+' Fame au total'):('&#9876; '+(shopState.tamashii||0)+' Tamashii au total'))+'</div>'
       +'<div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">'
       +'<button class="btn" onclick="startReviewMode()">&#128269; Analyse</button>'
-      +'<button class="btn" onclick="exitArenaMatch();showScreen(\'arena\')">Retour \u00e0 l\u2019Ar\u00e8ne</button>'
+      +(_isSumo
+        ?'<button class="btn" onclick="exitArenaMatch();showScreen(\'sumo\')">Retour au SUMO</button>'
+        :'<button class="btn" onclick="exitArenaMatch();showScreen(\'arena\')">Retour \u00e0 l\u2019Ar\u00e8ne</button>')
       +'<button class="btn" style="opacity:.7" onclick="exitArenaMatch();handleMenuClick()">'+ '&#8962; Menu' +'</button>'
       +'</div>';
     ov.classList.add('active');
@@ -12454,6 +12607,11 @@ function renderBoard(overrideLM,isRev){
       rle.appendChild(l);
     }
   }
+  // SUMO : ring circulaire (dohyō) + pions tombés en transparence — le
+  // cadre rectangulaire du plateau est masqué par la classe body.sumo-game.
+  document.body.classList.toggle('sumo-game', !!G.sumoMode);
+  if(G.sumoMode){ renderSumoRing(cs,rows,cols); }
+  else { const _sr=document.getElementById('sumo-ring'); if(_sr) _sr.remove(); }
   // Drag support (attach once)
   if(!isRev&&!grid._dragSetup){grid._dragSetup=true;setupBoardDrag(grid,cs);}
   // Draw best-move arrow ONLY during active review mode
@@ -12483,6 +12641,45 @@ function mkPiece(piece,cs,isStackBottom,topType,col){
   else el.classList.add('pion-sword');
   el.innerHTML = makePieceSVG(_skin, sz, piece);
   return el;
+}
+
+// ══════════════════════════════════════════════════════
+// SUMO — ring circulaire (dohyō) + pions éjectés
+// ══════════════════════════════════════════════════════
+// Le ring est un div absolu inséré DERRIÈRE la grille dans .board-wrapper :
+// il ne coûte rien à la mise en page. Les pions tombés sont posés en
+// transparence SUR le bord du cercle, dans l'axe exact de leur chute
+// (case de sortie + direction de la poussée), côté où ils sont tombés.
+function renderSumoRing(cs,rows,cols){
+  var wrap=document.querySelector('.board-wrapper');
+  var grid=document.getElementById('board-grid');
+  if(!wrap||!grid) return;
+  var step=cs+3, bw=cols*step-3, bh=rows*step-3;
+  var ring=document.getElementById('sumo-ring');
+  if(!ring){ ring=document.createElement('div'); ring.id='sumo-ring'; wrap.insertBefore(ring,grid); }
+  var d=Math.round(Math.max(bw,bh)*1.5);
+  ring.style.width=ring.style.height=d+'px';
+  ring.style.left=Math.round(grid.offsetLeft+bw/2-d/2)+'px';
+  ring.style.top=Math.round(grid.offsetTop+bh/2-d/2)+'px';
+  ring.innerHTML='';
+  // Même miroir vertical que l'affichage des lignes (affToLog est sa
+  // propre inverse) : une poussée "vers le haut logique" doit tomber du
+  // côté visuellement cohérent quel que soit le joueur affiché en bas.
+  var flip=(affToLog(0)!==0);
+  (G.sumoFallen||[]).forEach(function(f){
+    var vr=affToLog(f.r), vdr=flip?-f.dr:f.dr;
+    // Vecteur du centre du plateau vers le point de chute (case de sortie
+    // virtuelle), normalisé puis projeté sur le bord intérieur du cercle.
+    var px=f.c*step+cs/2-bw/2+f.dc*step;
+    var py=vr*step+cs/2-bh/2+vdr*step;
+    var len=Math.sqrt(px*px+py*py)||1;
+    var R=d/2-cs*0.55;
+    var el=mkPiece({color:f.color,type:f.type},Math.round(cs*0.78),false,null,f.c);
+    el.classList.add('sumo-fallen');
+    el.style.left=Math.round(d/2+px/len*R)+'px';
+    el.style.top=Math.round(d/2+py/len*R)+'px';
+    ring.appendChild(el);
+  });
 }
 
 
@@ -12719,6 +12916,10 @@ function legalMoves(color,board,stacks,sel,lastMoved,lastPush){
             }else if(!board[pr][pc]){
               moves.push({r:tr,c:tc,isCapture:false,isPush:true});
             }
+          }else if(G.sumoMode&&!isValid(pr,pc)){
+            // SUMO : la case derrière est hors du ring → l'allié est éjecté
+            // (oui, on peut sacrifier son propre pion — comme au sumo).
+            moves.push({r:tr,c:tc,isCapture:false,isPush:true,pushOut:true});
           }
         }else if(tgt.color!==color&&tgt.type==='epeiste'&&isV2mode()){
           // V2 : Épeiste peut POUSSER l'épeiste adverse
@@ -12733,6 +12934,10 @@ function legalMoves(color,board,stacks,sel,lastMoved,lastPush){
               // L'épéiste adverse est poussé sur le pion épée allié → victoire
               moves.push({r:tr,c:tc,isCapture:false,isPush:true,pushesEpeiste:true,pushCaptures:true,pushCaptureOnAlly:true});
             }
+          }else if(!antiPush&&G.sumoMode&&!isValid(pr,pc)){
+            // SUMO : l'épéiste adverse est éjecté du ring → victoire immédiate
+            // (équivalent de la capture par le pion épée en règles normales).
+            moves.push({r:tr,c:tc,isCapture:false,isPush:true,pushesEpeiste:true,pushCaptures:true,pushOut:true});
           }
         }
         // Épeiste ne capture pas, ne pousse pas les pions adverses normaux
@@ -12751,7 +12956,14 @@ function legalMoves(color,board,stacks,sel,lastMoved,lastPush){
           if(isV2mode()&&tgt.type==='shield'){}
           else{
             const pr=tr+d.dr,pc=tc+d.dc;
-            if(!isValid(pr,pc))continue;
+            if(!isValid(pr,pc)){
+              // SUMO : la case derrière est hors du ring → le pion poussé est
+              // éjecté (même garde anti-contre-poussée que le cas normal).
+              if(G.sumoMode&&!(lastPush&&lastPush.pushedToR===r&&lastPush.pushedToC===c&&lastPush.pusherToR===tr&&lastPush.pusherToC===tc&&d.dr===-lastPush.dr&&d.dc===-lastPush.dc)){
+                moves.push({r:tr,c:tc,isCapture:false,isPush:true,pushOut:true});
+              }
+              continue;
+            }
             if(lastPush&&lastPush.pushedToR===r&&lastPush.pushedToC===c&&lastPush.pusherToR===tr&&lastPush.pusherToC===tc&&d.dr===-lastPush.dr&&d.dc===-lastPush.dc)continue;
             if(!stacks[pr][pc]){
               const pushedEnemy=tgt.color==='white'?'black':'white';
@@ -12800,6 +13012,9 @@ function legalMoves(color,board,stacks,sel,lastMoved,lastPush){
               }else if(board[pr][pc].type==='sword'&&board[pr][pc].color===color){
                 moves.push({r:tr,c:tc,isCapture:false,isPush:true,pushesEpeiste:true,pushCaptures:true,pushCaptureOnAlly:true});
               }
+            }else if(G.sumoMode&&!isValid(pr,pc)){
+              // SUMO : le Bouclier éjecte l'épéiste adverse du ring → victoire
+              moves.push({r:tr,c:tc,isCapture:false,isPush:true,pushesEpeiste:true,pushCaptures:true,pushOut:true});
             }
           }else if(tgt.type==='sword'){
             // Pousse pion épée (allié ou adverse)
@@ -12810,6 +13025,9 @@ function legalMoves(color,board,stacks,sel,lastMoved,lastPush){
                 // Bouclier pousse épée ALLIÉE sur l'épéiste adverse → victoire !
                 moves.push({r:tr,c:tc,isCapture:false,isPush:true,pushCaptures:true});
               }
+            }else if(G.sumoMode&&!isValid(pr,pc)){
+              // SUMO : le Bouclier éjecte une épée (alliée ou adverse) du ring
+              moves.push({r:tr,c:tc,isCapture:false,isPush:true,pushOut:true});
             }
           }
           // tgt = épeiste allié ou shield → interdit en V2
@@ -12835,6 +13053,31 @@ function execMove(fr,fc,tr,tc,mv){
     const pushed=b[tr][tc];
     // Safety: épéiste cannot be pushed sauf en V2 (pushesEpeiste flag)
     if(pushed&&pushed.type==='epeiste'&&!mv.pushesEpeiste)return false;
+    if(mv.pushOut){
+      // SUMO : (pr,pc) est HORS plateau — b[pr] n'existe pas, on ne doit
+      // surtout pas y écrire. Le pion poussé sort du ring : retiré du jeu,
+      // mémorisé dans sumoFallen pour l'afficher en transparence au bord du
+      // cercle, là où il est tombé. Il ne revient jamais en jeu.
+      G.lastPush={pusherFromR:fr,pusherFromC:fc,pusherToR:tr,pusherToC:tc,pushedFromR:tr,pushedFromC:tc,pushedToR:pr,pushedToC:pc,dr:dr,dc:dc};
+      // En simulation (IA/analyse), ne pas polluer la liste réelle des tombés.
+      if(!G.simulating){
+        G.sumoFallen=G.sumoFallen||[];
+        G.sumoFallen.push({color:pushed.color,type:pushed.type,r:tr,c:tc,dr:dr,dc:dc});
+      }
+      b[tr][tc]=p;b[fr][fc]=uf;s[fr][fc]=null;
+      G.lastMoved={color:p.color,type:p.type,fromR:fr,fromC:fc,toR:tr,toC:tc};
+      if(G.lastMovedByColor)G.lastMovedByColor[p.color]={type:p.type,fromR:fr,fromC:fc,toR:tr,toC:tc};
+      G.pushCount=(G.pushCount||0)+1;
+      if(!G.simulating){PP.totalPushes++;playSound('push');haptic('push');}
+      if(mv.pushCaptures){
+        // Épéiste adverse éjecté → victoire (même chemin que la push-capture)
+        G.captureCount=(G.captureCount||0)+1;
+        G._pushCapWin=true;
+        if(!G.simulating){PP.totalCaptures++;playSound('capture');haptic('capture');}
+        return true;
+      }
+      return false;
+    }
     G.lastPush={pusherFromR:fr,pusherFromC:fc,pusherToR:tr,pusherToC:tc,pushedFromR:tr,pushedFromC:tc,pushedToR:pr,pushedToC:pc,dr:dr,dc:dc};
     // Sauvegarder le pion qui est déjà sur la case de destination de la poussée (pr,pc)
     const allyOnDest=b[pr][pc]; // peut être une épée alliée (cas pushCaptureOnAlly)
@@ -17529,7 +17772,8 @@ async function spectateGame(gameId){
     messageLog: [],
     // onlineGameId volontairement à null : empêche tout code de jeu/synchro
     // (timer de tour, envoi de coup...) de croire qu'on est l'un des deux joueurs.
-    onlineGameId: null, onlineMyColor: null
+    onlineGameId: null, onlineMyColor: null,
+    sumoMode: !!game.game_state.sumo, sumoFallen: game.game_state.sumoFallen || []
   };
 
   var nb=document.getElementById('name-bottom'), nt=document.getElementById('name-top');
@@ -17588,6 +17832,8 @@ function applySpectatorState(row, whitePseudo, blackPseudo){
   G.lastMoved = row.game_state.lastMoved;
   G.lastMovedByColor = row.game_state.lastMovedByColor;
   G.lastPush = row.game_state.lastPush || null;
+  // SUMO : synchroniser aussi les pions éjectés (receveur ET spectateur).
+  if(row.game_state.sumo){ G.sumoMode = true; G.sumoFallen = row.game_state.sumoFallen || G.sumoFallen || []; }
   G.turn = row.turn;
   renderBoard();
   if(typeof animateLastMoveSlide==='function') animateLastMoveSlide();
@@ -18087,7 +18333,12 @@ async function enterOnlineGame(gameId, whitePlayerId, gameState, turn, timerSeco
     pushCount: 0, captureCount: 0, startTime: Date.now(), _gameToken: Date.now(),
     messageLog: [],
     onlineGameId: gameId, onlineMyColor: myColorOnline, _matchStarted: false,
-    ranked: (ranked!==false)
+    ranked: (ranked!==false),
+    // SUMO : porté par la manche elle-même (game_state.sumo) pour que les
+    // DEUX clients activent la même physique — poussées éjectantes hors du
+    // ring, pions tombés listés dans sumoFallen (jamais réintégrés).
+    sumoMode: !!(gameState && gameState.sumo),
+    sumoFallen: (gameState && gameState.sumoFallen) ? gameState.sumoFallen.slice() : []
   };
 
   // Récupère le pseudo de l'adversaire pour l'affichage (les deux IDs
@@ -18242,6 +18493,8 @@ function applyRemoteGameState(row){
   G.lastMoved = row.game_state.lastMoved;
   G.lastMovedByColor = row.game_state.lastMovedByColor;
   G.lastPush = row.game_state.lastPush || null;
+  // SUMO : synchroniser aussi les pions éjectés (receveur ET spectateur).
+  if(row.game_state.sumo){ G.sumoMode = true; G.sumoFallen = row.game_state.sumoFallen || G.sumoFallen || []; }
   G.turn = row.turn;
   renderBoard();
   // Tout ce qui suit jusqu'à startTurnTimer est PUREMENT cosmétique
@@ -18316,7 +18569,10 @@ async function pushOnlineMove(won, movedColor){
   if(!currentOnlineGameId) return;
   const nextTurn = won ? movedColor : (movedColor==='white' ? 'black' : 'white');
   const update = {
-    game_state: { board: G.board, stacks: G.stacks, lastMoved: G.lastMoved, lastMovedByColor: G.lastMovedByColor, lastPush: G.lastPush },
+    game_state: { board: G.board, stacks: G.stacks, lastMoved: G.lastMoved, lastMovedByColor: G.lastMovedByColor, lastPush: G.lastPush,
+      // SUMO : le drapeau et la liste des tombés voyagent avec chaque coup,
+      // sinon l'adversaire ne verrait jamais les pions éjectés.
+      sumo: G.sumoMode || undefined, sumoFallen: G.sumoMode ? (G.sumoFallen||[]) : undefined },
     turn: nextTurn,
     updated_at: new Date().toISOString()
   };
@@ -18541,6 +18797,44 @@ window.addEventListener('beforeunload', () => {
   </div>
 </div>
 
+<!-- ═══════════ SUMO — événement d'été (jusqu'au 31 août) ═══════════ -->
+<div id="screen-sumo" class="screen">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="stopSumoMatchmakingSearch();showScreen('events-mode')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
+  <div class="panel" style="max-width:300px">
+    <!-- Ciel Sumi : le dohyō sous la lune, deux lutteurs face à face
+         (réutilisé en thème Wurmz via un filtre or — voir CSS) -->
+    <div class="sumi-sky"><svg viewBox="0 0 300 92" preserveAspectRatio="none" aria-hidden="true">
+      <rect width="300" height="92" fill="var(--sumi-sky,#b23a52)"/>
+      <circle cx="234" cy="26" r="18" fill="#ede3cb" opacity=".92"/>
+      <!-- le dohyō : monticule + anneau de tawara -->
+      <ellipse cx="150" cy="86" rx="118" ry="18" fill="#211a28"/>
+      <ellipse cx="150" cy="82" rx="88" ry="12" fill="none" stroke="#16121c" stroke-width="5"/>
+      <!-- deux rikishi face à face, en garde -->
+      <path d="M118 78 q-2 -14 8 -18 q-6 -6 0 -10 q7 -4 10 3 q9 1 9 11 l-3 14 z" fill="#16121c"/>
+      <path d="M182 78 q2 -14 -8 -18 q6 -6 0 -10 q-7 -4 -10 3 q-9 1 -9 11 l3 14 z" fill="#16121c"/>
+      <!-- gyōji (arbitre) stylisé, éventail levé -->
+      <path d="M147 66 l3 -12 l3 12 z M150 54 l6 -7" stroke="#16121c" stroke-width="2.4" fill="#16121c"/>
+    </svg></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px">🌗 SUMO</div><button onclick="showModeInfo('sumo')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
+    <!-- Monnaie de l'événement : 💗 Fame — kanji 心 (kokoro, le cœur) -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 8px">
+      <div style="font-family:VT323,monospace;font-size:14px;color:#ff9dbf"><span style="font-family:'Noto Serif JP',serif;font-size:15px;vertical-align:middle">心</span> 💗 <span class="fame-display">0</span> <span style="font-size:10px;opacity:.6">Fame</span></div>
+    </div>
+    <!-- Intro du tournoi -->
+    <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.75;text-align:center;line-height:1.45;margin-bottom:8px">Le grand basho d'été est ouvert à tous les guerriers. Plus de murs, plus de refuge : seul le cercle décide. Éjecte l'Épéiste adverse hors du dohyō et ta légende grandira — chaque combat rapporte de la Fame 心, et plus ton ratio de victoires est haut, plus elle enfle.</div>
+    <div style="font-family:VT323,monospace;font-size:11px;color:#ff9dbf;opacity:.8;text-align:center;margin-bottom:6px">Jusqu'au 31 août · BO3 · 💗 +2 victoire / +1 défaite · appariement au plus proche niveau</div>
+    <div class="menu-divider"></div>
+    <div class="option-label" data-i18n="config_timer">Timer par coup</div>
+    <div class="option-row">
+      <div class="opt-btn sumo-timer-btn" onclick="startSumoMatchmakingSearch(3)">3s</div>
+      <div class="opt-btn sumo-timer-btn" onclick="startSumoMatchmakingSearch(5)">5s</div>
+      <div class="opt-btn sumo-timer-btn" onclick="startSumoMatchmakingSearch(10)">10s</div>
+    </div>
+    <div id="sumo-mm-status" style="text-align:center;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright);margin:16px 0;min-height:20px"></div>
+    <button class="btn" id="sumo-mm-cancel-btn" style="display:none;border-color:rgba(200,80,80,.4);color:#f08080" onclick="stopSumoMatchmakingSearch()" data-i18n="mm_cancel">&#10005; Annuler</button>
+  </div>
+</div>
+
 
 <!-- ═══════════ ADMIN — PANNEAU D'ADMINISTRATION (Wurmz / Musashi) ═══════════ -->
 <div id="screen-devrewards" class="screen" style="justify-content:flex-start;padding-top:14px">
@@ -18667,16 +18961,16 @@ window.addEventListener('beforeunload', () => {
       <div id="events-hanafuda-milestones" style="position:absolute;top:14px;left:0;right:0;height:34px"></div>
     </div>
     <div class="menu-divider"></div>
-    <!-- Contenu à venir -->
-    <div style="text-align:center;padding:24px 8px">
-      <div style="font-size:40px;opacity:.3;margin-bottom:12px">🌸</div>
-      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold);opacity:.6;letter-spacing:2px;margin-bottom:6px">EN CHANTIER</div>
-      <!-- "Quelqu'un est enterré ici." en japonais classique -->
-      <div style="font-family:'Noto Serif JP',serif;font-size:24px;color:rgba(200,168,110,.2);letter-spacing:6px;line-height:1.6">誰かが<br>ここに<br>眠る</div>
-      <div style="font-family:'VT323',monospace;font-size:10px;color:var(--parchment);opacity:.3;margin-top:8px;font-style:italic">Quelqu'un est enterré ici.</div>
-      <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.4;margin-top:12px">Événements saisonniers · Défis limités · Collections exclusives</div>
+    <!-- Événement en cours : SUMO (été 2026) -->
+    <div onclick="showScreen('sumo')" style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(90,50,20,.55),rgba(20,15,8,.45));border:1px solid rgba(216,150,80,.4);border-radius:8px;padding:11px 12px;margin-bottom:8px;cursor:pointer">
+      <span style="font-size:26px">🌗</span>
+      <div style="flex:1">
+        <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold-bright)">SUMO <span style="font-family:'Noto Serif JP',serif;font-size:12px;opacity:.7">相撲</span></div>
+        <div style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.65">Le ring sans murs · éjecte l'Épéiste adverse · 💗 Fame</div>
+      </div>
+      <div style="text-align:right"><div style="font-family:VT323,monospace;font-size:11px;color:#ff9dbf">jusqu'au<br>31 août</div></div>
     </div>
-    <button class="btn" style="opacity:.5" onclick="showToast('Événements saisonniers : en chantier ⚒️', false)">🌸 Voir les événements actifs</button>
+    <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.4;text-align:center;margin-bottom:4px">Événements saisonniers · Défis limités · Collections exclusives</div>
   </div>
 </div>
 

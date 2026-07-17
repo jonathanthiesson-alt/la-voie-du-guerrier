@@ -77,6 +77,12 @@ end $$;
 | 26 | `guilds_v2.sql` | Supprime la faille `guild_contribute_ryu` (montant libre client), ajoute `guild_report_win` (serveur-autoritaire, +2 Ryu par victoire classée), défis inter-guildes chef-seulement sur 48 h + tick `pg_cron`. ⚠ A d'abord échoué sur `cron.schedule('...','60 seconds')` → erreur 22023 (voir piège ci-dessus) |
 | 27 | `wurmz_easter_egg.sql` | Easter egg « Trouver Wurmz » : colonne `profiles.wurmz_found` + RPC `claim_wurmz_egg()` — **aucun montant transmis par le client** (400 Koku en dur côté serveur, un seul versement par compte, `for update`) |
 
+### ⏳ À exécuter
+
+| # | Script | Contenu |
+|---|---|---|
+| 28 | `sumo_event.sql` | **Événement SUMO (jusqu'au 31 août)** : colonnes `mode`/`elo` sur les tables Arène (le SUMO réutilise toute l'infra Arène), monnaie Fame 心 (`profiles.fame_balance` + `sumo_wins`/`sumo_losses`), RPC `record_sumo_round_win` (montants en dur serveur : +2/+1, coupés après le 31 août), vue `sumo_leaderboard` (score = fame × (1 + ratio de victoires)). ⚠ Tant qu'il n'est pas passé, l'écran SUMO affiche « SUMO indisponible » — l'Arène classique, elle, ne nomme jamais les nouvelles colonnes (filtres côté client). |
+
 ---
 
 ## Diagnostic RLS
