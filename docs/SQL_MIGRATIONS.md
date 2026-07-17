@@ -74,7 +74,8 @@ end $$;
 | 23 | `tournaments_auto.sql` | **Automatisation serveur** : `tournament_close_registration` (créateur seul), révocation de `tournament_start_next_round` aux clients, grâce 90 s avant double-forfait, `tournament_round_matches`, tick `pg_cron` toutes les 20 s |
 | 24 | `tournaments_claim_race.sql` | Réservation de création durcie : `creator_claimed_at`, libération refusée par le serveur avant 10 s (fin de la double création de partie) |
 | 25 | `friend_challenges.sql` | Défis entre amis : colonnes `challenges.mode`/`ranked`, `online_games.ranked`, `arena_matches.ranked` ; `record_arena_round_win` ne verse plus de Koku en Arène amicale |
-| 26 | `guilds_v2.sql` | ⏳ **À exécuter** — supprime la faille `guild_contribute_ryu` (montant libre client), ajoute `guild_report_win` (serveur-autoritaire, +2 Ryu par victoire classée), défis inter-guildes chef-seulement sur 48 h + tick `pg_cron` |
+| 26 | `guilds_v2.sql` | Supprime la faille `guild_contribute_ryu` (montant libre client), ajoute `guild_report_win` (serveur-autoritaire, +2 Ryu par victoire classée), défis inter-guildes chef-seulement sur 48 h + tick `pg_cron`. ⚠ A d'abord échoué sur `cron.schedule('...','60 seconds')` → erreur 22023 (voir piège ci-dessus) |
+| 27 | `wurmz_easter_egg.sql` | Easter egg « Trouver Wurmz » : colonne `profiles.wurmz_found` + RPC `claim_wurmz_egg()` — **aucun montant transmis par le client** (400 Koku en dur côté serveur, un seul versement par compte, `for update`) |
 
 ---
 
@@ -127,6 +128,28 @@ select
 ```
 
 Attendu : toutes les fonctions nommées, `cols_tournaments = 3`, `cols_pairings = 2`.
+
+---
+
+## Requête de contrôle des guildes & de l'easter egg
+
+```sql
+select
+  to_regproc('public.claim_wurmz_egg')::text      as fn_wurmz,
+  to_regproc('public.guild_challenge')::text      as fn_guild_challenge,
+  to_regproc('public.guild_report_win')::text     as fn_guild_report,
+  to_regproc('public.guild_contribute_ryu')::text as faille_doit_etre_null,
+  (select count(*) from information_schema.columns
+     where table_name='profiles' and column_name='wurmz_found')       as col_wurmz_found,
+  (select count(*) from information_schema.columns
+     where table_name='online_games' and column_name='guild_counted') as col_guild_counted,
+  (select count(*) from cron.job where jobname='guild_challenges_tick')   as tick_guildes,
+  (select count(*) from cron.job where jobname='tournament_cleanup_tick') as tick_tournois;
+```
+
+Attendu : les 3 fonctions nommées, **`faille_doit_etre_null` à `null`**, les
+deux colonnes à 1, les deux ticks à 1.
+*Vérifié en base le 2026-07-17 : tout au vert.*
 
 ---
 
