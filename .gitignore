@@ -1,8 +1,13 @@
 # Skills installés localement (npx skills add) : outillage personnel, pas du
 # code du jeu — ils ne doivent pas polluer le dépôt.
-.claude/skills/
+# NB : on ignore le CONTENU (/*) et non le dossier lui-même — git ne descend
+# pas dans un répertoire exclu, donc la ré-inclusion ci-dessous ne serait
+# jamais évaluée si on écrivait `.claude/skills/`.
+.claude/skills/*
 .agents/
 skills-lock.json
+# ...sauf les nôtres, qui font partie du projet et se versionnent.
+!.claude/skills/audit-audio/
 
 # Config locale de l'éditeur / de l'agent
 .claude/settings.local.json

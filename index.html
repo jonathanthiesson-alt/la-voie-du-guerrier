@@ -3691,13 +3691,8 @@ const SFX={
   ach:()=>{[523,659,784,1047,1319].forEach((f,i)=>playTone(f,'triangle',.18,.32,i*.07))},
   launch:()=>{playTone(150,'sawtooth',.25,.45);[220,280,350,440].forEach((f,i)=>playTone(f,'triangle',.22,.28,i*.06))},
 };
-function playSound(n){
-  // Le son ne doit JAMAIS pouvoir interrompre le déroulement d'un coup :
-  // une exception ici romprait silencieusement toute la chaîne d'appel
-  // (executeDrop -> switchTurn -> scheduleAI), laissant la partie dans
-  // un état figé qui peut dériver vers un comportement erratique.
-  try{ if(SFX[n]) SFX[n](); }catch(e){ console.error('playSound error:', n, e); }
-}
+// NB : playSound() est défini plus bas (près de PROFILE_SOUNDS), en une
+// seule fois. Un doublon vivait ici et était écrasé silencieusement.
 
 // ══════════════════════════════════════════════════════
 // V7.0.5 — HAPTICS
@@ -8828,6 +8823,11 @@ function showScreen(id){
   }
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});
   const sc=document.getElementById('screen-'+id);if(sc)sc.classList.add('active');
+  // On quitte l'écran de jeu : tout son de fin de partie encore en attente
+  // (délai de 1,5 s) doit mourir avec lui, sinon il se déclenche par-dessus
+  // l'écran d'arrivée. Un seul point de sortie plutôt qu'un appel par
+  // destination — c'est le fait de QUITTER le jeu qui compte, pas où l'on va.
+  if(id!=='game' && typeof cancelPendingEndgameSfx==='function') cancelPendingEndgameSfx();
   updateBottomNav(id);
   if(id==='play') refreshPlayScreen();
   applyLang();
@@ -11534,15 +11534,28 @@ document.addEventListener('DOMContentLoaded', function(){
 //   fin de partie en ligne générique) : joué 1,5s plus tard, pour laisser
 //   le temps de comprendre ce qui vient de se passer (voir pourquoi on a
 //   gagné/perdu) avant que le son n'arrive.
+// Minuteur du son de fin retenu pour pouvoir l'ANNULER : sans ça, quitter
+// l'écran de fin de partie dans le délai de 1,5 s laissait le son se
+// déclencher plus tard, par-dessus le menu ("le son de fin de combat se
+// lance en arrivant au menu"). Voir cancelPendingEndgameSfx().
+var _endgameSfxTimer = null;
+function cancelPendingEndgameSfx(){
+  if(_endgameSfxTimer){ clearTimeout(_endgameSfxTimer); _endgameSfxTimer = null; }
+  var sfxC = document.getElementById('endgame-sfx');
+  // Le son a pu DÉJÀ commencer (départ juste après le déclenchement) :
+  // annuler le minuteur ne suffit alors pas, il faut aussi le couper.
+  if(sfxC){ try{ sfxC.pause(); sfxC.currentTime = 0; }catch(e){} }
+}
 function playEndgameSfx(immediate){
   if(!userPrefs.sound) return;
   var sfx = document.getElementById('endgame-sfx');
   if(!sfx) return;
+  if(_endgameSfxTimer){ clearTimeout(_endgameSfxTimer); _endgameSfxTimer = null; }
   // muted=false défensif : si le déverrouillage initial (unlockAllAudio) a
   // été interrompu avant de restaurer l'état, le son resterait muet à vie.
   // Volume aligné sur le réglage utilisateur (était 1 en dur).
   function fire(){ try{ sfx.currentTime = 0; sfx.muted = false; sfx.volume = (typeof userPrefs.soundVolume==='number'?userPrefs.soundVolume:1); sfx.play().catch(function(err){ console.warn('endgame-sfx: lecture impossible', err); }); }catch(e){} }
-  if(immediate) fire(); else setTimeout(fire, 1500);
+  if(immediate) fire(); else _endgameSfxTimer = setTimeout(function(){ _endgameSfxTimer = null; fire(); }, 1500);
 }
 function endGame(winner,reason){
   // Garde anti-double-appel centralisée : un appel tardif (écho temps réel
@@ -15103,13 +15116,25 @@ const PROFILE_SOUNDS = {
 
 // Patch playSound to use profile
 var _origPlaySound = null;
+// Définition UNIQUE : il en existait une seconde, plus haut dans le
+// fichier, que celle-ci écrasait silencieusement (même nom = la dernière
+// gagne). L'autre portait le try/catch ci-dessous mais ignorait
+// userPrefs.sound ; celle-ci gérait le réglage et les profils mais avait
+// perdu la protection. Les deux comportements sont désormais réunis ici.
+//
+// Le try/catch n'est pas décoratif : le son ne doit JAMAIS pouvoir
+// interrompre le déroulement d'un coup. Une exception ici romprait toute
+// la chaîne d'appel (executeDrop -> switchTurn -> scheduleAI) et laisserait
+// la partie figée, sans rien signaler.
 function playSound(n) {
   if (!userPrefs.sound) return;
-  if (soundProfile !== '8bit' && PROFILE_SOUNDS[soundProfile] && PROFILE_SOUNDS[soundProfile][n]) {
-    PROFILE_SOUNDS[soundProfile][n]();
-    return;
-  }
-  if (SFX[n]) SFX[n]();
+  try {
+    if (soundProfile !== '8bit' && PROFILE_SOUNDS[soundProfile] && PROFILE_SOUNDS[soundProfile][n]) {
+      PROFILE_SOUNDS[soundProfile][n]();
+      return;
+    }
+    if (SFX[n]) SFX[n]();
+  } catch(e) { console.error('playSound error:', n, e); }
 }
 
 // ══════════════════════════════════════════════════════
