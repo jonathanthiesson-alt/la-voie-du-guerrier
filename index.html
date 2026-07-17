@@ -434,22 +434,32 @@ body.ui-sumi .sumi-sky svg{position:absolute;inset:0;width:100%;height:100%;disp
 .musashi-avatar{width:84px;height:84px;flex-shrink:0;border-radius:50%;background:radial-gradient(circle at 50% 25%,#3a2810,#0a0604);border:2px solid var(--gold);box-shadow:0 0 14px rgba(212,160,23,.35);overflow:hidden;display:flex;align-items:flex-end;justify-content:center}
 .musashi-avatar img{width:108%;height:auto;object-fit:contain;transform:translateY(8%)}
 .musashi-bubble{position:relative;flex:1;background:#f2e8d2;color:#241a0c;border-radius:14px;padding:11px 13px;font-family:'VT323',monospace;font-size:15px;line-height:1.4;min-height:46px;box-shadow:0 4px 14px rgba(0,0,0,.4)}
-/* En partie (défis), la bulle ne doit jamais repousser le plateau : hauteur
-   plafonnée et défilement interne (le clic avance déjà le texte/skip).
-   Le plafond est aussi exprimé en vh : sur un écran court (667px et moins),
-   un plafond fixe de 92px forçait getCellSize() à réduire la case jusqu'à
-   ~24px — plateau injouable. C'est la BULLE qui doit céder, pas le plateau. */
-#aldric-text{max-height:min(92px,12vh);overflow-y:auto;-webkit-overflow-scrolling:touch}
-/* Idem pour l'avatar, qui impose sinon son plein format à la ligne. */
+/* La bulle est en SURIMPRESSION dans #combat-banner (position:relative,
+   overflow:hidden) : elle ne participe plus à la colonne flex, donc elle ne
+   vole plus aucune hauteur au plateau. Fond translucide car elle recouvre
+   la jauge de probabilité pendant qu'elle parle. */
+#aldric-bubble{
+  position:absolute;inset:0;z-index:4;
+  display:flex;align-items:center;
+  padding:6px 10px;box-sizing:border-box;
+  background:linear-gradient(0deg,rgba(6,4,2,.94),rgba(6,4,2,.82));
+}
+#aldric-bubble .musashi-dialogue{width:100%;align-items:center}
+/* Le plafond du texte suit la hauteur du bandeau qui l'accueille (et non
+   plus l'écran) : overflow:hidden le rognerait sinon au lieu de le faire
+   défiler. Le clic sur la bulle avance/passe le texte. */
+#aldric-text{max-height:min(96px,15vh);overflow-y:auto;-webkit-overflow-scrolling:touch}
+/* Sur écran court, on resserre le bandeau (110px en flex-shrink:0, c'est le
+   plus gros poste fixe pris au plateau). Comme la bulle vit DEDANS et que le
+   bandeau est en overflow:hidden, son texte doit être plafonné en
+   conséquence, sinon il serait rogné au lieu de défiler. */
 @media (max-height:700px){
   .musashi-avatar{width:52px;height:52px}
-  #aldric-bubble{padding:3px 12px}
-  /* Sur écran court, ces deux blocs sont les plus gros postes fixes du
-     chrome (110px + 60px, tous deux en flex-shrink:0) : ils ne cédaient
-     rien et c'est le PLATEAU qui absorbait tout, jusqu'à une case de 25px
-     en leçon de campagne (bandeau + bulle). player-msg-zone réservait même
-     ses 60px à vide. */
-  #combat-banner{height:clamp(72px,11vh,110px);min-height:72px}
+  #combat-banner{height:clamp(88px,13vh,110px);min-height:88px}
+  #aldric-text{max-height:64px}
+  #aldric-bubble{padding:4px 8px}
+  /* #player-msg-zone réservait 60px même vide, en flex-shrink:0 : autant de
+     hauteur prise au plateau pour rien. */
   #player-msg-zone{min-height:0}
 }
 .musashi-bubble::before{content:'';position:absolute;left:-9px;bottom:16px;border-width:8px 10px 8px 0;border-style:solid;border-color:transparent #f2e8d2 transparent transparent}
@@ -2401,18 +2411,24 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <!-- Zone de messages joueurs (bulles manga) -->
   <div id="player-msg-zone"></div>
   <!-- Bulle de narration Musashi-sensei (mode Campagne uniquement) -->
-  <div id="aldric-bubble" style="display:none;width:100%;padding:6px 12px;box-sizing:border-box">
-    <div class="musashi-dialogue" id="musashi-dialogue-inner" onclick="advanceMusashiText()">
-      <div class="musashi-avatar"><img class="musashi-avatar-img" alt="Musashi-sensei"></div>
-      <div class="musashi-bubble" id="aldric-text">...</div>
-    </div>
-  </div>
   <div class="status-bar" id="status-bar"><span data-i18n="game_select">Sélectionnez une pièce</span></div>
   <div id="combat-banner">
     <div id="win-prob-bar"><div id="win-prob-bg-white"></div><div id="win-prob-bg-black"></div></div>
     <div id="win-prob-separator"></div>
     <div id="combat-anim-stage"><img id="combat-anim-img" src="" alt="" draggable="false"></div>
     <div id="combat-start-banner"><span data-i18n="combat_start">COMBATTEZ</span></div>
+    <!-- La bulle de Musashi vit DANS le bandeau de combat, en surimpression
+         (comme ses trois voisins ci-dessus, tous en position:absolute).
+         Elle était auparavant un frère du plateau dans la colonne flex :
+         elle lui volait donc sa hauteur, et le plateau tombait à 45px de
+         case en leçon contre 63 en partie normale. En surimpression elle
+         ne coûte plus un seul pixel de mise en page. -->
+    <div id="aldric-bubble" style="display:none">
+      <div class="musashi-dialogue" id="musashi-dialogue-inner" onclick="advanceMusashiText()">
+        <div class="musashi-avatar"><img class="musashi-avatar-img" alt="Musashi-sensei"></div>
+        <div class="musashi-bubble" id="aldric-text">...</div>
+      </div>
+    </div>
   </div>
   <div style="display:flex;flex-direction:column;align-items:center;width:100%;flex:1;justify-content:flex-end;padding-bottom:2px">
     <div style="display:flex;align-items:flex-start"><div class="board-row-labels" id="board-row-labels"></div><div class="board-wrapper"><div class="board-grid" id="board-grid"></div><div class="board-col-labels" id="board-col-labels"></div></div></div>
@@ -10630,7 +10646,10 @@ function showMusashiText(text){
   var bubble = document.getElementById('aldric-bubble');
   var el = document.getElementById('aldric-text');
   if(!bubble || !el) return;
-  bubble.style.display = 'block';
+  // 'flex' et non 'block' : la bulle est désormais une surimpression centrée
+  // dans #combat-banner (voir son CSS). Un display:block en ligne écraserait
+  // le flex de la feuille de style et casserait le centrage vertical.
+  bubble.style.display = 'flex';
   typewriterStart(el, text, 24);
 }
 function advanceMusashiText(){
