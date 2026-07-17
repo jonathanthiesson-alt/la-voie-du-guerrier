@@ -5360,7 +5360,43 @@ function buildWurmzSkinFor(role, type, piece, col){
   return s;
 }
 
+// ── Skin SUMO (événement, jusqu'au 31 août) ─────────────────────────
+// Pendant une partie SUMO, ce skin est IMPOSÉ aux deux camps : aucun
+// skin personnel (même le WurmzSkin s'efface). Il n'apparaît dans AUCUN
+// réglage d'apparence — à la fin de l'événement il deviendra déblocable
+// dans les réglages, et des variantes seront offertes aux paliers.
+// blanc = médaillons or/parchemin, noir = médaillons sombres.
+var SUMO_SKIN = {
+  white: { epeiste:'images/sumo/epeiste_blanc.png', shield:'images/sumo/bouclier_blanc.png',
+           swordL:'images/sumo/epee_gauche_blanc.png', swordR:'images/sumo/epee_droite_blanc.png' },
+  black: { epeiste:'images/sumo/epeiste_noir.png',  shield:'images/sumo/bouclier_noir.png',
+           swordL:'images/sumo/epee_gauche_noir.png',  swordR:'images/sumo/epee_droite_noir.png' }
+};
+// Même forme que buildWurmzSkin : _wurmz:true réutilise tout le chemin
+// « médaillon plein pion » (taille 100 %, fond masqué, aucun filtre de
+// thème) — _sumo:true ne sert qu'à le distinguer si besoin.
+function buildSumoSkin(type, piece, col){
+  var color = (piece && piece.color) ? piece.color : 'white';
+  var set = SUMO_SKIN[color==='black' ? 'black' : 'white'];
+  var src;
+  if(type==='epeiste')      src = set.epeiste;
+  else if(type==='shield')  src = set.shield;
+  else {
+    // Épée : la main gauche sur la moitié gauche du plateau, droite sinon
+    // (les deux claques du rikishi se font face, comme chez Wurmz).
+    var cols = (typeof G!=='undefined' && G.cols) ? G.cols : 5;
+    var isLeft = (typeof col==='number') ? (col < cols/2) : false;
+    src = isLeft ? set.swordL : set.swordR;
+  }
+  return { id:'sumo-'+type, label:'SumoSkin', vb:null, kanji:null, b64:src, _wurmz:true, _sumo:true };
+}
+
 function getPieceSkin(role, type, piece, col){
+  // SUMO : le skin d'événement écrase TOUT, pour tous les rôles (moi,
+  // adversaire, spectateur) — c'est l'uniforme du basho.
+  if(typeof G!=='undefined' && G.sumoMode){
+    return buildSumoSkin(type, piece, col);
+  }
   // Le WurmzSkin écrase toute sélection (épéiste / bouclier / épée) pour
   // les pièces de Wurmz. Décoché → on retombe sur les logos choisis.
   if(role==='player1' && isWurmzSkinActive()){
