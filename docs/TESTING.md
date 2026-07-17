@@ -71,9 +71,31 @@ Jonathan teste avec **2 comptes** (téléphone + PC, ou 2 navigateurs).
    amicale ne rapporte **aucun Koku**.
 6. **Revanche après partie amicale** : doit rester amicale.
 
-## ☐ Guildes ← prochain gros sujet
-Créer (adhésion ouverte / sur demande), rejoindre, approuver une demande,
-quitter (le chef part → promotion auto du plus ancien), défier une autre guilde.
+## ☐ Guildes ← en cours (audit + refonte défis le 2026-07-14)
+**Audit fait** : rôles/plafond 20/promotion du chef déjà corrects côté
+serveur ; ids en bigint (pas de piège uuid). **Corrigé** : la faille
+`guild_contribute_ryu` (montant libre client — triche illimitée) est
+supprimée ; le Ryu n'était de toute façon JAMAIS gagné (RPC jamais
+appelé) ; les défis inter-guildes étaient une coquille vide (scores
+jamais écrits, insert direct ouvert à tout membre).
+
+**Nouveau fonctionnement (guilds_v2.sql)** : victoire en ligne classée
+= +2 Ryu (perso + collectif), vérifiée en base par `guild_report_win`
+(partie finie, gagnée par l'appelant, classée, non déjà comptée). Défi
+inter-guildes : chef uniquement, 48 h, +1 par victoire d'un membre,
+clôture pg_cron (+30 Ryu à la guilde gagnante, égalité = personne).
+
+Protocole (2 comptes) :
+1. Compte A : créer une guilde SUR DEMANDE → B demande → A approuve.
+2. B quitte, re-rejoint une guilde OUVERTE créée par B ? Non — B crée
+   sa propre guilde (il faut 2 guildes pour un défi).
+3. A (chef) lance un défi inter-guildes → vérifier que B (membre d'une
+   autre guilde) voit le défi ; vérifier qu'un simple membre ne PEUT
+   PAS défier (toast "Seul le chef...").
+4. A bat B en partie en ligne CLASSÉE → écran de fin : "🐉 +2 Ryu · +1
+   défi de guilde" ; vérifier le score du défi et le Ryu collectif.
+5. Une victoire AMICALE ne doit rien créditer.
+6. Le chef quitte → l'autre membre devient chef (👑).
 
 ## ☐ Ligue
 Gagner une partie en ligne → points de Ligue crédités (3s→3, 5s→2, 10s→1).

@@ -4957,7 +4957,9 @@ async function openGuildTournaments(myGuildId){
   body.innerHTML='<div style="text-align:center;padding:14px;opacity:.5;font-family:VT323,monospace">Chargement…</div>';
   try{
     const { data: gt } = await supa.from('guild_tournaments').select('*').or('guild_a.eq.'+myGuildId+',guild_b.eq.'+myGuildId).order('created_at',{ascending:false}).limit(20);
-    const { data: guilds } = await supa.from('v_guild_leaderboard').select('id,name,tag');
+    // select('*') : chemin critique — ne jamais nommer de colonnes (une
+    // colonne manquante casserait tout l'écran, leçon du matchmaking).
+    const { data: guilds } = await supa.from('v_guild_leaderboard').select('*');
     var gmap = {}; (guilds||[]).forEach(function(g){ gmap[g.id]=g; });
     var html = '<button class="btn" style="width:100%;font-size:11px;padding:6px;opacity:.7;margin-bottom:8px" onclick="_guildView=\'auto\';refreshGuildScreen()">↩ Ma guilde</button>';
     html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;margin-bottom:6px;letter-spacing:1px">⚔ DÉFIER UNE GUILDE</div>';
@@ -4976,9 +4978,22 @@ async function openGuildTournaments(myGuildId){
       html += gt.map(function(t){
         var an = (gmap[t.guild_a]||{}).name||'?', bn=(gmap[t.guild_b]||{}).name||'?';
         var lead = t.score_a>t.score_b?'◀':(t.score_b>t.score_a?'▶':'=');
+        var enCours = (t.status==='active' || t.status==='running');
+        var meta;
+        if(enCours && t.deadline){
+          var restant = Math.max(0, new Date(t.deadline) - Date.now());
+          var h = Math.floor(restant/3600000), mn = Math.floor((restant%3600000)/60000);
+          meta = '⏳ '+(h>0 ? h+'h'+(mn<10?'0':'')+mn : mn+' min')+' restantes';
+        } else if(enCours){
+          meta = 'en cours';
+        } else if(t.winner_guild){
+          meta = '🏆 '+escapeHtml((gmap[t.winner_guild]||{}).name||'?')+' (+30 Ryu)';
+        } else {
+          meta = 'terminé — égalité';
+        }
         return '<div style="background:rgba(0,0,0,.22);border-radius:6px;padding:8px 10px;margin-bottom:4px;font-family:VT323,monospace;font-size:12px;color:var(--parchment)">'
           + escapeHtml(an)+' <span style="color:var(--gold-bright)">'+t.score_a+' '+lead+' '+t.score_b+'</span> '+escapeHtml(bn)
-          + ' <span style="opacity:.5;font-size:10px">('+(t.status==='running'?'en cours':'terminé')+')</span></div>';
+          + ' <span style="opacity:.5;font-size:10px">('+meta+')</span></div>';
       }).join('');
     }
     body.innerHTML = html;
@@ -4986,10 +5001,32 @@ async function openGuildTournaments(myGuildId){
 }
 async function challengeGuild(myGuildId, targetId){
   try{
-    await supa.from('guild_tournaments').insert({ guild_a:myGuildId, guild_b:targetId });
-    showToast('Défi inter-guildes lancé !', false);
+    // RPC serveur (chef uniquement, 1 défi actif par guilde, 48 h) — plus
+    // d'insert direct : la policy INSERT a été retirée (guilds_v2.sql).
+    const { data } = await supa.rpc('guild_challenge', { p_target_guild: targetId });
+    if(data && data.ok){ showToast('⚔ Défi lancé ! 48 h pour marquer plus de victoires qu\'eux.', false); }
+    else if(data && data.reason==='not_leader'){ showToast('Seul le chef de guilde peut lancer un défi.', true); }
+    else if(data && data.reason==='busy'){ showToast('Un défi est déjà en cours pour l\'une des deux guildes.', true); }
+    else showToast('Impossible de lancer le défi.', true);
     openGuildTournaments(myGuildId);
-  }catch(e){ showToast('Erreur.', true); }
+  }catch(e){ showToast('Erreur — le script guilds_v2.sql a-t-il été exécuté ?', true); }
+}
+// Reporte une victoire en ligne classée à la guilde : +2 Ryu (perso +
+// collectif) et +1 au score du défi inter-guildes actif s'il y en a un.
+// Serveur-autoritaire : la partie est vérifiée en base (finie, gagnée
+// par l'appelant, classée, pas déjà comptée) — voir guild_report_win.
+async function reportGuildWin(gameId){
+  if(!gameId || !currentUser || !supa) return;
+  try{
+    const { data } = await supa.rpc('guild_report_win', { p_game_id: gameId });
+    if(data && data.ok && !data.already && data.ryu){
+      shopState.ryu = (shopState.ryu||0) + data.ryu;
+      saveShopStateCache();
+      refreshAllCurrencyDisplays();
+      var lgEl = document.getElementById('shiso-gain-row');
+      if(lgEl && lgEl.style.display!=='none'){ lgEl.innerHTML += ' · 🐉 +'+data.ryu+' Ryu'+(data.defi_point?' · +1 défi de guilde':''); }
+    }
+  }catch(e){ /* pas en guilde / script SQL absent : sans effet */ }
 }
 function refreshEventsProgress()    { renderModeProgressBar('events-hanafuda-fill','events-hanafuda-milestones',shopState.hanafuda); }
 
@@ -11686,6 +11723,9 @@ function endGame(winner,reason){
               if(lgEl){ lgEl.innerHTML += ' · 🏆 +'+res.data.added+' pts Ligue'; }
             }
           }).catch(function(){});
+        // Guilde : +2 Ryu et +1 au défi inter-guildes actif — le serveur
+        // vérifie la partie en base, un appel sur une défaite est rejeté.
+        if(typeof reportGuildWin==='function') reportGuildWin(G.onlineGameId || currentOnlineGameId);
       }
     }
     if(isOnlineGame && !G.arenaMatchId){
