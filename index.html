@@ -1994,6 +1994,9 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('settings')" style="font-size:13px;padding:9px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">設</span><span data-i18n="menu_settings">Param&#232;tres</span></button>
 
     <button class="btn btn-devtest" onclick="showScreen('devlog')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">録</span><span data-i18n="menu_devlog">DevLog</span></button>
+    <!-- Retour à l'écran d'accueil SANS se déconnecter (pratique pour farmer
+         l'easter egg Wurmz). Toujours visible : l'accueil est accessible à tous. -->
+    <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
   <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.17.0 &#9820;</div>
@@ -2001,10 +2004,9 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 </div>
 
 <!-- ═══════════ JOUER (écran unifié, onglet principal de la bottom-nav) ═══════════ -->
-<div id="screen-play" class="screen" style="justify-content:flex-start;padding-top:46px">
-  <!-- La barre est en position:absolute : le padding-top de l'écran (46px au
-       lieu de 14) est ce qui empêche le panneau de passer dessous. -->
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('home')" data-i18n="nav_home">&#8617; ACCUEIL</button></div>
+<div id="screen-play" class="screen" style="justify-content:flex-start">
+  <!-- Plus de barre de header : la bottom-nav suffit à la navigation, et le
+       "Menu complet" en bas de panneau mène au menu (donc à la déconnexion). -->
   <div class="panel" style="max-width:330px;width:100%">
     <!-- Ciel Sumi : mont Fuji au crépuscule (visible en thème Sumi uniquement) -->
     <div class="sumi-sky"><svg viewBox="0 0 300 92" preserveAspectRatio="none" aria-hidden="true">
@@ -2277,7 +2279,6 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
 <!-- ═══════════ CAMPAGNE — LISTE ═══════════ -->
 <div id="screen-campaigns" class="screen">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('menu')">&#8617; MENU</button></div>
   <div class="panel" style="max-width:360px">
     <!-- Ciel Sumi : toit de dojo dans la brume (campagne) -->
     <div class="sumi-sky"><svg viewBox="0 0 300 92" preserveAspectRatio="none" aria-hidden="true">
@@ -2476,7 +2477,6 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
 <!-- PROFILE -->
 <div id="screen-profile" class="screen">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('menu')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
   <div class="profile-header">
     <div class="profile-name-txt" id="profile-name-txt">Joueur</div>
     <div class="profile-grade-row-wrap" id="profile-grade-row-wrap" style="justify-content:center;cursor:pointer" onclick="openGradesModal()"></div>
@@ -18391,8 +18391,7 @@ window.addEventListener('beforeunload', () => {
 </div>
 
 <!-- ═══════════ AMIS — écran unifié (Messagerie / Amis / Joueurs) ═══════════ -->
-<div id="screen-amis" class="screen" style="justify-content:flex-start;padding-top:54px">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('online-hub')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
+<div id="screen-amis" class="screen" style="justify-content:flex-start">
   <div class="panel" style="max-width:340px;width:100%;max-height:calc(100vh - 70px);display:flex;flex-direction:column;overflow:hidden;padding:10px">
     <!-- Onglets -->
     <div style="display:flex;gap:0;border-bottom:1px solid rgba(200,168,110,.2);flex-shrink:0;margin-bottom:8px">
@@ -18670,11 +18669,7 @@ window.addEventListener('beforeunload', () => {
 </div>
 
 <!-- ═══════════ BOUTIQUE ═══════════ -->
-<div id="screen-shop" class="screen" style="justify-content:flex-start;padding-top:54px">
-  <div class="screen-nav-bar" style="justify-content:space-between">
-    <button class="tuto-nav-btn" onclick="showScreen('menu')" data-i18n="btn_menu_back">&#8617; MENU</button>
-    <div class="shop-koku-badge"><span class="koku-ideogram">石</span> <span class="koku-balance-display">0</span></div>
-  </div>
+<div id="screen-shop" class="screen" style="justify-content:flex-start">
   <div class="panel" style="max-width:340px;max-height:calc(100vh - 70px);display:flex;flex-direction:column;overflow:hidden">
     <!-- Ciel Sumi : lanterne de pierre au couchant (marché) -->
     <div class="sumi-sky"><svg viewBox="0 0 300 92" preserveAspectRatio="none" aria-hidden="true">
@@ -18687,7 +18682,7 @@ window.addEventListener('beforeunload', () => {
       <polygon points="57,55 71,55 69,50 59,50" fill="#e8863a"/>
       <polygon points="0,92 70,80 150,88 230,78 300,88 300,92" fill="#211a28"/>
     </svg></div>
-    <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px;flex-shrink:0">&#9925; BOUTIQUE &#9925;</div><button onclick="showModeInfo('shop')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0"><div style="flex:1"></div><div class="menu-title" style="font-size:18px;flex-shrink:0">&#9925; BOUTIQUE &#9925;</div><button onclick="showModeInfo('shop')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button><!-- Solde Koku rapatrié ici depuis l'ancien header supprimé --><div style="flex:1;display:flex;justify-content:flex-end"><div class="shop-koku-badge"><span class="koku-ideogram">&#30707;</span> <span class="koku-balance-display">0</span></div></div></div>
     <div class="menu-divider" style="flex-shrink:0"></div>
     <div style="display:flex;gap:5px;margin-bottom:10px;flex-shrink:0">
       <button class="shop-tab-btn active" id="shoptab-subs-btn" onclick="setShopTab('subs')">Abonn.</button>
