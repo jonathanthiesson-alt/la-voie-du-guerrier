@@ -25,6 +25,12 @@ Ne peut ni réordonner ni renommer les colonnes d'une vue existante.
 ### `create or replace function` — changement de type de retour
 → `drop function if exists ma_fonction(types);` **avant**.
 
+### `cron.schedule` — erreur 22023 « invalid schedule »
+L'intervalle en secondes n'est accepté que de **1 à 59**. `'60 seconds'` est
+refusé. Pour une minute pile, utiliser le format cron : `'* * * * *'`.
+Vécu sur `guilds_v2.sql` — et comme l'échec était sur la **dernière**
+instruction, tout le script avait été annulé.
+
 ### Wrapper les opérations conditionnelles
 ```sql
 do $$
@@ -68,6 +74,7 @@ end $$;
 | 23 | `tournaments_auto.sql` | **Automatisation serveur** : `tournament_close_registration` (créateur seul), révocation de `tournament_start_next_round` aux clients, grâce 90 s avant double-forfait, `tournament_round_matches`, tick `pg_cron` toutes les 20 s |
 | 24 | `tournaments_claim_race.sql` | Réservation de création durcie : `creator_claimed_at`, libération refusée par le serveur avant 10 s (fin de la double création de partie) |
 | 25 | `friend_challenges.sql` | Défis entre amis : colonnes `challenges.mode`/`ranked`, `online_games.ranked`, `arena_matches.ranked` ; `record_arena_round_win` ne verse plus de Koku en Arène amicale |
+| 26 | `guilds_v2.sql` | ⏳ **À exécuter** — supprime la faille `guild_contribute_ryu` (montant libre client), ajoute `guild_report_win` (serveur-autoritaire, +2 Ryu par victoire classée), défis inter-guildes chef-seulement sur 48 h + tick `pg_cron` |
 
 ---
 

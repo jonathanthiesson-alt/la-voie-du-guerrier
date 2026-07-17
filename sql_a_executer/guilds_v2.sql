@@ -154,4 +154,6 @@ begin
   end if;
 end $$;
 
-select cron.schedule('guild_challenges_tick', '60 seconds', $$select public.guild_challenges_cleanup();$$);
+-- ⚠ pg_cron n'accepte l'intervalle en secondes que de 1 à 59 ('60 seconds'
+-- => erreur 22023). Pour une minute pile, il faut le format cron classique.
+select cron.schedule('guild_challenges_tick', '* * * * *', $$select public.guild_challenges_cleanup();$$);
