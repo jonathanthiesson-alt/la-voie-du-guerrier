@@ -11631,10 +11631,25 @@ function updateTimerUI(){
   document.getElementById('bar-top').classList.toggle('active-bar',!botActive);
   updateTurnRings();
 }
-function triggerTimeout(){
+async function triggerTimeout(){
   if(G.gameOver)return;
   const w=G.turn==='white'?'black':'white';
   if(G.onlineGameId){
+    // Si c'est L'ADVERSAIRE qu'on s'apprête à déclarer hors délai, notre
+    // vue est peut-être simplement périmée (message temps réel perdu :
+    // son coup — voire sa victoire — est en base mais jamais arrivé ici).
+    // Sans cette relecture, un perdant à la vue figée s'auto-déclarait
+    // GAGNANT et écrasait le vrai résultat en base.
+    if(G.turn !== G.onlineMyColor){
+      try{
+        const { data: row } = await supa.from('online_games').select('*').eq('id', G.onlineGameId).single();
+        if(G.gameOver) return; // le temps réel a pu conclure pendant l'await
+        if(row && (row.status === 'finished' || row.turn === myColorOnline)){
+          applyRemoteGameState(row);
+          return;
+        }
+      }catch(e){}
+    }
     // Synchronise le dépassement de temps avec l'adversaire — sans ça,
     // un timeout ne serait détecté que localement chez le client qui
     // décompte, sans jamais être transmis à l'autre joueur.
@@ -18051,6 +18066,7 @@ async function enterOnlineGame(gameId, whitePlayerId, gameState, turn, timerSeco
   document.getElementById('status-bar').textContent = 'En attente de l\'adversaire…';
   pushHistory();
   subscribeToOnlineGame(gameId);
+  startOnlineGameWatchdog(gameId); // filet si le temps réel lâche (voir la fonction)
   // Le minuteur ne démarre plus ici directement : on attend que les
   // DEUX joueurs aient confirmé être chargés et prêts (voir plus haut),
   // pour éviter qu'un joueur ne perde au temps avant même d'avoir pu
@@ -18086,6 +18102,36 @@ function subscribeToOnlineGame(gameId){
     .subscribe();
   currentGameChannel = channel;
   onlineSubscriptions.push(channel);
+}
+
+// ── Chien de garde anti-message-perdu ────────────────────────────
+// Le canal temps réel peut mourir en silence sur mobile (verrouillage
+// d'écran, changement de réseau) : le dernier UPDATE — typiquement le
+// status 'finished' du coup gagnant — n'arrive alors jamais, et
+// l'adversaire reste figé en partie (vécu sur une victoire par poussée
+// en partie rapide 5 s). Ce poll relit la ligne toutes les 5 s et ne
+// ré-applique l'état QUE si le client est en retard sur le serveur :
+// partie finie côté serveur mais pas ici, ou coup adverse jamais reçu.
+// select('*') volontairement (règle CLAUDE.md : jamais de colonnes
+// nommées sur un chemin critique).
+let _onlineWatchdogTimer = null;
+function startOnlineGameWatchdog(gameId){
+  if(_onlineWatchdogTimer) clearInterval(_onlineWatchdogTimer);
+  _onlineWatchdogTimer = setInterval(async function(){
+    if(G.gameOver || currentOnlineGameId !== gameId){
+      clearInterval(_onlineWatchdogTimer); _onlineWatchdogTimer = null; return;
+    }
+    try{
+      const { data: row, error } = await supa.from('online_games').select('*').eq('id', gameId).single();
+      if(error || !row) return;
+      // Re-vérifié après l'await : un événement temps réel a pu arriver
+      // entre-temps et terminer la partie — ne pas ré-appliquer par-dessus.
+      if(G.gameOver || currentOnlineGameId !== gameId) return;
+      const finishedMissed = (row.status === 'finished' && !G.gameOver);
+      const moveMissed = (row.turn === myColorOnline && G.turn !== myColorOnline && row.status !== 'finished');
+      if(finishedMissed || moveMissed) applyRemoteGameState(row);
+    }catch(e){}
+  }, 5000);
 }
 
 function applyRemoteGameState(row){
@@ -18127,6 +18173,13 @@ function applyRemoteGameState(row){
   G.lastPush = row.game_state.lastPush || null;
   G.turn = row.turn;
   renderBoard();
+  // Tout ce qui suit jusqu'à startTurnTimer est PUREMENT cosmétique
+  // (glissé, vibration, animation de combat, jauge). Ce bloc tourne dans
+  // un callback temps réel dont les exceptions sont avalées par le client
+  // Supabase : sans ce try/catch, le moindre pépin cosmétique sauterait
+  // startTurnTimer ET endGame — l'adversaire resterait figé en partie
+  // sans jamais voir la fin (vécu : victoire par poussée non propagée).
+  try{
   if(typeof animateLastMoveSlide==='function' && row.game_state.lastMoved && row.game_state.lastMoved.color !== myColorOnline){
     animateLastMoveSlide();
     // Léger tic quand L'ADVERSAIRE joue (mon propre coup vibre déjà au
@@ -18153,6 +18206,7 @@ function applyRemoteGameState(row){
     handleCombatAnimForMove(_moverType, _targetType, _syntheticMv, _rlm.color);
   }
   if(typeof updateWinProbBar==='function') updateWinProbBar();
+  }catch(_cosmEx){ console.error('applyRemoteGameState (cosmétique):', _cosmEx); }
   // Redémarre le décompte pour le nouveau tour, chez les deux joueurs —
   // sans cela, le minuteur ne tournait que chez celui qui venait de
   // jouer (via switchTurn), jamais chez celui qui reçoit l'état à
