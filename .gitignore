@@ -1,0 +1,8 @@
+# Skills installés localement (npx skills add) : outillage personnel, pas du
+# code du jeu — ils ne doivent pas polluer le dépôt.
+.claude/skills/
+.agents/
+skills-lock.json
+
+# Config locale de l'éditeur / de l'agent
+.claude/settings.local.json
