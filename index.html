@@ -454,6 +454,31 @@ body.ui-sumi .sumi-sky svg{position:absolute;inset:0;width:100%;height:100%;disp
 }
 .musashi-bubble::before{content:'';position:absolute;left:-9px;bottom:16px;border-width:8px 10px 8px 0;border-style:solid;border-color:transparent #f2e8d2 transparent transparent}
 .musashi-cursor{display:inline-block;width:7px;height:13px;background:#241a0c;margin-left:2px;vertical-align:middle;animation:musashi-blink .9s steps(1) infinite}
+
+/* ── Easter egg « Trouver Wurmz » ────────────────────────────────────
+   Le bousier passe la tête depuis un coin, au PREMIER PLAN (z-index au
+   -dessus du menu, façon Dan Forden dans Mortal Kombat 3). Il est décalé
+   hors écran par défaut ; les classes .from-* le font entrer. */
+#wurmz-egg{
+  position:absolute;width:132px;height:132px;object-fit:contain;z-index:60;
+  display:none;cursor:pointer;pointer-events:auto;
+  filter:drop-shadow(0 4px 18px rgba(0,0,0,.7));
+  transition:transform .45s cubic-bezier(.22,1.2,.36,1);
+}
+#wurmz-egg.visible{display:block}
+/* Position de repos = hors champ, dans son coin. La classe .peek le fait
+   glisser à l'intérieur ; l'enlever le fait repartir par le même chemin. */
+#wurmz-egg.corner-tl{top:-132px;left:14px}
+#wurmz-egg.corner-tr{top:-132px;right:14px}
+#wurmz-egg.corner-bl{bottom:-132px;left:14px}
+#wurmz-egg.corner-br{bottom:-132px;right:14px}
+#wurmz-egg.corner-tl.peek,#wurmz-egg.corner-tr.peek{transform:translateY(112px)}
+#wurmz-egg.corner-bl.peek,#wurmz-egg.corner-br.peek{transform:translateY(-112px)}
+/* Il arrive par le haut : on le retourne pour qu'il ait la tête en bas,
+   comme s'il se penchait par-dessus le bord pour regarder le menu. */
+#wurmz-egg.corner-tl,#wurmz-egg.corner-tr{transform:rotate(180deg)}
+#wurmz-egg.corner-tl.peek,#wurmz-egg.corner-tr.peek{transform:translateY(112px) rotate(180deg)}
+@media (prefers-reduced-motion:reduce){ #wurmz-egg{transition:none} }
 @keyframes musashi-blink{50%{opacity:0}}
 
 .dojo-bg{background:linear-gradient(180deg,#2c1d0e 0%,#1a1108 55%,#120a04 100%) !important}
@@ -1814,6 +1839,11 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
 <!-- HOME -->
 <div id="screen-home" class="screen active">
+
+  <!-- Easter egg « Trouver Wurmz » (1 accueil sur 100) : le bousier glisse
+       la tête depuis un coin au hasard, reste ~3 s, puis repart. Le cliquer
+       débloque le succès secret. Caché par défaut, voir maybeShowWurmzEgg(). -->
+  <img id="wurmz-egg" src="images/wurmz/AVATAR.png" alt="?" onclick="catchWurmzEgg()">
 
   <!-- Bascule de thème d'interface (Classique ⇄ Sumi), accessible sans
        entrer dans les menus — le libellé affiche le thème VERS lequel on
@@ -5456,6 +5486,9 @@ const ACH=[
   {id:'lose_5',name:'Acier Trempé',desc:"5 défaites — l’échec forge les grands",icon:'🔧',xp:15},
   {id:'fifty_games',name:'La Longue Route',desc:'50 parties jouées',icon:'🛤️',xp:50},
   {id:'hundred_games',name:'Investi',desc:'100 parties jouées',icon:'🧭',xp:100},
+  // secret:true => invisible tant qu'il n'est pas débloqué (pas même dans la
+  // liste des verrouillés : le trouver EST le succès). Voir buildAchievementsHtml.
+  {id:'find_wurmz',name:'Trouver Wurmz',desc:'Attraper le bousier qui rôde sur l’accueil',icon:'🪲',xp:100,secret:true},
 ];
 
 // Construit les deux cases "Blancs"/"Noirs" pour une cadence donnée —
@@ -5603,7 +5636,10 @@ function buildStreakGridHtml(d){
 function buildAchievementsHtml(achievementsObj, idPrefix){
   achievementsObj = achievementsObj||{};
   var unlockedList = ACH.filter(function(a){ return !!achievementsObj[a.id]; });
-  var lockedList = ACH.filter(function(a){ return !achievementsObj[a.id]; });
+  // Un succès SECRET non débloqué n'apparaît nulle part — pas même en
+  // "verrouillé" : en annoncer l'existence suffirait à vendre la mèche.
+  // Une fois obtenu, il s'affiche comme les autres.
+  var lockedList = ACH.filter(function(a){ return !achievementsObj[a.id] && !a.secret; });
   function achCard(a, unlocked){
     var icon = unlocked ? a.icon : '\ud83d\udd12';
     return '<div class="ach-card2 '+(unlocked?'unlocked':'locked')+'">'
@@ -5622,7 +5658,10 @@ function buildAchievementsHtml(achievementsObj, idPrefix){
     html += '<button class="ach-toggle-btn" id="'+idPrefix+'-ach-toggle-btn" data-locked-count="'+lockedList.length+'" onclick="toggleLockedAch(\''+idPrefix+'\')">Voir les '+lockedList.length+' succ\u00e8s verrouill\u00e9s &#9662;</button>';
     html += '<div id="'+idPrefix+'-ach-locked-list" class="ach-list" style="display:none">'+lockedList.map(function(a){ return achCard(a,false); }).join('')+'</div>';
   }
-  return {progressText: unlockedList.length+' / '+ACH.length+' d\u00e9bloqu\u00e9s', html: html};
+  // Le total exclut les secrets non trouv\u00e9s, sinon l'\u00e9cart entre le compteur
+  // et le nombre de cartes affich\u00e9es trahirait leur existence.
+  var total = ACH.filter(function(a){ return !a.secret || !!achievementsObj[a.id]; }).length;
+  return {progressText: unlockedList.length+' / '+total+' d\u00e9bloqu\u00e9s', html: html};
 }
 
 function toggleLockedAch(idPrefix){
@@ -8808,6 +8847,76 @@ async function recordBotDefeat(botIdx){
     }
   }catch(e){}
 }
+// ══════════════════════════════════════════════════════
+// EASTER EGG « TROUVER WURMZ » — 1 accueil sur 100
+// Hommage au Dan Forden de Mortal Kombat 3 : le bousier passe la tête
+// depuis un coin au hasard, reste ~3 s, repart. Le cliquer débloque un
+// succès secret + 400 Koku (versés par le SERVEUR, voir claim_wurmz_egg).
+// Musashi vend la mèche, lui aussi 1 fois sur 100 (voir MUSASHI_REPLIES) :
+// deux tirages indépendants, l'un étant l'indice de l'autre.
+// ══════════════════════════════════════════════════════
+var WURMZ_EGG_ODDS = 100;      // 1 chance sur 100
+var _wurmzEggTimer = null;
+var _wurmzEggCaught = false;   // évite le double-clic pendant l'appel serveur
+function maybeShowWurmzEgg(){
+  var el = document.getElementById('wurmz-egg');
+  if(!el) return;
+  if(Math.floor(Math.random()*WURMZ_EGG_ODDS) !== 0) return;
+  showWurmzEgg();
+}
+function showWurmzEgg(){
+  var el = document.getElementById('wurmz-egg');
+  if(!el) return;
+  hideWurmzEgg(true); // repart d'un état propre si un précédent traînait
+  _wurmzEggCaught = false;
+  var coins = ['tl','tr','bl','br'];
+  var coin = coins[Math.floor(Math.random()*coins.length)];
+  el.className = 'visible corner-' + coin;
+  // Deux images successives : sans ce délai, le navigateur applique la
+  // classe .peek dans le même calcul de style que la position de départ
+  // et ne voit aucune transition à animer — le bousier apparaîtrait d'un
+  // coup au lieu de glisser.
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ el.classList.add('peek'); }); });
+  _wurmzEggTimer = setTimeout(function(){ hideWurmzEgg(); }, 3000);
+}
+function hideWurmzEgg(immediat){
+  var el = document.getElementById('wurmz-egg');
+  if(!el) return;
+  if(_wurmzEggTimer){ clearTimeout(_wurmzEggTimer); _wurmzEggTimer = null; }
+  el.classList.remove('peek');            // il ressort par où il est entré
+  if(immediat){ el.className = ''; return; }
+  setTimeout(function(){ if(!el.classList.contains('peek')) el.className = ''; }, 500);
+}
+async function catchWurmzEgg(){
+  if(_wurmzEggCaught) return;
+  _wurmzEggCaught = true;
+  hideWurmzEgg();
+  if(typeof haptic==='function') haptic('victory');
+  // Le succès d'abord : il est local + synchronisé, il marche même sans
+  // le script SQL. Le Koku ensuite, car lui dépend du RPC serveur.
+  if(typeof unlockAch==='function') unlockAch('find_wurmz');
+  if(!currentUser || !supa){
+    showToast('🪲 Wurmz ! Connecte-toi pour empocher les 400 石.', false);
+    return;
+  }
+  try{
+    // Aucun montant transmis : le serveur seul décide (400) et ne paie
+    // qu'une fois par compte (profiles.wurmz_found).
+    const { data } = await supa.rpc('claim_wurmz_egg');
+    if(data && data.ok && !data.already){
+      if(data.balance != null) shopState.koku = data.balance;
+      else shopState.koku = (shopState.koku||0) + (data.koku||0);
+      if(typeof saveShopStateCache==='function') saveShopStateCache();
+      if(typeof refreshAllCurrencyDisplays==='function') refreshAllCurrencyDisplays();
+      showToast('🪲 Tu as attrapé Wurmz ! +400 石', false);
+    } else if(data && data.already){
+      showToast('🪲 Wurmz encore ! Mais on ne paie qu\'une fois.', false);
+    }
+  }catch(e){
+    showToast('🪲 Wurmz ! (400 石 en attente — script SQL non exécuté)', true);
+  }
+}
+
 function showScreen(id){
   // Garde-fou : un mode coupé par l'administration reste inaccessible
   // (sauf pour les admins). Permet de désactiver un mode qui bugue sans
@@ -8835,7 +8944,8 @@ function showScreen(id){
   if(id==='piece-skins' && typeof updateWurmzSkinToggle==='function') updateWurmzSkinToggle();
   if(id==='menu'){const el=document.getElementById('menu-quote');if(el)el.style.display='none';}
   if(id==='profile')renderProfile();
-  if(id==='home'){loadHomeQuotes();refreshHomeLogo();}
+  if(id==='home'){loadHomeQuotes();refreshHomeLogo();maybeShowWurmzEgg();}
+  else if(typeof hideWurmzEgg==='function') hideWurmzEgg(true); // il ne suit pas hors de l'accueil
   if(id==='local'){var bln=document.getElementById('btn-local-next');if(bln)bln.style.display='block';}
   if(id==='campaigns')renderCampaignsList();
   if(id==='clock')startClock();
@@ -10853,6 +10963,117 @@ var _QUICK_MSGS = [
 ];
 var _pmsgTimeout = null;
 
+// ══════════════════════════════════════════════════════
+// RÉPONSES DES PNJ AUX MESSAGES RAPIDES
+// Chaque bot répond dans SA voix (cf. AI_PERSONALITIES juste au-dessus :
+// intro/win/loss donnent déjà le la — on prolonge, on ne réinvente pas).
+// Clés : 0=Bonjour, 1=Bien joué, 2=Quelle erreur, 3=Revanche, 4=perso.
+// ══════════════════════════════════════════════════════
+
+// MUSASHI — le sensei. Noir, sombre, pédagogue malgré lui. Sarcastique,
+// grinçant, vieux moqueur. Il n'est presque JAMAIS gentil : c'est ce qui
+// donne son poids au rare compliment qui lui échappe, comme s'il admettait
+// à contrecœur d'avoir remarqué quelque chose. Il ne félicite pas : il
+// constate, agacé d'être impressionné.
+var MUSASHI_REPLIES = {
+  0: [ // Bonjour
+    "Bonjour. Le mot est joli. Il n'a jamais paré un seul coup.",
+    "Tu salues ton adversaire ? Charmant. Moi je salue les survivants.",
+    "Économise ta politesse, petit. Tu en auras besoin pour t'excuser tout à l'heure.",
+    "Bonjour. Voilà. C'est fait. On peut mourir maintenant ?",
+    "Ah, la courtoisie. Le dernier refuge de ceux qui n'ont pas de plan."
+  ],
+  1: [ // Bien joué (le joueur félicite Musashi)
+    "Évidemment. Tu croyais quoi ?",
+    "Ne me félicite pas. Félicite les quarante ans qui m'ont appris ce coup.",
+    "« Bien joué ». Tu applaudis l'orage aussi, quand il te tombe dessus ?",
+    "J'accepte. Non pas ton compliment — ta reddition.",
+    "Garde tes applaudissements. Ils font fuir la concentration."
+  ],
+  2: [ // Quelle erreur !
+    "Une erreur ? Non. Un enseignement. Le tien, généralement.",
+    "Tu as vu l'erreur. C'est déjà mieux qu'hier, où tu la commettais.",
+    "Les erreurs ne me dérangent pas. Ce sont les répétitions qui me fatiguent.",
+    "Oh, tu comptes les miennes ? Prends un carnet plus petit.",
+    "Rate encore. Rate mieux. C'est tout ce que je demande."
+  ],
+  3: [ // Revanche ?
+    "Une revanche ? Tu n'as pas fini de perdre celle-ci.",
+    "Encore ? Bien. L'entêtement est le seul talent que je ne peux pas t'enseigner.",
+    "La revanche est un plat qui se mange froid. Le tien est encore sur le feu.",
+    "Autant que tu voudras. J'ai le temps. Ce n'est pas ton cas.",
+    "Reviens. Je serai là. C'est le drame des vieux maîtres."
+  ],
+  4: [ // Message personnalisé
+    "Tu parles beaucoup, petit bousier. Tu vas de boule en boule et tu appelles ça un chemin.",
+    "Des mots. Encore des mots. Roule-les donc, ça te connaît.",
+    "Petit bousier… tu pousses, tu pousses, et tu crois que le monde avance.",
+    "J'ai entendu. J'ai choisi de ne pas répondre. C'est aussi une réponse.",
+    "Cause toujours. Le plateau, lui, ne t'écoute pas.",
+    "Tiens, il parle. Le silence te réussissait mieux."
+  ]
+};
+// Le compliment sincère : rare, court, et il lui échappe. Voir pickNpcReply.
+var MUSASHI_PRAISE = [
+  "…Oh.",
+  "…Tiens.",
+  "…Ça, c'était bien joué. N'y prends pas goût.",
+  "…Hm. Je n'avais pas vu venir ce coup. Ça faisait longtemps.",
+  "…Où as-tu appris ça ? Non. Ne réponds pas. Garde-le.",
+  "…Bien. Voilà. C'était bien. N'en parlons plus."
+];
+// 1 fois sur 100, l'indice. C'est l'autre moitié de l'easter egg de
+// l'accueil : Musashi est le seul à savoir, et il le lâche comme une
+// vieille rancune (voir maybeShowWurmzEgg).
+var MUSASHI_SECRET_HINT = "J'ai vu bien des secrets dans l'accueil.";
+var MUSASHI_HINT_ODDS = 100;
+
+// Les 6 bots de la galerie. Ordre des clés identique à AI_PERSONALITIES.
+var NPC_REPLIES = {
+  0: { // Le Fer — défensif, patient, impitoyable
+    0:["Salut reçu. Il ne te servira à rien.","Parle moins. Frappe mieux.","Le fer ne répond pas aux politesses."],
+    1:["Le fer ne se félicite pas. Il tient.","Constat exact. Continue.","C'était la seule réponse possible."],
+    2:["Une faille. J'attendais qu'elle vienne.","Le fer, lui, ne se trompe pas.","Tu t'es fêlé tout seul."],
+    3:["Reviens. Je n'aurai pas bougé.","Autant de fois que tu voudras te briser.","Le fer attend. C'est son métier."],
+    4:["Des mots. Le fer n'en a jamais eu besoin.","Tu parles. Je tiens. Devine qui gagne.","Cause. J'ai le temps, je ne plie pas."]
+  },
+  1: { // Le Juge — positionnel, punit chaque erreur
+    0:["Le tribunal note ta politesse. Sans indulgence.","Salut enregistré. Passons au dossier.","On ne salue pas son juge. On plaide."],
+    1:["La sentence était juste, voilà tout.","Je n'ai pas bien joué. J'ai jugé.","Le verdict n'a pas besoin d'éloges."],
+    2:["Faute reconnue. Circonstances aggravantes.","Chaque erreur est une pièce au dossier.","Noté. Ça pèsera au verdict."],
+    3:["L'appel est recevable. Il sera rejeté.","On ne rejuge pas un mort. Mais soit.","Deuxième comparution. Même sentence."],
+    4:["Tout ce que tu diras sera retenu contre toi.","Plaidoirie inutile. Le dossier est accablant.","Parle. J'aime les aveux spontanés."]
+  },
+  2: { // Le Vent — agressif, rapide, tranchant
+    0:["Bonjour. Au revoir. C'était rapide, non ?","Salut ! Bon, tu es déjà en retard.","Le vent ne s'annonce pas."],
+    1:["Déjà reparti quand tu l'as dit.","Trop lent. Même ton compliment.","Merci ! Enfin, j'imagine. Je n'ai pas écouté."],
+    2:["Vu. Exploitée. Déjà loin.","Les erreurs, moi, je les traverse.","Tu t'en es aperçu ? Trop tard."],
+    3:["Encore ? D'accord. Ce sera plus court.","La revanche du vent, c'est un courant d'air.","Oui ! Vite alors, j'ai autre chose."],
+    4:["Trop long. J'ai lu la moitié.","Tu écris pendant que je coupe. Choix courageux.","Des mots au vent. Littéralement."]
+  },
+  3: { // Sagami — équilibré, monte en pression
+    0:["Bonjour. Les cendres sont encore tièdes.","Salut à toi. Profite : c'est le moment le plus calme.","Bienvenue. Ça va chauffer."],
+    1:["La braise ne remercie pas. Elle monte.","Ce n'était que l'étincelle.","Attends la suite avant d'applaudir."],
+    2:["Une braise mal placée, et tout brûle.","L'erreur est un courant d'air : elle attise.","Ça part vite, une faute."],
+    3:["Le feu reprend toujours. Approche.","Revanche ? Rajoute du bois, alors.","On rallume. Volontiers."],
+    4:["Beaucoup de fumée. Peu de feu.","Souffle sur les braises tant que tu veux.","Les mots brûlent vite et mal."]
+  },
+  4: { // Le Feu follet — fourbe, pièges et sacrifices
+    0:["Bonjouuur. Approche donc. Encore un peu.","Salut, l'ami ! (Il n'y a pas d'ami.)","Bonjour ! Suis-moi, c'est par ici. Promis."],
+    1:["Merci ! C'était un piège, mais merci.","Tu applaudis ? Parfait. Regarde ailleurs.","Content que ça t'ait plu. Ça devait te plaire."],
+    2:["Une erreur ? Non non. Un cadeau.","Tu appelles ça une erreur ? Moi, un appât.","Chut. Ne dis rien. Reprends-en une."],
+    3:["Oui ! Reviens ! Ils reviennent toujours.","Une revanche ! Quelle bonne idée. La tienne, bien sûr.","Encore ? Je n'osais pas te le proposer."],
+    4:["Continue de parler, ça m'aide à te situer.","Oh, tu me racontes des choses ! J'adore ça.","Parle, parle. Tu ne regardes pas le plateau."]
+  },
+  5: { // Le Crâne — le plus fort, aucune faille
+    0:["…","La politesse est un os creux.","Les crânes ne saluent pas. Ils accueillent."],
+    1:["L'art n'a que faire de ton avis.","Ce n'était pas bien joué. C'était exact.","Range ton compliment. Il ne rentre pas ici."],
+    2:["Je n'en commets pas. Toi si. Trois déjà.","L'erreur est ta signature. Je l'ai reconnue.","Sous ce crâne, aucune erreur. Seulement l'art."],
+    3:["Reviens. La collection est incomplète.","Ta place est déjà prête. Sur l'étagère.","Autant de revanches que d'os. J'en ai beaucoup."],
+    4:["Les vivants parlent trop. Ça se soigne.","Des mots. Ils ne tiendront pas dans la vitrine.","Parle tant qu'il te reste une mâchoire."]
+  }
+};
+
 function sendQuickMsg(idx){
   if(reviewMode) return; // pas de nouveaux messages en mode analyse, on ne fait que rejouer ceux déjà envoyés
   var txt = idx === 4 ? (userPrefs.customQuickMsg||'...') : _QUICK_MSGS[idx];
@@ -10874,6 +11095,84 @@ function sendQuickMsg(idx){
   // soi), préparé pour l'extension future.
   playSound('move');
   haptic('select');
+  maybeNpcReply(idx);
+}
+
+// Le PNJ ne répond pas toujours : ignorer le joueur fait partie du
+// personnage (surtout Musashi), et une réponse systématique tuerait
+// l'effet — on cesserait de les lire.
+var NPC_REPLY_CHANCE = 0.75;
+var _npcReplyTimer = null;
+var _npcLastReply = {};   // dernière réplique servie par catégorie : on évite de la répéter deux fois de suite
+
+// Qui est en face ? Musashi tient la leçon en campagne ; en galerie, c'est
+// le bot choisi. Renvoie null en ligne / en local (deux humains).
+function currentNpcId(){
+  if(G.onlineGameId) return null;          // adversaire humain : pas de PNJ
+  // Campagne et entraînement = Musashi. On teste campaignState (l'état réel
+  // de la leçon) et G.gameMode : en campagne G.vsAI vaut false, un garde sur
+  // vsAI seul écarterait donc justement l'écran où Musashi doit parler.
+  if(typeof campaignState!=='undefined' && campaignState) return 'musashi';
+  if(G.gameMode === 'campaign') return 'musashi';
+  if(typeof _trainingMode!=='undefined' && _trainingMode) return 'musashi';
+  if(!G.vsAI) return null;                 // partie locale à deux humains
+  // Galerie Adversaires : _pendingBotIdx porte l'index de personnalité.
+  var idx = (typeof _pendingBotIdx==='number') ? _pendingBotIdx : null;
+  if(idx===null && typeof G.advId==='number') idx = G.advId;
+  return (typeof idx==='number' && NPC_REPLIES[idx]) ? idx : null;
+}
+
+// Choisit une réplique sans répéter la précédente de la même catégorie —
+// deux fois la même phrase d'affilée casse net l'illusion du personnage.
+function pickNpcReply(pool, cle){
+  if(!pool || !pool.length) return null;
+  if(pool.length === 1) return pool[0];
+  var choix, essais = 0;
+  do { choix = pool[Math.floor(Math.random()*pool.length)]; essais++; }
+  while(choix === _npcLastReply[cle] && essais < 8);
+  _npcLastReply[cle] = choix;
+  return choix;
+}
+
+function maybeNpcReply(idx){
+  var npc = currentNpcId();
+  if(npc === null) return;
+  if(_npcReplyTimer){ clearTimeout(_npcReplyTimer); _npcReplyTimer = null; }
+  if(Math.random() > NPC_REPLY_CHANCE) return;   // il t'ignore, et c'est voulu
+
+  var txt = null;
+  if(npc === 'musashi'){
+    // 1 fois sur 100 : l'indice de l'easter egg de l'accueil. Il passe
+    // avant tout le reste — c'est le clin d'œil, il doit pouvoir tomber
+    // sur n'importe quel message.
+    if(Math.floor(Math.random()*MUSASHI_HINT_ODDS) === 0){
+      txt = MUSASHI_SECRET_HINT;
+    } else if(idx === 1 && Math.random() < 0.18){
+      // Le compliment qui lui échappe : uniquement quand le joueur salue un
+      // beau coup, et rarement. Sa valeur tient à sa rareté.
+      txt = pickNpcReply(MUSASHI_PRAISE, 'praise');
+    } else {
+      txt = pickNpcReply(MUSASHI_REPLIES[idx], 'm'+idx);
+    }
+  } else {
+    var pool = NPC_REPLIES[npc] && NPC_REPLIES[npc][idx];
+    txt = pickNpcReply(pool, npc+'-'+idx);
+  }
+  if(!txt) return;
+
+  // Petit temps avant la réponse : une réplique instantanée ferait
+  // automate. Musashi, lui, prend le temps de te toiser.
+  var delai = (npc==='musashi') ? 900 : 650;
+  _npcReplyTimer = setTimeout(function(){
+    _npcReplyTimer = null;
+    if(G.gameOver || reviewMode) return;   // la partie s'est terminée entre-temps
+    if(npc === 'musashi' && typeof showMusashiText==='function'){
+      showMusashiText(txt);                 // sa bulle d'avatar dédiée
+    } else {
+      var oppColor = (G.bottomColor==='white') ? 'black' : 'white';
+      showPlayerMsg(txt, oppColor);         // bulle du camp adverse
+    }
+  }, delai);
 }
 
 function showPlayerMsg(txt, color){
@@ -13859,6 +14158,10 @@ document.addEventListener('DOMContentLoaded',function(){
   updateHomeProfileMini();
   updateToggles();
   loadHomeQuotes(); // ← afficher citation dès le premier chargement
+  // L'accueil est déjà actif au chargement (class="screen active") : il ne
+  // passe donc pas par showScreen('home'), d'où ce tirage explicite ici —
+  // sinon l'easter egg ne pourrait jamais sortir au tout premier écran.
+  if(typeof maybeShowWurmzEgg==='function') maybeShowWurmzEgg();
   // Restore sound profile UI
   setSoundProfile(soundProfile);
   document.addEventListener('touchstart',function(){var c=getACtx();if(c&&c.state==='suspended')c.resume();});
