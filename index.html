@@ -18217,7 +18217,14 @@ function applyRemoteGameState(row){
     // localement via le flux normal d'executeDrop avant même que cette
     // mise à jour temps réel (son propre echo) ne lui revienne.
     if(G.gameOver) return;
-    G.gameOver = true;
+    // 🔴 NE PAS poser G.gameOver ici. endGame() commence par
+    // `if(G.gameOver) return;` : le positionner avant l'appel faisait
+    // sortir endGame immédiatement — aucun overlay, aucun son — et le
+    // PERDANT restait figé en partie. C'était LA cause du bug « victoire
+    // par poussée non propagée » : une défaite au temps passe par le
+    // triggerTimeout local (qui, lui, n'arme pas le drapeau avant), mais
+    // une victoire décidée chez l'adversaire et reçue par temps réel
+    // passait uniquement par ici. endGame pose le drapeau lui-même.
     endGame(row.winner, (row.winner===myColorOnline) ? 'Victoire en ligne !' : 'Défaite en ligne.');
   }
 }
