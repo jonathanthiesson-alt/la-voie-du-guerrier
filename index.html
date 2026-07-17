@@ -1946,7 +1946,10 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 </div>
 
 <!-- ═══════════ JOUER (écran unifié, onglet principal de la bottom-nav) ═══════════ -->
-<div id="screen-play" class="screen" style="justify-content:flex-start;padding-top:14px">
+<div id="screen-play" class="screen" style="justify-content:flex-start;padding-top:46px">
+  <!-- La barre est en position:absolute : le padding-top de l'écran (46px au
+       lieu de 14) est ce qui empêche le panneau de passer dessous. -->
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('menu')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
   <div class="panel" style="max-width:330px;width:100%">
     <!-- Ciel Sumi : mont Fuji au crépuscule (visible en thème Sumi uniquement) -->
     <div class="sumi-sky"><svg viewBox="0 0 300 92" preserveAspectRatio="none" aria-hidden="true">
@@ -9115,16 +9118,23 @@ async function pollMatchmaking(timerSeconds, myElo){
   if(!_mmSearching || !currentUser) return;
   try{
     // Un adversaire a peut-être déjà créé la partie pour nous.
+    // select('*') et NON une liste de colonnes : nommer les colonnes ici a
+    // fait perdre `arena_match_id` et `ranked`. Conséquence vécue — une
+    // manche d'Arène ramassée par ce poll était rejouée comme une partie
+    // ordinaire : G.arenaMatchId restait vide, endGame() ne dispatchait
+    // plus vers handleArenaEndGame(), et les manches ne s'enchaînaient plus.
     const { data: myGames } = await supa.from('online_games')
-      .select('id,white_player_id,black_player_id,game_state,turn,timer_seconds,status,created_at')
+      .select('*')
       .or('white_player_id.eq.'+currentUser.id+',black_player_id.eq.'+currentUser.id)
       .eq('status','active').order('created_at',{ascending:false}).limit(1);
     if(myGames && myGames.length){
       var g = myGames[0];
       var ageMs = Date.now() - new Date(g.created_at).getTime();
-      if(ageMs < 20000){
+      // Une manche d'Arène ne se rejoint JAMAIS par ici : elle a son propre
+      // chemin (enterArenaMatch), seul à poser le contexte du BO3.
+      if(ageMs < 20000 && !g.arena_match_id){
         stopMatchmakingSearch(false);
-        await enterOnlineGame(g.id, g.white_player_id, g.game_state, g.turn, g.timer_seconds);
+        await enterOnlineGame(g.id, g.white_player_id, g.game_state, g.turn, g.timer_seconds, g.ranked);
         return;
       }
     }
@@ -9277,6 +9287,10 @@ async function createArenaRound(match, roundNumber){
     white_player_id: whiteId, black_player_id: blackId,
     game_state: { board: G.board, stacks: G.stacks, lastMoved: G.lastMoved, lastMovedByColor: G.lastMovedByColor },
     turn: G.turn, timer_seconds: match.timer_seconds,
+    // online_games.ranked vaut `true` par DÉFAUT en base : sans le reporter
+    // depuis le match, les manches 2 et 3 d'une Arène amicale repartaient
+    // en classées alors que la manche 1 ne l'était pas.
+    ranked: (match.ranked !== false),
     arena_match_id: match.id, arena_round_number: roundNumber
   }).select().single();
   _arenaRoundCreationInFlight = null;
@@ -9298,7 +9312,11 @@ async function enterArenaMatch(match, gameRow){
   // IMPORTANT : enterOnlineGame() fait `G = {...}` (remplacement complet,
   // pas une fusion) — poser les champs d'Arène AVANT l'appel les ferait
   // écraser silencieusement. On les pose donc APRÈS, une fois G reconstruit.
-  await enterOnlineGame(gameRow.id, gameRow.white_player_id, gameRow.game_state, gameRow.turn, gameRow.timer_seconds);
+  // Le statut classé/amical se lit sur la ligne de partie, sinon sur le
+  // match : sans ce 6e argument, G.ranked retombait sur `true` par défaut
+  // et une Arène AMICALE créditait ELO, Koku et XP.
+  var _arenaRanked = (gameRow.ranked !== undefined) ? gameRow.ranked : match.ranked;
+  await enterOnlineGame(gameRow.id, gameRow.white_player_id, gameRow.game_state, gameRow.turn, gameRow.timer_seconds, _arenaRanked);
   G.arenaMatchId = match.id;
   G.arenaRoundNumber = gameRow.arena_round_number;
   G.arenaMatch = match;
