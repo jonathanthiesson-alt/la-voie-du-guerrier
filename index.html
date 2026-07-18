@@ -138,6 +138,10 @@ body.ui-sumi #sumi-home-sky svg{width:100%;height:100%;display:block}
 /* En Sumi, le paysage EST le visuel d'accueil : le logo épéiste (pensé
    pour le fond sombre du Classique) ferait doublon sur le Fuji. */
 body.ui-sumi #home-logo{display:none}
+/* Logo-raccourci actif (phase C) : léger battement pour signaler qu'il
+   est cliquable. Sur transform pour ne pas écraser le filter (aura) inline. */
+@keyframes homeLogoPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+#home-logo.home-logo-active{animation:homeLogoPulse 2.6s ease-in-out infinite}
 .sumisky-swatch{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid rgba(200,168,110,.25)}
 .sumisky-swatch.selected,#sumisky-auto.selected{border-color:var(--gold-bright);box-shadow:0 0 6px rgba(212,160,23,.6)}
 .sumi-sky{display:none}
@@ -1962,6 +1966,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <!-- Zone titre — agrandi -->
   <div style="width:100%;padding:28px 24px 0;display:flex;flex-direction:column;align-items:center;position:relative;z-index:1">
     <img id="home-logo" src="" alt="Logo épéiste"
+      onclick="onHomeLogoClick()" ontouchend="if(getHomeLogoAction&&getHomeLogoAction()!=='none'){event.preventDefault();onHomeLogoClick();}"
       style="width:180px;height:180px;object-fit:contain;margin-bottom:4px;opacity:.95;filter:drop-shadow(0 0 16px rgba(232,213,163,.35))">
     <!-- Emblème du thème Wurmz : visible uniquement en ui-wurmz (voir CSS). -->
     <img id="wurmz-home-emblem" src="images/wurmz/AVATAR.png" alt="Wurmz" aria-hidden="true"
@@ -2169,6 +2174,9 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div class="settings-item" onclick="showScreen('language')">
       <span class="settings-label">&#127760; <span data-i18n="lang_title">Langue</span></span><span style="color:var(--gold);opacity:.6;font-size:16px">&#8250;</span>
     </div>
+    <div class="settings-item" onclick="showScreen('home-logo-cfg')">
+      <span class="settings-label">&#127968; <span data-i18n="home_logo_cfg_item">Logo d'accueil</span></span><span style="color:var(--gold);opacity:.6;font-size:16px">&#8250;</span>
+    </div>
     <div class="settings-item" onclick="toggleSetting('sound')">
       <span class="settings-label">&#128266; <span data-i18n="settings_sound">Sons</span></span>
       <div class="settings-toggle on" id="toggle-sound"></div>
@@ -2293,6 +2301,16 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
         &#127471;&#127477; &#26085;&#26412;&#35486; <span id="lang-ja-check" style="float:right;color:var(--gold-bright)">&#10003;</span>
       </button>
     </div>
+  </div>
+</div>
+
+<!-- LOGO D'ACCUEIL — raccourci configurable (refonte UI, phase C) -->
+<div id="screen-home-logo-cfg" class="screen">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('settings')" data-i18n="btn_back">&#8617; Retour</button></div>
+  <div class="panel" style="max-width:320px">
+    <div class="menu-title" style="font-size:20px">&#127968; <span data-i18n="home_logo_cfg_title">LOGO D'ACCUEIL</span></div>
+    <div class="menu-divider"></div>
+    <div id="home-logo-cfg-body"></div>
   </div>
 </div>
 
@@ -6370,6 +6388,8 @@ const LANGS={
     local_hub_versus:'Vs Ordi / 2 joueurs',
     options_title:'OPTIONS',
     local_hub_sub_opt:'Réglages, apparence, compte',
+    home_logo_cfg_item:'Logo d\'accueil',
+    home_logo_cfg_title:'LOGO D\'ACCUEIL',
     menu_shop:'Boutique',
     menu_events_mode:'Événements',
   },
@@ -6575,6 +6595,8 @@ const LANGS={
     local_hub_versus:'Vs Computer / 2 players',
     options_title:'OPTIONS',
     local_hub_sub_opt:'Settings, appearance, account',
+    home_logo_cfg_item:'Home logo',
+    home_logo_cfg_title:'HOME LOGO',
     menu_shop:'Shop',
     menu_events_mode:'Events',
   },
@@ -6780,6 +6802,8 @@ const LANGS={
     local_hub_versus:'対CPU / 2人対戦',
     options_title:'設定',
     local_hub_sub_opt:'設定・外観・アカウント',
+    home_logo_cfg_item:'ホームロゴ',
+    home_logo_cfg_title:'ホームロゴ',
     menu_shop:'商店',
     menu_events_mode:'イベント',
   }
@@ -7885,7 +7909,7 @@ var NAV_TAB_MAP = {
   clock:'bn-campaign', campaigns:'bn-campaign', 'campaign-dojo':'bn-campaign', citations:'bn-campaign',
   shop:'bn-shop', events:'bn-shop',
   amis:'bn-social', messaging:'bn-social', 'public-profile':'bn-social',
-  profile:'bn-profile', settings:'bn-profile', display:'bn-profile', language:'bn-profile', 'piece-skins':'bn-profile'
+  profile:'bn-profile', settings:'bn-profile', display:'bn-profile', language:'bn-profile', 'piece-skins':'bn-profile', 'home-logo-cfg':'bn-profile'
 };
 function updateBottomNav(id){
   var visible = NAV_HIDDEN_SCREENS.indexOf(id)===-1;
@@ -9241,7 +9265,8 @@ function showScreen(id){
     if(logoutBtn) logoutBtn.style.display = currentUser ? 'block' : 'none';
   }
   if(id==='game'){ if(typeof stopMenuMusic==='function') stopMenuMusic(); }
-  if(id==='home'){ if(typeof stopMenuMusic==='function') stopMenuMusic(); if(typeof stopFightMusic==='function') stopFightMusic(); if(typeof refreshHomeOnlineCount==='function') refreshHomeOnlineCount(); }
+  if(id==='home'){ if(typeof stopMenuMusic==='function') stopMenuMusic(); if(typeof stopFightMusic==='function') stopFightMusic(); if(typeof refreshHomeOnlineCount==='function') refreshHomeOnlineCount(); if(typeof applyHomeLogoAura==='function') applyHomeLogoAura(); }
+  if(id==='home-logo-cfg'){ renderHomeLogoCfg(); }
   if(id==='arena'){ refreshKokuDisplays(); refreshArenaKokuProgress(); refreshAllCurrencyDisplays(); }
   if(id==='sumo'){ refreshAllCurrencyDisplays(); }
   if(id==='online-hub'){ refreshKokuDisplays(); refreshAllCurrencyDisplays(); }
@@ -9261,6 +9286,7 @@ function showScreen(id){
   if(id==='events') openEventsScreen();
   if(id!=='matchmaking') stopMatchmakingSearch(false);
   if(id!=='messaging' && _leagueChatPollInterval){ clearInterval(_leagueChatPollInterval); _leagueChatPollInterval=null; }
+  if(id!=='messaging' && _guildChatPollInterval){ clearInterval(_guildChatPollInterval); _guildChatPollInterval=null; }
 }
 
 // ══ QUICK PLAY ══
@@ -13843,7 +13869,9 @@ async function syncAppearancePrefsToCloud(){
         pieces_theme: currentPiecesTheme,
         board_layout: currentBoardLayout,
         opponent_skin: pieceSkins.opponent,
-        title_idx: PP.title||0
+        title_idx: PP.title||0,
+        home_logo_action: getHomeLogoAction(),
+        home_logo_aura: getHomeLogoAura()
       }
     }).eq('id', currentUser.id);
   }catch(e){}
@@ -14650,6 +14678,8 @@ function refreshHomeLogo(){
   if(!epSkinsWithB64.length) return;
   var pick = epSkinsWithB64[Math.floor(Math.random() * epSkinsWithB64.length)];
   img.src = pick.b64;
+  // Applique l'aura du raccourci (ou l'aura décorative par défaut).
+  if(typeof applyHomeLogoAura==='function') applyHomeLogoAura();
 }
 
 // Option cachée : cliquer sur le logo épéiste de l'écran d'accueil lance
@@ -14678,6 +14708,113 @@ function handleSecretLogoTouch(e){
   _secretLogoTouchLock = true;
   setTimeout(function(){ _secretLogoTouchLock = false; }, 800);
   startSecretDefenderMatch();
+}
+
+// ══════════════════════════════════════════════════════
+// LOGO D'ACCUEIL = RACCOURCI CONFIGURABLE (refonte UI, phase C)
+//
+// Par défaut le logo est purement décoratif (action 'none', aucun clic
+// actif). Le joueur peut le transformer en bouton-raccourci depuis
+// ⚙ Options → Logo d'accueil. Dès qu'un raccourci est choisi, une aura
+// colorée légère entoure le logo pour signaler qu'il est cliquable ; la
+// couleur de l'aura est au choix du joueur. Réglage rattaché au compte
+// (stocké dans profiles.appearance_prefs — aucune colonne SQL neuve).
+// ══════════════════════════════════════════════════════
+// Les 5 raccourcis proposés + 'none'. Les trois premiers exigent une
+// connexion (jeu en ligne) : garde-fou dans onHomeLogoClick.
+var HOME_LOGO_LABELS = {
+  none:   'Aucun (décoratif)',
+  quick5: '⚡ Partie rapide 5s',
+  arena10:'⚔ Combat d\'Arène 10s',
+  daily:  '🎯 Défi du jour',
+  events: '🌸 Page Événements',
+  social: '👥 Page Social'
+};
+function getHomeLogoAction(){ try{ return localStorage.getItem('vtl_home_logo_action')||'none'; }catch(e){ return 'none'; } }
+function getHomeLogoAura(){ try{ return localStorage.getItem('vtl_home_logo_aura')||'#d4a017'; }catch(e){ return '#d4a017'; } }
+// Convertit un #rrggbb en rgba() translucide pour une aura douce.
+function homeLogoHexToRgba(hex, a){
+  var h = String(hex||'#d4a017').replace('#','');
+  if(h.length===3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  var r=parseInt(h.substr(0,2),16), g=parseInt(h.substr(2,2),16), b=parseInt(h.substr(4,2),16);
+  if(isNaN(r)||isNaN(g)||isNaN(b)){ r=212; g=160; b=23; }
+  return 'rgba('+r+','+g+','+b+','+a+')';
+}
+// Applique (ou retire) l'aura sur le logo selon l'action configurée.
+function applyHomeLogoAura(){
+  var img = document.getElementById('home-logo');
+  if(!img) return;
+  var action = getHomeLogoAction();
+  if(action==='none'){
+    img.style.cursor = 'default';
+    // Aura décorative d'origine (blanc chaud discret).
+    img.style.filter = 'drop-shadow(0 0 16px rgba(232,213,163,.35))';
+    img.classList.remove('home-logo-active');
+    return;
+  }
+  var c = getHomeLogoAura();
+  img.style.cursor = 'pointer';
+  // Deux halos concentriques translucides = aura légère et colorée.
+  img.style.filter = 'drop-shadow(0 0 10px '+homeLogoHexToRgba(c,.65)+') drop-shadow(0 0 26px '+homeLogoHexToRgba(c,.4)+')';
+  img.classList.add('home-logo-active');
+}
+// Exécute le raccourci choisi au clic sur le logo (rien si 'none').
+function onHomeLogoClick(){
+  var action = getHomeLogoAction();
+  if(action==='none') return;
+  var needsOnline = (action==='quick5' || action==='arena10' || action==='daily');
+  if(needsOnline && !currentUser){
+    showToast('Connectez-vous pour utiliser ce raccourci.', true);
+    showScreen('online-auth');
+    return;
+  }
+  switch(action){
+    case 'quick5':  setQuickCadence(5); quickPlay(); break;
+    case 'arena10': showScreen('arena'); setTimeout(function(){ startArenaMatchmakingSearch(10); }, 80); break;
+    case 'daily':   startDailyChallenge(); break;
+    case 'events':  showScreen('events-mode'); break;
+    case 'social':  showScreen('amis'); break;
+  }
+}
+function setHomeLogoAction(action){
+  if(!HOME_LOGO_LABELS[action]) action='none';
+  try{ localStorage.setItem('vtl_home_logo_action', action); }catch(e){}
+  applyHomeLogoAura();
+  renderHomeLogoCfg();
+  if(typeof syncAppearancePrefsToCloud==='function') syncAppearancePrefsToCloud();
+}
+function setHomeLogoAura(color){
+  try{ localStorage.setItem('vtl_home_logo_aura', color); }catch(e){}
+  applyHomeLogoAura();
+  renderHomeLogoCfg();
+  if(typeof syncAppearancePrefsToCloud==='function') syncAppearancePrefsToCloud();
+}
+// (Re)construit l'écran de configuration du logo d'accueil.
+function renderHomeLogoCfg(){
+  var box = document.getElementById('home-logo-cfg-body');
+  if(!box) return;
+  var action = getHomeLogoAction();
+  var aura = getHomeLogoAura();
+  var html = '<div style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.6;margin-bottom:12px">Transforme le logo de l\'écran d\'accueil en bouton-raccourci. Une aura colorée signale qu\'il est actif.</div>';
+  html += '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">';
+  Object.keys(HOME_LOGO_LABELS).forEach(function(k){
+    var sel = (k===action);
+    html += '<button class="btn" style="width:100%;font-size:12px;padding:9px;text-align:left'+(sel?';border-color:var(--gold-bright);background:rgba(212,160,23,.18)':'')+'" onclick="setHomeLogoAction(\''+k+'\')">'
+      + (sel?'● ':'○ ') + HOME_LOGO_LABELS[k] + '</button>';
+  });
+  html += '</div>';
+  // La couleur d'aura n'a de sens que si un raccourci est actif.
+  var dim = (action==='none');
+  html += '<div style="padding-top:6px;border-top:1px solid rgba(200,169,110,.15);opacity:'+(dim?'.4':'1')+'">'
+    + '<div style="font-family:VT323,monospace;font-size:12px;color:var(--gold);margin-bottom:8px">Couleur de l\'aura'+(dim?' (choisis d\'abord un raccourci)':'')+'</div>'
+    + '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">';
+  ['#d4a017','#e8863a','#d94f6e','#6abf40','#5a7ba8','#8a7fa8'].forEach(function(c){
+    var on = (c.toLowerCase()===String(aura).toLowerCase());
+    html += '<div onclick="setHomeLogoAura(\''+c+'\')" style="width:30px;height:30px;border-radius:50%;cursor:pointer;background:'+c+';border:2px solid '+(on?'#fff':'rgba(200,168,110,.4)')+'"></div>';
+  });
+  html += '<input type="color" value="'+aura+'" oninput="setHomeLogoAura(this.value)" title="Couleur libre" style="width:30px;height:30px;border:2px solid rgba(200,168,110,.4);border-radius:50%;background:none;cursor:pointer;padding:0">';
+  html += '</div></div>';
+  box.innerHTML = html;
 }
 
 
@@ -17353,6 +17490,10 @@ async function reconcileProfileWithCloud(cloud){
     if(ap.board_layout && ap.board_layout!==currentBoardLayout){ setBoardLayout(ap.board_layout); }
     if(ap.opponent_skin){ pieceSkins.opponent = ap.opponent_skin; try{ savePieceSkins(); }catch(e){} }
     if(ap.title_idx !== undefined && ap.title_idx !== PP.title){ PP.title = ap.title_idx; changed = true; }
+    // Raccourci du logo d'accueil (le cloud fait foi entre appareils).
+    if(ap.home_logo_action){ try{ localStorage.setItem('vtl_home_logo_action', ap.home_logo_action); }catch(e){} }
+    if(ap.home_logo_aura){ try{ localStorage.setItem('vtl_home_logo_aura', ap.home_logo_aura); }catch(e){} }
+    if(typeof applyHomeLogoAura==='function') applyHomeLogoAura();
   }
 
   if(changed){ saveProfile(); updateHomeProfileMini(); }
@@ -17375,7 +17516,8 @@ async function pushFullProfileToCloud(){
       achievements: PP.achievements, piece_skin: pieceSkins.player1, displayed_grade: PP.displayedGrade,
       appearance_prefs: {
         board_theme: currentBoardTheme, pieces_theme: currentPiecesTheme, board_layout: currentBoardLayout,
-        opponent_skin: pieceSkins.opponent, title_idx: PP.title||0
+        opponent_skin: pieceSkins.opponent, title_idx: PP.title||0,
+        home_logo_action: getHomeLogoAction(), home_logo_aura: getHomeLogoAura()
       }
     }).eq('id', currentUser.id);
   }catch(e){}

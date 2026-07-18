@@ -1,5 +1,9 @@
 # Refonte UI « fluide façon chess.com » — plan validé (2026-07-18)
 
+> ✅ **Phases A, B et C livrées le 2026-07-18** (commits sur `main`).
+> Détail des réalisations à la fin de chaque phase ci-dessous.
+
+
 > Décisions prises avec Jonathan AVANT le chantier. À exécuter en
 > **3 phases = 3 commits testables**, dans l'ordre. Ne pas tout faire
 > d'un coup. Vérifier dans le navigateur à chaque phase.
