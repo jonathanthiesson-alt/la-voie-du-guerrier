@@ -5013,11 +5013,14 @@ async function renderGuildList(){
     html += list.map(function(g,i){
       var podium = i<3 ? ['🥇','🥈','🥉'][i] : '#'+(i+1);
       var modeIcon = g.join_mode==='open' ? '🔓' : '🔒';
-      return '<div style="display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.22);border-radius:7px;padding:8px 11px;margin-bottom:5px">'
-        + '<span style="font-family:VT323,monospace;font-size:13px;color:var(--gold);width:26px">'+podium+'</span>'
-        + '<div style="flex:1;min-width:0"><div style="font-family:\'Cinzel\',serif;font-size:12px;color:var(--gold-bright)">'+modeIcon+' '+escapeHtml(g.name)+' <span style="opacity:.5">['+escapeHtml(g.tag||'')+']</span></div>'
-        + '<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.55">🐉 '+g.ryu_total+' · '+g.members+'/20 membres</div></div>'
-        + '<button class="btn" style="font-size:10px;padding:5px 9px" onclick="joinGuild('+g.id+')">'+(g.join_mode==='open'?'Rejoindre':'Demander')+'</button>'
+      // ⚠ .btn a width:100% par défaut : sans width:auto/flex-shrink:0
+      // inline, le bouton s'étale sur toute la ligne et écrase le nom
+      // (vécu : classement des guildes illisible en thème sombre).
+      return '<div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.22);border-radius:7px;padding:8px 11px;margin-bottom:5px">'
+        + '<span style="font-family:VT323,monospace;font-size:13px;color:var(--gold);width:26px;flex-shrink:0">'+podium+'</span>'
+        + '<div style="flex:1;min-width:0"><div style="font-family:\'Cinzel\',serif;font-size:12px;color:var(--gold-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+modeIcon+' '+escapeHtml(g.name)+' <span style="opacity:.5">['+escapeHtml(g.tag||'')+']</span></div>'
+        + '<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.55;white-space:nowrap">🐉 '+g.ryu_total+' · '+g.members+'/20 membres</div></div>'
+        + '<button class="btn" style="font-size:10px;padding:5px 9px;width:auto;flex-shrink:0;margin:0" onclick="joinGuild('+g.id+')">'+(g.join_mode==='open'?'Rejoindre':'Demander')+'</button>'
       + '</div>';
     }).join('');
   }
@@ -5032,7 +5035,7 @@ function renderMyGuild(data){
     + '<div style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.6">🐉 '+g.ryu_total+' Ryu collectif · '+(g.join_mode==='open'?'🔓 Ouverte':'🔒 Sur demande')+'</div></div>';
   html += '<div style="display:flex;gap:6px;margin-bottom:10px">'
     + '<button class="btn" style="flex:1;font-size:11px;padding:7px" onclick="_guildView=\'list\';refreshGuildScreen()">🏆 Autres guildes</button>'
-    + '<button class="btn" style="flex:1;font-size:11px;padding:7px" onclick="openGuildTournaments('+g.id+')">⚔ Défis inter-guildes</button>'
+    + '<button class="btn" style="flex:1;font-size:11px;padding:7px" onclick="openGuildTournaments('+g.id+','+isLeader+')">⚔ Défis inter-guildes</button>'
     + '</div>';
   // Demandes en attente (chef uniquement)
   if(isLeader && requests.length){
@@ -5040,7 +5043,7 @@ function renderMyGuild(data){
     html += requests.map(function(r){
       return '<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(212,160,23,.08);border-radius:6px;padding:6px 10px;margin-bottom:4px">'
         + '<span style="font-family:VT323,monospace;font-size:12px;color:var(--parchment)">'+escapeHtml(r.pseudo||'?')+'</span>'
-        + '<button class="btn" style="font-size:10px;padding:4px 10px" onclick="approveGuildRequest('+r.id+')">✓ Accepter</button>'
+        + '<button class="btn" style="font-size:10px;padding:4px 10px;width:auto;flex-shrink:0;margin:0" onclick="approveGuildRequest('+r.id+')">✓ Accepter</button>'
       + '</div>';
     }).join('');
   }
@@ -5093,7 +5096,9 @@ async function leaveGuild(){
   }catch(e){ showToast('Erreur.', true); }
 }
 // ── Tournois inter-guildes ───────────────────────────────────────
-async function openGuildTournaments(myGuildId){
+// isLeader : seuls les chefs 👑 envoient ET acceptent les défis — les
+// membres voient tout mais sans boutons d'action.
+async function openGuildTournaments(myGuildId, isLeader){
   var body = document.getElementById('guild-body');
   if(!body) return;
   body.innerHTML='<div style="text-align:center;padding:14px;opacity:.5;font-family:VT323,monospace">Chargement…</div>';
@@ -5104,20 +5109,54 @@ async function openGuildTournaments(myGuildId){
     const { data: guilds } = await supa.from('v_guild_leaderboard').select('*');
     var gmap = {}; (guilds||[]).forEach(function(g){ gmap[g.id]=g; });
     var html = '<button class="btn" style="width:100%;font-size:11px;padding:6px;opacity:.7;margin-bottom:8px" onclick="_guildView=\'auto\';refreshGuildScreen()">↩ Ma guilde</button>';
-    html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;margin-bottom:6px;letter-spacing:1px">⚔ DÉFIER UNE GUILDE</div>';
-    var others = (guilds||[]).filter(function(g){ return g.id!==myGuildId; });
-    if(!others.length){ html += '<div style="opacity:.5;font-family:VT323,monospace;font-size:11px;padding:6px">Aucune autre guilde à défier.</div>'; }
-    else {
-      html += others.slice(0,10).map(function(g){
-        return '<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.22);border-radius:6px;padding:7px 10px;margin-bottom:4px">'
-          + '<span style="font-family:VT323,monospace;font-size:12px;color:var(--parchment)">'+escapeHtml(g.name)+' ['+escapeHtml(g.tag||'')+']</span>'
-          + '<button class="btn" style="font-size:10px;padding:4px 10px" onclick="challengeGuild('+myGuildId+','+g.id+')">Défier</button>'
+    // Comment ça marche — sans cette explication, un défi accepté semble
+    // ne « rien faire » : il n'y a PAS d'écran de combat dédié, ce sont
+    // les victoires classées normales des membres qui marquent les points.
+    html += '<div style="background:rgba(212,160,23,.07);border:1px solid rgba(212,160,23,.2);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.85;line-height:1.4">'
+      + '⚔ Un défi dure <b>48 h</b> une fois accepté par le chef adverse. Pendant ce temps, <b>chaque victoire classée en ligne</b> (matchmaking, tournoi…) d\'un membre rapporte <b>+1 point</b> à sa guilde (et toujours +2 🐉). À la fin : <b>+30 🐉</b> pour la guilde gagnante.</div>';
+    var pendings = (gt||[]).filter(function(t){ return t.status==='pending'; });
+    var recus   = pendings.filter(function(t){ return t.guild_b===myGuildId; });
+    var envoyes = pendings.filter(function(t){ return t.guild_a===myGuildId; });
+    if(recus.length){
+      html += '<div style="font-family:VT323,monospace;font-size:11px;color:#ffb85c;opacity:.9;margin-bottom:5px;letter-spacing:1px">📥 DÉFIS REÇUS</div>';
+      html += recus.map(function(t){
+        var an=(gmap[t.guild_a]||{}).name||'?';
+        return '<div style="display:flex;align-items:center;gap:8px;background:rgba(255,160,60,.08);border:1px solid rgba(255,160,60,.25);border-radius:6px;padding:7px 10px;margin-bottom:4px">'
+          + '<span style="flex:1;min-width:0;font-family:VT323,monospace;font-size:12px;color:var(--parchment);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHtml(an)+' vous défie !</span>'
+          + (isLeader
+            ? '<button class="btn" style="font-size:10px;padding:4px 10px;width:auto;flex-shrink:0;margin:0" onclick="guildChallengeRespond('+t.id+',true,'+myGuildId+','+isLeader+')">✓ Accepter</button>'
+              +'<button class="btn" style="font-size:10px;padding:4px 10px;width:auto;flex-shrink:0;margin:0;border-color:rgba(200,80,80,.4);color:#f08080" onclick="guildChallengeRespond('+t.id+',false,'+myGuildId+','+isLeader+')">✕</button>'
+            : '<span style="font-family:VT323,monospace;font-size:10px;opacity:.5;flex-shrink:0">en attente du chef 👑</span>')
         + '</div>';
       }).join('');
     }
-    if(gt && gt.length){
+    if(envoyes.length){
+      html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;margin:6px 0 5px;letter-spacing:1px">📤 DÉFIS ENVOYÉS</div>';
+      html += envoyes.map(function(t){
+        var bn=(gmap[t.guild_b]||{}).name||'?';
+        return '<div style="background:rgba(0,0,0,.22);border-radius:6px;padding:7px 10px;margin-bottom:4px;font-family:VT323,monospace;font-size:12px;color:var(--parchment)">'
+          + escapeHtml(bn)+' <span style="opacity:.5;font-size:10px">— en attente d\'acceptation par leur chef 👑</span></div>';
+      }).join('');
+    }
+    html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;margin:6px 0 5px;letter-spacing:1px">⚔ DÉFIER UNE GUILDE</div>';
+    if(!isLeader){
+      html += '<div style="opacity:.5;font-family:VT323,monospace;font-size:11px;padding:6px">Seul le chef de guilde 👑 peut lancer ou accepter un défi.</div>';
+    } else {
+      var others = (guilds||[]).filter(function(g){ return g.id!==myGuildId; });
+      if(!others.length){ html += '<div style="opacity:.5;font-family:VT323,monospace;font-size:11px;padding:6px">Aucune autre guilde à défier.</div>'; }
+      else {
+        html += others.slice(0,10).map(function(g){
+          return '<div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.22);border-radius:6px;padding:7px 10px;margin-bottom:4px">'
+            + '<span style="flex:1;min-width:0;font-family:VT323,monospace;font-size:12px;color:var(--parchment);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHtml(g.name)+' ['+escapeHtml(g.tag||'')+']</span>'
+            + '<button class="btn" style="font-size:10px;padding:4px 10px;width:auto;flex-shrink:0;margin:0" onclick="challengeGuild('+myGuildId+','+g.id+','+isLeader+')">Défier</button>'
+          + '</div>';
+        }).join('');
+      }
+    }
+    var histo = (gt||[]).filter(function(t){ return t.status!=='pending'; });
+    if(histo.length){
       html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;margin:10px 0 5px;letter-spacing:1px">DÉFIS EN COURS / PASSÉS</div>';
-      html += gt.map(function(t){
+      html += histo.map(function(t){
         var an = (gmap[t.guild_a]||{}).name||'?', bn=(gmap[t.guild_b]||{}).name||'?';
         var lead = t.score_a>t.score_b?'◀':(t.score_b>t.score_a?'▶':'=');
         var enCours = (t.status==='active' || t.status==='running');
@@ -5128,6 +5167,10 @@ async function openGuildTournaments(myGuildId){
           meta = '⏳ '+(h>0 ? h+'h'+(mn<10?'0':'')+mn : mn+' min')+' restantes';
         } else if(enCours){
           meta = 'en cours';
+        } else if(t.status==='declined'){
+          meta = 'refusé';
+        } else if(t.status==='expired'){
+          meta = 'expiré sans réponse';
         } else if(t.winner_guild){
           meta = '🏆 '+escapeHtml((gmap[t.winner_guild]||{}).name||'?')+' (+30 Ryu)';
         } else {
@@ -5141,17 +5184,30 @@ async function openGuildTournaments(myGuildId){
     body.innerHTML = html;
   }catch(e){ body.innerHTML='<div style="text-align:center;padding:14px;opacity:.6;font-family:VT323,monospace">Erreur de chargement.</div>'; }
 }
-async function challengeGuild(myGuildId, targetId){
+async function challengeGuild(myGuildId, targetId, isLeader){
   try{
-    // RPC serveur (chef uniquement, 1 défi actif par guilde, 48 h) — plus
+    // RPC serveur (chef uniquement, 1 défi en cours par guilde) — plus
     // d'insert direct : la policy INSERT a été retirée (guilds_v2.sql).
+    // Depuis guilds_v3.sql, le défi part en 'pending' : il ne démarre que
+    // quand le chef adverse l'accepte (48 h à partir de là).
     const { data } = await supa.rpc('guild_challenge', { p_target_guild: targetId });
-    if(data && data.ok){ showToast('⚔ Défi lancé ! 48 h pour marquer plus de victoires qu\'eux.', false); }
+    if(data && data.ok){ showToast('📤 Défi envoyé — en attente d\'acceptation par leur chef.', false); }
     else if(data && data.reason==='not_leader'){ showToast('Seul le chef de guilde peut lancer un défi.', true); }
-    else if(data && data.reason==='busy'){ showToast('Un défi est déjà en cours pour l\'une des deux guildes.', true); }
+    else if(data && data.reason==='busy'){ showToast('Un défi est déjà en cours (ou en attente) pour l\'une des deux guildes.', true); }
     else showToast('Impossible de lancer le défi.', true);
-    openGuildTournaments(myGuildId);
+    openGuildTournaments(myGuildId, isLeader);
   }catch(e){ showToast('Erreur — le script guilds_v2.sql a-t-il été exécuté ?', true); }
+}
+// Accepter / refuser un défi reçu — chef de la guilde DÉFIÉE uniquement
+// (vérifié côté serveur par guild_challenge_respond, guilds_v3.sql).
+async function guildChallengeRespond(challengeId, accept, myGuildId, isLeader){
+  try{
+    const { data } = await supa.rpc('guild_challenge_respond', { p_challenge_id: challengeId, p_accept: !!accept });
+    if(data && data.ok){ showToast(accept ? '⚔ Défi accepté — 48 h pour marquer plus de victoires qu\'eux !' : 'Défi refusé.', false); }
+    else if(data && data.reason==='not_leader'){ showToast('Seul le chef de guilde peut répondre à un défi.', true); }
+    else showToast('Impossible de répondre au défi.', true);
+    openGuildTournaments(myGuildId, isLeader);
+  }catch(e){ showToast('Erreur — le script guilds_v3.sql a-t-il été exécuté ?', true); }
 }
 // Reporte une victoire en ligne classée à la guilde : +2 Ryu (perso +
 // collectif) et +1 au score du défi inter-guildes actif s'il y en a un.

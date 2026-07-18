@@ -81,6 +81,7 @@ end $$;
 
 | # | Script | Contenu |
 |---|---|---|
+| 29 | `guilds_v3.sql` | **Défis inter-guildes avec acceptation** : le défi part en `pending` (aucun point ne compte), le chef DÉFIÉ accepte (`guild_challenge_respond`, 48 h à partir de l'acceptation) ou refuse ; expiration auto des défis sans réponse (48 h, même tick pg_cron). Corrige le « j'envoie un défi et rien ne se passe » du test 2 comptes. |
 | 28 | `sumo_event.sql` | **Événement SUMO (jusqu'au 31 août)** : colonnes `mode`/`elo` sur les tables Arène (le SUMO réutilise toute l'infra Arène), monnaie Fame 心 (`profiles.fame_balance` + `sumo_wins`/`sumo_losses`), RPC `record_sumo_round_win` (montants en dur serveur : +2/+1, coupés après le 31 août), vue `sumo_leaderboard` (score = fame × (1 + ratio de victoires × min(parties,35)/35) — le bonus de ratio monte à chaque partie et n'est plein qu'à 35 parties, pour un ratio statistiquement exploitable). ⚠ Tant qu'il n'est pas passé, l'écran SUMO affiche « SUMO indisponible » — l'Arène classique, elle, ne nomme jamais les nouvelles colonnes (filtres côté client). |
 
 ---
