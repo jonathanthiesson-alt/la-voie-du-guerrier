@@ -139,9 +139,15 @@ body.ui-sumi #sumi-home-sky svg{width:100%;height:100%;display:block}
    pour le fond sombre du Classique) ferait doublon sur le Fuji. */
 body.ui-sumi #home-logo{display:none}
 /* Logo-raccourci actif (phase C) : léger battement pour signaler qu'il
-   est cliquable. Sur transform pour ne pas écraser le filter (aura) inline. */
+   est cliquable. Sur transform pour ne pas écraser le filter (aura) inline.
+   S'applique à l'emblème de CHAQUE thème (épéiste Classique/Sumi, avatar
+   Wurmz) — l'aura doit être visible quel que soit le thème. */
 @keyframes homeLogoPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
-#home-logo.home-logo-active{animation:homeLogoPulse 2.6s ease-in-out infinite}
+#home-logo.home-logo-active,#wurmz-home-emblem.home-logo-active{animation:homeLogoPulse 2.6s ease-in-out infinite}
+/* En Sumi le logo est masqué par défaut (le Fuji est le visuel), mais dès
+   qu'un raccourci est configuré on révèle l'épéiste pour qu'il serve de
+   bouton cliquable avec son aura. */
+body.ui-sumi #home-logo.home-logo-active{display:block}
 .sumisky-swatch{width:30px;height:30px;border-radius:50%;cursor:pointer;border:2px solid rgba(200,168,110,.25)}
 .sumisky-swatch.selected,#sumisky-auto.selected{border-color:var(--gold-bright);box-shadow:0 0 6px rgba(212,160,23,.6)}
 .sumi-sky{display:none}
@@ -1970,6 +1976,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       style="width:180px;height:180px;object-fit:contain;margin-bottom:4px;opacity:.95;filter:drop-shadow(0 0 16px rgba(232,213,163,.35))">
     <!-- Emblème du thème Wurmz : visible uniquement en ui-wurmz (voir CSS). -->
     <img id="wurmz-home-emblem" src="images/wurmz/AVATAR.png" alt="Wurmz" aria-hidden="true"
+      onclick="onHomeLogoClick()" ontouchend="if(getHomeLogoAction&&getHomeLogoAction()!=='none'){event.preventDefault();onHomeLogoClick();}"
       style="width:200px;height:200px;object-fit:contain;margin-bottom:4px;filter:drop-shadow(0 0 22px rgba(201,162,75,.5))">
     <!-- Sous-titre japonais -->
     <div style="font-family:'Noto Serif JP',serif;font-size:13px;color:rgba(200,168,110,.45);letter-spacing:6px;margin-bottom:12px;font-weight:300">&#21049;&#12398;&#36947;</div>
@@ -14735,23 +14742,30 @@ function homeLogoHexToRgba(hex, a){
   if(isNaN(r)||isNaN(g)||isNaN(b)){ r=212; g=160; b=23; }
   return 'rgba('+r+','+g+','+b+','+a+')';
 }
-// Applique (ou retire) l'aura sur le logo selon l'action configurée.
-function applyHomeLogoAura(){
-  var img = document.getElementById('home-logo');
+// Applique (ou retire) l'aura sur le logo d'accueil, quel que soit le
+// thème. Chaque thème affiche son propre emblème : l'épéiste #home-logo
+// en Classique, l'avatar #wurmz-home-emblem en Wurmz, et en Sumi on
+// révèle l'épéiste (masqué par défaut sur le Fuji) uniquement quand un
+// raccourci est actif. On applique donc le style aux DEUX éléments : le
+// CSS ne montre que celui qui correspond au thème courant.
+function styleOneHomeLogo(img, action, c){
   if(!img) return;
-  var action = getHomeLogoAction();
   if(action==='none'){
     img.style.cursor = 'default';
-    // Aura décorative d'origine (blanc chaud discret).
     img.style.filter = 'drop-shadow(0 0 16px rgba(232,213,163,.35))';
     img.classList.remove('home-logo-active');
     return;
   }
-  var c = getHomeLogoAura();
   img.style.cursor = 'pointer';
   // Deux halos concentriques translucides = aura légère et colorée.
   img.style.filter = 'drop-shadow(0 0 10px '+homeLogoHexToRgba(c,.65)+') drop-shadow(0 0 26px '+homeLogoHexToRgba(c,.4)+')';
   img.classList.add('home-logo-active');
+}
+function applyHomeLogoAura(){
+  var action = getHomeLogoAction();
+  var c = getHomeLogoAura();
+  styleOneHomeLogo(document.getElementById('home-logo'), action, c);
+  styleOneHomeLogo(document.getElementById('wurmz-home-emblem'), action, c);
 }
 // Exécute le raccourci choisi au clic sur le logo (rien si 'none').
 function onHomeLogoClick(){
