@@ -4201,6 +4201,9 @@ function applyShopStateFromProfile(profile){
   shopState.shiitake   = (profile.shiitake_balance!=null)  ? profile.shiitake_balance  : shopState.shiitake;
   shopState.fame       = (profile.fame_balance!=null)      ? profile.fame_balance      : shopState.fame;
   if(profile.claimed_milestones) _claimedMilestones = profile.claimed_milestones;
+  // Le thème Wurmz suit le compte : wurmz_found (serveur) réalimente le
+  // cache local à chaque connexion — il survit donc au changement d'appareil.
+  if(profile.wurmz_found && typeof unlockWurmzTheme==='function') unlockWurmzTheme();
   saveShopStateCache();
   refreshKokuDisplays();
   refreshArenaKokuProgress();
@@ -9041,19 +9044,23 @@ async function recordBotDefeat(botIdx){
   }catch(e){}
 }
 // ══════════════════════════════════════════════════════
-// EASTER EGG « TROUVER WURMZ » — 1 accueil sur 100
+// EASTER EGG « TROUVER WURMZ » — 1 accueil sur 200, joueurs CONNECTÉS
 // Hommage au Dan Forden de Mortal Kombat 3 : le bousier passe la tête
 // depuis un coin au hasard, reste ~3 s, repart. Le cliquer débloque un
-// succès secret + 400 Koku (versés par le SERVEUR, voir claim_wurmz_egg).
-// Musashi vend la mèche, lui aussi 1 fois sur 100 (voir MUSASHI_REPLIES) :
+// succès secret + 400 Koku (versés par le SERVEUR, voir claim_wurmz_egg)
+// + LE THÈME WURMZ, inaccessible autrement.
+// Musashi vend la mèche, lui 1 fois sur 100 (voir MUSASHI_REPLIES) :
 // deux tirages indépendants, l'un étant l'indice de l'autre.
 // ══════════════════════════════════════════════════════
-var WURMZ_EGG_ODDS = 100;      // 1 chance sur 100
+var WURMZ_EGG_ODDS = 200;      // 1 chance sur 200
 var _wurmzEggTimer = null;
 var _wurmzEggCaught = false;   // évite le double-clic pendant l'appel serveur
 function maybeShowWurmzEgg(){
   var el = document.getElementById('wurmz-egg');
   if(!el) return;
+  // Connectés seulement : la récompense (Koku + thème) vit sur le profil
+  // serveur — un anonyme qui l'attraperait ne pourrait rien empocher.
+  if(!currentUser) return;
   if(Math.floor(Math.random()*WURMZ_EGG_ODDS) !== 0) return;
   showWurmzEgg();
 }
@@ -9101,13 +9108,26 @@ async function catchWurmzEgg(){
       else shopState.koku = (shopState.koku||0) + (data.koku||0);
       if(typeof saveShopStateCache==='function') saveShopStateCache();
       if(typeof refreshAllCurrencyDisplays==='function') refreshAllCurrencyDisplays();
-      showToast('🪲 Tu as attrapé Wurmz ! +400 石', false);
+      unlockWurmzTheme();
+      showToast('🪲 Tu as attrapé Wurmz ! +400 石 · Thème Wurmz débloqué !', false);
     } else if(data && data.already){
+      unlockWurmzTheme(); // il l'avait déjà trouvé (autre appareil ?) : resynchro
       showToast('🪲 Wurmz encore ! Mais on ne paie qu\'une fois.', false);
     }
   }catch(e){
     showToast('🪲 Wurmz ! (400 石 en attente — script SQL non exécuté)', true);
   }
+}
+// Le thème Wurmz n'existe que pour ceux qui ont attrapé le bousier.
+// Source de vérité : profiles.wurmz_found (resynchronisée à chaque
+// connexion, voir applyShopStateFromProfile) — le localStorage n'est
+// qu'un cache pour l'appliquer dès le démarrage, avant le login.
+function isWurmzThemeUnlocked(){
+  try{ return localStorage.getItem('vtl_wurmz_theme_unlocked')==='1'; }catch(e){ return false; }
+}
+function unlockWurmzTheme(){
+  try{ localStorage.setItem('vtl_wurmz_theme_unlocked','1'); }catch(e){}
+  if(typeof updateUiThemeButtons==='function') updateUiThemeButtons();
 }
 
 function showScreen(id){
@@ -9287,6 +9307,12 @@ function currentUiTheme(){
   return 'classic';
 }
 function setUiTheme(v){
+  // Le thème Wurmz est une récompense : il faut avoir attrapé le bousier
+  // de l'accueil (1 chance sur 200, connecté) pour y avoir droit.
+  if(v==='wurmz' && !isWurmzThemeUnlocked()){
+    if(typeof showToast==='function') showToast('🔒 Thème verrouillé — attrape Wurmz sur l\'écran d\'accueil pour le débloquer !', true);
+    return;
+  }
   // On retire TOUJOURS toutes les classes de thème avant d'ajouter la
   // bonne : sans ça, passer de Sumi à Wurmz laisserait les deux actives.
   document.body.classList.remove('ui-sumi','ui-wurmz');
@@ -9298,8 +9324,11 @@ function setUiTheme(v){
 // Bascule cyclique pour le bouton unique de l'accueil : Classique → Sumi
 // → Wurmz → Classique. Un toast nomme le thème atteint (découvrabilité).
 function cycleUiTheme(){
-  var order = UI_THEMES;
-  var next = order[(order.indexOf(currentUiTheme())+1) % order.length];
+  // Wurmz sauté tant qu'il n'est pas débloqué (le bouton de l'accueil ne
+  // doit jamais afficher le toast « verrouillé » : il cycle, c'est tout).
+  var order = UI_THEMES.filter(function(t){ return t!=='wurmz' || isWurmzThemeUnlocked(); });
+  var idx = order.indexOf(currentUiTheme());
+  var next = order[(idx+1) % order.length];
   setUiTheme(next);
   var labels = {classic:'Classique', sumi:'墨 Sumi', wurmz:'🪲 Wurmz'};
   if(typeof showToast==='function') showToast('Thème : '+labels[next], false);
@@ -9308,8 +9337,16 @@ function updateUiThemeButtons(){
   // Le sélecteur existe à DEUX endroits (Apparence + Affichage) : mise à
   // jour par classe pour que les deux restent synchronisés.
   var cur = currentUiTheme();
+  var wurmzOk = isWurmzThemeUnlocked();
   document.querySelectorAll('.uitheme-btn').forEach(function(b){
     b.classList.toggle('selected', b.dataset.theme===cur);
+    // Wurmz verrouillé : cadenas + grisé (le clic affiche le toast
+    // d'explication via setUiTheme, on ne cache pas le bouton — savoir
+    // qu'un thème secret existe fait partie de la chasse).
+    if(b.dataset.theme==='wurmz'){
+      b.textContent = wurmzOk ? '🪲 Wurmz' : '🔒 Wurmz';
+      b.style.opacity = wurmzOk ? '' : '.45';
+    }
   });
 }
 // Couleur d'ambiance des ciels Sumi. null = « Auto » : chaque écran garde
@@ -9332,7 +9369,9 @@ function rgbToHexSafe(rgb){
   return '#'+[m[1],m[2],m[3]].map(function(v){ return ('0'+parseInt(v,10).toString(16)).slice(-2); }).join('');
 }
 // Application au démarrage (avant tout affichage d'écran).
-try{ var _th=localStorage.getItem('vtl_ui_theme'); if(_th==='sumi') document.body.classList.add('ui-sumi'); else if(_th==='wurmz') document.body.classList.add('ui-wurmz'); }catch(e){}
+// Wurmz mémorisé mais plus débloqué sur cet appareil (cache vidé, autre
+// session...) : retour silencieux au Classique plutôt qu'un thème volé.
+try{ var _th=localStorage.getItem('vtl_ui_theme'); if(_th==='sumi') document.body.classList.add('ui-sumi'); else if(_th==='wurmz' && isWurmzThemeUnlocked()) document.body.classList.add('ui-wurmz'); }catch(e){}
 try{ var _ss=localStorage.getItem('vtl_sumi_sky'); if(_ss) document.body.style.setProperty('--sumi-sky', _ss); }catch(e){}
 function setBoardSize(v){displayPrefs.boardSize=v;['small','auto','large'].forEach(x=>document.getElementById('board-'+x).classList.toggle('selected',x===v));if(document.getElementById('screen-game').classList.contains('active'))renderBoard()}
 function confirmMenu(){if(confirm(t('msg_confirm_menu'))){stopTimer();showScreen('menu')}}
