@@ -73,7 +73,7 @@ de lignes : c'est un piège classique pour les insertions.
 
 ### 3. i18n — TOUJOURS le même nombre de clés
 
-`const LANGS` contient `fr`, `en`, `ja`. **Actuellement 195 clés chacune.**
+`const LANGS` contient `fr`, `en`, `ja`. **Actuellement 203 clés chacune.**
 Ajouter une clé quelque part = l'ajouter dans les trois.
 
 ```bash
