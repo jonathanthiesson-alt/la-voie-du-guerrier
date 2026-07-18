@@ -1988,6 +1988,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div id="home-q1-attr" style="text-align:right;margin-top:8px"></div>
   </div>
 
+  <!-- Joueurs actuellement en ligne (discret, au-dessus de COMMENCER) -->
+  <div id="home-online-count" style="width:100%;text-align:center;font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.55;margin-bottom:4px;min-height:14px;position:relative;z-index:1"></div>
   <!-- Bouton COMMENCER -->
   <div style="width:100%;padding:0 24px 12px;position:relative;z-index:1">
     <button class="home-btn-primary" style="width:100%;font-size:16px;padding:18px;margin:0;letter-spacing:5px" onclick="enterMainMenu()">COMMENCER</button>
@@ -9158,7 +9160,7 @@ function showScreen(id){
     if(logoutBtn) logoutBtn.style.display = currentUser ? 'block' : 'none';
   }
   if(id==='game'){ if(typeof stopMenuMusic==='function') stopMenuMusic(); }
-  if(id==='home'){ if(typeof stopMenuMusic==='function') stopMenuMusic(); if(typeof stopFightMusic==='function') stopFightMusic(); }
+  if(id==='home'){ if(typeof stopMenuMusic==='function') stopMenuMusic(); if(typeof stopFightMusic==='function') stopFightMusic(); if(typeof refreshHomeOnlineCount==='function') refreshHomeOnlineCount(); }
   if(id==='arena'){ refreshKokuDisplays(); refreshArenaKokuProgress(); refreshAllCurrencyDisplays(); }
   if(id==='sumo'){ refreshAllCurrencyDisplays(); }
   if(id==='online-hub'){ refreshKokuDisplays(); refreshAllCurrencyDisplays(); }
@@ -17371,6 +17373,34 @@ function presenceTier(p){
   if(diffMin <= 10) return 'away';
   return 'offline';
 }
+
+// ── Compteur « joueurs en ligne » de l'écran d'accueil ─────────────
+// Même définition que le vert de presenceTier() : signal de vie il y a
+// 3 minutes ou moins. count/head:true = juste le nombre, zéro ligne
+// transférée. En cas d'erreur (hors-ligne, RLS...), on laisse vide :
+// l'accueil ne doit jamais afficher une erreur pour un simple compteur.
+async function refreshHomeOnlineCount(){
+  var el = document.getElementById('home-online-count');
+  if(!el || !supa) return;
+  try{
+    const { count, error } = await supa.from('profiles')
+      .select('id', { count:'exact', head:true })
+      .eq('is_online', true)
+      .gte('last_seen', new Date(Date.now() - 3*60000).toISOString());
+    if(error || count == null){ el.textContent=''; return; }
+    el.innerHTML = '<span style="color:#4caf50">&#9679;</span> '+count+(count>1?' guerriers en ligne':' guerrier en ligne');
+  }catch(e){ el.textContent=''; }
+}
+// Rafraîchi toutes les 60 s, mais uniquement quand l'accueil est visible
+// (aucune requête en fond depuis les autres écrans ou en pleine partie).
+setInterval(function(){
+  var hs = document.getElementById('screen-home');
+  if(hs && hs.classList.contains('active')) refreshHomeOnlineCount();
+}, 60000);
+// Premier affichage au démarrage (l'accueil est l'écran de boot — le
+// hook de showScreen('home') ne couvre que les retours à l'accueil).
+// 2 s de délai : le temps que le client Supabase soit initialisé.
+setTimeout(function(){ refreshHomeOnlineCount(); }, 2000);
 
 // ── Profil public d'un autre joueur (consultation, lecture seule) ──
 // Ouvert en cliquant sur un pseudo dans la liste "Jouer en ligne".
