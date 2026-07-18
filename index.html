@@ -5073,6 +5073,8 @@ function renderMyGuild(data){
     + '<button class="btn" style="flex:1;font-size:11px;padding:7px" onclick="_guildView=\'list\';refreshGuildScreen()">🏆 Autres guildes</button>'
     + '<button class="btn" style="flex:1;font-size:11px;padding:7px" onclick="openGuildTournaments('+g.id+','+isLeader+')">⚔ Défis inter-guildes</button>'
     + '</div>';
+  // Chat de guilde — même canal que celui accessible depuis SOCIAL.
+  html += '<button class="btn" style="width:100%;font-size:11px;padding:7px;margin-bottom:10px" onclick="openGuildChatFromMenu()">💬 Chat de guilde</button>';
   // Demandes en attente (chef uniquement)
   if(isLeader && requests.length){
     html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.7;margin-bottom:4px">✉ DEMANDES ('+requests.length+')</div>';
@@ -5102,6 +5104,7 @@ async function createGuild(mode){
   if(!name){ showToast('Choisis un nom de guilde.', true); return; }
   try{
     const { data } = await supa.rpc('guild_create', { p_name:name, p_tag:'', p_join_mode:mode });
+    _myGuildIdCache = null; // nouvelle guilde : le chat doit la résoudre
     if(data && data.ok){ showToast('Guilde créée !', false); _guildView='auto'; refreshGuildScreen(); }
     else if(data && data.reason==='already_in_guild'){ showToast('Tu es déjà dans une guilde.', true); }
     else showToast('Nom déjà pris ?', true);
@@ -5110,6 +5113,7 @@ async function createGuild(mode){
 async function joinGuild(id){
   try{
     const { data } = await supa.rpc('guild_join', { p_guild_id:id });
+    _myGuildIdCache = null; // l'appartenance change : le chat doit re-résoudre la guilde
     if(data && data.joined){ showToast('Bienvenue dans la guilde !', false); _guildView='auto'; refreshGuildScreen(); }
     else if(data && data.requested){ showToast('Demande envoyée au chef.', false); }
     else if(data && data.reason==='full'){ showToast('Guilde complète (20 max).', true); }
@@ -5127,6 +5131,7 @@ async function leaveGuild(){
   if(!confirm('Quitter votre guilde ?')) return;
   try{
     await supa.rpc('guild_leave');
+    _myGuildIdCache = null; // plus de guilde : le chat doit se réinitialiser
     showToast('Vous avez quitté la guilde.', false);
     _guildView='list'; refreshGuildScreen();
   }catch(e){ showToast('Erreur.', true); }
@@ -10592,6 +10597,76 @@ async function sendLeagueChatMessage(){
   }catch(e){ showToast('Message non envoyé.', true); }
 }
 
+// ── Canal de discussion de la Guilde (un salon par guilde) ──
+// Même mécanique que le chat de Ligue (table guild_channel_messages,
+// RLS membre-seulement). Accessible depuis SOCIAL (onglet Guilde de la
+// messagerie) ET depuis le menu Guilde de JOUER — une seule implé.
+var _guildChatPollInterval = null;
+var _myGuildIdCache = null;
+async function getMyGuildId(){
+  if(_myGuildIdCache) return _myGuildIdCache;
+  if(!currentUser) return null;
+  try{
+    const { data } = await supa.rpc('get_my_guild');
+    _myGuildIdCache = (data && data.in_guild && data.guild) ? data.guild.id : null;
+    return _myGuildIdCache;
+  }catch(e){ return null; }
+}
+async function openGuildChat(){
+  var statusEl = document.getElementById('guild-chat-status');
+  var list = document.getElementById('guild-chat-messages');
+  if(!currentUser){
+    if(list) list.innerHTML = '<div style="text-align:center;padding:16px;font-family:VT323,monospace;color:var(--parchment);opacity:.6">Connectez-vous pour rejoindre le canal de guilde.</div>';
+    return;
+  }
+  if(statusEl) statusEl.textContent = t('history_loading');
+  var guildId = await getMyGuildId();
+  if(!guildId){
+    if(statusEl) statusEl.textContent = '';
+    if(list) list.innerHTML = '<div style="text-align:center;padding:16px;font-family:VT323,monospace;color:var(--parchment);opacity:.6">Rejoignez une guilde pour discuter avec ses membres.</div>';
+    return;
+  }
+  if(statusEl) statusEl.textContent = 'Salon des membres de votre guilde';
+  loadGuildChatMessages(guildId);
+  _guildChatPollInterval = setInterval(function(){ loadGuildChatMessages(guildId); }, 3000);
+}
+async function loadGuildChatMessages(guildId){
+  var list = document.getElementById('guild-chat-messages');
+  if(!list) return;
+  try{
+    const { data: msgs } = await supa.from('guild_channel_messages').select('*')
+      .eq('guild_id', guildId).order('created_at',{ascending:true}).limit(100);
+    list.innerHTML = (msgs||[]).map(function(m){
+      var mine = m.sender_id===currentUser.id;
+      return '<div style="display:flex;justify-content:'+(mine?'flex-end':'flex-start')+';margin:4px 0">'
+        + '<span style="max-width:78%;padding:6px 10px;border-radius:8px;font-family:VT323,monospace;font-size:14px;background:'+(mine?'rgba(212,160,23,.25)':'rgba(255,255,255,.06)')+';color:var(--parchment)">'
+        + (mine?'':'<b style="color:var(--gold-bright);font-size:11px;display:block">'+String(m.sender_pseudo||'?').replace(/</g,'&lt;')+'</b>')
+        + String(m.body||'').replace(/</g,'&lt;')+'</span></div>';
+    }).join('');
+    list.scrollTop = list.scrollHeight;
+  }catch(e){
+    list.innerHTML = '<div style="text-align:center;padding:16px;font-family:VT323,monospace;color:var(--parchment);opacity:.6">Canal indisponible — script SQL guild_chat.sql ex&#233;cut&#233; ?</div>';
+  }
+}
+async function sendGuildChatMessage(){
+  var input = document.getElementById('guild-chat-input');
+  if(!input || !currentUser) return;
+  var text = input.value.trim();
+  if(!text) return;
+  var guildId = await getMyGuildId();
+  if(!guildId) return;
+  input.value = '';
+  try{
+    await supa.from('guild_channel_messages').insert({ guild_id: guildId, sender_id: currentUser.id, sender_pseudo: currentUser.pseudo, body: text });
+    loadGuildChatMessages(guildId);
+  }catch(e){ showToast('Message non envoyé.', true); }
+}
+// Ouvre la messagerie directement sur l'onglet Guilde (depuis le menu Guilde).
+function openGuildChatFromMenu(){
+  _messagingCurrentTab = 'guild';
+  showScreen('messaging');
+}
+
 // ══════════════════════════════════════════════════════
 // AMIS + MESSAGERIE PRIVÉE (basique, par sondage — comme le reste de
 // l'app — pas encore de canal temps réel dédié)
@@ -10617,10 +10692,13 @@ function setMessagingTab(tab){
     if(panel) panel.style.display = active ? 'flex' : 'none';
   });
   if(_leagueChatPollInterval){ clearInterval(_leagueChatPollInterval); _leagueChatPollInterval=null; }
+  if(_guildChatPollInterval){ clearInterval(_guildChatPollInterval); _guildChatPollInterval=null; }
   if(tab==='friends'){
     if(currentUser) refreshFriendsList();
   } else if(tab==='league'){
     openLeagueChat();
+  } else if(tab==='guild'){
+    openGuildChat();
   }
 }
 
@@ -19245,8 +19323,13 @@ window.addEventListener('beforeunload', () => {
       </div>
     </div>
 
-    <div id="msgtab-panel-guild" style="display:none;flex:1;align-items:center;justify-content:center;text-align:center;padding:20px">
-      <div style="font-family:'Cinzel',serif;font-size:12px;color:var(--gold);opacity:.7" data-i18n="in_development">&#128679; En d&#233;veloppement — bient&#244;t disponible !</div>
+    <div id="msgtab-panel-guild" style="display:none;flex:1;flex-direction:column;overflow:hidden">
+      <div id="guild-chat-status" style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.5;text-align:center;margin-bottom:6px;flex-shrink:0"></div>
+      <div id="guild-chat-messages" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;background:rgba(0,0,0,.3);border:1px solid rgba(200,168,110,.15);border-radius:6px;padding:10px;display:flex;flex-direction:column;margin-bottom:8px"></div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <input type="text" id="guild-chat-input" placeholder="Message à la guilde..." onkeydown="if(event.key==='Enter')sendGuildChatMessage()" style="flex:1;background:rgba(0,0,0,.3);border:1px solid rgba(200,168,110,.3);border-radius:4px;color:var(--parchment);padding:10px;font-family:VT323,monospace;font-size:14px">
+        <button class="btn-small-icon" onclick="sendGuildChatMessage()" title="Envoyer">&#10148;</button>
+      </div>
     </div>
   </div>
 </div>
