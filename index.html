@@ -2051,18 +2051,12 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div class="menu-title" data-i18n="menu_title">MENU</div>
     <div class="menu-divider"></div>
     <div class="menu-quote" id="menu-quote"></div>
-    <button class="btn" onclick="goOnline()"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">網</span><span data-i18n="menu_online">Jouer en Ligne</span></button>
-    <button class="btn" onclick="showScreen('local')"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">剣</span><span data-i18n="menu_local">Jouer Local</span></button>
-    <button class="btn" onclick="showScreen('amis')" style="position:relative"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">友</span><span data-i18n="menu_friends">Amis</span><span id="messaging-badge" style="display:none;position:absolute;top:-6px;right:-6px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:#e74c3c;box-shadow:0 0 4px rgba(231,76,60,.8);font-family:VT323,monospace;font-size:11px;line-height:16px;color:#fff;text-align:center"></span></button>
-    <button class="btn" onclick="showScreen('campaigns')"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">巻</span><span data-i18n="menu_campaign">Campagne</span></button>
-    <button class="btn" onclick="showScreen('clock')"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">⏱</span><span data-i18n="menu_clock">Pendule</span></button>
-    <button class="btn" onclick="showScreen('shop')"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">店</span><span data-i18n="menu_shop">Boutique</span></button>
-    <button class="btn" onclick="showScreen('events-mode')"><span style="font-size:16px;vertical-align:middle;margin-right:4px">🌸</span><span data-i18n="menu_events_mode">Événements</span></button>
+    <!-- Menu allégé (refonte UI) : on ne garde ici que ce qui n'est PAS
+         déjà atteignable par les onglets — jouer, local, social, boutique,
+         règles (déplacées dans l'onglet Local) et profil sont ailleurs. -->
     <!-- Bouton DEV (violet) — visible uniquement pour Wurmz et Musashi -->
     <button class="btn" id="menu-dev-btn" style="display:none;margin-top:4px;border-color:rgba(160,90,220,.6);color:#c58aff;background:linear-gradient(135deg,rgba(90,40,140,.35),rgba(40,20,60,.3))" onclick="showScreen('devrewards')"><span style="font-size:15px;vertical-align:middle;margin-right:4px">🛠</span>DEV — Récompenses</button>
 
-    <button class="btn" onclick="showScreen('rules')"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">典</span><span data-i18n="menu_rules">R&#232;gles</span></button>
-    <button class="btn" onclick="showScreen('profile')" style="font-size:13px;padding:9px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">侍</span><span data-i18n="menu_profile">Profil &amp; Succ&#232;s</span></button>
     <button class="btn" onclick="showScreen('settings')" style="font-size:13px;padding:9px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">設</span><span data-i18n="menu_settings">Param&#232;tres</span></button>
 
     <button class="btn btn-devtest" onclick="showScreen('devlog')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">録</span><span data-i18n="menu_devlog">DevLog</span></button>
@@ -2332,6 +2326,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('campaigns')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">巻</span><span data-i18n="menu_campaign">Campagne</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('opponents')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">&#9876;</span><span data-i18n="local_hub_masters">Maîtres IA</span></button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('rules')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">典</span><span data-i18n="menu_rules">Règles</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('training')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">&#127919;</span><span data-i18n="local_hub_training">Entraînement</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('local')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">対</span><span data-i18n="local_hub_versus">Vs Ordi / 2 joueurs</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('clock')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">⏱</span><span data-i18n="menu_clock">Pendule</span></button>
@@ -2821,7 +2816,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 <!-- DISPLAY SETTINGS SCREEN -->
 <div id="screen-rules" class="screen">
   <div class="rules-hdr">
-    <button class="tuto-nav-btn" onclick="showScreen('menu')" style="padding:5px 10px;font-size:11px">&#8617; Retour</button>
+    <button class="tuto-nav-btn" onclick="showScreen('local-hub')" style="padding:5px 10px;font-size:11px">&#8617; Retour</button>
     <div>
       <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold-bright);letter-spacing:2px" data-i18n="rules_title">🛡️ RÈGLES DU JEU</div>
       <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.4" data-i18n="rules_subtitle">Expliquées simplement</div>
@@ -7903,9 +7898,9 @@ var NAV_HIDDEN_SCREENS = ['home','game','coinflip','campaign-intro','online-auth
 var NAV_TAB_MAP = {
   play:'bn-play', menu:'bn-play', 'online-hub':'bn-play', matchmaking:'bn-play', arena:'bn-play',
   tournament:'bn-play', guild:'bn-play', league:'bn-play', leaderboard:'bn-play',
-  'online-menu':'bn-play', rules:'bn-play', devlog:'bn-play', 'events-mode':'bn-play', sumo:'bn-play',
+  'online-menu':'bn-play', devlog:'bn-play', 'events-mode':'bn-play', sumo:'bn-play',
   // Onglet « Local » : tout le jeu hors-ligne.
-  'local-hub':'bn-campaign', local:'bn-campaign', training:'bn-campaign', opponents:'bn-campaign',
+  'local-hub':'bn-campaign', local:'bn-campaign', training:'bn-campaign', opponents:'bn-campaign', rules:'bn-campaign',
   clock:'bn-campaign', campaigns:'bn-campaign', 'campaign-dojo':'bn-campaign', citations:'bn-campaign',
   shop:'bn-shop', events:'bn-shop',
   amis:'bn-social', messaging:'bn-social', 'public-profile':'bn-social',
@@ -18129,7 +18124,7 @@ async function refreshOnlinePlayersList(){
       sinceTxt = '<div class="online-since-txt">depuis '+formatTimeAgo(p.last_seen)+'</div>';
     }
     return `
-    <div class="online-player-row">
+    <div class="online-player-row" data-pseudo="${escapeHtml(String(p.pseudo||'').toLowerCase())}">
       <div class="online-player-info">
         <div class="online-player-pseudo" style="cursor:pointer;text-decoration:underline;text-decoration-color:rgba(200,168,110,.3);text-underline-offset:3px" onclick="viewPlayerProfile('${p.id}')">${escapeHtml(p.pseudo)}</div>
         <div class="online-player-stats">${p.wins}V / ${p.losses}D &middot; ${p.xp} XP</div>
@@ -18142,6 +18137,40 @@ async function refreshOnlinePlayersList(){
     </div>
   `;
   }).join('');
+  // Réapplique le filtre de recherche après chaque (re)construction de la
+  // liste — sinon le rafraîchissement automatique ferait réapparaître les
+  // joueurs masqués pendant que l'utilisateur tape.
+  applyOnlinePlayerFilter();
+}
+
+// Masque les lignes dont le pseudo ne contient pas le texte recherché.
+// Filtre purement côté client (aucune requête réseau par frappe).
+function applyOnlinePlayerFilter(){
+  var input = document.getElementById('online-player-search');
+  var listEl = document.getElementById('online-players-list');
+  if(!listEl) return;
+  var q = input ? input.value.trim().toLowerCase() : '';
+  var rows = listEl.querySelectorAll('.online-player-row');
+  var shown = 0;
+  rows.forEach(function(r){
+    var match = !q || (r.getAttribute('data-pseudo')||'').indexOf(q) !== -1;
+    r.style.display = match ? '' : 'none';
+    if(match) shown++;
+  });
+  // Petit message si la recherche ne renvoie rien (sans écraser la liste).
+  var empty = document.getElementById('online-search-empty');
+  if(q && shown===0){
+    if(!empty){
+      empty = document.createElement('div');
+      empty.id = 'online-search-empty';
+      empty.style.cssText = 'text-align:center;opacity:.5;padding:12px;font-family:VT323,monospace';
+      listEl.appendChild(empty);
+    }
+    empty.textContent = 'Aucun joueur « '+q+' ».';
+    empty.style.display = '';
+  } else if(empty){
+    empty.style.display = 'none';
+  }
 }
 
 function escapeHtml(s){
@@ -19451,7 +19480,7 @@ window.addEventListener('beforeunload', () => {
     <div id="msgtab-panel-friends" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
       <div style="display:flex;gap:6px;margin-bottom:8px;flex-shrink:0">
         <input type="text" id="friend-search-input" placeholder="Pseudo du joueur" style="flex:1;background:rgba(0,0,0,.3);border:1px solid rgba(200,168,110,.3);border-radius:4px;color:var(--parchment);padding:8px 10px;font-family:VT323,monospace;font-size:14px">
-        <button class="btn-small-icon" onclick="sendFriendRequestByPseudo()" title="Ajouter" data-i18n="friends_add">&#10133;</button>
+        <button class="btn-small-icon" onclick="sendFriendRequestByPseudo()" title="Ajouter un ami">&#10133;</button>
       </div>
       <div id="friends-list" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
     </div>
@@ -19552,6 +19581,10 @@ window.addEventListener('beforeunload', () => {
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-shrink:0">
       <span style="font-family:'Cinzel',serif;font-size:12px;color:var(--parchment);opacity:.7">Joueurs en ligne</span>
       <button class="btn-small-icon" onclick="refreshOnlinePlayersList()" title="Rafraîchir">&#8635;</button>
+    </div>
+    <!-- Recherche d'un joueur par pseudo (filtre la liste ci-dessous). -->
+    <div style="position:relative;margin-bottom:6px;flex-shrink:0">
+      <input type="text" id="online-player-search" oninput="applyOnlinePlayerFilter()" placeholder="🔍 Rechercher un joueur…" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,.3);border:1px solid rgba(200,168,110,.3);border-radius:4px;color:var(--parchment);padding:8px 10px;font-family:VT323,monospace;font-size:14px">
     </div>
     <div style="display:flex;gap:5px;margin-bottom:6px;flex-shrink:0">
       <button class="sortmode-btn active" id="sortmode-status" onclick="setOnlineSortMode('status')">&#9876; Statut</button>
