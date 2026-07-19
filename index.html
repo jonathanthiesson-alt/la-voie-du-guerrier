@@ -14862,16 +14862,16 @@ function renderHomeLogoCfg(){
   html += '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;max-height:340px;overflow-y:auto;padding-right:2px">';
   function btnFor(s){
     var sel = (s.key===action);
-    return '<button class="btn" style="width:100%;font-size:12px;padding:9px;text-align:left'+(sel?';border-color:var(--gold-bright);background:rgba(212,160,23,.18)':'')+'" onclick="setHomeLogoAction(\''+s.key+'\')">'
+    return '<button class="btn" style="width:100%;flex-shrink:0;margin:0;font-size:12px;padding:9px;text-align:left'+(sel?';border-color:var(--gold-bright);background:rgba(212,160,23,.18)':'')+'" onclick="setHomeLogoAction(\''+s.key+'\')">'
       + (sel?'● ':'○ ') + s.label + '</button>';
   }
   var none = HOME_LOGO_SHORTCUTS[0];
   var actions = HOME_LOGO_SHORTCUTS.filter(function(s){ return s.key.indexOf('action:')===0; });
   var gotos   = HOME_LOGO_SHORTCUTS.filter(function(s){ return s.key.indexOf('goto:')===0; });
   html += btnFor(none);
-  html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.7;margin-top:8px">Actions rapides</div>';
+  html += '<div style="flex-shrink:0;font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.7;margin-top:8px">Actions rapides</div>';
   actions.forEach(function(s){ html += btnFor(s); });
-  html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.7;margin-top:8px">Aller à…</div>';
+  html += '<div style="flex-shrink:0;font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.7;margin-top:8px">Aller à…</div>';
   gotos.forEach(function(s){ html += btnFor(s); });
   html += '</div>';
   // La couleur d'aura n'a de sens que si un raccourci est actif.
