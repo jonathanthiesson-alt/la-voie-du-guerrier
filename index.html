@@ -14722,17 +14722,65 @@ function handleSecretLogoTouch(e){
 // couleur de l'aura est au choix du joueur. Réglage rattaché au compte
 // (stocké dans profiles.appearance_prefs — aucune colonne SQL neuve).
 // ══════════════════════════════════════════════════════
-// Les 5 raccourcis proposés + 'none'. Les trois premiers exigent une
-// connexion (jeu en ligne) : garde-fou dans onHomeLogoClick.
-var HOME_LOGO_LABELS = {
-  none:   'Aucun (décoratif)',
-  quick5: '⚡ Partie rapide 5s',
-  arena10:'⚔ Combat d\'Arène 10s',
-  daily:  '🎯 Défi du jour',
-  events: '🌸 Page Événements',
-  social: '👥 Page Social'
+// Liste ouverte de raccourcis : le joueur choisit n'importe quel mode
+// ou menu du jeu, pas seulement une poignée d'exemples figés. Deux
+// familles de clé : 'action:xxx' (comportement spécial, ex. lance une
+// recherche) et 'goto:idEcran' (navigation directe via showScreen).
+// Certaines entrées exigent une connexion (jeu en ligne) : voir
+// ONLINE_ONLY_HOME_LOGO dans onHomeLogoClick.
+var HOME_LOGO_SHORTCUTS = [
+  {key:'none', label:'Aucun (décoratif)'},
+  {key:'action:quick3',  label:'⚡ Partie rapide 3s'},
+  {key:'action:quick5',  label:'⚡ Partie rapide 5s'},
+  {key:'action:quick10', label:'⚡ Partie rapide 10s'},
+  {key:'action:arena10', label:'⚔ Combat d\'Arène 10s'},
+  {key:'action:daily',   label:'🎯 Défi du jour'},
+  {key:'goto:local-hub',   label:'🏠 Local'},
+  {key:'goto:campaigns',   label:'🗾 Campagne'},
+  {key:'goto:training',    label:'📖 Entraînement'},
+  {key:'goto:opponents',   label:'🤖 Maîtres IA'},
+  {key:'goto:clock',       label:'⏱ Pendule'},
+  {key:'goto:rules',       label:'📜 Règles'},
+  {key:'goto:online-menu', label:'🌐 Joueurs en ligne'},
+  {key:'goto:arena',       label:'⚔ Arène'},
+  {key:'goto:sumo',        label:'🀄 SUMO'},
+  {key:'goto:tournament',  label:'🏆 Tournois'},
+  {key:'goto:league',      label:'📊 Ligue'},
+  {key:'goto:guild',       label:'🏯 Guilde'},
+  {key:'goto:leaderboard', label:'🥇 Classements'},
+  {key:'goto:events-mode', label:'🌸 Événements'},
+  {key:'goto:amis',        label:'👥 Amis'},
+  {key:'goto:messaging',   label:'💬 Messages'},
+  {key:'goto:shop',        label:'🏪 Boutique'},
+  {key:'goto:profile',     label:'侍 Profil'},
+  {key:'goto:devlog',      label:'📰 DevLog'}
+];
+// Anciennes clés (avant l'ouverture du choix) → nouvelles, pour ne pas
+// casser le réglage des joueurs qui l'avaient déjà configuré.
+var HOME_LOGO_KEY_MIGRATION = {
+  quick5:'action:quick5', arena10:'action:arena10', daily:'action:daily',
+  events:'goto:events-mode', social:'goto:amis'
 };
-function getHomeLogoAction(){ try{ return localStorage.getItem('vtl_home_logo_action')||'none'; }catch(e){ return 'none'; } }
+// Écrans qui exigent d'être connecté pour être utiles en raccourci.
+var ONLINE_ONLY_HOME_LOGO_SCREENS = {
+  'online-menu':1,'arena':1,'sumo':1,'tournament':1,'league':1,
+  'guild':1,'leaderboard':1,'amis':1,'messaging':1
+};
+function isValidHomeLogoKey(k){
+  for(var i=0;i<HOME_LOGO_SHORTCUTS.length;i++){ if(HOME_LOGO_SHORTCUTS[i].key===k) return true; }
+  return false;
+}
+function homeLogoShortcutLabel(k){
+  for(var i=0;i<HOME_LOGO_SHORTCUTS.length;i++){ if(HOME_LOGO_SHORTCUTS[i].key===k) return HOME_LOGO_SHORTCUTS[i].label; }
+  return HOME_LOGO_SHORTCUTS[0].label;
+}
+function getHomeLogoAction(){
+  try{
+    var v = localStorage.getItem('vtl_home_logo_action')||'none';
+    if(HOME_LOGO_KEY_MIGRATION[v]) v = HOME_LOGO_KEY_MIGRATION[v];
+    return isValidHomeLogoKey(v) ? v : 'none';
+  }catch(e){ return 'none'; }
+}
 function getHomeLogoAura(){ try{ return localStorage.getItem('vtl_home_logo_aura')||'#d4a017'; }catch(e){ return '#d4a017'; } }
 // Convertit un #rrggbb en rgba() translucide pour une aura douce.
 function homeLogoHexToRgba(hex, a){
@@ -14771,22 +14819,28 @@ function applyHomeLogoAura(){
 function onHomeLogoClick(){
   var action = getHomeLogoAction();
   if(action==='none') return;
-  var needsOnline = (action==='quick5' || action==='arena10' || action==='daily');
+  var isAction = action.indexOf('action:')===0;
+  var isGoto   = action.indexOf('goto:')===0;
+  var needsOnline = isAction ? true : (isGoto && !!ONLINE_ONLY_HOME_LOGO_SCREENS[action.slice(5)]);
   if(needsOnline && !currentUser){
     showToast('Connectez-vous pour utiliser ce raccourci.', true);
     showScreen('online-auth');
     return;
   }
-  switch(action){
-    case 'quick5':  setQuickCadence(5); quickPlay(); break;
-    case 'arena10': showScreen('arena'); setTimeout(function(){ startArenaMatchmakingSearch(10); }, 80); break;
-    case 'daily':   startDailyChallenge(); break;
-    case 'events':  showScreen('events-mode'); break;
-    case 'social':  showScreen('amis'); break;
+  if(isAction){
+    switch(action){
+      case 'action:quick3':  setQuickCadence(3);  quickPlay(); break;
+      case 'action:quick5':  setQuickCadence(5);  quickPlay(); break;
+      case 'action:quick10': setQuickCadence(10); quickPlay(); break;
+      case 'action:arena10': showScreen('arena'); setTimeout(function(){ startArenaMatchmakingSearch(10); }, 80); break;
+      case 'action:daily':   startDailyChallenge(); break;
+    }
+    return;
   }
+  if(isGoto) showScreen(action.slice(5));
 }
 function setHomeLogoAction(action){
-  if(!HOME_LOGO_LABELS[action]) action='none';
+  if(!isValidHomeLogoKey(action)) action='none';
   try{ localStorage.setItem('vtl_home_logo_action', action); }catch(e){}
   applyHomeLogoAura();
   renderHomeLogoCfg();
@@ -14804,13 +14858,21 @@ function renderHomeLogoCfg(){
   if(!box) return;
   var action = getHomeLogoAction();
   var aura = getHomeLogoAura();
-  var html = '<div style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.6;margin-bottom:12px">Transforme le logo de l\'écran d\'accueil en bouton-raccourci. Une aura colorée signale qu\'il est actif.</div>';
-  html += '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">';
-  Object.keys(HOME_LOGO_LABELS).forEach(function(k){
-    var sel = (k===action);
-    html += '<button class="btn" style="width:100%;font-size:12px;padding:9px;text-align:left'+(sel?';border-color:var(--gold-bright);background:rgba(212,160,23,.18)':'')+'" onclick="setHomeLogoAction(\''+k+'\')">'
-      + (sel?'● ':'○ ') + HOME_LOGO_LABELS[k] + '</button>';
-  });
+  var html = '<div style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.6;margin-bottom:12px">Transforme le logo de l\'écran d\'accueil en bouton-raccourci vers le mode ou menu de ton choix. Une aura colorée signale qu\'il est actif.</div>';
+  html += '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px;max-height:340px;overflow-y:auto;padding-right:2px">';
+  function btnFor(s){
+    var sel = (s.key===action);
+    return '<button class="btn" style="width:100%;font-size:12px;padding:9px;text-align:left'+(sel?';border-color:var(--gold-bright);background:rgba(212,160,23,.18)':'')+'" onclick="setHomeLogoAction(\''+s.key+'\')">'
+      + (sel?'● ':'○ ') + s.label + '</button>';
+  }
+  var none = HOME_LOGO_SHORTCUTS[0];
+  var actions = HOME_LOGO_SHORTCUTS.filter(function(s){ return s.key.indexOf('action:')===0; });
+  var gotos   = HOME_LOGO_SHORTCUTS.filter(function(s){ return s.key.indexOf('goto:')===0; });
+  html += btnFor(none);
+  html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.7;margin-top:8px">Actions rapides</div>';
+  actions.forEach(function(s){ html += btnFor(s); });
+  html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.7;margin-top:8px">Aller à…</div>';
+  gotos.forEach(function(s){ html += btnFor(s); });
   html += '</div>';
   // La couleur d'aura n'a de sens que si un raccourci est actif.
   var dim = (action==='none');
