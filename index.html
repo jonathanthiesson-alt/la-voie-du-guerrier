@@ -4567,6 +4567,9 @@ function infoBtnHtml(key){
 // ══════════════════════════════════════════════════════
 var _currentTournamentId = null;
 var _currentTournamentRound = 0;
+// Écran à retrouver en quittant le mode spectateur, quand on y est
+// entré depuis l'écran d'attente d'un tournoi (au lieu du hub En ligne).
+var _spectateReturnScreen = null;
 // Ronde déjà présentée par l'écran d'appariement (par tournoi) : évite
 // de le rejouer à chaque rafraîchissement automatique (5s).
 var _tournamentIntroShownRound = {};
@@ -4754,6 +4757,7 @@ async function renderTournamentDetail(id){
       html += '<div style="text-align:center;font-family:VT323,monospace;font-size:10px;opacity:.5;margin-bottom:6px">'
         + (rondesRestantes>0 ? rondesRestantes+' ronde'+(rondesRestantes>1?'s':'')+' restante'+(rondesRestantes>1?'s':'')+' après celle-ci' : 'Dernière ronde')
         + ' · la ronde suivante démarre automatiquement</div>';
+      html += await renderTournamentSpectateButton(id, tn.current_round);
     }
     // Mes appariements de la ronde courante
     if(tn.current_round>0){
@@ -5050,6 +5054,21 @@ async function renderRoundMatches(tournamentId, round){
     groups.finished.concat(groups.bye).forEach(function(m){ html += row(m, '⚪ Terminé', 'var(--parchment)'); });
     return html;
   }catch(e){ console.error('[tournoi] liste des matchs :', e); return ''; }
+}
+// Pendant l'attente entre les rondes, propose de suivre EN DIRECT le
+// plateau d'un combat au hasard parmi ceux encore en cours dans la
+// ronde — réutilise le mode spectateur existant (spectateGame), en
+// mémorisant l'écran d'où on vient pour y revenir en quittant.
+async function renderTournamentSpectateButton(tournamentId, round){
+  try{
+    const { data } = await supa.rpc('tournament_round_matches', { p_tournament_id: tournamentId, p_round: round });
+    var matches = (data && data.matches) || [];
+    var ongoing = matches.filter(function(m){ return m.state==='ongoing' && m.online_game_id; });
+    if(!ongoing.length) return '';
+    var pick = ongoing[Math.floor(Math.random()*ongoing.length)];
+    return '<button class="btn" style="width:100%;font-size:11px;padding:7px;margin-bottom:6px;opacity:.85" onclick="_spectateReturnScreen=\'tournament\';spectateGame('+pick.online_game_id+')">👁 Suivre un combat en cours — '
+      + escapeHtml(pick.white_pseudo||'?')+' vs '+escapeHtml(pick.black_pseudo||'?')+'</button>';
+  }catch(e){ return ''; }
 }
 // Réclame la victoire quand l'adversaire ne s'est pas présenté (délai écoulé).
 // L'absent est déclaré abandonniste et exclu des rondes suivantes ; le
@@ -18499,7 +18518,8 @@ function stopSpectating(){
 function exitSpectateMode(){
   stopSpectating();
   reviewMode = false;
-  showScreen('online-menu');
+  var back = _spectateReturnScreen; _spectateReturnScreen = null;
+  showScreen(back || 'online-menu');
   refreshOnlinePlayersList();
 }
 
