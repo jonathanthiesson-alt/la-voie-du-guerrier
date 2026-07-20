@@ -4429,9 +4429,9 @@ var MODE_INFO = {
       ['Appariement', 'À chaque ronde, les joueurs sont triés par score et appariés entre voisins : 1er contre 2e, 3e contre 4e… Plus le tournoi avance, plus tu affrontes des joueurs de ton niveau réel.'],
       ['Nombre de rondes', 'Calculé selon le nombre d\'inscrits (log₂). 8 inscrits → 3 rondes, 16 → 4 rondes. Plafonné par la cadence.'],
       ['Plafonds', '3s → 64 joueurs (~18 min) · 5s → 32 joueurs (~20 min) · 10s → 16 joueurs (~28 min).'],
-      ['Score', 'Victoire : 1 pt · Nulle : 0,5 pt · Défaite : 0 pt · Bye (nombre impair de joueurs) : 1 pt offert au dernier du classement.'],
+      ['Score', 'Pas de partie nulle possible : chaque combat se résout par une victoire ou une défaite. Victoire : 1 pt · Défaite : 0 pt · Bye (nombre impair de joueurs) : 1 pt offert au dernier du classement.'],
       ['Délai & abandon', 'Chaque ronde a un délai limite. Si ton adversaire ne se présente pas, réclame la victoire par forfait une fois le délai écoulé. Un joueur absent est déclaré abandonniste, exclu des rondes suivantes — et le tournoi continue sans lui.'],
-      ['Récompenses', 'Victoire : +2 🏮 · Nulle : +1 🏮. Podium final : 20 / 12 / 6 🏮.']
+      ['Récompenses', 'Victoire : +2 🏮 par combat. À la fin, TOUT LE MONDE touche du Mon selon son classement final — même le dernier repart avec un peu (3 🏮), et le 1er en empoche jusqu\'à 20 🏮.']
     ]
   },
   league: {
@@ -4745,8 +4745,7 @@ async function renderMyPairing(tournamentId, round, deadline){
 
     if(p.result){
       // Partie déjà conclue.
-      var rlabel = p.result==='draw' ? 'Nulle'
-        : p.result==='timeout' ? 'Non jouée (forfait)'
+      var rlabel = p.result==='timeout' ? 'Non jouée (forfait)'
         : ((p.result==='white' && p.i_am_white) || (p.result==='black' && !p.i_am_white) ? 'Victoire ✓' : 'Défaite');
       html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.7">Résultat : '+rlabel+'</div>';
     } else {
@@ -4981,7 +4980,6 @@ async function renderRoundMatches(tournamentId, round){
     function resultLabel(m){
       if(m.result==='bye') return 'Exempté';
       if(m.result==='timeout') return 'Forfait (non joué)';
-      if(m.result==='draw') return 'Nulle';
       if(m.result==='white') return escapeHtml(m.white_pseudo||'?')+' gagne';
       if(m.result==='black') return escapeHtml(m.black_pseudo||'?')+' gagne';
       return '';
@@ -8389,7 +8387,7 @@ var DEV_MODES = [
   { key:'arena',       label:'⚔ Arène',       currency:'tamashii', icon:'⚔',
     events:[{k:'win_3s',label:'Manche gagnée (3s)'},{k:'win_5s',label:'Manche gagnée (5s)'},{k:'win_10s',label:'Manche gagnée (10s)'}] },
   { key:'tournament',  label:'🏆 Tournoi',    currency:'mon',      icon:'🏮',
-    events:[{k:'win',label:'Victoire'},{k:'draw',label:'Nulle'}] },
+    events:[{k:'win',label:'Victoire'}] },
   { key:'guild',       label:'🛡 Guilde',     currency:'ryu',      icon:'🐉',
     events:[{k:'win',label:'Victoire de guilde'}] },
   { key:'events',      label:'🌸 Événements', currency:'hanafuda', icon:'🌸',
@@ -17116,6 +17114,12 @@ var CURRENCY_LORE = {
     name: 'Hanafuda 花札',
     mode: 'Événements',
     lore: 'Les cartes de fleurs. Né au Japon du XVIIIe siècle, le hanafuda organisait les saisons en décors floraux — cerisiers, iris, érable. Chaque saison portait ses propres règles. Ici, chaque événement saisonnier porte ses propres récompenses.'
+  },
+  fame: {
+    icon: '💗',
+    name: 'Fame 心 — la Gloire',
+    mode: 'Événement SUMO',
+    lore: 'Le kanji 心 (kokoro) désigne le cœur, le courage qu\'on met dans chaque affrontement. Sur le dohyō, chaque combat forge ta légende : la Fame grandit à chaque victoire (et un peu à chaque défaite), et plus ton ratio de victoires est haut, plus ta gloire enfle vite. Monnaie propre à l\'événement SUMO, jusqu\'au 31 août.'
   }
 };
 function showCurrencyTooltip(key){
@@ -19370,6 +19374,7 @@ window.addEventListener('beforeunload', () => {
     <!-- Monnaie de l'événement : 💗 Fame — kanji 心 (kokoro, le cœur) -->
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 8px">
       <div style="font-family:VT323,monospace;font-size:14px;color:#ff9dbf"><span style="font-family:'Noto Serif JP',serif;font-size:15px;vertical-align:middle">心</span> 💗 <span class="fame-display">0</span> <span style="font-size:10px;opacity:.6">Fame</span></div>
+      <button onclick="showCurrencyTooltip('fame')" title="Qu'est-ce que la Fame ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(255,140,190,.4);border-radius:50%;width:16px;height:16px;color:#ff9dbf;font-family:serif;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button>
     </div>
     <!-- Intro du tournoi -->
     <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.75;text-align:center;line-height:1.45;margin-bottom:8px">Le grand basho d'été est ouvert à tous les guerriers. Plus de murs, plus de refuge : seul le cercle décide. Éjecte l'Épéiste adverse hors du dohyō et ta légende grandira — chaque combat rapporte de la Fame 心, et plus ton ratio de victoires est haut, plus elle enfle.</div>
@@ -19463,6 +19468,7 @@ window.addEventListener('beforeunload', () => {
     <!-- Monnaie du Tournoi : 🏮 Mon (sceau de clan) -->
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 8px;flex-shrink:0">
       <div style="font-family:VT323,monospace;font-size:14px;color:var(--gold-bright)">🏮 <span class="mon-display">0</span> <span style="font-size:10px;opacity:.6">Mon</span></div>
+      <button onclick="showCurrencyTooltip('mon')" title="Qu'est-ce que le Mon ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:16px;height:16px;color:var(--gold-bright);font-family:serif;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button>
     </div>
     <div style="position:relative;height:48px;margin:0 4px 6px;flex-shrink:0">
       <div style="position:absolute;top:0;left:0;right:0;height:10px;background:rgba(0,0,0,.4);border-radius:5px;overflow:hidden;border:1px solid rgba(255,140,0,.25)">
