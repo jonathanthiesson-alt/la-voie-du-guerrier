@@ -4567,6 +4567,9 @@ function infoBtnHtml(key){
 // ══════════════════════════════════════════════════════
 var _currentTournamentId = null;
 var _currentTournamentRound = 0;
+// Ronde déjà présentée par l'écran d'appariement (par tournoi) : évite
+// de le rejouer à chaque rafraîchissement automatique (5s).
+var _tournamentIntroShownRound = {};
 // Mémorise le tournoi de la dernière partie jouée, pour que le bouton
 // "Menu" de l'écran de fin y ramène — capturé dans endGame() avant que
 // _currentTournamentId ne soit potentiellement remis à zéro ailleurs.
@@ -4650,6 +4653,55 @@ function openTournament(id){
     renderTournamentDetail(_currentTournamentId);
   }, 5000);   // filet : détecte une partie créée par l'adversaire même si le temps réel a échoué
 }
+// Écran d'appariement façon « Battlegrounds » : affiché quelques
+// secondes au début du tournoi et avant chaque nouvelle ronde, montrant
+// qui affronte qui (+ le classement en cours à partir de la ronde 2,
+// où tout le monde n'est plus à 0 point). Se referme seul, ou au clic.
+async function maybeShowTournamentRoundIntro(id, tn, standings){
+  if(tn.status!=='running' || !tn.current_round) return false;
+  if(_tournamentIntroShownRound[id] === tn.current_round) return false;
+  _tournamentIntroShownRound[id] = tn.current_round;
+  var body = document.getElementById('tournament-body');
+  if(!body) return false;
+  var matches = [];
+  try{
+    const { data } = await supa.rpc('tournament_round_matches', { p_tournament_id: id, p_round: tn.current_round });
+    matches = (data && data.matches) || [];
+  }catch(e){}
+  var html = '<div style="text-align:center;padding:16px 4px">';
+  html += '<div style="font-family:\'Cinzel\',serif;font-size:17px;color:var(--gold-bright);letter-spacing:1px;margin-bottom:2px">⚔ RONDE '+tn.current_round+'</div>';
+  html += '<div style="font-family:VT323,monospace;font-size:11px;opacity:.55;margin-bottom:14px">Les combats vont commencer…</div>';
+  if(matches.length){
+    html += '<div style="display:flex;flex-direction:column;gap:6px;max-height:230px;overflow-y:auto;margin-bottom:16px;padding:0 2px">';
+    matches.forEach(function(m){
+      var vs = m.black_pseudo
+        ? (escapeHtml(m.white_pseudo||'?')+' <span style="opacity:.4">vs</span> '+escapeHtml(m.black_pseudo||'?'))
+        : escapeHtml(m.white_pseudo||'?')+' <span style="opacity:.5;font-size:10px">(exempté)</span>';
+      var mine = currentUser && (m.white_pseudo===currentUser.pseudo || m.black_pseudo===currentUser.pseudo);
+      html += '<div style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,'+(mine?'.6':'.22')+');border-radius:6px;padding:7px 10px;font-family:VT323,monospace;font-size:13px;color:var(--parchment)">'+vs+'</div>';
+    });
+    html += '</div>';
+  }
+  if(tn.current_round>1 && standings && standings.length){
+    html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;margin-bottom:6px;letter-spacing:1px">CLASSEMENT AVANT LA RONDE</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:3px;max-height:170px;overflow-y:auto;margin-bottom:16px">';
+    var rang=0;
+    standings.forEach(function(s){
+      if(s.abandoned) return;
+      rang++;
+      var pos = rang<=3 ? ['🥇','🥈','🥉'][rang-1] : '#'+rang;
+      html += '<div style="display:flex;justify-content:space-between;padding:3px 10px;font-family:VT323,monospace;font-size:12px;color:var(--parchment)"><span>'+pos+' '+escapeHtml(s.pseudo||'?')+(s.player_id===currentUser.id?' (vous)':'')+'</span><span style="color:var(--gold-bright)">'+s.score+' pt'+(s.score===1?'':'s')+'</span></div>';
+    });
+    html += '</div>';
+  }
+  html += '<button class="btn" style="width:auto;flex-shrink:0;margin:0;font-size:11px;padding:7px 20px" onclick="renderTournamentDetail('+id+')">Passer ▶</button>';
+  html += '</div>';
+  body.innerHTML = html;
+  setTimeout(function(){
+    if(_currentTournamentId===id) renderTournamentDetail(id);
+  }, 5000);
+  return true;
+}
 async function renderTournamentDetail(id){
   var body = document.getElementById('tournament-body');
   if(!body) return;
@@ -4658,6 +4710,7 @@ async function renderTournamentDetail(id){
     const { data } = await supa.rpc('tournament_standings', { p_tournament_id: id });
     var tn = data.tournament, standings = data.standings||[];
     _currentTournamentRound = tn.current_round || 0;
+    if(await maybeShowTournamentRoundIntro(id, tn, standings)) return;
     var amIn = standings.some(function(s){ return s.player_id===currentUser.id; });
     var html = '<button class="btn" style="width:100%;font-size:11px;padding:6px;opacity:.7;margin-bottom:8px" onclick="_currentTournamentId=null;refreshTournamentScreen()">↩ Liste des tournois</button>';
     html += '<div style="font-family:\'Cinzel\',serif;font-size:14px;color:var(--gold-bright);text-align:center;margin-bottom:2px">'+escapeHtml(tn.name)+'</div>';
