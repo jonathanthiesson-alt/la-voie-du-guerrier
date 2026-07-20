@@ -14733,7 +14733,12 @@ var HOME_LOGO_SHORTCUTS = [
   {key:'action:quick3',  label:'⚡ Partie rapide 3s'},
   {key:'action:quick5',  label:'⚡ Partie rapide 5s'},
   {key:'action:quick10', label:'⚡ Partie rapide 10s'},
+  {key:'action:arena3',  label:'⚔ Combat d\'Arène 3s'},
+  {key:'action:arena5',  label:'⚔ Combat d\'Arène 5s'},
   {key:'action:arena10', label:'⚔ Combat d\'Arène 10s'},
+  {key:'action:sumo3',   label:'🀄 SUMO 3s'},
+  {key:'action:sumo5',   label:'🀄 SUMO 5s'},
+  {key:'action:sumo10',  label:'🀄 SUMO 10s'},
   {key:'action:daily',   label:'🎯 Défi du jour'},
   {key:'goto:local-hub',   label:'🏠 Local'},
   {key:'goto:campaigns',   label:'🗾 Campagne'},
@@ -14828,12 +14833,15 @@ function onHomeLogoClick(){
     return;
   }
   if(isAction){
-    switch(action){
-      case 'action:quick3':  setQuickCadence(3);  quickPlay(); break;
-      case 'action:quick5':  setQuickCadence(5);  quickPlay(); break;
-      case 'action:quick10': setQuickCadence(10); quickPlay(); break;
-      case 'action:arena10': showScreen('arena'); setTimeout(function(){ startArenaMatchmakingSearch(10); }, 80); break;
-      case 'action:daily':   startDailyChallenge(); break;
+    var m;
+    if(action==='action:daily'){
+      startDailyChallenge();
+    }else if((m = /^action:quick(\d+)$/.exec(action))){
+      setQuickCadence(parseInt(m[1],10)); quickPlay();
+    }else if((m = /^action:arena(\d+)$/.exec(action))){
+      showScreen('arena'); setTimeout(function(){ startArenaMatchmakingSearch(parseInt(m[1],10)); }, 80);
+    }else if((m = /^action:sumo(\d+)$/.exec(action))){
+      showScreen('sumo'); setTimeout(function(){ startSumoMatchmakingSearch(parseInt(m[1],10)); }, 80);
     }
     return;
   }
