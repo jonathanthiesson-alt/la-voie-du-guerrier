@@ -8052,14 +8052,18 @@ function markDailyChallengeSolved(solved){
 }
 async function startDailyChallenge(){
   if(!currentUser){ showScreen('online-auth'); return; }
-  // Réutilise le moteur de campagne : on lance le premier défi disponible
-  // comme "défi du jour" (le vivier sera étoffé plus tard). Le crédit se
-  // fait à la résolution via solveDailyChallengeReward().
-  _dailyChallengeActive = true;
-  showScreen('campaigns');
+  var pool = getPuzzlePool();
+  if(!pool.length){ showToast('Aucun défi disponible.', true); return; }
+  // Choisit un défi proche du rating du joueur (voir pickAdaptivePuzzle) ;
+  // le crédit (1x/jour, contrôlé côté serveur) se fait à la résolution
+  // via solveDailyChallengeReward(), appelée depuis completeCampaignLesson.
+  var rating = await fetchPuzzleRating();
+  var p = pickAdaptivePuzzle(pool, rating);
+  _trainingMode = 'daily';
+  _currentPuzzleDifficulty = p.difficulty;
+  startLesson(p.campaignId, p.lessonIdx);
   showToast(t('daily_challenge_launch')||'Défi du jour — bonne chance !', false);
 }
-var _dailyChallengeActive = false;
 async function solveDailyChallengeReward(){
   if(!currentUser || !supa) return;
   try{
@@ -8157,6 +8161,26 @@ function getPuzzlePool(){
              difficulty: Math.min(5, Math.ceil((idx+1)/3)) };
   });
 }
+// Rating implicite d'un défi selon sa difficulté (même formule que le RPC
+// serveur record_puzzle_result : 1→680 … 5→1800), pour choisir un défi
+// proche du niveau du joueur plutôt qu'au hasard (façon chess.com).
+function puzzleImplicitRating(difficulty){ return 400 + (difficulty||3) * 280; }
+function pickAdaptivePuzzle(pool, rating, excludeLessonIdx){
+  var candidates = pool.filter(function(p){ return p.lessonIdx !== excludeLessonIdx; });
+  if(!candidates.length) candidates = pool;
+  candidates = candidates.slice().sort(function(a, b){
+    return Math.abs(puzzleImplicitRating(a.difficulty) - rating) - Math.abs(puzzleImplicitRating(b.difficulty) - rating);
+  });
+  var top = candidates.slice(0, Math.min(3, candidates.length));
+  return top[Math.floor(Math.random() * top.length)];
+}
+async function fetchPuzzleRating(){
+  if(!currentUser || !supa) return 800;
+  try{
+    const { data } = await supa.from('profiles').select('puzzle_rating').eq('id', currentUser.id).single();
+    return (data && data.puzzle_rating) || 800;
+  }catch(e){ return 800; }
+}
 async function refreshTrainingScreen(){
   var pool = getPuzzlePool();
   var list = document.getElementById('training-puzzles-list');
@@ -8202,25 +8226,24 @@ async function recordFreePuzzleSolved(){
 }
 
 // ── Défi Rush ────────────────────────────────────────────────────
-function startDefiRush(){
+async function startDefiRush(){
   if(!currentUser){ showScreen('online-auth'); return; }
   var pool = getPuzzlePool();
   if(!pool.length){ showToast('Aucun défi disponible.', true); return; }
-  // Ordre aléatoire des défis.
-  var order = pool.slice().sort(function(){ return Math.random()-0.5; });
-  _rushState = { order:order, idx:0, solved:0, errors:0, deadline:Date.now()+180000, ended:false };
+  // Le rythme démarre au rating du joueur puis s'ajuste localement à
+  // chaque défi (façon Puzzle Rush chess.com) sans toucher au rating
+  // persistant (record_puzzle_result n'est PAS appelé ici, seul le
+  // meilleur score compte, via record_rush_score).
+  var rating = await fetchPuzzleRating();
+  _rushState = { pool:pool, rating:rating, lastLessonIdx:null, solved:0, errors:0, deadline:Date.now()+180000, ended:false };
   _trainingMode = 'rush';
   runNextRushPuzzle();
   startRushTimer();
 }
 function runNextRushPuzzle(){
   if(!_rushState || _rushState.ended) return;
-  if(_rushState.idx >= _rushState.order.length){
-    // Recyclage : on reboucle sur la liste mélangée si le joueur est rapide.
-    _rushState.order.sort(function(){ return Math.random()-0.5; });
-    _rushState.idx = 0;
-  }
-  var p = _rushState.order[_rushState.idx];
+  var p = pickAdaptivePuzzle(_rushState.pool, _rushState.rating, _rushState.lastLessonIdx);
+  _rushState.lastLessonIdx = p.lessonIdx;
   startLesson(p.campaignId, p.lessonIdx);
   updateRushHud();
 }
@@ -8244,13 +8267,14 @@ function updateRushHud(){
 function onRushPuzzleSolved(){
   if(!_rushState || _rushState.ended) return;
   _rushState.solved++;
-  _rushState.idx++;
+  _rushState.rating += 15;
   setTimeout(runNextRushPuzzle, 400);
 }
 // Appelé quand le joueur se trompe pendant un Rush (3 erreurs = fin).
 function onRushPuzzleError(){
   if(!_rushState || _rushState.ended) return;
   _rushState.errors++;
+  _rushState.rating = Math.max(400, _rushState.rating - 20);
   updateRushHud();
   if(_rushState.errors >= 3){ endDefiRush(); }
 }
@@ -11523,6 +11547,20 @@ function completeCampaignLesson(){
   if(_trainingMode==='rush'){
     if(typeof playSound==='function') playSound('victory');
     onRushPuzzleSolved();
+    return;
+  }
+  if(_trainingMode==='daily'){
+    _trainingMode = null;
+    campaignLessonActive = false;
+    if(typeof playSound==='function') playSound('victory');
+    if(typeof reportDailyActivity==='function') reportDailyActivity();
+    recordFreePuzzleSolved();
+    solveDailyChallengeReward();
+    showMusashiText('Défi du jour résolu !');
+    setTimeout(function(){
+      var bubble=document.getElementById('aldric-bubble'); if(bubble) bubble.style.display='none';
+      showScreen('home');
+    }, 1600);
     return;
   }
   if(_trainingMode==='free'){
