@@ -2335,7 +2335,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('opponents')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">&#9876;</span><span data-i18n="local_hub_masters">Maîtres IA</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('rules')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">典</span><span data-i18n="menu_rules">Règles</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('training')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">&#127919;</span><span data-i18n="local_hub_training">Entraînement</span></button>
-    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('local')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">対</span><span data-i18n="local_hub_versus">Vs Ordi / 2 joueurs</span></button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="openLocalMode('ai')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">機</span><span data-i18n="local_hub_vs_ai">Vs Ordinateur</span></button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="openLocalMode('human')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">対</span><span data-i18n="local_hub_vs_2p">2 joueurs (même appareil)</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('clock')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">⏱</span><span data-i18n="menu_clock">Pendule</span></button>
   </div>
 </div>
@@ -2347,7 +2348,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div class="panel" style="max-width:340px">
     <div class="menu-title" style="font-size:20px"><span data-i18n="local_title">将 JEU LOCAL</span></div>
     <div class="menu-divider"></div>
-    <div class="option-group">
+    <div class="option-group" id="local-mode-picker">
       <div class="option-label"><span data-i18n="local_opponent">Adversaire</span></div>
       <div class="option-row">
         <div class="opt-btn selected" id="opt-human" style="text-align:center" onclick="selectLocalMode('human')"><span data-i18n="local_human"><span style="font-family:'Noto Serif JP',serif;font-size:20px;vertical-align:middle">対</span> Joueur vs Joueur</span></div>
@@ -6457,7 +6458,8 @@ const LANGS={
     local_hub_sub:'Jouer hors-ligne, sur cet appareil',
     local_hub_masters:'Maîtres IA',
     local_hub_training:'Entraînement',
-    local_hub_versus:'Vs Ordi / 2 joueurs',
+    local_hub_vs_ai:'Vs Ordinateur',
+    local_hub_vs_2p:'2 joueurs (même appareil)',
     options_title:'OPTIONS',
     local_hub_sub_opt:'Réglages, apparence, compte',
     home_logo_cfg_item:'Logo d\'accueil',
@@ -6664,7 +6666,8 @@ const LANGS={
     local_hub_sub:'Play offline, on this device',
     local_hub_masters:'AI Masters',
     local_hub_training:'Training',
-    local_hub_versus:'Vs Computer / 2 players',
+    local_hub_vs_ai:'Vs Computer',
+    local_hub_vs_2p:'2 players (same device)',
     options_title:'OPTIONS',
     local_hub_sub_opt:'Settings, appearance, account',
     home_logo_cfg_item:'Home logo',
@@ -6871,7 +6874,8 @@ const LANGS={
     local_hub_sub:'この端末でオフライン対戦',
     local_hub_masters:'AI師範',
     local_hub_training:'稽古',
-    local_hub_versus:'対CPU / 2人対戦',
+    local_hub_vs_ai:'対CPU',
+    local_hub_vs_2p:'2人対戦（同じ端末）',
     options_title:'設定',
     local_hub_sub_opt:'設定・外観・アカウント',
     home_logo_cfg_item:'ホームロゴ',
@@ -9407,6 +9411,17 @@ function isDevAccount(){
   return typeof currentUser!=='undefined' && !!currentUser && DEV_ACCOUNT_IDS.indexOf(currentUser.id)!==-1;
 }
 
+// Point d'entrée depuis le hub Local : deux boutons distincts (Vs Ordi /
+// 2 joueurs) au lieu d'un seul écran avec un choix à faire dedans. Le
+// mode arrive déjà décidé, donc on masque le sélecteur Adversaire —
+// il ne reste plus qu'à choisir la cadence (et l'adversaire IA le cas
+// échéant).
+function openLocalMode(mode){
+  showScreen('local');
+  selectLocalMode(mode);
+  var picker = document.getElementById('local-mode-picker');
+  if(picker) picker.style.display = 'none';
+}
 function selectLocalMode(mode){
   settings.vsAI=(mode==='ai');
   document.getElementById('opt-human').classList.toggle('selected',mode==='human');
