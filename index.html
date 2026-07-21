@@ -2335,9 +2335,30 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('opponents')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">&#9876;</span><span data-i18n="local_hub_masters">Maîtres IA</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('rules')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">典</span><span data-i18n="menu_rules">Règles</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('training')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">&#127919;</span><span data-i18n="local_hub_training">Entraînement</span></button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('training-bot')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">柔</span><span data-i18n="local_hub_training_bot">Bot d'entraînement</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="openLocalMode('ai')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">機</span><span data-i18n="local_hub_vs_ai">Vs Ordinateur</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="openLocalMode('human')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">対</span><span data-i18n="local_hub_vs_2p">2 joueurs (même appareil)</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('clock')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">⏱</span><span data-i18n="menu_clock">Pendule</span></button>
+  </div>
+</div>
+
+<!-- BOT D'ENTRAÎNEMENT — Musashi-sensei, séparé des Maîtres IA : pas de
+     déblocage ni de galerie, juste 3 niveaux cléments et bienveillants,
+     avec des conseils affichés après coup (voir executeDrop/trainingBotHint). -->
+<div id="screen-training-bot" class="screen" style="justify-content:flex-start">
+  <div class="panel" style="max-width:330px;width:100%">
+    <div class="menu-title" style="font-size:20px"><span style="font-family:'Noto Serif JP',serif;margin-right:6px">柔</span><span data-i18n="training_bot_title">BOT D'ENTRAÎNEMENT</span></div>
+    <div class="menu-divider"></div>
+    <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.55;text-align:center;margin-bottom:12px" data-i18n="training_bot_sub">Musashi-sensei joue avec vous, sans enjeu ni classement</div>
+
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="startTrainingBotMatch(1)"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">柔</span><span data-i18n="training_bot_lvl1">Novice</span></button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="startTrainingBotMatch(2)"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">和</span><span data-i18n="training_bot_lvl2">Confirmé</span></button>
+    <button class="btn" style="width:100%;margin-bottom:12px" onclick="startTrainingBotMatch(3)"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">賢</span><span data-i18n="training_bot_lvl3">Sage</span></button>
+
+    <label style="display:flex;align-items:center;gap:8px;font-family:'VT323',monospace;font-size:13px;color:var(--parchment);opacity:.8;cursor:pointer;justify-content:center">
+      <input type="checkbox" id="training-bot-hints-toggle" checked onchange="_trainingBotHintsOn=this.checked">
+      <span data-i18n="training_bot_hints_label">Conseils de Musashi pendant la partie</span>
+    </label>
   </div>
 </div>
 
@@ -6458,6 +6479,13 @@ const LANGS={
     local_hub_sub:'Jouer hors-ligne, sur cet appareil',
     local_hub_masters:'Maîtres IA',
     local_hub_training:'Entraînement',
+    local_hub_training_bot:'Bot d’entraînement',
+    training_bot_title:'BOT D’ENTRAÎNEMENT',
+    training_bot_sub:'Musashi-sensei joue avec vous, sans enjeu ni classement',
+    training_bot_lvl1:'Novice',
+    training_bot_lvl2:'Confirmé',
+    training_bot_lvl3:'Sage',
+    training_bot_hints_label:'Conseils de Musashi pendant la partie',
     local_hub_vs_ai:'Vs Ordinateur',
     local_hub_vs_2p:'2 joueurs (même appareil)',
     options_title:'OPTIONS',
@@ -6666,6 +6694,13 @@ const LANGS={
     local_hub_sub:'Play offline, on this device',
     local_hub_masters:'AI Masters',
     local_hub_training:'Training',
+    local_hub_training_bot:'Training bot',
+    training_bot_title:'TRAINING BOT',
+    training_bot_sub:'Musashi-sensei plays with you, no stakes, no rating',
+    training_bot_lvl1:'Novice',
+    training_bot_lvl2:'Skilled',
+    training_bot_lvl3:'Wise',
+    training_bot_hints_label:'Musashi’s tips during the game',
     local_hub_vs_ai:'Vs Computer',
     local_hub_vs_2p:'2 players (same device)',
     options_title:'OPTIONS',
@@ -6874,6 +6909,13 @@ const LANGS={
     local_hub_sub:'この端末でオフライン対戦',
     local_hub_masters:'AI師範',
     local_hub_training:'稽古',
+    local_hub_training_bot:'鍛錬ボット',
+    training_bot_title:'鍛錬ボット',
+    training_bot_sub:'ムサシ先生と気軽に対局。勝敗もレートも関係ありません',
+    training_bot_lvl1:'見習い',
+    training_bot_lvl2:'熟練',
+    training_bot_lvl3:'賢者',
+    training_bot_hints_label:'対局中のムサシ先生の助言',
     local_hub_vs_ai:'対CPU',
     local_hub_vs_2p:'2人対戦（同じ端末）',
     options_title:'設定',
@@ -7764,7 +7806,43 @@ ADVERSARIES=[
   {id:7,icon:'敵',stars:'?????',isNotable:true,isAbsent:true,play:(moves)=>moves[Math.floor(Math.random()*moves.length)]},
   {id:8,icon:'師',stars:'?????',isNotable:true,isAbsent:true,play:(moves)=>moves[Math.floor(Math.random()*moves.length)]},
   {id:9,icon:'人間二',stars:'',isNotable:true,subtitle:'L\u2019assembleur de strat\u00e9gies vaincues',play:(moves,board,stacks,lm,lp)=>nt2Play(moves,board,stacks,lm,lp)},
+  // Bot d'entrainement (Musashi-sensei) - separe des Maitres IA : pas de
+  // deblocage, pas de galerie, pas de classement. Filtre hors de buildAdvGrid
+  // (voir ADVERSARIES.forEach isTrainingBot) et lance uniquement depuis le
+  // nouveau menu #screen-training-bot via startTrainingBotMatch().
+  {id:10,icon:'柔',isTrainingBot:true,fullName:'Musashi-sensei',botLevel:1,play:(moves,board,stacks,lm,lp)=>trainingBotPlay(1,moves,board,stacks,lm,lp)},
+  {id:11,icon:'和',isTrainingBot:true,fullName:'Musashi-sensei',botLevel:2,play:(moves,board,stacks,lm,lp)=>trainingBotPlay(2,moves,board,stacks,lm,lp)},
+  {id:12,icon:'賢',isTrainingBot:true,fullName:'Musashi-sensei',botLevel:3,play:(moves,board,stacks,lm,lp)=>trainingBotPlay(3,moves,board,stacks,lm,lp)},
 ];
+// Reglages du bot d'entrainement : profondeur clemente + une part de coups
+// non-optimaux (luck) pour rester accessible, meme au niveau "Sage". evalTrainer
+// existe deja (reutilise du profil "Confirme" des Maitres IA V2).
+var TRAINING_BOT_LEVELS = [
+  {depth:1, luck:0.30},
+  {depth:2, luck:0.12},
+  {depth:3, luck:0.04},
+];
+function trainingBotPlay(level, moves, board, stacks, lm, lp){
+  if(!moves || !moves.length) return null;
+  var cfg = TRAINING_BOT_LEVELS[level-1] || TRAINING_BOT_LEVELS[0];
+  if(Math.random() < cfg.luck) return moves[Math.floor(Math.random()*moves.length)];
+  return minimaxPlay(moves, board, stacks, lm, lp, cfg.depth, evalTrainer, G.topColor);
+}
+function isTrainingBotAdv(advId){
+  var a = ADVERSARIES[advId];
+  return !!(a && a.isTrainingBot);
+}
+// Lance une partie contre le bot d'entrainement (menu dedie, pas la galerie
+// des Maitres IA). Reutilise exactement le flux normal vsAI (confirmLaunch),
+// seul selectedAdvId change - le moteur ne fait aucune difference ailleurs.
+var _trainingBotHintsOn = true;
+function startTrainingBotMatch(level){
+  settings.vsAI = true;
+  selectedAdvId = 9 + level; // 10, 11, 12
+  settings.gameMode = 'rempart-v2';
+  settings.timerSeconds = settings.timerSeconds || 10;
+  confirmLaunch();
+}
 
 // ── ADVERSARIES V2-TEST ──
 var ADVERSARIES_V2=[
@@ -7896,6 +7974,7 @@ function buildAdvGrid(){
   grid.appendChild(cat2);
 
   ADVERSARIES.forEach(a=>{
+    if(a.isTrainingBot) return; // le bot d'entrainement a son propre menu, pas dans la galerie des Maitres IA
     const el=document.createElement('div');
     const isShin=a.isShinAI;
     const isNotable=a.isNotable;
@@ -7981,7 +8060,7 @@ var NAV_TAB_MAP = {
   tournament:'bn-play', guild:'bn-play', league:'bn-play', leaderboard:'bn-play',
   'online-menu':'bn-play', devlog:'bn-play', 'events-mode':'bn-play', sumo:'bn-play',
   // Onglet « Local » : tout le jeu hors-ligne.
-  'local-hub':'bn-campaign', local:'bn-campaign', training:'bn-campaign', opponents:'bn-campaign', rules:'bn-campaign',
+  'local-hub':'bn-campaign', local:'bn-campaign', training:'bn-campaign', 'training-bot':'bn-campaign', opponents:'bn-campaign', rules:'bn-campaign',
   clock:'bn-campaign', campaigns:'bn-campaign', 'campaign-dojo':'bn-campaign', citations:'bn-campaign',
   shop:'bn-shop', events:'bn-shop',
   amis:'bn-social', messaging:'bn-social', 'public-profile':'bn-social',
@@ -16540,6 +16619,16 @@ function executeDrop(r,c){
   // plateau juste après.
   var _combatMoverType = G.board[G.selected.r][G.selected.c] ? G.board[G.selected.r][G.selected.c].type : null;
   var _combatTargetType = G.board[r][c] ? G.board[r][c].type : null;
+  // Bot d'entrainement (Musashi-sensei) : capture le meilleur coup AVANT de
+  // jouer, pour pouvoir glisser un conseil bienveillant apres coup si le
+  // joueur a choisi autre chose. Jamais bloquant, jamais punitif.
+  const trainingBotHint = (G.vsAI && typeof isTrainingBotAdv==='function' && isTrainingBotAdv(G.advId) && _trainingBotHintsOn);
+  var _hintFromR=G.selected.r, _hintFromC=G.selected.c, _hintSuggestion=null, _hintBoardBefore=null;
+  if(trainingBotHint){
+    var playerMoves = allMoves(G.turn,G.board,G.stacks,G.lastMoved,G.lastPush,G.lastMovedByColor);
+    _hintSuggestion = minimaxPlay(playerMoves, G.board, G.stacks, G.lastMoved, G.lastPush, 2, evalTrainer, G.turn);
+    _hintBoardBefore = cloneBS(G.board, G.stacks).board;
+  }
   const won=execMove(G.selected.r,G.selected.c,r,c,mv);
   G.selected=null;G.validMoves=[];
   renderBoard();
@@ -16555,7 +16644,16 @@ function executeDrop(r,c){
     pushSoloGameMove(won, G.turn);
   }
   if(won){pushHistory();endGame(G.turn,(G.turn==='white'?t('color_white'):t('color_black'))+' '+t('msg_slay'))}
-  else{pushHistory();switchTurn()}
+  else{
+    pushHistory();switchTurn();
+    if(trainingBotHint && _hintSuggestion){
+      var playedBest = (_hintSuggestion.fr===_hintFromR && _hintSuggestion.fc===_hintFromC && _hintSuggestion.tr===r && _hintSuggestion.tc===c);
+      if(!playedBest){
+        var tip = moveNotation(_hintBoardBefore, _hintSuggestion);
+        setTimeout(function(){ showMusashiText('Coup joue. Une autre voie, tout aussi valable : '+tip+'. Continue, tu progresses.'); }, 600);
+      }
+    }
+  }
 }
 
 
