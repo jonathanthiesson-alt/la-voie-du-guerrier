@@ -12,7 +12,7 @@ comptes, avant d'ajouter quoi que ce soit.
 | État | Sujet |
 |---|---|
 | ☐ | **Guildes** (adhésion, approbation, défis inter-guildes) ← prochain |
-| ☐ | Ligue (points, classement de groupe) — ⚠ code des points modifié le 2026-07-14, à re-tester |
+| ☐ | Ligue (points, classement de groupe) — était **totalement cassée** (RPC manquantes en base, jamais commitées), reconstruite et appliquée le 2026-07-21, à tester à 2 comptes. Divisions/promotion-relégation pas encore implémentées. |
 | ☐ | Défis entre amis (profil, Arène/rapide, compétitif/amical) — codé le 2026-07-14, à valider à 2 comptes |
 | ☐ | Paliers de monnaie cliquables |
 | ☐ | Boucle quotidienne (défi du jour, quêtes, streak, Rush) |

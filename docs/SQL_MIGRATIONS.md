@@ -53,7 +53,7 @@ end $$;
 | 2 | `daily_loop` | Défi du jour, quêtes, streak |
 | 3 | `training_mode` | Défis, rating de défi, Rush |
 | 4 | `ai_opponents` | Galerie IA, sceaux |
-| 5 | `league_weekly` | Ligue, groupes, points |
+| 5 | `league_weekly` | Ligue, groupes, points — ⚠ **entrée fausse** : les tables/RLS existaient mais les RPC `get_my_league_standings`/`award_league_points` n'ont JAMAIS été créées (script jamais retrouvé dans le dépôt, jamais commité). D'où « Ligue indisponible » en jeu. **Reconstruit et exécuté via MCP le 2026-07-21** — voir entrée 32. |
 | 6 | `tournaments_part1_tables` | Tables tournois |
 | 7 | `tournaments_part2_functions` | Fonctions tournois v1 |
 | 8 | `guilds` | Guildes |
@@ -80,6 +80,7 @@ end $$;
 | 29 | `guilds_v3.sql` | **Défis inter-guildes avec acceptation** : le défi part en `pending` (aucun point ne compte), le chef DÉFIÉ accepte (`guild_challenge_respond`, 48 h à partir de l'acceptation) ou refuse ; expiration auto des défis sans réponse. **Exécuté le 2026-07-18.** |
 | 30 | `guild_chat.sql` | **Chat de guilde** (refonte UI phase B) : table `guild_channel_messages` (lecture/écriture directe client, calquée sur `league_channel_messages`), RLS membre-seulement (2 politiques). Double accès côté client : menu Guilde (JOUER) + Messagerie (SOCIAL). **Appliqué via MCP le 2026-07-18.** |
 | 31 | `tournaments_no_draw_ranked_rewards.sql` | **Retire la nulle des tournois** (le jeu ne peut résoudre que par victoire/défaite) : `tournament_report_from_game` n'accepte plus que `white`/`black`. `tournament_award_podium` ne paie plus seulement le podium (20/12/6 Mon) mais **tout le classement final**, du dernier (3 Mon) au premier (20 Mon), au prorata linéaire du rang. En appliquant, a aussi supprimé une **vieille surcharge zombie** `tournament_report_from_game(uuid, text)` (paramètre `p_game_id` en `uuid`, antérieure au fix `tournaments_fix_uuid_mismatch.sql` — ne recevait plus jamais d'appel mais contenait encore la logique « nulle »). **Appliqué via MCP le 2026-07-20.** |
+| 32 | `league_weekly.sql` (reconstruit) | **Corrige l'entrée 5, qui était fausse** : les tables `league_seasons/pools/members/channel_messages` + RLS existaient bel et bien, mais **aucune des RPC** que le client appelle (`get_my_league_standings`, `award_league_points`) n'avait jamais été créée — le script d'origine n'a jamais été commité. Recrée les trois fonctions (`league_current_season`, `league_ensure_membership` en interne, + les deux RPC publiques). Saison = mois calendaire, pool = ~100 joueurs, jointure paresseuse au premier appel. Points de victoire uniquement : 3s→3, 5s→2, 10s→1. ⚠ **Pas de colonne division/tier persistée** : le système de divisions Bois→Dragon et la promotion/relégation décrits dans `ROADMAP.md` restent à construire — `tier` renvoie 0 pour tout le monde en attendant. **Appliqué via MCP le 2026-07-21.** |
 
 ---
 
