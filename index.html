@@ -2331,34 +2331,38 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div class="menu-divider"></div>
     <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.55;text-align:center;margin-bottom:12px" data-i18n="local_hub_sub">Jouer hors-ligne, sur cet appareil</div>
 
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('rules')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">典</span><span data-i18n="menu_rules">Règles</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('campaigns')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">巻</span><span data-i18n="menu_campaign">Campagne</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('opponents')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">&#9876;</span><span data-i18n="local_hub_masters">Maîtres IA</span></button>
-    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('rules')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">典</span><span data-i18n="menu_rules">Règles</span></button>
-    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('training')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">&#127919;</span><span data-i18n="local_hub_training">Entraînement</span></button>
-    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('training-bot')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">柔</span><span data-i18n="local_hub_training_bot">Bot d'entraînement</span></button>
-    <button class="btn" style="width:100%;margin-bottom:8px" onclick="openLocalMode('ai')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">機</span><span data-i18n="local_hub_vs_ai">Vs Ordinateur</span></button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="openLocalMode('ai')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">機</span><span data-i18n="local_hub_vs_ai">IA</span></button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('training-bot')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">傀</span><span data-i18n="local_hub_training_bot">Karakuri</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="openLocalMode('human')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">対</span><span data-i18n="local_hub_vs_2p">2 joueurs (même appareil)</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('clock')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">⏱</span><span data-i18n="menu_clock">Pendule</span></button>
   </div>
 </div>
 
-<!-- BOT D'ENTRAÎNEMENT — Musashi-sensei, séparé des Maîtres IA : pas de
-     déblocage ni de galerie, juste 3 niveaux cléments et bienveillants,
-     avec des conseils affichés après coup (voir executeDrop/trainingBotHint). -->
+<!-- KARAKURI — pantin mécanique d'entraînement, séparé des Maîtres IA : pas
+     de déblocage ni de galerie, juste 3 niveaux + une IA qui s'adapte EN
+     COURS DE PARTIE (voir trainingBotPlay). Musashi-sensei joue le rôle du
+     coach façon chess.com : il commente les coups du joueur depuis la bulle
+     habituelle (#aldric-bubble). Karakuri, lui, ne "parle" pas : il émet
+     juste, de temps en temps, un cliquetis mécanique (#karakuri-click dans
+     #bar-top, voir showKarakuriClick / scheduleAI). -->
 <div id="screen-training-bot" class="screen" style="justify-content:flex-start">
   <div class="panel" style="max-width:330px;width:100%">
-    <div class="menu-title" style="font-size:20px"><span style="font-family:'Noto Serif JP',serif;margin-right:6px">柔</span><span data-i18n="training_bot_title">BOT D'ENTRAÎNEMENT</span></div>
+    <div class="menu-title" style="font-size:20px"><span style="font-family:'Noto Serif JP',serif;margin-right:6px">傀</span><span data-i18n="training_bot_title">KARAKURI</span></div>
     <div class="menu-divider"></div>
-    <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.55;text-align:center;margin-bottom:12px" data-i18n="training_bot_sub">Musashi-sensei joue avec vous, sans enjeu ni classement</div>
+    <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.55;text-align:center;margin-bottom:12px" data-i18n="training_bot_sub">Un pantin mécanique pour s'entraîner — Musashi-sensei vous coache en direct</div>
 
-    <button class="btn" style="width:100%;margin-bottom:8px" onclick="startTrainingBotMatch(1)"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">柔</span><span data-i18n="training_bot_lvl1">Novice</span></button>
-    <button class="btn" style="width:100%;margin-bottom:8px" onclick="startTrainingBotMatch(2)"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">和</span><span data-i18n="training_bot_lvl2">Confirmé</span></button>
-    <button class="btn" style="width:100%;margin-bottom:12px" onclick="startTrainingBotMatch(3)"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">賢</span><span data-i18n="training_bot_lvl3">Sage</span></button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="startTrainingBotMatch(1)"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">初</span><span data-i18n="training_bot_lvl1">Novice</span></button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="startTrainingBotMatch(2)"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">中</span><span data-i18n="training_bot_lvl2">Confirmé</span></button>
+    <button class="btn" style="width:100%;margin-bottom:12px" onclick="startTrainingBotMatch(3)"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">達</span><span data-i18n="training_bot_lvl3">Sage</span></button>
 
-    <label style="display:flex;align-items:center;gap:8px;font-family:'VT323',monospace;font-size:13px;color:var(--parchment);opacity:.8;cursor:pointer;justify-content:center">
+    <label style="display:flex;align-items:center;gap:8px;font-family:'VT323',monospace;font-size:13px;color:var(--parchment);opacity:.8;cursor:pointer;justify-content:center;margin-bottom:12px">
       <input type="checkbox" id="training-bot-hints-toggle" checked onchange="_trainingBotHintsOn=this.checked">
       <span data-i18n="training_bot_hints_label">Conseils de Musashi pendant la partie</span>
     </label>
+    <button class="btn" style="width:100%;font-size:11px;padding:7px;opacity:.75" onclick="showScreen('training')"><span data-i18n="training_bot_rush_link">Défis libres &amp; Défi Rush</span></button>
   </div>
 </div>
 
@@ -2523,7 +2527,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button onclick="restartCampaignLesson()">&#8635; Recommencer</button>
   </div>
   <div class="player-bar" id="bar-top">
-    <div class="player-name-label"><span class="turn-dot" id="dot-top"></span><span class="player-piece-badge" id="badge-top"></span><span id="name-top"><span data-i18n="color_black">NOIRS</span></span><span class="turn-label">&#9654; JOUE</span></div>
+    <div class="player-name-label"><span class="turn-dot" id="dot-top"></span><span class="player-piece-badge" id="badge-top"></span><span id="name-top"><span data-i18n="color_black">NOIRS</span></span><span class="turn-label">&#9654; JOUE</span><span id="karakuri-click" style="display:none;margin-left:8px;font-family:'VT323',monospace;font-size:11px;color:var(--gold);opacity:.75"></span></div>
     <div class="timer-display" id="timer-top">--</div>
   </div>
   <div id="arena-round-picker" style="display:none;width:100%;gap:5px;padding:4px 8px;box-sizing:border-box;background:rgba(0,0,0,.4)"></div>
@@ -6478,15 +6482,15 @@ const LANGS={
     local_hub_title:'JEU LOCAL',
     local_hub_sub:'Jouer hors-ligne, sur cet appareil',
     local_hub_masters:'Maîtres IA',
-    local_hub_training:'Entraînement',
-    local_hub_training_bot:'Bot d’entraînement',
-    training_bot_title:'BOT D’ENTRAÎNEMENT',
-    training_bot_sub:'Musashi-sensei joue avec vous, sans enjeu ni classement',
+    local_hub_training_bot:'Karakuri',
+    training_bot_title:'KARAKURI',
+    training_bot_sub:'Un pantin mécanique pour s’entraîner — Musashi-sensei vous coache en direct',
     training_bot_lvl1:'Novice',
     training_bot_lvl2:'Confirmé',
     training_bot_lvl3:'Sage',
     training_bot_hints_label:'Conseils de Musashi pendant la partie',
-    local_hub_vs_ai:'Vs Ordinateur',
+    training_bot_rush_link:'Défis libres & Défi Rush',
+    local_hub_vs_ai:'IA',
     local_hub_vs_2p:'2 joueurs (même appareil)',
     options_title:'OPTIONS',
     local_hub_sub_opt:'Réglages, apparence, compte',
@@ -6693,15 +6697,15 @@ const LANGS={
     local_hub_title:'LOCAL PLAY',
     local_hub_sub:'Play offline, on this device',
     local_hub_masters:'AI Masters',
-    local_hub_training:'Training',
-    local_hub_training_bot:'Training bot',
-    training_bot_title:'TRAINING BOT',
-    training_bot_sub:'Musashi-sensei plays with you, no stakes, no rating',
+    local_hub_training_bot:'Karakuri',
+    training_bot_title:'KARAKURI',
+    training_bot_sub:'A mechanical training dummy — Musashi-sensei coaches you live',
     training_bot_lvl1:'Novice',
     training_bot_lvl2:'Skilled',
     training_bot_lvl3:'Wise',
     training_bot_hints_label:'Musashi’s tips during the game',
-    local_hub_vs_ai:'Vs Computer',
+    training_bot_rush_link:'Free puzzles & Puzzle Rush',
+    local_hub_vs_ai:'AI',
     local_hub_vs_2p:'2 players (same device)',
     options_title:'OPTIONS',
     local_hub_sub_opt:'Settings, appearance, account',
@@ -6908,15 +6912,15 @@ const LANGS={
     local_hub_title:'ローカル対戦',
     local_hub_sub:'この端末でオフライン対戦',
     local_hub_masters:'AI師範',
-    local_hub_training:'稽古',
-    local_hub_training_bot:'鍛錬ボット',
-    training_bot_title:'鍛錬ボット',
-    training_bot_sub:'ムサシ先生と気軽に対局。勝敗もレートも関係ありません',
+    local_hub_training_bot:'カラクリ',
+    training_bot_title:'カラクリ',
+    training_bot_sub:'からくり人形との稽古 — ムサシ先生がその場で指導します',
     training_bot_lvl1:'見習い',
     training_bot_lvl2:'熟練',
     training_bot_lvl3:'賢者',
     training_bot_hints_label:'対局中のムサシ先生の助言',
-    local_hub_vs_ai:'対CPU',
+    training_bot_rush_link:'自由課題 & ラッシュ課題',
+    local_hub_vs_ai:'AI',
     local_hub_vs_2p:'2人対戦（同じ端末）',
     options_title:'設定',
     local_hub_sub_opt:'設定・外観・アカウント',
@@ -7806,35 +7810,49 @@ ADVERSARIES=[
   {id:7,icon:'敵',stars:'?????',isNotable:true,isAbsent:true,play:(moves)=>moves[Math.floor(Math.random()*moves.length)]},
   {id:8,icon:'師',stars:'?????',isNotable:true,isAbsent:true,play:(moves)=>moves[Math.floor(Math.random()*moves.length)]},
   {id:9,icon:'人間二',stars:'',isNotable:true,subtitle:'L\u2019assembleur de strat\u00e9gies vaincues',play:(moves,board,stacks,lm,lp)=>nt2Play(moves,board,stacks,lm,lp)},
-  // Bot d'entrainement (Musashi-sensei) - separe des Maitres IA : pas de
-  // deblocage, pas de galerie, pas de classement. Filtre hors de buildAdvGrid
-  // (voir ADVERSARIES.forEach isTrainingBot) et lance uniquement depuis le
-  // nouveau menu #screen-training-bot via startTrainingBotMatch().
-  {id:10,icon:'柔',isTrainingBot:true,fullName:'Musashi-sensei',botLevel:1,play:(moves,board,stacks,lm,lp)=>trainingBotPlay(1,moves,board,stacks,lm,lp)},
-  {id:11,icon:'和',isTrainingBot:true,fullName:'Musashi-sensei',botLevel:2,play:(moves,board,stacks,lm,lp)=>trainingBotPlay(2,moves,board,stacks,lm,lp)},
-  {id:12,icon:'賢',isTrainingBot:true,fullName:'Musashi-sensei',botLevel:3,play:(moves,board,stacks,lm,lp)=>trainingBotPlay(3,moves,board,stacks,lm,lp)},
+  // Karakuri, pantin mecanique d'entrainement - separe des Maitres IA : pas
+  // de deblocage, pas de galerie, pas de classement. Filtre hors de
+  // buildAdvGrid (voir ADVERSARIES.forEach isTrainingBot) et lance
+  // uniquement depuis le nouveau menu #screen-training-bot via
+  // startTrainingBotMatch(). Musashi-sensei joue le coach (voir executeDrop),
+  // Karakuri ne "parle" pas : il cliquette (voir showKarakuriClick).
+  {id:10,icon:'傀',isTrainingBot:true,fullName:'Karakuri',botLevel:1,play:(moves,board,stacks,lm,lp)=>trainingBotPlay(1,moves,board,stacks,lm,lp)},
+  {id:11,icon:'傀',isTrainingBot:true,fullName:'Karakuri',botLevel:2,play:(moves,board,stacks,lm,lp)=>trainingBotPlay(2,moves,board,stacks,lm,lp)},
+  {id:12,icon:'傀',isTrainingBot:true,fullName:'Karakuri',botLevel:3,play:(moves,board,stacks,lm,lp)=>trainingBotPlay(3,moves,board,stacks,lm,lp)},
 ];
-// Reglages du bot d'entrainement : profondeur clemente + une part de coups
-// non-optimaux (luck) pour rester accessible, meme au niveau "Sage". evalTrainer
-// existe deja (reutilise du profil "Confirme" des Maitres IA V2).
+// Reglages de Karakuri : profondeur clemente + une part de coups non-optimaux
+// (luck) pour rester accessible, meme au niveau "Sage". evalTrainer existe
+// deja (reutilise du profil "Confirme" des Maitres IA V2).
 var TRAINING_BOT_LEVELS = [
   {depth:1, luck:0.30},
   {depth:2, luck:0.12},
   {depth:3, luck:0.04},
 ];
+// Karakuri s'adapte EN COURS DE PARTIE (pas seulement via le niveau choisi
+// au menu) : s'il domine largement, il "rouille" un peu (profondeur -1) pour
+// laisser une chance d'apprendre ; si le joueur domine largement, il se
+// resserre (profondeur +1) pour rester un adversaire credible. Evite les
+// parties soit ecrasantes soit desesperantes des deux cotes.
 function trainingBotPlay(level, moves, board, stacks, lm, lp){
   if(!moves || !moves.length) return null;
   var cfg = TRAINING_BOT_LEVELS[level-1] || TRAINING_BOT_LEVELS[0];
   if(Math.random() < cfg.luck) return moves[Math.floor(Math.random()*moves.length)];
-  return minimaxPlay(moves, board, stacks, lm, lp, cfg.depth, evalTrainer, G.topColor);
+  var depth = cfg.depth;
+  try{
+    var botColor = G.topColor;
+    var evalForBot = evalTrainer(board, stacks) * (botColor==='white' ? 1 : -1);
+    if(evalForBot < -80) depth = Math.min(4, depth+1);
+    else if(evalForBot > 80) depth = Math.max(1, depth-1);
+  }catch(e){}
+  return minimaxPlay(moves, board, stacks, lm, lp, depth, evalTrainer, G.topColor);
 }
 function isTrainingBotAdv(advId){
   var a = ADVERSARIES[advId];
   return !!(a && a.isTrainingBot);
 }
-// Lance une partie contre le bot d'entrainement (menu dedie, pas la galerie
-// des Maitres IA). Reutilise exactement le flux normal vsAI (confirmLaunch),
-// seul selectedAdvId change - le moteur ne fait aucune difference ailleurs.
+// Lance une partie contre Karakuri (menu dedie, pas la galerie des Maitres
+// IA). Reutilise exactement le flux normal vsAI (confirmLaunch), seul
+// selectedAdvId change - le moteur ne fait aucune difference ailleurs.
 var _trainingBotHintsOn = true;
 function startTrainingBotMatch(level){
   settings.vsAI = true;
@@ -7842,6 +7860,17 @@ function startTrainingBotMatch(level){
   settings.gameMode = 'rempart-v2';
   settings.timerSeconds = settings.timerSeconds || 10;
   confirmLaunch();
+}
+// Cliquetis mecanique de Karakuri : purement decoratif, affiche brievement
+// pres de son nom (bar-top), distinct de la bulle de coaching de Musashi.
+var KARAKURI_CLICKS = ['*clic... clic-clic...*','⚙ ...tic. tic. tic...','*cliquetis d’engrenages*','⚙ ...grince doucement...','*tic-tic-tic*'];
+function showKarakuriClick(){
+  var el = document.getElementById('karakuri-click');
+  if(!el) return;
+  el.textContent = KARAKURI_CLICKS[Math.floor(Math.random()*KARAKURI_CLICKS.length)];
+  el.style.display = 'inline';
+  clearTimeout(el._hideTimer);
+  el._hideTimer = setTimeout(function(){ el.style.display='none'; }, 1800);
 }
 
 // ── ADVERSARIES V2-TEST ──
@@ -13927,6 +13956,8 @@ function scheduleAI(){
       G.aiThinking=false;renderBoard();
       if(typeof animateLastMoveSlide==='function') animateLastMoveSlide();
       if(currentSoloGameId) pushSoloGameMove(won, aiColor);
+      // Cliquetis de Karakuri (purement decoratif) : environ 1 coup sur 3.
+      if(isTrainingBotAdv(G.advId) && Math.random()<0.35 && typeof showKarakuriClick==='function') showKarakuriClick();
       if(won){pushHistory();endGame(aiColor,t('color_'+(aiColor==='white'?'white':'black'))+' '+t('msg_slay'))}
       else{pushHistory();switchTurn()}
     }else{G.aiThinking=false;switchTurn()}
@@ -16648,12 +16679,28 @@ function executeDrop(r,c){
     pushHistory();switchTurn();
     if(trainingBotHint && _hintSuggestion){
       var playedBest = (_hintSuggestion.fr===_hintFromR && _hintSuggestion.fc===_hintFromC && _hintSuggestion.tr===r && _hintSuggestion.tc===c);
-      if(!playedBest){
-        var tip = moveNotation(_hintBoardBefore, _hintSuggestion);
-        setTimeout(function(){ showMusashiText('Coup joue. Une autre voie, tout aussi valable : '+tip+'. Continue, tu progresses.'); }, 600);
-      }
+      setTimeout(function(){ showMusashiCoachTip(playedBest, _hintSuggestion, _hintBoardBefore); }, 600);
     }
   }
+}
+// Coaching de Musashi (facon "Coach" chess.com) pendant un combat contre
+// Karakuri : commente le coup joue plutot que de se taire quand tout va
+// bien, et quand une meilleure voie existait, nomme la tactique manquee
+// (capture / poussee) quand les donnees du moteur le permettent, plutot
+// que d'inventer une explication. Jamais bloquant, jamais punitif.
+function showMusashiCoachTip(playedBest, suggestion, boardBefore){
+  if(playedBest){
+    // Ne felicite pas a CHAQUE coup (deviendrait du bruit) : environ 1 sur 2.
+    if(Math.random() < 0.5) return;
+    var praises = ['Excellent ! C’etait le meilleur coup possible.','Voila. Karakuri n’a pas vu venir celui-la.','Ta lame trouve toujours la bonne ouverture.','Precis. Continue ainsi.'];
+    showMusashiText(praises[Math.floor(Math.random()*praises.length)]);
+    return;
+  }
+  var tip = moveNotation(boardBefore, suggestion);
+  var tactic = '';
+  if(suggestion.action && suggestion.action.isCapture) tactic = ' — une capture s’offrait a toi';
+  else if(suggestion.action && suggestion.action.isPush) tactic = ' — une poussee aurait dessequilibre Karakuri';
+  showMusashiText('Coup joué. Une autre voie s’offrait : '+tip+tactic+'. Retiens ce motif pour la prochaine fois.');
 }
 
 
