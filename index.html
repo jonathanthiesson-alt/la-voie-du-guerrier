@@ -2358,11 +2358,12 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-openings')">📖 Répertoire d'ouvertures</button>
     <button class="btn" style="width:100%;margin-bottom:12px" onclick="showScreen('dev-tactics')">⚔ Répertoire de tactiques</button>
     <div class="menu-divider"></div>
-    <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.7;text-align:center;margin-bottom:8px">Simulation bot vs bot (mode de base, hors Sumo)</div>
-    <button class="dev-sim-btn adm-btn" style="width:100%;padding:8px;margin-bottom:6px" onclick="devSimRunBatch(200)">▶ Lancer 200 parties</button>
-    <button class="dev-sim-btn adm-btn" style="width:100%;padding:8px;margin-bottom:6px" onclick="devSimRunBatch(1000)">▶ Lancer 1 000 parties</button>
-    <button class="dev-sim-btn adm-btn" style="width:100%;padding:8px;margin-bottom:6px" onclick="devSimRunBatch(5000)">▶ Lancer 5 000 parties</button>
-    <button class="dev-sim-btn adm-btn" style="width:100%;padding:8px;margin-bottom:6px" onclick="devSimRunBatch(10000)">▶ Lancer 10 000 parties</button>
+    <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.7;text-align:center;margin-bottom:4px">Simulation bot vs bot (mode de base, hors Sumo)</div>
+    <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.55;text-align:center;margin-bottom:8px">Force maximale des deux côtés (profondeur 4, sans coup chance) — ~1,5s/partie, laisse tourner en fond</div>
+    <button class="dev-sim-btn adm-btn" style="width:100%;padding:8px;margin-bottom:6px" onclick="devSimRunBatch(200)">▶ Lancer 200 parties (~5 min)</button>
+    <button class="dev-sim-btn adm-btn" style="width:100%;padding:8px;margin-bottom:6px" onclick="devSimRunBatch(1000)">▶ Lancer 1 000 parties (~25 min)</button>
+    <button class="dev-sim-btn adm-btn" style="width:100%;padding:8px;margin-bottom:6px" onclick="devSimRunBatch(5000)">▶ Lancer 5 000 parties (~2 h)</button>
+    <button class="dev-sim-btn adm-btn" style="width:100%;padding:8px;margin-bottom:6px" onclick="devSimRunBatch(10000)">▶ Lancer 10 000 parties (~4 h)</button>
     <div id="dev-sim-progress" style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.8;text-align:center"></div>
   </div>
   </div>
@@ -13788,8 +13789,16 @@ function evalTrainer(b,s){return evalPosition(b,s,1.3,1.6,3,3)}
 // mode de base rempart-v2 — le Sumo (push-out, plateau rond) est un mode
 // événement à part, volontairement laissé en dehors de cet outil.
 // ══════════════════════════════════════════════════════
-var DEV_SIM_DEPTHS=[1,2,3];
-var DEV_SIM_LUCK=[0.25,0.12,0.05];
+// Profondeur FIXE et IDENTIQUE des deux côtés, sans coup "chance" — un
+// niveau/luck aléatoire par partie (première version de cet outil)
+// biaisait les stats : une ouverture semblait gagnante simplement parce
+// qu'elle tombait plus souvent face à un bot plus faible ce jour-là, pas
+// parce qu'elle était réellement meilleure. Pour un répertoire fiable, les
+// deux bots doivent jouer à la même force, aussi forte que le budget de
+// calcul le permet (profondeur 4 ≈ 1,5s/partie mesuré en conditions
+// réelles — la profondeur 5 ≈ 3,7s/partie est trop lente pour des lots de
+// plusieurs milliers de parties).
+var DEV_SIM_DEPTH=4;
 var _devSimRunning=false;
 
 function devSimSetupBoard(){
@@ -13800,9 +13809,23 @@ function devSimSetupBoard(){
   return {board:board,stacks:stacks};
 }
 
-function devSimPickMove(moves,board,stacks,lm,lp,color,luck,depth){
-  if(Math.random()<luck) return moves[Math.floor(Math.random()*moves.length)];
-  return minimaxPlay(moves,board,stacks,lm,lp,depth,evalTrainer,color);
+// Diversifie les 2 premiers coups de CHAQUE camp (4 premiers demi-coups de
+// la partie) sans jamais jouer un coup franchement mauvais : chaque
+// candidat est noté par une recherche courte (comme le ferait minimaxPlay),
+// puis on tire parmi les meilleurs. Après ce stade, plus aucun hasard —
+// voir devSimOneGame. C'est la seule source de variété d'ouvertures : sans
+// elle, une recherche déterministe à profondeur fixe rejoue LA MÊME partie
+// à l'identique à chaque simulation, ce qui interdirait toute comparaison
+// entre plusieurs lignes d'ouverture.
+function devSimTopMoves(moves,board,stacks,lm,lp,color,depth,topN){
+  var scored=moves.map(function(mv){
+    var cl=cloneBS(board,stacks);
+    var res=applyToClone(cl.board,cl.stacks,mv,lm,lp);
+    var sc=res.won?100000:minimaxFn(cl.board,cl.stacks,depth-1,false,-Infinity,Infinity,res.nlm,res.nlp,evalTrainer,color);
+    return {mv:mv,sc:sc};
+  });
+  scored.sort(function(a,b){ return b.sc-a.sc; });
+  return scored.slice(0, Math.min(topN, scored.length)).map(function(s){ return s.mv; });
 }
 
 function devTacticMotifKey(t){
@@ -13815,8 +13838,14 @@ function devTacticMotifKey(t){
   return [t.type, mover?mover.type:'?', target?target.type:'?', dir, zone(mv.tr,mv.tc)].join('|');
 }
 
-// Joue une partie complète bot vs bot, niveaux tirés au hasard des deux
-// côtés (pour varier la diversité des ouvertures rencontrées).
+// Joue une partie complète bot vs bot. Force IDENTIQUE et IMBATTUE des
+// deux côtés (DEV_SIM_DEPTH, aucun coup chance) sur tout le déroulé réel
+// de la partie — seuls les 4 premiers demi-coups (2 par camp) piochent
+// parmi des options solides pour varier les ouvertures explorées (voir
+// devSimTopMoves). Au-delà, chaque camp joue le meilleur coup que le
+// moteur sait trouver : c'est ce qui rend les stats de tactiques et
+// d'ouvertures exploitables comme une vraie analyse, pas une moyenne de
+// parties de force inégale.
 function devSimOneGame(){
   var setup=devSimSetupBoard();
   var board=setup.board, stacks=setup.stacks;
@@ -13825,14 +13854,17 @@ function devSimOneGame(){
   var openingMoves={white:[],black:[]};
   var tactics=[];
   var winner=null;
-  var lvW=Math.floor(Math.random()*3), lvB=Math.floor(Math.random()*3);
-  var depths={white:DEV_SIM_DEPTHS[lvW],black:DEV_SIM_DEPTHS[lvB]};
-  var lucks={white:DEV_SIM_LUCK[lvW],black:DEV_SIM_LUCK[lvB]};
   for(var i=0;i<120;i++){
     var color=turn;
     var moves=allMoves(color,board,stacks,lm,lp,lmbc);
     if(!moves.length){ winner=(color==='white'?'black':'white'); break; }
-    var chosen=devSimPickMove(moves,board,stacks,lm,lp,color,lucks[color],depths[color])||moves[0];
+    var chosen;
+    if(i<4){
+      var pool=devSimTopMoves(moves,board,stacks,lm,lp,color,2,4);
+      chosen=pool[Math.floor(Math.random()*pool.length)];
+    } else {
+      chosen=minimaxPlay(moves,board,stacks,lm,lp,DEV_SIM_DEPTH,evalTrainer,color)||moves[0];
+    }
     var boardBefore=cloneBS(board,stacks).board;
     var evalBefore=evalTrainer(board,stacks);
     var res=applyToClone(board,stacks,chosen,lm,lp);
@@ -13901,12 +13933,15 @@ async function renderDevOpeningsList(){
   if(!el) return;
   el.innerHTML='Chargement…';
   try{
-    var w=await supa.from('dev_opening_stats').select('*').eq('side','white').gte('games',5).limit(300);
-    var b=await supa.from('dev_opening_stats').select('*').eq('side','black').gte('games',5).limit(300);
+    // Seuil relevé à 50 parties minimum : en dessous, la marge d'erreur
+    // statistique rend un écart de quelques % entre deux ouvertures non
+    // significatif — voir la note sur la fiabilité au-dessus de ce bloc.
+    var w=await supa.from('dev_opening_stats').select('*').eq('side','white').gte('games',50).limit(300);
+    var b=await supa.from('dev_opening_stats').select('*').eq('side','black').gte('games',50).limit(300);
     function renderSide(title,rows){
       rows=(rows||[]).slice().sort(function(a,c){ return (c.wins/c.games)-(a.wins/a.games); });
       var html='<div style="font-weight:bold;margin:8px 0 4px">'+title+'</div>';
-      if(!rows.length){ html+='<div style="opacity:.6">Pas encore assez de données (min. 5 parties). Lance des simulations depuis l\'écran Dev.</div>'; return html; }
+      if(!rows.length){ html+='<div style="opacity:.6">Pas encore assez de données (min. 50 parties par ouverture). Lance des simulations depuis l\'écran Dev.</div>'; return html; }
       rows.slice(0,15).forEach(function(r){
         var pct=Math.round(100*r.wins/r.games);
         var label=Array.isArray(r.moves_json)?r.moves_json.join(' ; '):r.opening_key;
@@ -13924,9 +13959,9 @@ async function renderDevTacticsList(){
   if(!el) return;
   el.innerHTML='Chargement…';
   try{
-    var res=await supa.from('dev_tactic_stats').select('*').gte('occurrences',3).order('occurrences',{ascending:false}).limit(30);
+    var res=await supa.from('dev_tactic_stats').select('*').gte('occurrences',8).order('occurrences',{ascending:false}).limit(30);
     var rows=res.data||[];
-    if(!rows.length){ el.innerHTML='Pas encore assez de données (min. 3 occurrences). Lance des simulations depuis l\'écran Dev.'; return; }
+    if(!rows.length){ el.innerHTML='Pas encore assez de données (min. 8 occurrences). Lance des simulations depuis l\'écran Dev.'; return; }
     var html='';
     rows.forEach(function(r){
       html+='<div style="border-bottom:1px solid rgba(255,255,255,.1);padding:5px 0">'
