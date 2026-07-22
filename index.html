@@ -2358,11 +2358,10 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="startTrainingBotMatch(2)"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">中</span><span data-i18n="training_bot_lvl2">Confirmé</span></button>
     <button class="btn" style="width:100%;margin-bottom:12px" onclick="startTrainingBotMatch(3)"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">達</span><span data-i18n="training_bot_lvl3">Sage</span></button>
 
-    <label style="display:flex;align-items:center;gap:8px;font-family:'VT323',monospace;font-size:13px;color:var(--parchment);opacity:.8;cursor:pointer;justify-content:center;margin-bottom:12px">
+    <label style="display:flex;align-items:center;gap:8px;font-family:'VT323',monospace;font-size:13px;color:var(--parchment);opacity:.8;cursor:pointer;justify-content:center">
       <input type="checkbox" id="training-bot-hints-toggle" checked onchange="_trainingBotHintsOn=this.checked">
       <span data-i18n="training_bot_hints_label">Conseils de Musashi pendant la partie</span>
     </label>
-    <button class="btn" style="width:100%;font-size:11px;padding:7px;opacity:.75" onclick="showScreen('training')"><span data-i18n="training_bot_rush_link">Défis libres &amp; Défi Rush</span></button>
   </div>
 </div>
 
@@ -4494,16 +4493,6 @@ var MODE_INFO = {
       ['À savoir', 'Les événements sont planifiés par l\'équipe. Surveille le bandeau d\'annonce en haut de l\'écran.']
     ]
   },
-  training: {
-    titre: '🎯 ENTRAÎNEMENT',
-    monnaie: '—',
-    sections: [
-      ['But', 'Progresser sans pression : aucun ELO en jeu, aucune défaite au compteur.'],
-      ['Défis libres', 'Des positions tirées des leçons de campagne. Chaque défi résolu fait monter ton RATING DE DÉFI — un classement séparé de ton ELO de partie.'],
-      ['Défi Rush', '3 minutes, 3 erreurs maximum. Enchaîne le plus de défis possible. Ton meilleur score est enregistré et figure au classement.'],
-      ['À savoir', 'Le rating de défi apparaît sur ton profil public, dans la section Records.']
-    ]
-  },
   daily: {
     titre: '🍄 QUOTIDIEN',
     monnaie: '🍄 Shiitake',
@@ -6430,19 +6419,10 @@ const LANGS={
     daily_challenge_done:'Résolu ! Reviens demain',
     daily_challenge_launch:'Défi du jour — bonne chance !',
     daily_quests_title:'📜 Quêtes du jour',
-    training_title:'ENTRAÎNEMENT',
-    training_rating_label:'Rating défi',
-    training_solved_label:'Résolus',
-    training_free_puzzles:'◇ Défis libres',
-    rush_title:'Défi Rush',
-    rush_sub:'3 min · 3 erreurs max · max de défis',
-    rush_record:'record',
-    rush_leaderboard:'Classement Rush',
     opponents_title:'ADVERSAIRES',
     opponents_sub:'Vaincs chaque maître pour gagner son sceau 🛡',
     lb_cat_elo:'⚔ ELO',
     lb_cat_arena:'⚔ Arène',
-    lb_cat_rush:'⚡ Rush',
     online_hub_leaderboard:'Classement',
     notif_btn:'Notifications',
     notif_empty:'Aucune notification pour le moment.',
@@ -6489,7 +6469,6 @@ const LANGS={
     training_bot_lvl2:'Confirmé',
     training_bot_lvl3:'Sage',
     training_bot_hints_label:'Conseils de Musashi pendant la partie',
-    training_bot_rush_link:'Défis libres & Défi Rush',
     local_hub_vs_ai:'IA',
     local_hub_vs_2p:'2 joueurs (même appareil)',
     options_title:'OPTIONS',
@@ -6645,19 +6624,10 @@ const LANGS={
     daily_challenge_done:'Solved! Come back tomorrow',
     daily_challenge_launch:'Daily challenge — good luck!',
     daily_quests_title:'📜 Daily Quests',
-    training_title:'TRAINING',
-    training_rating_label:'Puzzle rating',
-    training_solved_label:'Solved',
-    training_free_puzzles:'◇ Free puzzles',
-    rush_title:'Puzzle Rush',
-    rush_sub:'3 min · 3 mistakes max · most puzzles',
-    rush_record:'record',
-    rush_leaderboard:'Rush leaderboard',
     opponents_title:'OPPONENTS',
     opponents_sub:'Defeat each master to earn their seal 🛡',
     lb_cat_elo:'⚔ ELO',
     lb_cat_arena:'⚔ Arena',
-    lb_cat_rush:'⚡ Rush',
     online_hub_leaderboard:'Leaderboard',
     notif_btn:'Notifications',
     notif_empty:'No notifications yet.',
@@ -6704,7 +6674,6 @@ const LANGS={
     training_bot_lvl2:'Skilled',
     training_bot_lvl3:'Wise',
     training_bot_hints_label:'Musashi’s tips during the game',
-    training_bot_rush_link:'Free puzzles & Puzzle Rush',
     local_hub_vs_ai:'AI',
     local_hub_vs_2p:'2 players (same device)',
     options_title:'OPTIONS',
@@ -6860,19 +6829,10 @@ const LANGS={
     daily_challenge_done:'クリア！また明日',
     daily_challenge_launch:'今日の挑戦 — 頑張って！',
     daily_quests_title:'📜 今日のクエスト',
-    training_title:'トレーニング',
-    training_rating_label:'パズルレート',
-    training_solved_label:'解決済み',
-    training_free_puzzles:'◇ フリーパズル',
-    rush_title:'パズルラッシュ',
-    rush_sub:'3分 · ミス3回まで · 最多パズル',
-    rush_record:'記録',
-    rush_leaderboard:'ラッシュ順位',
     opponents_title:'対戦相手',
     opponents_sub:'各師範を倒して印を獲得しよう 🛡',
     lb_cat_elo:'⚔ ELO',
     lb_cat_arena:'⚔ アリーナ',
-    lb_cat_rush:'⚡ ラッシュ',
     online_hub_leaderboard:'順位表',
     notif_btn:'通知',
     notif_empty:'まだ通知はありません。',
@@ -6919,7 +6879,6 @@ const LANGS={
     training_bot_lvl2:'熟練',
     training_bot_lvl3:'賢者',
     training_bot_hints_label:'対局中のムサシ先生の助言',
-    training_bot_rush_link:'自由課題 & ラッシュ課題',
     local_hub_vs_ai:'AI',
     local_hub_vs_2p:'2人対戦（同じ端末）',
     options_title:'設定',
@@ -8253,11 +8212,10 @@ async function reportQuestProgress(questId){
 // chaque leçon du dojo sert de "défi" tactique. La difficulté est déduite
 // du numéro de leçon (progression pédagogique croissante).
 // ══════════════════════════════════════════════════════
-// Contexte d'entraînement actif ('free' = défi libre, 'rush' = Défi Rush,
-// null = on est en campagne normale). Permet à completeCampaignLesson de
-// router correctement la fin de défi.
+// Contexte d'entraînement actif ('daily' = défi du jour, null = campagne
+// normale). Permet à completeCampaignLesson de router correctement la fin
+// de défi.
 var _trainingMode = null;
-var _rushState = null;
 
 function getPuzzlePool(){
   // Pour l'instant, le vivier = les leçons de la campagne "bousier".
@@ -8289,39 +8247,9 @@ async function fetchPuzzleRating(){
     return (data && data.puzzle_rating) || 800;
   }catch(e){ return 800; }
 }
-async function refreshTrainingScreen(){
-  var pool = getPuzzlePool();
-  var list = document.getElementById('training-puzzles-list');
-  if(list){
-    list.innerHTML = pool.map(function(p){
-      var stars = '★'.repeat(p.difficulty) + '☆'.repeat(5-p.difficulty);
-      return '<div onclick="startFreePuzzle('+p.lessonIdx+')" style="display:flex;align-items:center;gap:10px;background:rgba(0,0,0,.22);border-radius:6px;padding:8px 10px;cursor:pointer">'
-        + '<span style="font-family:VT323,monospace;font-size:13px;color:var(--gold);min-width:20px">#'+p.num+'</span>'
-        + '<span style="flex:1;font-family:VT323,monospace;font-size:12px;color:var(--parchment)">'+p.title+'</span>'
-        + '<span style="font-family:VT323,monospace;font-size:10px;color:var(--gold-bright);opacity:.8">'+stars+'</span>'
-        + '</div>';
-    }).join('');
-  }
-  if(currentUser && supa){
-    try{
-      const { data } = await supa.from('profiles').select('puzzle_rating,puzzle_solved,rush_best').eq('id', currentUser.id).single();
-      if(data){
-        var r=document.getElementById('training-rating'); if(r) r.textContent=data.puzzle_rating||800;
-        var s=document.getElementById('training-solved'); if(s) s.textContent=data.puzzle_solved||0;
-        var rb=document.getElementById('rush-best'); if(rb) rb.textContent=data.rush_best||0;
-      }
-    }catch(e){}
-  }
-}
-// Lance un défi libre (hors campagne) : réutilise startLesson mais marque
-// le contexte d'entraînement pour router la fin correctement.
-function startFreePuzzle(lessonIdx){
-  _trainingMode = 'free';
-  _currentPuzzleDifficulty = Math.min(5, Math.ceil((lessonIdx+1)/3));
-  startLesson('bousier', lessonIdx);
-}
+// Crédite le rating après un défi du jour résolu (record_puzzle_result :
+// formule Elo côté serveur, voir get_daily_puzzle/pickAdaptivePuzzle).
 var _currentPuzzleDifficulty = 3;
-// Crédite le rating après un défi libre résolu.
 async function recordFreePuzzleSolved(){
   if(!currentUser || !supa) return;
   try{
@@ -8331,92 +8259,6 @@ async function recordFreePuzzleSolved(){
       showToast('🎯 Défi résolu ! Rating '+data.rating+' ('+sign+data.delta+')', false);
     }
   }catch(e){}
-}
-
-// ── Défi Rush ────────────────────────────────────────────────────
-async function startDefiRush(){
-  if(!currentUser){ showScreen('online-auth'); return; }
-  var pool = getPuzzlePool();
-  if(!pool.length){ showToast('Aucun défi disponible.', true); return; }
-  // Le rythme démarre au rating du joueur puis s'ajuste localement à
-  // chaque défi (façon Puzzle Rush chess.com) sans toucher au rating
-  // persistant (record_puzzle_result n'est PAS appelé ici, seul le
-  // meilleur score compte, via record_rush_score).
-  var rating = await fetchPuzzleRating();
-  _rushState = { pool:pool, rating:rating, lastLessonIdx:null, solved:0, errors:0, deadline:Date.now()+180000, ended:false };
-  _trainingMode = 'rush';
-  runNextRushPuzzle();
-  startRushTimer();
-}
-function runNextRushPuzzle(){
-  if(!_rushState || _rushState.ended) return;
-  var p = pickAdaptivePuzzle(_rushState.pool, _rushState.rating, _rushState.lastLessonIdx);
-  _rushState.lastLessonIdx = p.lessonIdx;
-  startLesson(p.campaignId, p.lessonIdx);
-  updateRushHud();
-}
-function startRushTimer(){
-  if(_rushState._timer) clearInterval(_rushState._timer);
-  _rushState._timer = setInterval(function(){
-    if(!_rushState || _rushState.ended){ clearInterval(_rushState._timer); return; }
-    if(Date.now() >= _rushState.deadline){ endDefiRush(); return; }
-    updateRushHud();
-  }, 500);
-}
-function updateRushHud(){
-  var sb = document.getElementById('status-bar');
-  if(sb && _rushState && !_rushState.ended){
-    var remain = Math.max(0, Math.ceil((_rushState.deadline - Date.now())/1000));
-    var mm = Math.floor(remain/60), ss = ('0'+(remain%60)).slice(-2);
-    sb.textContent = '⚡ RUSH  '+mm+':'+ss+'   ✓ '+_rushState.solved+'   ✗ '+_rushState.errors+'/3';
-  }
-}
-// Appelé par le moteur de leçon quand un défi Rush est réussi.
-function onRushPuzzleSolved(){
-  if(!_rushState || _rushState.ended) return;
-  _rushState.solved++;
-  _rushState.rating += 15;
-  setTimeout(runNextRushPuzzle, 400);
-}
-// Appelé quand le joueur se trompe pendant un Rush (3 erreurs = fin).
-function onRushPuzzleError(){
-  if(!_rushState || _rushState.ended) return;
-  _rushState.errors++;
-  _rushState.rating = Math.max(400, _rushState.rating - 20);
-  updateRushHud();
-  if(_rushState.errors >= 3){ endDefiRush(); }
-}
-async function endDefiRush(){
-  if(!_rushState || _rushState.ended) return;
-  _rushState.ended = true;
-  if(_rushState._timer) clearInterval(_rushState._timer);
-  var score = _rushState.solved;
-  _trainingMode = null;
-  campaignLessonActive = false;
-  var isRecord = false;
-  if(currentUser && supa){
-    try{
-      const { data } = await supa.rpc('record_rush_score', { p_score:score });
-      if(data) isRecord = (score>0 && data.best===score);
-      logTelemetryEvent('rush_end', { score: score, is_record: isRecord });
-    }catch(e){}
-    reportDailyActivity();
-  }
-  var clb=document.getElementById('campaign-lesson-bar'); if(clb) clb.style.display='none';
-  var bubble=document.getElementById('aldric-bubble'); if(bubble) bubble.style.display='none';
-  showScreen('training');
-  refreshTrainingScreen();
-  showToast('⚡ Défi Rush terminé : '+score+' défis '+(isRecord?'— NOUVEAU RECORD ! 🏆':''), false);
-}
-async function showRushLeaderboard(){
-  if(!supa) return;
-  try{
-    const { data } = await supa.from('v_rush_leaderboard').select('*');
-    var lines = (data||[]).map(function(r,i){
-      return '#'+(i+1)+'  '+(r.pseudo||'?')+'  —  '+r.rush_best;
-    }).join('\n');
-    showToast('🏆 CLASSEMENT DÉFI RUSH\n'+(lines||'Aucun score pour l\'instant.'), false);
-  }catch(e){ showToast('Classement indisponible.', true); }
 }
 
 // ══════════════════════════════════════════════════════════
@@ -9483,7 +9325,6 @@ function showScreen(id){
   if(id==='events-mode'){ refreshAllCurrencyDisplays(); refreshEventsProgress(); }
   if(id==='matchmaking'){ refreshHubEloDisplay(); refreshAllCurrencyDisplays(); refreshShisoProgress(); }
   if(id==='amis'){ setAmisTab(_amisTab||'msg'); }
-  if(id==='training'){ refreshTrainingScreen(); }
   if(id==='devrewards'){ refreshDevRewardsScreen(); }
   if(id==='menu'){ updateDevButtonVisibility(); }
   if(id==='opponents'){ refreshOpponentsScreen(); }
@@ -11644,19 +11485,13 @@ function handleCampaignPlayerMove(fr,fc,tr,tc,mv){
     }
   } else {
     clearSelection();
-    if(_trainingMode==='rush'){ onRushPuzzleError(); return; }
     showMusashiText("Ce n'est pas tout \u00e0 fait le coup que j'attendais... Essayez encore !");
   }
 }
 
 function completeCampaignLesson(){
   if(!campaignState) return;
-  // Routage entraînement : défi libre ou Défi Rush plutôt que campagne.
-  if(_trainingMode==='rush'){
-    if(typeof playSound==='function') playSound('victory');
-    onRushPuzzleSolved();
-    return;
-  }
+  // Routage entrainement : defi du jour plutot que campagne.
   if(_trainingMode==='daily'){
     _trainingMode = null;
     campaignLessonActive = false;
@@ -11664,25 +11499,10 @@ function completeCampaignLesson(){
     if(typeof reportDailyActivity==='function') reportDailyActivity();
     recordFreePuzzleSolved();
     solveDailyChallengeReward();
-    showMusashiText('Défi du jour résolu !');
+    showMusashiText('Defi du jour resolu !');
     setTimeout(function(){
       var bubble=document.getElementById('aldric-bubble'); if(bubble) bubble.style.display='none';
       showScreen('home');
-    }, 1600);
-    return;
-  }
-  if(_trainingMode==='free'){
-    _trainingMode = null;
-    campaignLessonActive = false;
-    if(typeof playSound==='function') playSound('victory');
-    if(typeof reportDailyActivity==='function') reportDailyActivity();
-    recordFreePuzzleSolved();
-    if(typeof reportQuestProgress==='function') reportQuestProgress('daily_puzzle');
-    showMusashiText('Défi résolu ! Votre technique s\\u2019affine.');
-    setTimeout(function(){
-      var bubble=document.getElementById('aldric-bubble'); if(bubble) bubble.style.display='none';
-      showScreen('training');
-      refreshTrainingScreen();
     }, 1600);
     return;
   }
@@ -11706,8 +11526,7 @@ function completeCampaignLesson(){
 // prochaine vraie partie.
 function exitCampaignLesson(){
   campaignLessonActive = false;
-  if(_rushState && !_rushState.ended){ _rushState.ended=true; if(_rushState._timer) clearInterval(_rushState._timer); }
-  if(_trainingMode){ _trainingMode = null; var clbT=document.getElementById('campaign-lesson-bar'); if(clbT) clbT.style.display='none'; var bubT=document.getElementById('aldric-bubble'); if(bubT) bubT.style.display='none'; showScreen('training'); refreshTrainingScreen(); return; }
+  if(_trainingMode){ _trainingMode = null; var clbT=document.getElementById('campaign-lesson-bar'); if(clbT) clbT.style.display='none'; var bubT=document.getElementById('aldric-bubble'); if(bubT) bubT.style.display='none'; showScreen('home'); return; }
   var clb=document.getElementById('campaign-lesson-bar'); if(clb) clb.style.display='none';
   var bubble=document.getElementById('aldric-bubble'); if(bubble) bubble.style.display='none';
   var id = campaignState ? campaignState.campaignId : _currentCampaignId;
@@ -18157,7 +17976,7 @@ async function loadMyRecords(){
   if(!recEl) return;
   if(!currentUser || !supa){ recEl.innerHTML = buildRecordsHtml({}); return; }
   try{
-    const { data } = await supa.from('profiles').select('streak_best,rush_best,puzzle_rating,puzzle_solved,ai_defeated').eq('id', currentUser.id).single();
+    const { data } = await supa.from('profiles').select('streak_best,puzzle_rating,puzzle_solved,ai_defeated').eq('id', currentUser.id).single();
     recEl.innerHTML = buildRecordsHtml(data||{});
   }catch(e){ recEl.innerHTML = buildRecordsHtml({}); }
 }
@@ -18168,7 +17987,6 @@ function buildRecordsHtml(p){
   try{ aiCount = Array.isArray(p.ai_defeated) ? p.ai_defeated.length : 0; }catch(e){}
   var recs = [
     {val:(p.streak_best||0), lbl:'🔥 Série quotidienne'},
-    {val:(p.rush_best||0),   lbl:'⚡ Défi Rush'},
     {val:(p.puzzle_rating||800), lbl:'🎯 Rating défi'},
     {val:aiCount+'/6',       lbl:'🛡 Maîtres vaincus'}
   ];
@@ -18278,7 +18096,7 @@ var _leaderboardTab = 5; // 3, 5 ou 10 (secondes par coup)
 var _leaderboardCategory = 'elo';
 function setLeaderboardCategory(cat){
   _leaderboardCategory = cat;
-  ['elo','arena','rush'].forEach(function(c){
+  ['elo','arena'].forEach(function(c){
     var b=document.getElementById('lbcat-'+c);
     if(b) b.classList.toggle('active', c===cat);
   });
@@ -18287,7 +18105,6 @@ function setLeaderboardCategory(cat){
   var sub = document.getElementById('lb-subtitle');
   if(cat==='elo'){ if(sub) sub.textContent='Basé sur les parties en ligne uniquement'; loadLeaderboard(_leaderboardTab||5); }
   else if(cat==='arena'){ if(sub) sub.textContent='Âme du guerrier ⚔ Tamashii cumulé'; loadArenaLeaderboard(); }
-  else if(cat==='rush'){ if(sub) sub.textContent='Meilleur score au Défi Rush ⚡'; loadRushLeaderboardScreen(); }
 }
 async function loadArenaLeaderboard(){
   var listEl = document.getElementById('leaderboard-list');
@@ -18299,16 +18116,6 @@ async function loadArenaLeaderboard(){
     if(!rows.length){ listEl.innerHTML='<div style="text-align:center;opacity:.5;padding:12px">Aucun Tamashii cumulé pour le moment.</div>'; return; }
     listEl.innerHTML = rows.map(function(p,idx){ return _lbRow(idx, p, p.tamashii_balance||0, '⚔'); }).join('');
   }catch(e){ listEl.innerHTML='<div style="text-align:center;opacity:.5">Erreur de chargement.</div>'; }
-}
-async function loadRushLeaderboardScreen(){
-  var listEl = document.getElementById('leaderboard-list');
-  if(!listEl) return;
-  listEl.innerHTML = '<div style="text-align:center;opacity:.5;padding:12px">Chargement…</div>';
-  try{
-    const { data } = await supa.from('v_rush_leaderboard').select('*');
-    if(!data || !data.length){ listEl.innerHTML='<div style="text-align:center;opacity:.5;padding:12px">Aucun score de Rush pour le moment.</div>'; return; }
-    listEl.innerHTML = data.map(function(p,idx){ return _lbRow(idx, p, p.rush_best||0, '⚡'); }).join('');
-  }catch(e){ listEl.innerHTML='<div style="text-align:center;opacity:.5">Classement indisponible (SQL ?)</div>'; }
 }
 // Ligne de classement générique (rang + pseudo + valeur).
 function _lbRow(idx, p, value, unit){
@@ -19684,34 +19491,6 @@ window.addEventListener('beforeunload', () => {
   </div>
 </div>
 
-<!-- ═══════════ ENTRAÎNEMENT (Défis libres + Défi Rush) ═══════════ -->
-<div id="screen-training" class="screen" style="justify-content:flex-start;padding-top:14px">
-  <div class="panel" style="max-width:330px;width:100%;max-height:calc(100vh - 90px);display:flex;flex-direction:column;overflow:hidden">
-    <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px;flex-shrink:0">&#127919; <span data-i18n="training_title">ENTRAÎNEMENT</span></div><button onclick="showModeInfo('training')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
-    <!-- Rating de défi (séparé de l'ELO) -->
-    <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin:4px 0 10px;flex-shrink:0">
-      <div style="text-align:center"><div style="font-family:'Cinzel',serif;font-size:20px;color:var(--gold-bright)" id="training-rating">—</div><div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.5" data-i18n="training_rating_label">Rating défi</div></div>
-      <div style="width:1px;height:28px;background:rgba(200,168,110,.2)"></div>
-      <div style="text-align:center"><div style="font-family:'Cinzel',serif;font-size:20px;color:var(--gold-bright)" id="training-solved">—</div><div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.5" data-i18n="training_solved_label">Résolus</div></div>
-    </div>
-
-    <!-- Défi Rush -->
-    <div onclick="startDefiRush()" style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(80,20,20,.5),rgba(20,15,8,.4));border:1px solid rgba(220,80,80,.35);border-radius:8px;padding:11px 12px;margin-bottom:6px;cursor:pointer;flex-shrink:0">
-      <span style="font-size:26px">&#9889;</span>
-      <div style="flex:1">
-        <div style="font-family:'Cinzel',serif;font-size:14px;color:#ff8a5c" data-i18n="rush_title">Défi Rush</div>
-        <div style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.6" data-i18n="rush_sub">3 min · 3 erreurs max · max de défis</div>
-      </div>
-      <div style="text-align:right"><div style="font-family:VT323,monospace;font-size:14px;color:var(--gold-bright)" id="rush-best">—</div><div style="font-family:VT323,monospace;font-size:9px;color:var(--parchment);opacity:.5" data-i18n="rush_record">record</div></div>
-    </div>
-    <button class="btn" style="width:100%;font-size:11px;padding:7px;opacity:.75;margin-bottom:10px;flex-shrink:0" onclick="showRushLeaderboard()">&#127942; <span data-i18n="rush_leaderboard">Classement Rush</span></button>
-
-    <!-- Liste des défis libres -->
-    <div style="font-family:'VT323',monospace;font-size:11px;color:var(--gold);opacity:.6;letter-spacing:1px;margin-bottom:5px;flex-shrink:0" data-i18n="training_free_puzzles">&#9670; Défis libres</div>
-    <div id="training-puzzles-list" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:5px"></div>
-  </div>
-</div>
-
 <!-- ═══════════ ADVERSAIRES (galerie IA à personnalités) ═══════════ -->
 <div id="screen-opponents" class="screen" style="justify-content:flex-start;padding-top:14px">
   <div class="panel" style="max-width:340px;width:100%;max-height:calc(100vh - 90px);display:flex;flex-direction:column;overflow:hidden">
@@ -19971,7 +19750,6 @@ window.addEventListener('beforeunload', () => {
     <div style="display:flex;gap:5px;margin:8px 0 6px">
       <button class="sortmode-btn active" id="lbcat-elo"   onclick="setLeaderboardCategory('elo')" data-i18n="lb_cat_elo">&#9876; ELO</button>
       <button class="sortmode-btn"        id="lbcat-arena" onclick="setLeaderboardCategory('arena')" data-i18n="lb_cat_arena">&#9876; Arène</button>
-      <button class="sortmode-btn"        id="lbcat-rush"  onclick="setLeaderboardCategory('rush')" data-i18n="lb_cat_rush">&#9889; Rush</button>
     </div>
     <!-- Onglets de cadence (visibles uniquement pour la catégorie ELO) -->
     <div id="lb-cadence-tabs" style="display:flex;gap:5px;margin-bottom:10px">
