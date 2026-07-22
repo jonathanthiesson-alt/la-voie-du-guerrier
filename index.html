@@ -2349,9 +2349,10 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
      impact sur les parties réelles : la simulation utilise allMoves/
      applyToClone comme le fait déjà minimaxPlay, sur un board local, jamais
      sur G. -->
-<div id="screen-dev-repertoire" class="screen" style="justify-content:flex-start">
+<div id="screen-dev-repertoire" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('local-hub')">↩ RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
   <div class="panel" style="max-width:340px;width:100%">
-    <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('local-hub')">↩ RETOUR</button></div>
     <div class="menu-title" style="font-size:18px;margin-top:10px">🛠 DEV — RÉPERTOIRE</div>
     <div class="menu-divider"></div>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-openings')">📖 Répertoire d'ouvertures</button>
@@ -2364,23 +2365,28 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="dev-sim-btn adm-btn" style="width:100%;padding:8px;margin-bottom:6px" onclick="devSimRunBatch(10000)">▶ Lancer 10 000 parties</button>
     <div id="dev-sim-progress" style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.8;text-align:center"></div>
   </div>
+  </div>
 </div>
 
-<div id="screen-dev-openings" class="screen" style="justify-content:flex-start">
+<div id="screen-dev-openings" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('dev-repertoire')">↩ RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
   <div class="panel" style="max-width:380px;width:100%">
-    <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('dev-repertoire')">↩ RETOUR</button></div>
     <div class="menu-title" style="font-size:18px;margin-top:10px">📖 OUVERTURES</div>
     <div class="menu-divider"></div>
     <div id="dev-openings-list" style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment)"></div>
   </div>
+  </div>
 </div>
 
-<div id="screen-dev-tactics" class="screen" style="justify-content:flex-start">
+<div id="screen-dev-tactics" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('dev-repertoire')">↩ RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
   <div class="panel" style="max-width:380px;width:100%">
-    <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('dev-repertoire')">↩ RETOUR</button></div>
     <div class="menu-title" style="font-size:18px;margin-top:10px">⚔ TACTIQUES</div>
     <div class="menu-divider"></div>
     <div id="dev-tactics-list" style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment)"></div>
+  </div>
   </div>
 </div>
 
