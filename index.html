@@ -9714,6 +9714,7 @@ async function pollMatchmaking(timerSeconds, myElo){
       if(ageMs < 20000 && !g.arena_match_id){
         stopMatchmakingSearch(false);
         await enterOnlineGame(g.id, g.white_player_id, g.game_state, g.turn, g.timer_seconds, g.ranked);
+        _lastGameFromMatchmaking = true;
         return;
       }
     }
@@ -9742,6 +9743,7 @@ async function pollMatchmaking(timerSeconds, myElo){
         var iAmWhite = Math.random()<0.5;
         stopMatchmakingSearch(false);
         await createOnlineGame(iAmWhite?currentUser.id:opp.player_id, iAmWhite?opp.player_id:currentUser.id, timerSeconds);
+        _lastGameFromMatchmaking = true;
       }
       // Sinon : on attend, l'autre client (id plus petit) va créer la
       // partie et notre prochain sondage la détectera.
@@ -17710,9 +17712,16 @@ async function handleMenuClick(){
     _lastGameTournamentId = null;
     showScreen('tournament');
     openTournament(tid);
+  } else if(_lastGameFromMatchmaking && currentUser){
+    // On quitte une partie de MATCHMAKING classé : retour à son écran
+    // dédié (cadences/recherche), pas la liste générique des joueurs —
+    // pour pouvoir relancer une recherche en un clic.
+    _lastGameFromMatchmaking = false;
+    showScreen('matchmaking');
   } else if(G.onlineGameId && currentUser){
-    // On quitte une partie EN LIGNE : retour à la liste des joueurs (pas
-    // au menu principal), pour pouvoir relancer un défi immédiatement.
+    // On quitte une partie EN LIGNE (défi entre amis, partie rapide hors
+    // matchmaking) : retour à la liste des joueurs, pour pouvoir relancer
+    // un défi immédiatement.
     showScreen('online-menu');
     refreshOnlinePlayersList();
     var op=document.getElementById('online-my-pseudo'); if(op) op.textContent='Connecté : '+currentUser.pseudo;
@@ -19127,7 +19136,15 @@ async function closeMyOtherActiveOnlineGames(excludeGameId){
   }catch(e){}
 }
 
+// Posé à true juste après les deux points d'entrée du matchmaking classé
+// (pollMatchmaking, côté créateur ET côté joueur qui rejoint), remis à
+// false par défaut ici : permet à handleMenuClick() de savoir, une fois la
+// partie terminée, s'il faut revenir à l'écran Matchmaking plutôt qu'à la
+// liste générique des joueurs en ligne.
+var _lastGameFromMatchmaking = false;
+
 async function enterOnlineGame(gameId, whitePlayerId, gameState, turn, timerSeconds, ranked){
+  _lastGameFromMatchmaking = false;
   _pendingBotIdx = null; // partie en ligne réelle, pas un bot de galerie
   if(isSpectating) stopSpectating(); // on rejoint une vraie partie : on n'est plus simple spectateur
   if(currentSoloGameId) finishSoloGameBroadcast(null); // pareil si on quittait une partie IA en cours pour rejoindre une vraie partie en ligne
