@@ -2338,6 +2338,46 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('training-bot')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">傀</span><span data-i18n="local_hub_training_bot">Karakuri</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="openLocalMode('human')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">対</span><span data-i18n="local_hub_vs_2p">2 joueurs (même appareil)</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('clock')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">⏱</span><span data-i18n="menu_clock">Pendule</span></button>
+    <button id="btn-dev-repertoire" class="adm-btn" style="width:100%;display:none;margin-top:4px;padding:7px" onclick="showScreen('dev-repertoire')">🛠 Dev — Répertoire d'ouvertures</button>
+  </div>
+</div>
+
+<!-- DEV — RÉPERTOIRE D'OUVERTURES/TACTIQUES : outil réservé aux comptes admin
+     (Musashi, Wurmz) pour faire tourner des parties bot-vs-bot en local
+     (mode de base rempart-v2 uniquement, PAS le mode événement Sumo) et en
+     tirer des stats de meilleures ouvertures / motifs tactiques. Aucun
+     impact sur les parties réelles : la simulation utilise allMoves/
+     applyToClone comme le fait déjà minimaxPlay, sur un board local, jamais
+     sur G. -->
+<div id="screen-dev-repertoire" class="screen" style="justify-content:flex-start">
+  <div class="panel" style="max-width:340px;width:100%">
+    <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('local-hub')">↩ RETOUR</button></div>
+    <div class="menu-title" style="font-size:18px;margin-top:10px">🛠 DEV — RÉPERTOIRE</div>
+    <div class="menu-divider"></div>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-openings')">📖 Répertoire d'ouvertures</button>
+    <button class="btn" style="width:100%;margin-bottom:12px" onclick="showScreen('dev-tactics')">⚔ Répertoire de tactiques</button>
+    <div class="menu-divider"></div>
+    <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.7;text-align:center;margin-bottom:8px">Simulation bot vs bot (mode de base, hors Sumo)</div>
+    <button id="dev-sim-btn" class="adm-btn" style="width:100%;padding:8px;margin-bottom:6px" onclick="devSimRunBatch(200)">▶ Lancer 200 parties</button>
+    <div id="dev-sim-progress" style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.8;text-align:center"></div>
+  </div>
+</div>
+
+<div id="screen-dev-openings" class="screen" style="justify-content:flex-start">
+  <div class="panel" style="max-width:380px;width:100%">
+    <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('dev-repertoire')">↩ RETOUR</button></div>
+    <div class="menu-title" style="font-size:18px;margin-top:10px">📖 OUVERTURES</div>
+    <div class="menu-divider"></div>
+    <div id="dev-openings-list" style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment)"></div>
+  </div>
+</div>
+
+<div id="screen-dev-tactics" class="screen" style="justify-content:flex-start">
+  <div class="panel" style="max-width:380px;width:100%">
+    <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('dev-repertoire')">↩ RETOUR</button></div>
+    <div class="menu-title" style="font-size:18px;margin-top:10px">⚔ TACTIQUES</div>
+    <div class="menu-divider"></div>
+    <div id="dev-tactics-list" style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment)"></div>
   </div>
 </div>
 
@@ -8430,6 +8470,8 @@ function isDevUser(){
 function updateDevButtonVisibility(){
   var b = document.getElementById('menu-dev-btn');
   if(b) b.style.display = isDevUser() ? 'block' : 'none';
+  var br = document.getElementById('btn-dev-repertoire');
+  if(br) br.style.display = isDevUser() ? 'block' : 'none';
 }
 var DEV_MODES = [
   { key:'matchmaking', label:'⚡ Matchmaking', currency:'shiso',    icon:'🌿',
@@ -9326,7 +9368,9 @@ function showScreen(id){
   if(id==='matchmaking'){ refreshHubEloDisplay(); refreshAllCurrencyDisplays(); refreshShisoProgress(); }
   if(id==='amis'){ setAmisTab(_amisTab||'msg'); }
   if(id==='devrewards'){ refreshDevRewardsScreen(); }
-  if(id==='menu'){ updateDevButtonVisibility(); }
+  if(id==='menu'||id==='local-hub'){ updateDevButtonVisibility(); }
+  if(id==='dev-openings') renderDevOpeningsList();
+  if(id==='dev-tactics') renderDevTacticsList();
   if(id==='opponents'){ refreshOpponentsScreen(); }
   if(id==='messaging'||id==='online-menu'){ restoreAmisAdoptedPanels(); }
   if(id==='league') openLeagueScreen();
@@ -13620,10 +13664,19 @@ function minimaxFn(board,stacks,depth,isMax,alpha,beta,lm,lp,evalFn,rootColor){
   // mauvaise couleur dès que l'IA devait jouer Blanc (un coinflip sur deux).
   rootColor = rootColor || (typeof G!=='undefined' && G.topColor) || 'black';
   const oppRoot = rootColor==='white' ? 'black' : 'white';
+  // evalFn (evalPosition et dérivées) retourne TOUJOURS un score orienté
+  // "positif = bon pour les Noirs" (formule asymétrique fixe, aucun
+  // paramètre de couleur). Or cette fonction doit renvoyer un score
+  // orienté "positif = bon pour rootColor" (c'est ce que suppose déjà tout
+  // le reste de la fonction : les raccourcis de victoire/défaite plus bas
+  // utilisent isMax, qui lui EST relatif à rootColor). Sans ce correctif,
+  // dès que rootColor==='white' l'IA maximisait en coulisses l'avantage
+  // des Noirs — elle jouait contre son propre camp une partie sur deux.
+  const orient = rootColor==='white' ? -1 : 1;
   const bm=findMaster('black',board);const wm=findMaster('white',board);
-  if(!bm)return -100000;if(!wm)return 100000;
+  if(!bm)return -100000*orient;if(!wm)return 100000*orient;
   if(depth===0){
-    var sc0=evalFn(board,stacks);
+    var sc0=evalFn(board,stacks)*orient;
     var qColor=isMax?rootColor:oppRoot;
     var qMvs=allMoves(qColor,board,stacks,lm,lp);
     if(qMvs.length){
@@ -13633,7 +13686,7 @@ function minimaxFn(board,stacks,depth,isMax,alpha,beta,lm,lp,evalFn,rootColor){
             qns=stacks.map(function(r){return r.map(function(p){return p?Object.assign({},p):null;});});
         var qr=applyToClone(qnb,qns,qCap,lm,lp);
         if(qr.won) return isMax?100000:-100000;
-        var sc1=evalFn(qnb,qns);
+        var sc1=evalFn(qnb,qns)*orient;
         sc0=isMax?Math.max(sc0,sc1):Math.min(sc0,sc1);
       }
     }
@@ -13715,6 +13768,154 @@ function evalTactician(b,s){return evalPosition(b,s,1.3,1.1,2,2)}
 function evalStrategist(b,s){return evalPosition(b,s,1.5,1.5,3,3)}
 function evalMaster(b,s){return evalPosition(b,s,1.7,1.9,4,4)}
 function evalTrainer(b,s){return evalPosition(b,s,1.3,1.6,3,3)}
+
+// ══════════════════════════════════════════════════════
+// DEV — SIMULATEUR BOT VS BOT (répertoire d'ouvertures/tactiques)
+// Rejoue des parties complètes sur un board local (jamais sur G, via les
+// mêmes briques que minimaxPlay : allMoves/applyToClone/cloneBS) pour
+// accumuler des stats d'ouvertures et de motifs tactiques. Uniquement le
+// mode de base rempart-v2 — le Sumo (push-out, plateau rond) est un mode
+// événement à part, volontairement laissé en dehors de cet outil.
+// ══════════════════════════════════════════════════════
+var DEV_SIM_DEPTHS=[1,2,3];
+var DEV_SIM_LUCK=[0.25,0.12,0.05];
+var _devSimRunning=false;
+
+function devSimSetupBoard(){
+  var board=Array.from({length:5},function(){return Array(5).fill(null)});
+  var stacks=Array.from({length:5},function(){return Array(5).fill(null)});
+  board[0][2]={type:'epeiste',color:'white'};board[0][1]={type:'sword',color:'white'};board[0][3]={type:'sword',color:'white'};board[1][2]={type:'shield',color:'white'};
+  board[4][2]={type:'epeiste',color:'black'};board[4][1]={type:'sword',color:'black'};board[4][3]={type:'sword',color:'black'};board[3][2]={type:'shield',color:'black'};
+  return {board:board,stacks:stacks};
+}
+
+function devSimPickMove(moves,board,stacks,lm,lp,color,luck,depth){
+  if(Math.random()<luck) return moves[Math.floor(Math.random()*moves.length)];
+  return minimaxPlay(moves,board,stacks,lm,lp,depth,evalTrainer,color);
+}
+
+function devTacticMotifKey(t){
+  var mv=t.move, board=t.board;
+  var mover=board[mv.fr][mv.fc];
+  var target=board[mv.tr][mv.tc];
+  var dr=mv.tr-mv.fr, dc=mv.tc-mv.fc;
+  var dir=(dr===0?'h':(dc===0?'v':'d'));
+  function zone(r,c){ if((r===0||r===4)&&(c===0||c===4))return'corner'; if(r===2&&c===2)return'center'; return 'edge'; }
+  return [t.type, mover?mover.type:'?', target?target.type:'?', dir, zone(mv.tr,mv.tc)].join('|');
+}
+
+// Joue une partie complète bot vs bot, niveaux tirés au hasard des deux
+// côtés (pour varier la diversité des ouvertures rencontrées).
+function devSimOneGame(){
+  var setup=devSimSetupBoard();
+  var board=setup.board, stacks=setup.stacks;
+  var lm=null, lp=null, lmbc={white:null,black:null};
+  var turn='white';
+  var openingMoves={white:[],black:[]};
+  var tactics=[];
+  var winner=null;
+  var lvW=Math.floor(Math.random()*3), lvB=Math.floor(Math.random()*3);
+  var depths={white:DEV_SIM_DEPTHS[lvW],black:DEV_SIM_DEPTHS[lvB]};
+  var lucks={white:DEV_SIM_LUCK[lvW],black:DEV_SIM_LUCK[lvB]};
+  for(var i=0;i<120;i++){
+    var color=turn;
+    var moves=allMoves(color,board,stacks,lm,lp,lmbc);
+    if(!moves.length){ winner=(color==='white'?'black':'white'); break; }
+    var chosen=devSimPickMove(moves,board,stacks,lm,lp,color,lucks[color],depths[color])||moves[0];
+    var boardBefore=cloneBS(board,stacks).board;
+    var evalBefore=evalTrainer(board,stacks);
+    var res=applyToClone(board,stacks,chosen,lm,lp);
+    lm=res.nlm; lp=res.nlp; lmbc[color]=lm;
+    if(openingMoves[color].length<2) openingMoves[color].push(moveNotation(boardBefore,chosen));
+    var evalAfter=evalTrainer(board,stacks);
+    var swing=(evalAfter-evalBefore)*(color==='white'?1:-1);
+    if(swing>=40 && chosen.action && (chosen.action.isCapture||chosen.action.isPush||chosen.action.pushCaptures)){
+      var mtype=chosen.action.pushCaptures?'push-capture':(chosen.action.isCapture?'capture':'push');
+      tactics.push({type:mtype,board:boardBefore,move:{fr:chosen.fr,fc:chosen.fc,tr:chosen.tr,tc:chosen.tc},side:color,swing:swing});
+    }
+    if(res.won){ winner=color; break; }
+    turn=(color==='white'?'black':'white');
+  }
+  return {winner:winner, openingMoves:openingMoves, tactics:tactics};
+}
+
+async function devSimUploadGame(g){
+  try{
+    if(g.winner){
+      for(var side of ['white','black']){
+        if(g.openingMoves[side].length){
+          var key=g.openingMoves[side].join(' ; ');
+          supa.rpc('dev_record_opening_result',{p_side:side,p_key:key,p_moves:g.openingMoves[side],p_win:(g.winner===side)});
+        }
+      }
+    }
+    g.tactics.forEach(function(t){
+      supa.rpc('dev_record_tactic',{p_key:devTacticMotifKey(t),p_type:t.type,p_board:t.board,p_move:t.move,p_side:t.side,p_swing:t.swing});
+    });
+  }catch(e){ console.error('devSimUploadGame', e); }
+}
+
+function devSimRunBatch(n){
+  if(_devSimRunning) return;
+  if(!isDevUser()){ if(typeof showToast==='function') showToast('Réservé aux comptes dev.', true); return; }
+  _devSimRunning=true;
+  var done=0;
+  var btn=document.getElementById('dev-sim-btn'); if(btn) btn.disabled=true;
+  function tick(){
+    var chunk=Math.min(4, n-done);
+    for(var i=0;i<chunk;i++){ devSimUploadGame(devSimOneGame()); done++; }
+    var prog=document.getElementById('dev-sim-progress');
+    if(prog) prog.textContent=done+' / '+n+' parties simulées';
+    if(done<n) setTimeout(tick,0);
+    else{
+      _devSimRunning=false;
+      if(btn) btn.disabled=false;
+      if(typeof showToast==='function') showToast('Simulation terminée : '+n+' parties.');
+    }
+  }
+  tick();
+}
+
+async function renderDevOpeningsList(){
+  var el=document.getElementById('dev-openings-list');
+  if(!el) return;
+  el.innerHTML='Chargement…';
+  try{
+    var w=await supa.from('dev_opening_stats').select('*').eq('side','white').gte('games',5).limit(300);
+    var b=await supa.from('dev_opening_stats').select('*').eq('side','black').gte('games',5).limit(300);
+    function renderSide(title,rows){
+      rows=(rows||[]).slice().sort(function(a,c){ return (c.wins/c.games)-(a.wins/a.games); });
+      var html='<div style="font-weight:bold;margin:8px 0 4px">'+title+'</div>';
+      if(!rows.length){ html+='<div style="opacity:.6">Pas encore assez de données (min. 5 parties). Lance des simulations depuis l\'écran Dev.</div>'; return html; }
+      rows.slice(0,15).forEach(function(r){
+        var pct=Math.round(100*r.wins/r.games);
+        var label=Array.isArray(r.moves_json)?r.moves_json.join(' ; '):r.opening_key;
+        html+='<div style="display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid rgba(255,255,255,.1);padding:3px 0">'
+          +'<span>'+label+'</span><span style="opacity:.8;white-space:nowrap">'+pct+'% ('+r.games+')</span></div>';
+      });
+      return html;
+    }
+    el.innerHTML=renderSide('BLANCS', w.data)+renderSide('NOIRS', b.data);
+  }catch(e){ el.innerHTML='Erreur de chargement.'; console.error(e); }
+}
+
+async function renderDevTacticsList(){
+  var el=document.getElementById('dev-tactics-list');
+  if(!el) return;
+  el.innerHTML='Chargement…';
+  try{
+    var res=await supa.from('dev_tactic_stats').select('*').gte('occurrences',3).order('occurrences',{ascending:false}).limit(30);
+    var rows=res.data||[];
+    if(!rows.length){ el.innerHTML='Pas encore assez de données (min. 3 occurrences). Lance des simulations depuis l\'écran Dev.'; return; }
+    var html='';
+    rows.forEach(function(r){
+      html+='<div style="border-bottom:1px solid rgba(255,255,255,.1);padding:5px 0">'
+        +'<div>'+r.motif_type+' · '+r.side+' · '+r.occurrences+'× · swing moyen '+Math.round(r.avg_eval_swing)+'</div>'
+        +'<div style="opacity:.6;font-size:11px">'+r.motif_key+'</div></div>';
+    });
+    el.innerHTML=html;
+  }catch(e){ el.innerHTML='Erreur de chargement.'; console.error(e); }
+}
 
 // ══════════════════════════════════════════════════════
 // AI SCHEDULER
