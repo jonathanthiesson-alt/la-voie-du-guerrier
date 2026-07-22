@@ -17470,6 +17470,11 @@ let challengeConfigRanked = true;
 function openChallengeConfigPopup(playerId, playerPseudo){
   const popup = document.getElementById('challenge-config-popup');
   if(!popup) return;
+  // Mémorise depuis quel écran ce défi est lancé (Amis social vs menu
+  // Joueurs en ligne) pour y ramener le joueur une fois la partie finie —
+  // voir handleMenuClick().
+  var activeScr = document.querySelector('.screen.active');
+  _challengeOriginScreen = activeScr ? activeScr.id.replace(/^screen-/,'') : null;
   popup.dataset.targetId = playerId;
   popup.dataset.targetPseudo = playerPseudo;
   document.getElementById('challenge-config-pseudo').textContent = 'Défier '+playerPseudo+' ?';
@@ -17718,6 +17723,13 @@ async function handleMenuClick(){
     // pour pouvoir relancer une recherche en un clic.
     _lastGameFromMatchmaking = false;
     showScreen('matchmaking');
+  } else if(_lastGameFromFriendChallenge && currentUser){
+    // On quitte une partie lancée via un DÉFI ENTRE JOUEURS : retour à
+    // l'écran depuis lequel le défi a été lancé/accepté (Amis social ou
+    // menu Joueurs en ligne), pas systématiquement la liste générique.
+    var origin = _lastGameFromFriendChallenge;
+    _lastGameFromFriendChallenge = null;
+    showScreen(origin);
   } else if(G.onlineGameId && currentUser){
     // On quitte une partie EN LIGNE (défi entre amis, partie rapide hors
     // matchmaking) : retour à la liste des joueurs, pour pouvoir relancer
@@ -18959,6 +18971,10 @@ async function respondToChallenge(accept){
 // Cœur partagé entre les boutons Accepter/Refuser du popup plein écran ET
 // les boutons d'acceptation/refus rapides du bandeau "Jouer en ligne".
 async function respondToChallengeCore(challengeId, challengerId, timerSeconds, accept){
+  // Mémorise l'écran depuis lequel CE joueur (le défié) accepte, pour y
+  // revenir en sortie de partie — voir handleMenuClick().
+  var activeScr = document.querySelector('.screen.active');
+  _challengeOriginScreen = activeScr ? activeScr.id.replace(/^screen-/,'') : null;
   // Bug corrigé : cette mise à jour peut être bloquée silencieusement par
   // une policy RLS Supabase manquante sur la table "challenges" (UPDATE
   // refusé pour le joueur défié) — dans ce cas Supabase ne renvoie AUCUNE
@@ -18989,8 +19005,11 @@ async function respondToChallengeCore(challengeId, challengerId, timerSeconds, a
     var row = updRows[0];
     if(row && row.mode === 'arena'){
       await createArenaMatch(whiteId, blackId, timerSeconds, row.ranked);
+      // L'Arène a déjà son propre retour dédié (écran de fin de série) —
+      // rien à faire ici, contrairement au mode rapide ci-dessous.
     } else {
       await createOnlineGame(whiteId, blackId, timerSeconds, row ? row.ranked : true);
+      _lastGameFromFriendChallenge = _challengeOriginScreen;
     }
   }
 }
@@ -19047,6 +19066,7 @@ async function onChallengeAccepted(challengeRow){
     if(match){ await enterArenaMatch(match, game); return; }
   }
   await enterOnlineGame(game.id, game.white_player_id, game.game_state, game.turn, game.timer_seconds, game.ranked);
+  _lastGameFromFriendChallenge = _challengeOriginScreen;
 }
 
 // ── Bandeau des défis reçus (écran "Jouer en ligne") ────────────────
@@ -19143,8 +19163,18 @@ async function closeMyOtherActiveOnlineGames(excludeGameId){
 // liste générique des joueurs en ligne.
 var _lastGameFromMatchmaking = false;
 
+// Écran ('amis' ou 'online-menu') depuis lequel un défi entre joueurs a été
+// LANCÉ ou ACCEPTÉ (posé par openChallengeConfigPopup côté défieur, par
+// respondToChallengeCore côté défié) — consommé juste après createOnlineGame/
+// enterOnlineGame pour peupler _lastGameFromFriendChallenge (même logique
+// que _lastGameFromMatchmaking : enterOnlineGame() remettant tout à zéro à
+// chaque entrée, ce marqueur ne doit être écrit qu'APRÈS son appel).
+var _challengeOriginScreen = null;
+var _lastGameFromFriendChallenge = null;
+
 async function enterOnlineGame(gameId, whitePlayerId, gameState, turn, timerSeconds, ranked){
   _lastGameFromMatchmaking = false;
+  _lastGameFromFriendChallenge = null;
   _pendingBotIdx = null; // partie en ligne réelle, pas un bot de galerie
   if(isSpectating) stopSpectating(); // on rejoint une vraie partie : on n'est plus simple spectateur
   if(currentSoloGameId) finishSoloGameBroadcast(null); // pareil si on quittait une partie IA en cours pour rejoindre une vraie partie en ligne
