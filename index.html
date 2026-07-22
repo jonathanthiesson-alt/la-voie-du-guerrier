@@ -2391,6 +2391,26 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   </div>
 </div>
 
+<!-- APPRENDRE — rejoue une ouverture coup par coup ou montre l'avant/après
+     d'une tactique, avec une explication en langage clair générée à partir
+     de l'état réel du plateau. Voir devOpenLearnOpening/devOpenLearnTactic. -->
+<div id="screen-dev-learn" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="devCloseLearn()">↩ RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+  <div class="panel" style="max-width:340px;width:100%;text-align:center">
+    <div class="menu-title" style="font-size:16px" id="dev-learn-title">Apprendre</div>
+    <div id="dev-learn-stats" style="font-family:'VT323',monospace;font-size:12px;opacity:.7;margin-bottom:4px"></div>
+    <div id="dev-learn-board"></div>
+    <div id="dev-learn-step-label" style="font-family:'VT323',monospace;font-size:13px;color:var(--gold-bright);margin-top:6px"></div>
+    <div id="dev-learn-explain" style="font-family:'VT323',monospace;font-size:13px;margin-top:6px;min-height:44px;line-height:1.4"></div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn" style="flex:1" onclick="devLearnStep(-1)">◀ Précédent</button>
+      <button class="btn" style="flex:1" onclick="devLearnStep(1)">Suivant ▶</button>
+    </div>
+  </div>
+  </div>
+</div>
+
 <!-- KARAKURI — pantin mécanique d'entraînement, séparé des Maîtres IA : pas
      de déblocage ni de galerie, juste 3 niveaux + une IA qui s'adapte EN
      COURS DE PARTIE (voir trainingBotPlay). Musashi-sensei joue le rôle du
@@ -13851,7 +13871,13 @@ function devSimOneGame(){
   var board=setup.board, stacks=setup.stacks;
   var lm=null, lp=null, lmbc={white:null,black:null};
   var turn='white';
+  // openingMoves[color] : jusqu'à 4 coups DE CE CAMP (fr/fc/tr/tc/action),
+  // sert de clé d'ouverture. fullSequence : les 8 premiers demi-coups de
+  // la partie (les deux camps mélangés, dans l'ordre réel), rejoués côté
+  // client par l'écran "Apprendre" pour reconstruire le plateau coup par
+  // coup et générer une explication à chaque étape.
   var openingMoves={white:[],black:[]};
+  var fullSequence=[];
   var tactics=[];
   var winner=null;
   for(var i=0;i<120;i++){
@@ -13866,20 +13892,27 @@ function devSimOneGame(){
       chosen=minimaxPlay(moves,board,stacks,lm,lp,DEV_SIM_DEPTH,evalTrainer,color)||moves[0];
     }
     var boardBefore=cloneBS(board,stacks).board;
+    var moverType=board[chosen.fr][chosen.fc]?board[chosen.fr][chosen.fc].type:'epeiste';
     var evalBefore=evalTrainer(board,stacks);
     var res=applyToClone(board,stacks,chosen,lm,lp);
     lm=res.nlm; lp=res.nlp; lmbc[color]=lm;
-    if(openingMoves[color].length<2) openingMoves[color].push(moveNotation(boardBefore,chosen));
+    var mvRecord={fr:chosen.fr,fc:chosen.fc,tr:chosen.tr,tc:chosen.tc,action:chosen.action,type:moverType};
+    if(openingMoves[color].length<4) openingMoves[color].push(mvRecord);
+    if(i<8) fullSequence.push({color:color,fr:chosen.fr,fc:chosen.fc,tr:chosen.tr,tc:chosen.tc,action:chosen.action,type:moverType});
     var evalAfter=evalTrainer(board,stacks);
     var swing=(evalAfter-evalBefore)*(color==='white'?1:-1);
     if(swing>=40 && chosen.action && (chosen.action.isCapture||chosen.action.isPush||chosen.action.pushCaptures)){
       var mtype=chosen.action.pushCaptures?'push-capture':(chosen.action.isCapture?'capture':'push');
-      tactics.push({type:mtype,board:boardBefore,move:{fr:chosen.fr,fc:chosen.fc,tr:chosen.tr,tc:chosen.tc},side:color,swing:swing});
+      tactics.push({type:mtype,board:boardBefore,move:{fr:chosen.fr,fc:chosen.fc,tr:chosen.tr,tc:chosen.tc,action:chosen.action},side:color,swing:swing});
     }
     if(res.won){ winner=color; break; }
     turn=(color==='white'?'black':'white');
   }
-  return {winner:winner, openingMoves:openingMoves, tactics:tactics};
+  return {winner:winner, openingMoves:openingMoves, fullSequence:fullSequence, tactics:tactics};
+}
+
+function devOpeningKey(moves){
+  return moves.map(function(m){ return m.fr+''+m.fc+'-'+m.tr+''+m.tc; }).join('_');
 }
 
 async function devSimUploadGame(g){
@@ -13888,8 +13921,8 @@ async function devSimUploadGame(g){
     if(g.winner){
       for(var side of ['white','black']){
         if(g.openingMoves[side].length){
-          var key=g.openingMoves[side].join(' ; ');
-          proms.push(supa.rpc('dev_record_opening_result',{p_side:side,p_key:key,p_moves:g.openingMoves[side],p_win:(g.winner===side)}));
+          var key=devOpeningKey(g.openingMoves[side]);
+          proms.push(supa.rpc('dev_record_opening_result',{p_side:side,p_key:key,p_moves:g.fullSequence,p_win:(g.winner===side)}));
         }
       }
     }
@@ -13928,6 +13961,12 @@ function devSimRunBatch(n){
   tick();
 }
 
+// Rempli par renderDevOpeningsList/renderDevTacticsList, consommé par
+// devOpenLearnOpening/devOpenLearnTactic : évite un aller-retour Supabase
+// au clic sur une ligne pour ouvrir l'écran "Apprendre".
+var _devOpeningsCache = {white:[], black:[]};
+var _devTacticsCache = [];
+
 async function renderDevOpeningsList(){
   var el=document.getElementById('dev-openings-list');
   if(!el) return;
@@ -13938,39 +13977,173 @@ async function renderDevOpeningsList(){
     // significatif — voir la note sur la fiabilité au-dessus de ce bloc.
     var w=await supa.from('dev_opening_stats').select('*').eq('side','white').gte('games',50).limit(300);
     var b=await supa.from('dev_opening_stats').select('*').eq('side','black').gte('games',50).limit(300);
-    function renderSide(title,rows){
-      rows=(rows||[]).slice().sort(function(a,c){ return (c.wins/c.games)-(a.wins/a.games); });
+    _devOpeningsCache.white=(w.data||[]).slice().sort(function(a,c){ return (c.wins/c.games)-(a.wins/a.games); }).slice(0,15);
+    _devOpeningsCache.black=(b.data||[]).slice().sort(function(a,c){ return (c.wins/c.games)-(a.wins/a.games); }).slice(0,15);
+    function renderSide(title,side,rows){
       var html='<div style="font-weight:bold;margin:8px 0 4px">'+title+'</div>';
       if(!rows.length){ html+='<div style="opacity:.6">Pas encore assez de données (min. 50 parties par ouverture). Lance des simulations depuis l\'écran Dev.</div>'; return html; }
-      rows.slice(0,15).forEach(function(r){
+      rows.forEach(function(r,idx){
         var pct=Math.round(100*r.wins/r.games);
-        var label=Array.isArray(r.moves_json)?r.moves_json.join(' ; '):r.opening_key;
-        html+='<div style="display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid rgba(255,255,255,.1);padding:3px 0">'
-          +'<span>'+label+'</span><span style="opacity:.8;white-space:nowrap">'+pct+'% ('+r.games+')</span></div>';
+        // moves_json = les 8 premiers demi-coups (les deux camps mélangés,
+        // voir devSimOneGame) : on ne garde ici que les coups DE CE CAMP,
+        // jusqu'à 4, pour l'aperçu de la ligne dans la liste.
+        var ownMoves=(Array.isArray(r.moves_json)?r.moves_json:[]).filter(function(m){ return m.color===side; }).slice(0,4);
+        var label=ownMoves.map(function(m){ return pieceNotationCode(m.type||'epeiste',side)+boardCoordLabel(m.fr,m.fc)+'–'+boardCoordLabel(m.tr,m.tc); }).join(' ; ') || r.opening_key;
+        html+='<div style="cursor:pointer;display:flex;justify-content:space-between;gap:8px;border-bottom:1px solid rgba(255,255,255,.1);padding:5px 0" onclick="devOpenLearnOpening(\''+side+'\','+idx+')">'
+          +'<span>📖 '+label+'</span><span style="opacity:.8;white-space:nowrap">'+pct+'% ('+r.games+')</span></div>';
       });
       return html;
     }
-    el.innerHTML=renderSide('BLANCS', w.data)+renderSide('NOIRS', b.data);
+    el.innerHTML=renderSide('BLANCS','white',_devOpeningsCache.white)+renderSide('NOIRS','black',_devOpeningsCache.black);
   }catch(e){ el.innerHTML='Erreur de chargement.'; console.error(e); }
 }
 
+var DEV_TACTIC_LABEL={capture:'Capture','push':'Poussée','push-capture':'Poussée décisive'};
 async function renderDevTacticsList(){
   var el=document.getElementById('dev-tactics-list');
   if(!el) return;
   el.innerHTML='Chargement…';
   try{
     var res=await supa.from('dev_tactic_stats').select('*').gte('occurrences',8).order('occurrences',{ascending:false}).limit(30);
-    var rows=res.data||[];
-    if(!rows.length){ el.innerHTML='Pas encore assez de données (min. 8 occurrences). Lance des simulations depuis l\'écran Dev.'; return; }
+    _devTacticsCache=res.data||[];
+    if(!_devTacticsCache.length){ el.innerHTML='Pas encore assez de données (min. 8 occurrences). Lance des simulations depuis l\'écran Dev.'; return; }
     var html='';
-    rows.forEach(function(r){
-      html+='<div style="border-bottom:1px solid rgba(255,255,255,.1);padding:5px 0">'
-        +'<div>'+r.motif_type+' · '+r.side+' · '+r.occurrences+'× · swing moyen '+Math.round(r.avg_eval_swing)+'</div>'
-        +'<div style="opacity:.6;font-size:11px">'+r.motif_key+'</div></div>';
+    _devTacticsCache.forEach(function(r,idx){
+      html+='<div style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.1);padding:6px 0" onclick="devOpenLearnTactic('+idx+')">'
+        +'<div>⚔ '+(DEV_TACTIC_LABEL[r.motif_type]||r.motif_type)+' · '+(r.side==='white'?'Blancs':'Noirs')+' · '+r.occurrences+'× · impact moyen '+Math.round(r.avg_eval_swing)+'</div>'
+        +'<div style="opacity:.55;font-size:11px">Toucher pour voir la position et l\'explication</div></div>';
     });
     el.innerHTML=html;
   }catch(e){ el.innerHTML='Erreur de chargement.'; console.error(e); }
 }
+
+// ── Écran "Apprendre" : rejoue une ouverture coup par coup, ou montre
+// l'avant/après d'une tactique, avec une explication en langage clair
+// générée à partir de l'état réel du plateau (capture/poussée, avance vers
+// le maître adverse, prise du centre, repli défensif) — jamais inventée.
+var DEV_PIECE_GLYPH={epeiste:'将',sword:'剣',shield:'盾'};
+var DEV_PIECE_LABEL={epeiste:'Maître',sword:'Sabre',shield:'Bouclier'};
+function devPieceLabel(p){ return p ? (DEV_PIECE_LABEL[p.type]||p.type) : 'pion'; }
+
+function devRenderMiniBoard(board,hl){
+  var rowsHtml=[];
+  for(var r=4;r>=0;r--){
+    var cells=[];
+    for(var c=0;c<5;c++){
+      var p=board[r]?board[r][c]:null;
+      var isFrom=hl&&hl.fr===r&&hl.fc===c, isTo=hl&&hl.tr===r&&hl.tc===c;
+      var bg=isTo?'rgba(212,160,23,.4)':(isFrom?'rgba(212,160,23,.18)':((r+c)%2===0?'rgba(255,255,255,.045)':'rgba(0,0,0,.18)'));
+      var content='';
+      if(p){
+        var isWhite=p.color==='white';
+        content='<div style="width:24px;height:24px;border-radius:50%;background:'+(isWhite?'rgba(232,223,200,.18)':'rgba(20,15,10,.65)')+';border:1px solid '+(isWhite?'#e8dfc8':'#8a7550')+';display:flex;align-items:center;justify-content:center;font-family:\'Noto Serif JP\',serif;font-size:13px;color:'+(isWhite?'#f5efd8':'#c9a86a')+'">'+(DEV_PIECE_GLYPH[p.type]||'?')+'</div>';
+      }
+      cells.push('<div style="width:32px;height:32px;box-sizing:border-box;background:'+bg+';display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.05)">'+content+'</div>');
+    }
+    rowsHtml.push('<div style="display:flex">'+cells.join('')+'</div>');
+  }
+  return '<div style="display:inline-flex;flex-direction:column;border:1px solid rgba(212,160,23,.4);margin:8px auto">'+rowsHtml.join('')+'</div>';
+}
+
+function devExplainMove(boardBefore,mv,color){
+  var enemy=color==='white'?'black':'white';
+  var mover=boardBefore[mv.fr]?boardBefore[mv.fr][mv.fc]:null;
+  var target=boardBefore[mv.tr]?boardBefore[mv.tr][mv.tc]:null;
+  var a=mv.action||{};
+  if(a.pushCaptures) return 'Repousse et élimine le '+devPieceLabel(target)+' adverse — coup décisif qui peut faire basculer la partie.';
+  if(a.isCapture)    return 'Capture le '+devPieceLabel(target)+' adverse : gain de matériel immédiat.';
+  if(a.isPush)       return 'Repousse le '+devPieceLabel(target)+' adverse, le déstabilise et ouvre une brèche dans sa formation.';
+  if(a.isStack)      return 'Empile son '+devPieceLabel(mover)+' sur le pion adverse : le neutralise sans le capturer.';
+  var enemyMaster=(typeof findMaster==='function')?findMaster(enemy,boardBefore):null;
+  if(enemyMaster){
+    var dB=Math.abs(mv.fr-enemyMaster.r)+Math.abs(mv.fc-enemyMaster.c), dA=Math.abs(mv.tr-enemyMaster.r)+Math.abs(mv.tc-enemyMaster.c);
+    if(dA<dB) return 'Avance vers le maître adverse : augmente la pression et prépare une attaque directe.';
+  }
+  var cB=Math.abs(mv.fr-2)+Math.abs(mv.fc-2), cA=Math.abs(mv.tr-2)+Math.abs(mv.tc-2);
+  if(cA<cB) return 'Prend le contrôle du centre, la case clé pour la mobilité future.';
+  var ownMaster=(typeof findMaster==='function')?findMaster(color,boardBefore):null;
+  if(ownMaster){
+    var oB=Math.abs(mv.fr-ownMaster.r)+Math.abs(mv.fc-ownMaster.c), oA=Math.abs(mv.tr-ownMaster.r)+Math.abs(mv.tc-ownMaster.c);
+    if(oA<oB) return 'Se replie pour renforcer la défense autour de son propre maître.';
+  }
+  return 'Développe sa position et prépare les coups suivants.';
+}
+
+var _devLearnSteps=[];
+var _devLearnIndex=0;
+var _devLearnReturnScreen='dev-openings';
+
+function devBuildOpeningSteps(seq){
+  var setup=devSimSetupBoard();
+  var board=setup.board, stacks=setup.stacks, lm=null, lp=null;
+  var steps=[];
+  (seq||[]).forEach(function(m){
+    var boardBefore=cloneBS(board,stacks).board;
+    var mv={fr:m.fr,fc:m.fc,tr:m.tr,tc:m.tc,action:m.action||{}};
+    var explain=devExplainMove(boardBefore,mv,m.color);
+    var notation=pieceNotationCode(m.type||'epeiste',m.color)+boardCoordLabel(m.fr,m.fc)+' – '+boardCoordLabel(m.tr,m.tc);
+    var res=applyToClone(board,stacks,mv,lm,lp);
+    lm=res.nlm; lp=res.nlp;
+    steps.push({board:cloneBS(board,stacks).board, hl:{fr:m.fr,fc:m.fc,tr:m.tr,tc:m.tc}, color:m.color, notation:notation, explain:explain});
+  });
+  return steps;
+}
+
+function devOpenLearnOpening(side,idx){
+  var row=_devOpeningsCache[side]&&_devOpeningsCache[side][idx];
+  if(!row) return;
+  _devLearnReturnScreen='dev-openings';
+  _devLearnSteps=devBuildOpeningSteps(row.moves_json);
+  _devLearnIndex=0;
+  var pct=row.games?Math.round(100*row.wins/row.games):0;
+  document.getElementById('dev-learn-title').textContent=(side==='white'?'BLANCS':'NOIRS')+' — Ouverture';
+  document.getElementById('dev-learn-stats').textContent=pct+'% de victoires sur '+row.games+' parties (force '+DEV_SIM_DEPTH+', bots identiques)';
+  showScreen('dev-learn');
+  devRenderLearnStep();
+}
+
+function devOpenLearnTactic(idx){
+  var row=_devTacticsCache[idx];
+  if(!row) return;
+  _devLearnReturnScreen='dev-tactics';
+  var board=row.board_before_json;
+  var storedAction=row.move_json&&row.move_json.action;
+  var mv={fr:row.move_json.fr,fc:row.move_json.fc,tr:row.move_json.tr,tc:row.move_json.tc,
+    action: storedAction || {isCapture:row.motif_type==='capture', isPush:row.motif_type!=='capture', pushCaptures:row.motif_type==='push-capture'}};
+  var explain=devExplainMove(board,mv,row.side);
+  var mover=board[mv.fr]?board[mv.fr][mv.fc]:null;
+  var notation=pieceNotationCode(mover?mover.type:'epeiste',row.side)+boardCoordLabel(mv.fr,mv.fc)+' – '+boardCoordLabel(mv.tr,mv.tc);
+  // Les stacks ne sont pas mémorisées pour les tactiques (seul le plateau
+  // l'est) : grille vide sans effet sur l'affichage d'une capture/poussée.
+  var emptyStacks=Array.from({length:5},function(){return Array(5).fill(null);});
+  var cl=cloneBS(board,emptyStacks);
+  applyToClone(cl.board,cl.stacks,mv,null,null);
+  _devLearnSteps=[
+    {board:board, hl:{fr:mv.fr,fc:mv.fc,tr:mv.tr,tc:mv.tc}, color:row.side, notation:notation, explain:explain},
+    {board:cl.board, hl:{fr:mv.fr,fc:mv.fc,tr:mv.tr,tc:mv.tc}, color:row.side, notation:notation, explain:'Position après ce coup.'}
+  ];
+  _devLearnIndex=0;
+  document.getElementById('dev-learn-title').textContent='⚔ Tactique — '+(row.side==='white'?'Blancs':'Noirs');
+  document.getElementById('dev-learn-stats').textContent=row.occurrences+' occurrences · impact moyen '+Math.round(row.avg_eval_swing);
+  showScreen('dev-learn');
+  devRenderLearnStep();
+}
+
+function devRenderLearnStep(){
+  var boardEl=document.getElementById('dev-learn-board'), lbl=document.getElementById('dev-learn-step-label'), ex=document.getElementById('dev-learn-explain');
+  if(!_devLearnSteps.length){
+    if(boardEl) boardEl.innerHTML=''; if(lbl) lbl.textContent=''; if(ex) ex.textContent='';
+    return;
+  }
+  if(_devLearnIndex<0) _devLearnIndex=0;
+  if(_devLearnIndex>_devLearnSteps.length-1) _devLearnIndex=_devLearnSteps.length-1;
+  var st=_devLearnSteps[_devLearnIndex];
+  if(boardEl) boardEl.innerHTML=devRenderMiniBoard(st.board,st.hl);
+  if(lbl) lbl.textContent='Coup '+(_devLearnIndex+1)+'/'+_devLearnSteps.length+' — '+(st.color==='white'?'Blancs':'Noirs')+' : '+st.notation;
+  if(ex) ex.textContent=st.explain;
+}
+function devLearnStep(delta){ _devLearnIndex+=delta; devRenderLearnStep(); }
+function devCloseLearn(){ showScreen(_devLearnReturnScreen); }
 
 // ══════════════════════════════════════════════════════
 // AI SCHEDULER
