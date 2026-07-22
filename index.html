@@ -17807,6 +17807,7 @@ async function onlineLoadSession(jumpToMenu){
   await reconcileProfileWithCloud(profile);
   applyShopStateFromProfile(profile);
   _isAdmin = !!profile.is_admin;
+  if(typeof updateDevButtonVisibility==='function') updateDevButtonVisibility();
   _myPseudo = profile.pseudo || '';
   // Restaure l'état du WurmzSkin depuis le cloud (persiste entre appareils).
   if(profile.wurmz_skin !== undefined && profile.wurmz_skin !== null){
