@@ -2358,7 +2358,10 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" style="width:100%;margin-bottom:12px" onclick="showScreen('dev-tactics')">⚔ Répertoire de tactiques</button>
     <div class="menu-divider"></div>
     <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.7;text-align:center;margin-bottom:8px">Simulation bot vs bot (mode de base, hors Sumo)</div>
-    <button id="dev-sim-btn" class="adm-btn" style="width:100%;padding:8px;margin-bottom:6px" onclick="devSimRunBatch(200)">▶ Lancer 200 parties</button>
+    <button class="dev-sim-btn adm-btn" style="width:100%;padding:8px;margin-bottom:6px" onclick="devSimRunBatch(200)">▶ Lancer 200 parties</button>
+    <button class="dev-sim-btn adm-btn" style="width:100%;padding:8px;margin-bottom:6px" onclick="devSimRunBatch(1000)">▶ Lancer 1 000 parties</button>
+    <button class="dev-sim-btn adm-btn" style="width:100%;padding:8px;margin-bottom:6px" onclick="devSimRunBatch(5000)">▶ Lancer 5 000 parties</button>
+    <button class="dev-sim-btn adm-btn" style="width:100%;padding:8px;margin-bottom:6px" onclick="devSimRunBatch(10000)">▶ Lancer 10 000 parties</button>
     <div id="dev-sim-progress" style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.8;text-align:center"></div>
   </div>
 </div>
@@ -13841,37 +13844,46 @@ function devSimOneGame(){
 
 async function devSimUploadGame(g){
   try{
+    var proms=[];
     if(g.winner){
       for(var side of ['white','black']){
         if(g.openingMoves[side].length){
           var key=g.openingMoves[side].join(' ; ');
-          supa.rpc('dev_record_opening_result',{p_side:side,p_key:key,p_moves:g.openingMoves[side],p_win:(g.winner===side)});
+          proms.push(supa.rpc('dev_record_opening_result',{p_side:side,p_key:key,p_moves:g.openingMoves[side],p_win:(g.winner===side)}));
         }
       }
     }
     g.tactics.forEach(function(t){
-      supa.rpc('dev_record_tactic',{p_key:devTacticMotifKey(t),p_type:t.type,p_board:t.board,p_move:t.move,p_side:t.side,p_swing:t.swing});
+      proms.push(supa.rpc('dev_record_tactic',{p_key:devTacticMotifKey(t),p_type:t.type,p_board:t.board,p_move:t.move,p_side:t.side,p_swing:t.swing}));
     });
+    await Promise.all(proms);
   }catch(e){ console.error('devSimUploadGame', e); }
 }
 
+// chunk borné pour ne pas geler l'UI (parties calculées en synchrone) ni
+// saturer le réseau (upload attendu avant le lot suivant) — indispensable
+// dès qu'on monte à 5000/10000 parties.
 function devSimRunBatch(n){
   if(_devSimRunning) return;
   if(!isDevUser()){ if(typeof showToast==='function') showToast('Réservé aux comptes dev.', true); return; }
   _devSimRunning=true;
   var done=0;
-  var btn=document.getElementById('dev-sim-btn'); if(btn) btn.disabled=true;
+  var btns=document.querySelectorAll('.dev-sim-btn');
+  btns.forEach(function(b){b.disabled=true;});
   function tick(){
-    var chunk=Math.min(4, n-done);
-    for(var i=0;i<chunk;i++){ devSimUploadGame(devSimOneGame()); done++; }
+    var chunk=Math.min(10, n-done);
+    var proms=[];
+    for(var i=0;i<chunk;i++){ proms.push(devSimUploadGame(devSimOneGame())); done++; }
     var prog=document.getElementById('dev-sim-progress');
     if(prog) prog.textContent=done+' / '+n+' parties simulées';
-    if(done<n) setTimeout(tick,0);
-    else{
-      _devSimRunning=false;
-      if(btn) btn.disabled=false;
-      if(typeof showToast==='function') showToast('Simulation terminée : '+n+' parties.');
-    }
+    Promise.all(proms).then(function(){
+      if(done<n) setTimeout(tick,0);
+      else{
+        _devSimRunning=false;
+        btns.forEach(function(b){b.disabled=false;});
+        if(typeof showToast==='function') showToast('Simulation terminée : '+n+' parties.');
+      }
+    });
   }
   tick();
 }
