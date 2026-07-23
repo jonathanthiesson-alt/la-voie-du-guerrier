@@ -14110,6 +14110,13 @@ async function renderDevTacticsList(){
 // générée à partir de l'état réel du plateau (capture/poussée, avance vers
 // le maître adverse, prise du centre, repli défensif) — jamais inventée.
 var DEV_PIECE_GLYPH={epeiste:'将',sword:'剣',shield:'盾'};
+// Apparence par défaut des pions (mêmes SVG que PIECE_SKINS[..][0]) pour les
+// mini-plateaux d'analyse — les kanjis y étaient peu lisibles en petite taille.
+var DEV_PIECE_SVG={
+  epeiste:{vb:'0 0 24 26', svg:'<path fill="currentColor" fill-rule="evenodd" d="M12 0 L10 6 L14 6 Z M5 13 C5 7.5 7.5 5.5 12 5.5 C16.5 5.5 19 7.5 19 13 L20 20 L15 22 L12 26 L9 22 L4 20 Z M6 13.5 L18 13.5 L18 16 L12.8 16 L12.5 18 L12 19.5 L11.5 18 L11.2 16 L6 16 Z"/>'},
+  shield:{vb:'0 0 20 20', svg:'<path d="M10 2C10 2 17 4 17 9C17 14 13 17 10 19C7 17 3 14 3 9C3 4 10 2 10 2Z" fill="currentColor"/>'},
+  sword:{vb:'0 0 16 16', svg:'<rect x="7" y="1" width="2" height="10" fill="currentColor"/><rect x="6" y="2" width="1" height="8" fill="currentColor" opacity=".45"/><rect x="4" y="10" width="8" height="2" fill="currentColor"/><rect x="7" y="12" width="2" height="3" fill="currentColor" opacity=".7"/>'}
+};
 var DEV_PIECE_LABEL={epeiste:'Maître',sword:'Sabre',shield:'Bouclier'};
 function devPieceLabel(p){ return p ? (DEV_PIECE_LABEL[p.type]||p.type) : 'pion'; }
 
@@ -14124,7 +14131,9 @@ function devRenderMiniBoard(board,hl){
       var content='';
       if(p){
         var isWhite=p.color==='white';
-        content='<div style="width:24px;height:24px;border-radius:50%;background:'+(isWhite?'rgba(232,223,200,.18)':'rgba(20,15,10,.65)')+';border:1px solid '+(isWhite?'#e8dfc8':'#8a7550')+';display:flex;align-items:center;justify-content:center;font-family:\'Noto Serif JP\',serif;font-size:13px;color:'+(isWhite?'#f5efd8':'#c9a86a')+'">'+(DEV_PIECE_GLYPH[p.type]||'?')+'</div>';
+        var pSvg=DEV_PIECE_SVG[p.type];
+        var iconHtml=pSvg?('<svg viewBox="'+pSvg.vb+'" width="16" height="16">'+pSvg.svg+'</svg>'):(DEV_PIECE_GLYPH[p.type]||'?');
+        content='<div style="width:24px;height:24px;border-radius:50%;background:'+(isWhite?'rgba(232,223,200,.18)':'rgba(20,15,10,.65)')+';border:1px solid '+(isWhite?'#e8dfc8':'#8a7550')+';display:flex;align-items:center;justify-content:center;color:'+(isWhite?'#f5efd8':'#c9a86a')+'">'+iconHtml+'</div>';
       }
       cells.push('<div style="width:32px;height:32px;box-sizing:border-box;background:'+bg+';display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.05)">'+content+'</div>');
     }
