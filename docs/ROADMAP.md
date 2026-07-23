@@ -55,6 +55,16 @@ Inspirations assumées : **Fate** (invocation de figures historiques) et
 ## 🔧 AXE 4 — Finitions applicatives  **[J]**
 
 - ~~Brancher les tournois sur de vraies parties~~ ← **en cours, AXE 1**
+- **Connexion via Google (OAuth)** — demandée le 2026-07-23. Bloquée côté
+  Jonathan : créer un projet Google Cloud Console (écran de consentement OAuth
+  + identifiants), URI de redirection à whitelister
+  `https://ikssbshpvpqlcgrbjldz.supabase.co/auth/v1/callback`, puis activer
+  le provider Google dans Supabase (Authentication → Providers) avec le
+  Client ID/Secret obtenus. **Une fois ça fait, prévenir Claude** pour la
+  suite côté code : bouton "Se connecter avec Google" + écran post-connexion
+  (choix du pseudo + acceptation CGU/confidentialité/âge, puisqu'avec Google
+  l'utilisateur arrive déjà authentifié, sans être passé par le formulaire
+  d'inscription classique).
 - Onboarding / tutoriel
 - Notifications push
 - Polish UI général
