@@ -18348,6 +18348,24 @@ function initSupabase(){
     return;
   }
   supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Lien de réinitialisation cliqué depuis l'email : Supabase ouvre une
+  // session temporaire et émet cet événement AVANT tout autre chargement.
+  supa.auth.onAuthStateChange(function(event){
+    if(event==='PASSWORD_RECOVERY') showScreen('reset-password');
+  });
+}
+
+async function onlineSetNewPassword(){
+  const errEl = document.getElementById('reset-password-error');
+  if(errEl) errEl.textContent='';
+  const pw1 = document.getElementById('reset-password-input1').value;
+  const pw2 = document.getElementById('reset-password-input2').value;
+  if(!pw1 || pw1.length<4){ if(errEl) errEl.textContent='Mot de passe trop court (4 caractères minimum).'; return; }
+  if(pw1!==pw2){ if(errEl) errEl.textContent='Les deux mots de passe ne correspondent pas.'; return; }
+  const { error } = await supa.auth.updateUser({ password: pw1 });
+  if(error){ if(errEl) errEl.textContent='Erreur: '+error.message; return; }
+  if(typeof showToast==='function') showToast('Mot de passe mis à jour.');
+  await onlineLoadSession(true);
 }
 
 // ── Inscription / Connexion ────────────────────────────────────
@@ -18438,6 +18456,22 @@ async function onlineLogIn(identifier, password){
     return;
   }
   await onlineLoadSession(true);
+}
+
+async function onlineForgotPassword(){
+  const errEl = document.getElementById('online-auth-error');
+  if(errEl) errEl.textContent='';
+  const raw = (document.getElementById('online-pseudo-input').value || document.getElementById('online-email-input').value || '').trim();
+  if(raw.indexOf('@')===-1){
+    if(errEl) errEl.textContent='Entrez votre email (pas votre pseudo) pour réinitialiser.';
+    return;
+  }
+  const { error } = await supa.auth.resetPasswordForEmail(raw.toLowerCase(), { redirectTo: window.location.origin + window.location.pathname });
+  if(error){
+    if(errEl) errEl.textContent='Erreur: '+error.message;
+    return;
+  }
+  if(errEl){ errEl.style.color='#7fbf7f'; errEl.textContent='Email de réinitialisation envoyé si ce compte existe.'; }
 }
 
 async function onlineLogOut(){
@@ -20230,6 +20264,23 @@ window.addEventListener('beforeunload', () => {
       <div id="online-auth-error" style="color:#e06060;font-family:'VT323',monospace;font-size:13px;min-height:16px;text-align:center"></div>
       <button class="btn" onclick="onlineLogIn(document.getElementById('online-pseudo-input').value.trim(), document.getElementById('online-password-input').value)">Se connecter</button>
       <button class="btn" style="opacity:.85" onclick="onlineSignUp(document.getElementById('online-pseudo-input').value.trim(), document.getElementById('online-password-input').value, document.getElementById('online-email-input').value.trim())">Créer un compte</button>
+      <a href="javascript:void(0)" onclick="onlineForgotPassword()" style="text-align:center;color:var(--gold-bright);text-decoration:underline;font-family:'VT323',monospace;font-size:13px;opacity:.85">Mot de passe oublié ?</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ÉCRAN NOUVEAU MOT DE PASSE (lien de réinitialisation) ═══════════ -->
+<div id="screen-reset-password" class="screen">
+  <div class="panel" style="max-width:300px">
+    <div class="menu-title">&#9670; NOUVEAU MOT DE PASSE &#9670;</div>
+    <div class="menu-divider"></div>
+    <div style="display:flex;flex-direction:column;gap:10px;padding:8px 0">
+      <input type="password" id="reset-password-input1" placeholder="Nouveau mot de passe" maxlength="50"
+        style="padding:10px;border-radius:6px;border:1px solid rgba(200,168,110,.3);background:rgba(0,0,0,.3);color:var(--parchment);font-family:'VT323',monospace;font-size:15px">
+      <input type="password" id="reset-password-input2" placeholder="Confirmer le mot de passe" maxlength="50"
+        style="padding:10px;border-radius:6px;border:1px solid rgba(200,168,110,.3);background:rgba(0,0,0,.3);color:var(--parchment);font-family:'VT323',monospace;font-size:15px">
+      <div id="reset-password-error" style="color:#e06060;font-family:'VT323',monospace;font-size:13px;min-height:16px;text-align:center"></div>
+      <button class="btn" onclick="onlineSetNewPassword()">Valider</button>
     </div>
   </div>
 </div>
