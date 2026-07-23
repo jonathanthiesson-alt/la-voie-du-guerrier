@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.18.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.19.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2072,7 +2072,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.18.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.19.0 &#9820;</div>
   </div>
 </div>
 
@@ -2229,6 +2229,41 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <span class="settings-label">&#128218; <span data-i18n="settings_citations">Biblioth&#232;que des citations</span></span>
       <span style="color:var(--gold);opacity:.6;font-size:16px">&#8250;</span>
     </div>
+
+    <div class="settings-item" onclick="showScreen('account-privacy')">
+      <span class="settings-label">&#128274; Confidentialit&#233; &amp; compte</span>
+      <span style="color:var(--gold);opacity:.6;font-size:16px">&#8250;</span>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIDENTIALITÉ & COMPTE (RGPD) — CGU/politique en modal (pas de
+     navigation qui ferait perdre le contexte), export et suppression de
+     compte en libre-service. Accessible même hors connexion pour lire les
+     CGU/politique, mais export/suppression exigent currentUser. -->
+<div id="screen-account-privacy" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('settings')">↩ RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+  <div class="panel" style="max-width:340px;width:100%">
+    <div class="menu-title" style="font-size:18px">&#128274; CONFIDENTIALIT&#201; &amp; COMPTE</div>
+    <div class="menu-divider"></div>
+
+    <div class="settings-item" onclick="showCguModal()">
+      <span class="settings-label">&#128220; Conditions g&#233;n&#233;rales d'utilisation</span>
+      <span style="color:var(--gold);opacity:.6;font-size:16px">&#8250;</span>
+    </div>
+    <div class="settings-item" onclick="showPrivacyModal()">
+      <span class="settings-label">&#128373; Politique de confidentialit&#233;</span>
+      <span style="color:var(--gold);opacity:.6;font-size:16px">&#8250;</span>
+    </div>
+
+    <div class="menu-divider" style="margin-top:14px"></div>
+    <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.6;text-align:center;margin:8px 0">Vos données, vos droits (RGPD)</div>
+
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="exportMyData()">&#11015; Exporter mes données</button>
+    <button class="btn" style="width:100%;border-color:rgba(220,80,80,.5);color:#f08080;background:rgba(120,30,30,.15)" onclick="confirmDeleteAccount()">&#128465; Supprimer mon compte</button>
+    <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.5;text-align:center;margin-top:8px">La suppression efface votre pseudo, votre email, vos messages et votre liste d'amis immédiatement et irréversiblement.</div>
+  </div>
   </div>
 </div>
 
@@ -3021,8 +3056,27 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.18.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.19.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.19.0 &mdash; 23 juillet 2026</div>
+      <ul class="devlog-list">
+
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; RGPD &amp; COMPTE</li>
+
+        <li><strong>Connexion par email r&eacute;el.</strong> La cr&eacute;ation de compte demande d&eacute;sormais une vraie adresse email (auparavant un email fictif &eacute;tait g&eacute;n&eacute;r&eacute; en coulisses &agrave; partir du pseudo). Les comptes cr&eacute;&eacute;s avant ce changement continuent de se connecter avec leur pseudo, sans rien avoir &agrave; faire.</li>
+
+        <li><strong>CGU et politique de confidentialit&eacute;</strong> : deux nouveaux documents, consultables depuis l'inscription et depuis Param&egrave;tres &rarr; Confidentialit&eacute; &amp; compte. Leur acceptation, ainsi que la confirmation d'avoir au moins 15 ans, sont d&eacute;sormais obligatoires et horodat&eacute;es pour cr&eacute;er un compte.</li>
+
+        <li><strong>Exporter mes donn&eacute;es</strong> : t&eacute;l&eacute;charge un fichier reprenant l'int&eacute;gralit&eacute; de vos donn&eacute;es (profil, parties, messages, amis, t&eacute;l&eacute;m&eacute;trie&#8230;) &mdash; droit d'acc&egrave;s et de portabilit&eacute; en libre-service.</li>
+
+        <li><strong>Supprimer mon compte</strong> : suppression irr&eacute;versible en deux confirmations (dont la ressaisie du pseudo). Pseudo, email et donn&eacute;es priv&eacute;es (messages, amis, t&eacute;l&eacute;m&eacute;trie) sont effac&eacute;s imm&eacute;diatement, et le compte est verrouill&eacute; &agrave; vie c&ocirc;t&eacute; authentification &mdash; aucune reconnexion possible ensuite, m&ecirc;me avec les bons identifiants. L'historique de parties d&eacute;j&agrave; jou&eacute;es est conserv&eacute; de fa&ccedil;on anonymis&eacute;e (il implique aussi l'adversaire).</li>
+
+        <li>Nouvelle section <strong>Param&egrave;tres &rarr; Confidentialit&eacute; &amp; compte</strong> regroupant ces quatre points.</li>
+
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -6377,7 +6431,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.18.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.19.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -6591,7 +6645,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.18.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.19.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -6796,7 +6850,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.18.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.19.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -17693,6 +17747,101 @@ function showCurrencyTooltip(key){
     +'</div>';
   document.body.appendChild(modal);
 }
+
+// ══════════════════════════════════════════════════════
+// RGPD — CGU, politique de confidentialité, export et
+// suppression de compte en libre-service.
+// ══════════════════════════════════════════════════════
+// Modal générique scrollable (texte long) — même famille visuelle que
+// showCurrencyTooltip, mais avec max-height + overflow-y car le contenu
+// dépasse largement une bulle de lore.
+function showLegalModal(title, bodyHtml){
+  var existing = document.getElementById('legal-modal');
+  if(existing) existing.remove();
+  var modal = document.createElement('div');
+  modal.id = 'legal-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9500;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  modal.onclick = function(e){ if(e.target===modal) modal.remove(); };
+  modal.innerHTML =
+    '<div style="background:linear-gradient(160deg,#1a1208,#0d0b06);border:1px solid rgba(212,160,23,.4);border-radius:10px;padding:18px 20px;max-width:480px;width:100%;max-height:85vh;display:flex;flex-direction:column;box-shadow:0 8px 32px rgba(0,0,0,.8)">'
+    +'<div style="font-family:\'Cinzel\',serif;font-size:16px;color:var(--gold-bright);text-align:center;margin-bottom:10px;flex-shrink:0">'+title+'</div>'
+    +'<div style="overflow-y:auto;-webkit-overflow-scrolling:touch;font-family:\'VT323\',monospace;font-size:14px;color:var(--parchment);line-height:1.5;opacity:.9">'+bodyHtml+'</div>'
+    +'<button onclick="this.closest(\'#legal-modal\').remove()" style="margin-top:14px;width:100%;flex-shrink:0;background:none;border:1px solid rgba(212,160,23,.3);color:var(--gold);padding:9px;font-family:VT323,monospace;font-size:14px;border-radius:5px;cursor:pointer;letter-spacing:1px">FERMER</button>'
+    +'</div>';
+  document.body.appendChild(modal);
+}
+
+var CGU_TEXT =
+  '<p><strong>Version du '+CGU_VERSION+'</strong></p>'
+  +'<p><strong>1. Objet.</strong> La Voie du Guerrier est un jeu de plateau en ligne édité par Jonathan Thiesson. La création d\'un compte suppose l\'acceptation pleine et entière des présentes CGU.</p>'
+  +'<p><strong>2. Compte.</strong> Un compte est personnel, identifié par un pseudo et une adresse email. La création d\'un compte est réservée aux personnes d\'au moins 15 ans (âge du consentement numérique en France). Vous êtes responsable de la confidentialité de votre mot de passe.</p>'
+  +'<p><strong>3. Comportement.</strong> Sont interdits : la triche (bots, scripts, exploitation de bugs pour en tirer un avantage), le harcèlement, les propos injurieux ou discriminatoires, l\'usurpation d\'identité, la création de comptes multiples pour fausser le classement. Tout manquement peut entraîner un avertissement, une suspension temporaire ou définitive du compte.</p>'
+  +'<p><strong>4. Monnaies virtuelles.</strong> Les monnaies du jeu (Shiso, Tamashii, Mon, Ryu, Hanafuda, Shiitake, Koku) n\'ont aucune valeur monétaire réelle, ne sont ni remboursables ni échangeables contre de l\'argent. Aucun paiement réel n\'est actif à ce jour ; si des achats venaient à être proposés, les présentes CGU seraient mises à jour en conséquence avant leur activation.</p>'
+  +'<p><strong>5. Disponibilité.</strong> Le service est fourni "en l\'état", en phase alpha : des interruptions, pertes de progression ou modifications d\'équilibrage peuvent survenir sans préavis.</p>'
+  +'<p><strong>6. Résiliation.</strong> Vous pouvez supprimer votre compte à tout moment depuis Paramètres → Confidentialité &amp; compte. L\'éditeur peut suspendre ou supprimer un compte en cas de manquement aux présentes CGU.</p>'
+  +'<p><strong>7. Droit applicable.</strong> Les présentes CGU sont soumises au droit français.</p>'
+  +'<p><strong>8. Contact.</strong> Pour toute question : jonathan.thiesson@gmail.com</p>';
+
+var PRIVACY_TEXT =
+  '<p><strong>Version du '+CGU_VERSION+'</strong></p>'
+  +'<p><strong>Responsable de traitement.</strong> Jonathan Thiesson, éditeur de La Voie du Guerrier — contact : jonathan.thiesson@gmail.com.</p>'
+  +'<p><strong>Données collectées.</strong> Pseudo, adresse email, mot de passe (haché, jamais stocké en clair — géré par notre hébergeur Supabase Auth) ; données de jeu (ELO, historique de parties, succès, classements) ; contenus que vous rédigez (messages privés, messages de guilde/ligue) ; données techniques d\'usage (connexions, parties jouées, défis résolus, achats en monnaie virtuelle) liées à votre compte à des fins de statistiques et de sécurité du service.</p>'
+  +'<p><strong>Finalités et base légale.</strong> Fourniture du service (création de compte, parties, classements, messagerie) : exécution du contrat noué à l\'acceptation des CGU. Sécurité et modération (lutte contre la triche et les abus) : intérêt légitime. Mesure d\'usage interne (rétention, statistiques de jeu) : intérêt légitime, jamais transmise à un tiers ni utilisée à des fins publicitaires.</p>'
+  +'<p><strong>Destinataires.</strong> Vos données sont hébergées par Supabase (notre sous-traitant technique, base de données et authentification). Aucune autre transmission à un tiers, aucune revente de données, aucun service publicitaire ou de tracking tiers n\'est utilisé dans le jeu.</p>'
+  +'<p><strong>Durée de conservation.</strong> Vos données sont conservées tant que votre compte existe. En cas de suppression de compte, votre pseudo et votre email sont effacés immédiatement et irréversiblement ; vos messages privés, votre liste d\'amis et vos données de télémétrie sont supprimés. Votre historique de parties déjà jouées est conservé de façon anonymisée (il implique d\'autres joueurs et ne peut être retiré unilatéralement de leur propre historique).</p>'
+  +'<p><strong>Vos droits.</strong> Vous disposez d\'un droit d\'accès, de rectification, d\'effacement, de portabilité et d\'opposition sur vos données (articles 15 à 21 du RGPD). L\'export et la suppression de votre compte sont disponibles en libre-service dans Paramètres → Confidentialité &amp; compte. Pour toute autre demande, écrivez à jonathan.thiesson@gmail.com. Vous pouvez également introduire une réclamation auprès de la CNIL (cnil.fr).</p>'
+  +'<p><strong>Cookies et stockage local.</strong> Seul un jeton de session technique (nécessaire pour rester connecté) est stocké sur votre appareil par notre hébergeur Supabase. Aucun cookie publicitaire ou de tracking tiers n\'est déposé.</p>';
+
+function showCguModal(){ showLegalModal('📜 CONDITIONS GÉNÉRALES D\'UTILISATION', CGU_TEXT); }
+function showPrivacyModal(){ showLegalModal('🔒 POLITIQUE DE CONFIDENTIALITÉ', PRIVACY_TEXT); }
+
+// ── Export de mes données (droit d'accès / portabilité) ──
+async function exportMyData(){
+  if(!currentUser){ showToast('Connectez-vous pour exporter vos données.', true); return; }
+  try{
+    const { data, error } = await supa.rpc('export_my_data');
+    if(error){ showToast('Erreur export : '+error.message, true); return; }
+    var blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'mes-donnees-lvdg-'+(currentUser.pseudo||'joueur')+'.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    showToast('Export téléchargé.');
+  }catch(e){ showToast('Erreur export : '+e.message, true); }
+}
+
+// ── Suppression de compte : double confirmation, la seconde exige de
+// retaper son pseudo — geste irréversible, on ne se fie pas à un simple
+// clic accidentel.
+function confirmDeleteAccount(){
+  if(!currentUser) return;
+  var ok = confirm('Supprimer définitivement votre compte "'+currentUser.pseudo+'" ?\n\nVotre pseudo, votre email, vos messages, votre liste d\'amis et vos données de connexion seront effacés IMMÉDIATEMENT ET IRRÉVERSIBLEMENT. Cette action ne peut pas être annulée.');
+  if(!ok) return;
+  var typed = prompt('Pour confirmer, retapez votre pseudo exact : "'+currentUser.pseudo+'"');
+  if(typed !== currentUser.pseudo){
+    showToast('Pseudo incorrect — suppression annulée.', true);
+    return;
+  }
+  executeDeleteAccount();
+}
+async function executeDeleteAccount(){
+  try{
+    const { data, error } = await supa.rpc('delete_my_account');
+    if(error){ showToast('Erreur suppression : '+error.message, true); return; }
+    showToast('Compte supprimé. À bientôt peut-être.');
+    await onlineSetOnlineStatus(false).catch(function(){});
+    cleanupOnlineSubscriptions();
+    await supa.auth.signOut();
+    currentUser = null;
+    _myLeaguePoolIdCache = null;
+    showScreen('home');
+  }catch(e){ showToast('Erreur suppression : '+e.message, true); }
+}
+
 function showToast(message, isError){
   var t = document.getElementById('online-toast');
   if(!t) return;
@@ -17993,40 +18142,72 @@ function initSupabase(){
 }
 
 // ── Inscription / Connexion ────────────────────────────────────
-// Supabase Auth exige un email ; on en génère un synthétique à partir
-// du pseudo pour offrir une expérience "juste un pseudo + mot de passe"
-// côté joueur, sans configurer de serveur d'envoi d'emails.
+// Historique : Supabase Auth exige un email, on en générait un synthétique
+// à partir du pseudo (pseudo@lvdg.local) pour ne demander qu'un pseudo à
+// la création. Passé à un EMAIL RÉEL en V0.19.0 (RGPD : identité de
+// contact du titulaire du compte, nécessaire pour l'exercice de ses
+// droits et la récupération d'accès). pseudoToSyntheticEmail() reste utile
+// UNIQUEMENT pour permettre aux comptes créés AVANT ce changement de
+// continuer à se connecter avec leur pseudo (voir onlineLogIn).
 function pseudoToSyntheticEmail(pseudo){
   return pseudo.toLowerCase()+'@lvdg.local';
 }
 
-async function onlineSignUp(pseudo, password){
+// Identifiant de la version des CGU/politique de confidentialité en
+// vigueur, horodaté à chaque acceptation dans profiles.cgu_accepted_at /
+// cgu_version — preuve de consentement (obligation d'accountability RGPD).
+var CGU_VERSION = '2026-07-23';
+
+async function onlineSignUp(pseudo, password, email){
   const errEl = document.getElementById('online-auth-error');
   if(errEl) errEl.textContent='';
   if(!/^[A-Za-z0-9_-]{3,20}$/.test(pseudo)){
     if(errEl) errEl.textContent='Pseudo invalide (3-20 caractères, lettres/chiffres/_/-).';
     return;
   }
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    if(errEl) errEl.textContent='Adresse email invalide.';
+    return;
+  }
   if(!password || password.length<4){
     if(errEl) errEl.textContent='Mot de passe trop court (4 caractères minimum).';
     return;
   }
-  const email = pseudoToSyntheticEmail(pseudo);
-  const { data, error } = await supa.auth.signUp({ email, password });
+  const cguBox = document.getElementById('signup-cgu-check');
+  const ageBox = document.getElementById('signup-age-check');
+  if(cguBox && !cguBox.checked){
+    if(errEl) errEl.textContent='Vous devez accepter les CGU et la politique de confidentialité.';
+    return;
+  }
+  if(ageBox && !ageBox.checked){
+    if(errEl) errEl.textContent='Vous devez confirmer avoir au moins 15 ans.';
+    return;
+  }
+  const emailNorm = email.toLowerCase();
+  const { data, error } = await supa.auth.signUp({ email: emailNorm, password });
   if(error){
     if(errEl) errEl.textContent = error.message.includes('already registered')
-      ? 'Ce pseudo est déjà pris.' : 'Erreur: '+error.message;
+      ? 'Cette adresse email est déjà utilisée.' : 'Erreur: '+error.message;
     return;
   }
   // Créer la ligne de profil correspondante. La contrainte UNIQUE sur
   // pseudo au niveau base de données est le VRAI garde-fou anti-doublon
-  // (la vérification ci-dessus ne fait qu'anticiper côté UI).
+  // (la vérification ci-dessus ne fait qu'anticiper côté UI). L'horodatage
+  // CGU/âge est posé ICI, côté serveur au sens propre (colonne timestamptz
+  // avec DEFAULT non utilisé exprès : on veut l'heure de LA VALIDATION,
+  // qu'on connaît nous-même à cet instant précis).
+  const nowIso = new Date().toISOString();
+  // Pas de colonne email dans profiles : cette table est lue en select('*')
+  // par n'importe quel joueur connecté (classements, profils adverses...),
+  // y stocker l'email l'aurait exposé à tout le monde. L'email réel ne
+  // vit que dans auth.users (protégé) — voir la migration RGPD dédiée.
   const { error: profErr } = await supa.from('profiles').insert({
-    id: data.user.id, pseudo: pseudo
+    id: data.user.id, pseudo: pseudo,
+    cgu_accepted_at: nowIso, cgu_version: CGU_VERSION, age_confirmed_at: nowIso
   });
   if(profErr){
     if(profErr.message.includes('duplicate') || profErr.code==='23505'){
-      if(errEl) errEl.textContent='Ce pseudo est déjà pris.';
+      if(errEl) errEl.textContent = profErr.message.includes('pseudo') ? 'Ce pseudo est déjà pris.' : 'Ce compte existe déjà.';
     } else {
       if(errEl) errEl.textContent='Erreur création profil: '+profErr.message;
     }
@@ -18035,13 +18216,16 @@ async function onlineSignUp(pseudo, password){
   await onlineLoadSession(true);
 }
 
-async function onlineLogIn(pseudo, password){
+// Accepte un EMAIL (comptes créés depuis le passage à l'email réel) ou un
+// PSEUDO (comptes plus anciens, encore sur l'email synthétique historique)
+// — un identifiant contenant "@" est utilisé tel quel.
+async function onlineLogIn(identifier, password){
   const errEl = document.getElementById('online-auth-error');
   if(errEl) errEl.textContent='';
-  const email = pseudoToSyntheticEmail(pseudo);
+  const email = identifier.indexOf('@')!==-1 ? identifier.trim().toLowerCase() : pseudoToSyntheticEmail(identifier);
   const { error } = await supa.auth.signInWithPassword({ email, password });
   if(error){
-    if(errEl) errEl.textContent='Pseudo ou mot de passe incorrect.';
+    if(errEl) errEl.textContent='Identifiant ou mot de passe incorrect.';
     return;
   }
   await onlineLoadSession(true);
@@ -19815,13 +19999,28 @@ window.addEventListener('beforeunload', () => {
     <div class="menu-title">&#9670; CONNEXION &#9670;</div>
     <div class="menu-divider"></div>
     <div style="display:flex;flex-direction:column;gap:10px;padding:8px 0">
-      <input type="text" id="online-pseudo-input" placeholder="Pseudo" maxlength="20"
+      <input type="text" id="online-pseudo-input" placeholder="Pseudo (ou email pour se connecter)" maxlength="30"
+        style="padding:10px;border-radius:6px;border:1px solid rgba(200,168,110,.3);background:rgba(0,0,0,.3);color:var(--parchment);font-family:'VT323',monospace;font-size:15px">
+      <!-- Requis uniquement pour créer un compte — la connexion accepte
+           l'email OU le pseudo (comptes créés avant le passage à l'email
+           réel, voir onlineLogIn). -->
+      <input type="email" id="online-email-input" placeholder="Email (pour créer un compte)" maxlength="120"
         style="padding:10px;border-radius:6px;border:1px solid rgba(200,168,110,.3);background:rgba(0,0,0,.3);color:var(--parchment);font-family:'VT323',monospace;font-size:15px">
       <input type="password" id="online-password-input" placeholder="Mot de passe" maxlength="50"
         style="padding:10px;border-radius:6px;border:1px solid rgba(200,168,110,.3);background:rgba(0,0,0,.3);color:var(--parchment);font-family:'VT323',monospace;font-size:15px">
+
+      <label style="display:flex;align-items:flex-start;gap:7px;font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.8;cursor:pointer;line-height:1.4">
+        <input type="checkbox" id="signup-cgu-check" style="margin-top:2px;flex-shrink:0">
+        <span>J'accepte les <a href="javascript:void(0)" onclick="event.preventDefault();showCguModal()" style="color:var(--gold-bright);text-decoration:underline">CGU</a> et la <a href="javascript:void(0)" onclick="event.preventDefault();showPrivacyModal()" style="color:var(--gold-bright);text-decoration:underline">politique de confidentialité</a> (requis pour créer un compte)</span>
+      </label>
+      <label style="display:flex;align-items:flex-start;gap:7px;font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.8;cursor:pointer;line-height:1.4">
+        <input type="checkbox" id="signup-age-check" style="margin-top:2px;flex-shrink:0">
+        <span>Je confirme avoir au moins 15 ans (requis pour créer un compte)</span>
+      </label>
+
       <div id="online-auth-error" style="color:#e06060;font-family:'VT323',monospace;font-size:13px;min-height:16px;text-align:center"></div>
       <button class="btn" onclick="onlineLogIn(document.getElementById('online-pseudo-input').value.trim(), document.getElementById('online-password-input').value)">Se connecter</button>
-      <button class="btn" style="opacity:.85" onclick="onlineSignUp(document.getElementById('online-pseudo-input').value.trim(), document.getElementById('online-password-input').value)">Créer un compte</button>
+      <button class="btn" style="opacity:.85" onclick="onlineSignUp(document.getElementById('online-pseudo-input').value.trim(), document.getElementById('online-password-input').value, document.getElementById('online-email-input').value.trim())">Créer un compte</button>
     </div>
   </div>
 </div>
