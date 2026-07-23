@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.19.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.20.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2072,7 +2072,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.19.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.20.0 &#9820;</div>
   </div>
 </div>
 
@@ -2391,7 +2391,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div class="menu-title" style="font-size:18px;margin-top:10px">🛠 DEV — RÉPERTOIRE</div>
     <div class="menu-divider"></div>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-openings')">📖 Répertoire d'ouvertures</button>
-    <button class="btn" style="width:100%;margin-bottom:12px" onclick="showScreen('dev-tactics')">⚔ Répertoire de tactiques</button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-tactics')">⚔ Répertoire de tactiques</button>
+    <button class="btn" style="width:100%;margin-bottom:12px" onclick="showScreen('dev-balance')">⚖ Analyse d'équilibre Blanc/Noir</button>
     <div class="menu-divider"></div>
     <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.7;text-align:center;margin-bottom:4px">Simulation bot vs bot (mode de base, hors Sumo)</div>
     <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.55;text-align:center;margin-bottom:8px">Force maximale des deux côtés (profondeur 4, sans coup chance) — ~1,5s/partie, laisse tourner en fond</div>
@@ -2422,6 +2423,41 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div class="menu-title" style="font-size:18px;margin-top:10px">⚔ TACTIQUES</div>
     <div class="menu-divider"></div>
     <div id="dev-tactics-list" style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment)"></div>
+  </div>
+  </div>
+</div>
+
+<!-- ANALYSE D'ÉQUILIBRE — suite au constat de 56,65% de victoires Noires sur
+     2743 parties miroir dans le répertoire d'ouvertures : cet écran compare
+     la formule d'éval ACTUELLE (qui a un terme de mobilité mesurant
+     uniquement allMoves('black',...), jamais celle des Blancs — asymétrie
+     structurelle indépendante du réglage agression/défense) à une version
+     où ce terme est symétrisé, à plusieurs profondeurs, pour isoler si le
+     déséquilibre observé est un bug d'évaluation ou un vrai avantage du
+     second joueur inhérent aux règles. Voir devBalanceSimOneGame. -->
+<div id="screen-dev-balance" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('dev-repertoire')">↩ RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+  <div class="panel" style="max-width:420px;width:100%">
+    <div class="menu-title" style="font-size:18px;margin-top:10px">⚖ ÉQUILIBRE BLANC/NOIR</div>
+    <div class="menu-divider"></div>
+    <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.75;text-align:center;margin-bottom:8px">
+      Parties miroir (même profondeur des deux côtés), 4 premiers demi-coups variés. Un écart significatif = ≥200 parties ET plus de 5 points au-dessus de 50%.
+    </div>
+    <div style="font-family:'VT323',monospace;font-size:11px;color:var(--gold-bright);opacity:.85;text-align:center;margin-bottom:10px">Formule actuelle (bug de mobilité suspecté)</div>
+    <button class="dev-balance-btn adm-btn" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('current',3,150)">▶ Profondeur 3/3 — 150 parties</button>
+    <button class="dev-balance-btn adm-btn" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('current',4,150)">▶ Profondeur 4/4 — 150 parties</button>
+    <button class="dev-balance-btn adm-btn" style="width:100%;padding:7px;margin-bottom:10px" onclick="devBalanceRunBatch('current',5,150)">▶ Profondeur 5/5 — 150 parties</button>
+    <div style="font-family:'VT323',monospace;font-size:11px;color:var(--gold-bright);opacity:.85;text-align:center;margin-bottom:10px">Mobilité symétrisée (correctif testé)</div>
+    <button class="dev-balance-btn adm-btn" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('mobfix',3,150)">▶ Profondeur 3/3 — 150 parties</button>
+    <button class="dev-balance-btn adm-btn" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('mobfix',4,150)">▶ Profondeur 4/4 — 150 parties</button>
+    <button class="dev-balance-btn adm-btn" style="width:100%;padding:7px;margin-bottom:10px" onclick="devBalanceRunBatch('mobfix',5,150)">▶ Profondeur 5/5 — 150 parties</button>
+    <div style="font-family:'VT323',monospace;font-size:11px;color:var(--gold-bright);opacity:.85;text-align:center;margin-bottom:10px">Totalement symétrique (agression = défense, contrôle)</div>
+    <button class="dev-balance-btn adm-btn" style="width:100%;padding:7px;margin-bottom:10px" onclick="devBalanceRunBatch('symmetric',4,150)">▶ Profondeur 4/4 — 150 parties</button>
+    <div id="dev-balance-progress" style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.8;text-align:center;margin-bottom:10px"></div>
+    <div class="menu-divider"></div>
+    <div id="dev-balance-list" style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment)"></div>
+    <button class="btn" style="width:100%;margin-top:10px;opacity:.7" onclick="devBalanceResetStats()">🗑 Réinitialiser les stats</button>
   </div>
   </div>
 </div>
@@ -3056,15 +3092,19 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.19.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.20.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
     </div>
 
     <div class="devlog-entry">
-      <div class="devlog-version">ONLINE alpha V0.19.0 &mdash; 23 juillet 2026</div>
+      <div class="devlog-version">ONLINE alpha V0.20.0 &mdash; 23 juillet 2026</div>
       <ul class="devlog-list">
 
-        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; RGPD &amp; COMPTE</li>
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; ANALYSE D'&Eacute;QUILIBRE (OUTIL DEV)</li>
+
+        <li>Le r&eacute;pertoire d'ouvertures signalait des lignes &agrave; 100% de victoires c&ocirc;t&eacute; Noir (et &agrave; l'inverse 0% c&ocirc;t&eacute; Blanc), et un taux global de 56,65% de victoires Noires sur 2743 parties simul&eacute;es &agrave; profondeur 4. Relecture du code : le terme de mobilit&eacute; de la fonction d'&eacute;valuation ne mesurait QUE la mobilit&eacute; des Noirs, jamais celle des Blancs &mdash; une asym&eacute;trie structurelle ind&eacute;pendante des r&eacute;glages d'agression/d&eacute;fense, pr&eacute;sente dans toutes les personnalit&eacute;s de bot qui l'utilisent.</li>
+
+        <li><strong>Nouvel &eacute;cran &laquo;&nbsp;Analyse d'&eacute;quilibre Blanc/Noir&nbsp;&raquo;</strong> (menu Local &rarr; Dev &mdash; R&eacute;pertoire) : compare la formule actuelle &agrave; une version corrig&eacute;e (mobilit&eacute; sym&eacute;tris&eacute;e) et &agrave; une version totalement sym&eacute;trique, sur plusieurs profondeurs (3/4/5), pour d&eacute;terminer si l'&eacute;cart observ&eacute; vient d'un bug d'&eacute;valuation ou d'un vrai avantage du second joueur inh&eacute;rent aux r&egrave;gles. R&eacute;serv&eacute; aux comptes admin, simulation locale (aucun impact sur les parties r&eacute;elles).</li>
 
         <li><strong>Connexion par email r&eacute;el.</strong> La cr&eacute;ation de compte demande d&eacute;sormais une vraie adresse email (auparavant un email fictif &eacute;tait g&eacute;n&eacute;r&eacute; en coulisses &agrave; partir du pseudo). Les comptes cr&eacute;&eacute;s avant ce changement continuent de se connecter avec leur pseudo, sans rien avoir &agrave; faire.</li>
 
@@ -6431,7 +6471,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.19.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.20.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -6645,7 +6685,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.19.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.20.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -6850,7 +6890,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.19.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.20.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -9489,6 +9529,7 @@ function showScreen(id){
   if(id==='menu'||id==='local-hub'){ updateDevButtonVisibility(); }
   if(id==='dev-openings') renderDevOpeningsList();
   if(id==='dev-tactics') renderDevTacticsList();
+  if(id==='dev-balance') renderDevBalanceList();
   if(id==='opponents'){ refreshOpponentsScreen(); }
   if(id==='messaging'||id==='online-menu'){ restoreAmisAdoptedPanels(); }
   if(id==='league') openLeagueScreen();
@@ -14047,6 +14088,132 @@ function devSimRunBatch(n){
     });
   }
   tick();
+}
+
+// ══════════════════════════════════════════════════════
+// DEV — ANALYSE D'ÉQUILIBRE BLANC/NOIR
+// Point de départ : 56,65% de victoires Noires sur 2743 parties miroir
+// (dev_opening_stats), très significatif statistiquement (~7 écarts-types
+// par rapport à 50%). Piste identifiée par relecture du code : le terme de
+// mobilité d'evalPosition (paramètre mb) ne mesure QUE allMoves('black',...)
+// — jamais celle des Blancs (voir evalPosition, ligne ~13734). Cette
+// asymétrie est structurelle : elle existe même si ag=df (agression et
+// défense égales), et affecte TOUTES les personnalités de bot qui utilisent
+// mb (evalTactician, evalStrategist, evalMaster, evalTrainer). Le correctif
+// testé ici (evalBalanceMobilityFixed) remplace ce terme par un différentiel
+// symétrique (mobilité Noirs − mobilité Blancs). Si l'écart se referme avec
+// le correctif, c'est un bug d'éval, pas un déséquilibre des règles.
+var _devBalanceRunning=false;
+
+function evalBalanceCurrent(b,s){ return evalPosition(b,s,1.3,1.6,3,3); } // = evalTrainer telle quelle (bug de mobilité inclus)
+function evalBalanceMobilityFixed(b,s){
+  var base=evalPosition(b,s,1.3,1.6,3,0); // mb=0 : coupe le terme de mobilité asymétrique
+  var mobDiff=(allMoves('black',b,s,null,null).length - allMoves('white',b,s,null,null).length)*3;
+  return base+mobDiff;
+}
+function evalBalanceSymmetric(b,s){
+  var base=evalPosition(b,s,1.5,1.5,3,0); // ag=df : agression/défense symétriques, mb=0
+  var mobDiff=(allMoves('black',b,s,null,null).length - allMoves('white',b,s,null,null).length)*3;
+  return base+mobDiff;
+}
+
+var DEV_BALANCE_EVALS={
+  current:{fn:evalBalanceCurrent,label:'Formule actuelle (mobilité asymétrique)'},
+  mobfix:{fn:evalBalanceMobilityFixed,label:'Mobilité symétrisée'},
+  symmetric:{fn:evalBalanceSymmetric,label:'Totalement symétrique'}
+};
+
+// Comme devSimOneGame (mêmes 4 premiers demi-coups variés pour la diversité
+// des parties), mais profondeur et fonction d'éval paramétrables, et SANS
+// tenir de journal d'ouvertures/tactiques : seul le vainqueur nous intéresse.
+function devBalanceSimOneGame(depth,evalFn){
+  var setup=devSimSetupBoard();
+  var board=setup.board, stacks=setup.stacks;
+  var lm=null, lp=null, lmbc={white:null,black:null};
+  var turn='white';
+  for(var i=0;i<160;i++){
+    var color=turn;
+    var moves=allMoves(color,board,stacks,lm,lp,lmbc);
+    if(!moves.length) return color==='white'?'black':'white';
+    var chosen;
+    if(i<4){
+      var pool=devSimTopMoves(moves,board,stacks,lm,lp,color,2,4);
+      chosen=pool[Math.floor(Math.random()*pool.length)];
+    }else{
+      chosen=minimaxPlay(moves,board,stacks,lm,lp,depth,evalFn,color)||moves[0];
+    }
+    var res=applyToClone(board,stacks,chosen,lm,lp);
+    lm=res.nlm; lp=res.nlp; lmbc[color]=lm;
+    if(res.won) return color;
+    turn=(color==='white'?'black':'white');
+  }
+  return null; // limite de coups atteinte (quasi-nulle) : non comptabilisée
+}
+
+async function devBalanceUploadResult(testLabel,evalKey,depth,winner){
+  if(!winner) return;
+  try{
+    await supa.rpc('dev_record_balance_result',{p_test_label:testLabel,p_eval_label:DEV_BALANCE_EVALS[evalKey].label,p_depth_white:depth,p_depth_black:depth,p_winner:winner});
+  }catch(e){ console.error('devBalanceUploadResult', e); }
+}
+
+function devBalanceRunBatch(evalKey,depth,n){
+  if(_devBalanceRunning) return;
+  if(!isDevUser()){ if(typeof showToast==='function') showToast('Réservé aux comptes dev.', true); return; }
+  _devBalanceRunning=true;
+  var done=0;
+  var btns=document.querySelectorAll('.dev-balance-btn');
+  btns.forEach(function(b){b.disabled=true;});
+  var testLabel='depth'+depth;
+  function tick(){
+    var chunk=Math.min(5, n-done);
+    var proms=[];
+    for(var i=0;i<chunk;i++){
+      var winner=devBalanceSimOneGame(depth,DEV_BALANCE_EVALS[evalKey].fn);
+      proms.push(devBalanceUploadResult(testLabel,evalKey,depth,winner));
+      done++;
+    }
+    var prog=document.getElementById('dev-balance-progress');
+    if(prog) prog.textContent=done+' / '+n+' parties simulées ('+DEV_BALANCE_EVALS[evalKey].label+', profondeur '+depth+')';
+    Promise.all(proms).then(function(){
+      if(done<n) setTimeout(tick,0);
+      else{
+        _devBalanceRunning=false;
+        btns.forEach(function(b){b.disabled=false;});
+        renderDevBalanceList();
+        if(typeof showToast==='function') showToast('Simulation terminée : '+n+' parties.');
+      }
+    });
+  }
+  tick();
+}
+
+async function renderDevBalanceList(){
+  var el=document.getElementById('dev-balance-list');
+  if(!el) return;
+  el.innerHTML='Chargement…';
+  try{
+    var res=await supa.from('dev_balance_stats').select('*').order('eval_label').order('depth_white');
+    var rows=res.data||[];
+    if(!rows.length){ el.innerHTML='<div style="opacity:.6">Aucune simulation encore lancée.</div>'; return; }
+    var html='<table style="width:100%;border-collapse:collapse;font-size:12px">';
+    html+='<tr style="opacity:.7"><td>Éval</td><td>Prof.</td><td>Parties</td><td>% Blanc</td><td>% Noir</td><td>Écart</td></tr>';
+    rows.forEach(function(r){
+      var pctW=r.games?Math.round(1000*r.white_wins/r.games)/10:0;
+      var pctB=r.games?Math.round(1000*r.black_wins/r.games)/10:0;
+      var gap=Math.abs(pctB-50);
+      var sig = r.games>=200 && gap>5;
+      var color = sig ? 'var(--gold-bright)' : 'inherit';
+      html+='<tr style="border-top:1px solid rgba(255,255,255,.1);color:'+color+'"><td>'+r.eval_label+'</td><td>'+r.depth_white+'/'+r.depth_black+'</td><td>'+r.games+'</td><td>'+pctW+'%</td><td>'+pctB+'%</td><td>'+(sig?'⚠ ':'')+gap.toFixed(1)+' pts</td></tr>';
+    });
+    html+='</table>';
+    el.innerHTML=html;
+  }catch(e){ console.error('renderDevBalanceList', e); el.innerHTML='Erreur de chargement.'; }
+}
+
+async function devBalanceResetStats(){
+  if(!confirm('Effacer toutes les stats d\'équilibre accumulées ?')) return;
+  try{ await supa.rpc('dev_reset_balance_stats'); renderDevBalanceList(); }catch(e){ console.error(e); }
 }
 
 // Rempli par renderDevOpeningsList/renderDevTacticsList, consommé par
