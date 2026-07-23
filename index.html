@@ -2444,6 +2444,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.75;text-align:center;margin-bottom:8px">
       Parties miroir (même profondeur des deux côtés), 4 premiers demi-coups variés. Un écart significatif = ≥200 parties ET plus de 5 points au-dessus de 50%.
     </div>
+    <button id="dev-balance-runall-btn" class="dev-balance-btn adm-btn" style="width:100%;padding:9px;margin-bottom:12px;font-weight:bold" onclick="devBalanceRunAll()">▶▶ Lancer les 7 tests d'affilée (150 parties chacun)</button>
+    <div class="menu-divider"></div>
     <div style="font-family:'VT323',monospace;font-size:11px;color:var(--gold-bright);opacity:.85;text-align:center;margin-bottom:10px">Formule actuelle (bug de mobilité suspecté)</div>
     <button class="dev-balance-btn adm-btn" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('current',3,150)">▶ Profondeur 3/3 — 150 parties</button>
     <button class="dev-balance-btn adm-btn" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('current',4,150)">▶ Profondeur 4/4 — 150 parties</button>
@@ -14157,35 +14159,66 @@ async function devBalanceUploadResult(testLabel,evalKey,depth,winner){
   }catch(e){ console.error('devBalanceUploadResult', e); }
 }
 
+// Retourne une Promise résolue une fois le batch terminé (consommée par
+// devBalanceRunAll pour enchaîner plusieurs tests l'un après l'autre sans
+// les faire tourner en même temps — chacun a besoin de _devBalanceRunning
+// libre pour démarrer).
 function devBalanceRunBatch(evalKey,depth,n){
-  if(_devBalanceRunning) return;
-  if(!isDevUser()){ if(typeof showToast==='function') showToast('Réservé aux comptes dev.', true); return; }
+  if(_devBalanceRunning) return Promise.resolve();
+  if(!isDevUser()){ if(typeof showToast==='function') showToast('Réservé aux comptes dev.', true); return Promise.resolve(); }
   _devBalanceRunning=true;
   var done=0;
   var btns=document.querySelectorAll('.dev-balance-btn');
   btns.forEach(function(b){b.disabled=true;});
   var testLabel='depth'+depth;
-  function tick(){
-    var chunk=Math.min(5, n-done);
-    var proms=[];
-    for(var i=0;i<chunk;i++){
-      var winner=devBalanceSimOneGame(depth,DEV_BALANCE_EVALS[evalKey].fn);
-      proms.push(devBalanceUploadResult(testLabel,evalKey,depth,winner));
-      done++;
-    }
-    var prog=document.getElementById('dev-balance-progress');
-    if(prog) prog.textContent=done+' / '+n+' parties simulées ('+DEV_BALANCE_EVALS[evalKey].label+', profondeur '+depth+')';
-    Promise.all(proms).then(function(){
-      if(done<n) setTimeout(tick,0);
-      else{
-        _devBalanceRunning=false;
-        btns.forEach(function(b){b.disabled=false;});
-        renderDevBalanceList();
-        if(typeof showToast==='function') showToast('Simulation terminée : '+n+' parties.');
+  return new Promise(function(resolve){
+    function tick(){
+      var chunk=Math.min(5, n-done);
+      var proms=[];
+      for(var i=0;i<chunk;i++){
+        var winner=devBalanceSimOneGame(depth,DEV_BALANCE_EVALS[evalKey].fn);
+        proms.push(devBalanceUploadResult(testLabel,evalKey,depth,winner));
+        done++;
       }
-    });
+      var prog=document.getElementById('dev-balance-progress');
+      if(prog) prog.textContent=done+' / '+n+' parties simulées ('+DEV_BALANCE_EVALS[evalKey].label+', profondeur '+depth+')';
+      Promise.all(proms).then(function(){
+        if(done<n) setTimeout(tick,0);
+        else{
+          _devBalanceRunning=false;
+          btns.forEach(function(b){b.disabled=false;});
+          renderDevBalanceList();
+          if(typeof showToast==='function') showToast('Simulation terminée : '+n+' parties.');
+          resolve();
+        }
+      });
+    }
+    tick();
+  });
+}
+
+// Enchaîne les 7 tests prédéfinis (3 profondeurs × formule actuelle, 3
+// profondeurs × mobilité corrigée, 1 × totalement symétrique) l'un après
+// l'autre. Coche 'écrasé' par les boutons individuels pendant le run pour
+// éviter un double lancement.
+var DEV_BALANCE_ALL_JOBS=[
+  ['current',3,150],['current',4,150],['current',5,150],
+  ['mobfix',3,150],['mobfix',4,150],['mobfix',5,150],
+  ['symmetric',4,150]
+];
+async function devBalanceRunAll(){
+  if(_devBalanceRunning){ if(typeof showToast==='function') showToast('Une simulation est déjà en cours.', true); return; }
+  if(!isDevUser()){ if(typeof showToast==='function') showToast('Réservé aux comptes dev.', true); return; }
+  var allBtn=document.getElementById('dev-balance-runall-btn');
+  if(allBtn) allBtn.disabled=true;
+  for(var i=0;i<DEV_BALANCE_ALL_JOBS.length;i++){
+    var job=DEV_BALANCE_ALL_JOBS[i];
+    var prog=document.getElementById('dev-balance-progress');
+    if(prog) prog.textContent='Test '+(i+1)+'/'+DEV_BALANCE_ALL_JOBS.length+' — démarrage…';
+    await devBalanceRunBatch(job[0],job[1],job[2]);
   }
-  tick();
+  if(allBtn) allBtn.disabled=false;
+  if(typeof showToast==='function') showToast('Les 7 simulations sont terminées.');
 }
 
 async function renderDevBalanceList(){
