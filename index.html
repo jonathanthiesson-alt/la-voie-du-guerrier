@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.17.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.18.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2072,7 +2072,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.17.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.18.0 &#9820;</div>
   </div>
 </div>
 
@@ -3021,8 +3021,42 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.17.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.18.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.18.0 &mdash; 23 juillet 2026</div>
+      <ul class="devlog-list">
+
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; KARAKURI &amp; ENTRA&Icirc;NEMENT</li>
+
+        <li><strong>D&eacute;fi du jour</strong> enfin fonctionnel : il menait jusqu'ici droit vers un &eacute;cran de campagne cass&eacute;. Il propose d&eacute;sormais une vraie position, choisie de fa&ccedil;on <strong>adaptative selon votre rating de d&eacute;fi</strong> (fa&ccedil;on chess.com) parmi les le&ccedil;ons de campagne.</li>
+
+        <li><strong>Karakuri &#20794;</strong>, nouveau pantin m&eacute;canique d'entra&icirc;nement (3 niveaux, ic&ocirc;ne d&eacute;di&eacute;e dans le menu Local) : Musashi-sensei vous coache <strong>en direct</strong> pendant le combat, comme l'entra&icirc;neur de chess.com &mdash; il salue les coups qui correspondent au meilleur coup calcul&eacute; par le moteur, et sugg&egrave;re la tactique manqu&eacute;e sinon (jamais invent&eacute;e : toujours issue d'un vrai calcul). Karakuri, lui, ne parle pas : il &eacute;met de temps &agrave; autre un simple <strong>cliquetis m&eacute;canique</strong> dans sa bulle. Sa force <strong>s'adapte en cours de partie</strong> selon l'&eacute;volution du rapport de force.</li>
+
+        <li><strong>D&eacute;fis libres et D&eacute;fi Rush retir&eacute;s</strong> : redondants avec la Campagne, qui remplit d&eacute;j&agrave; ce r&ocirc;le. Le D&eacute;fi du jour et Karakuri restent, fonctionnellement ind&eacute;pendants.</li>
+
+        <li><strong>Menu Local r&eacute;organis&eacute;</strong> : R&egrave;gles, Campagne, Ma&icirc;tres IA, IA, Karakuri, 2 joueurs (m&ecirc;me appareil), Pendule.</li>
+
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:8px">&#9670; OUTIL DEV &mdash; R&Eacute;PERTOIRE D'OUVERTURES &amp; TACTIQUES</li>
+
+        <li>Nouveau <strong>menu Dev</strong> (r&eacute;serv&eacute; aux comptes administrateurs) : un simulateur fait s'affronter des bots sur le mode de base (hors &eacute;v&eacute;nement Sumo) par lots de 200 &agrave; 10&#160;000 parties, pour construire deux r&eacute;pertoires aliment&eacute;s en direct &mdash; <strong>ouvertures</strong> (par camp, taux de victoire) et <strong>tactiques</strong> (motifs de capture/pouss&eacute;e r&eacute;currents).</li>
+
+        <li><strong>Analyse rigoureuse</strong> : force <strong>identique et maximale des deux c&ocirc;t&eacute;s</strong> (profondeur 4, aucun coup al&eacute;atoire) sur tout le d&eacute;roul&eacute; r&eacute;el de la partie &mdash; seuls les 2 premiers coups de chaque camp piochent parmi des options solides pour varier les lignes explor&eacute;es. Seuils de fiabilit&eacute; relev&eacute;s (50 parties minimum par ouverture, 8 occurrences par tactique) : en dessous, l'&eacute;cart entre deux lignes n'est pas statistiquement significatif.</li>
+
+        <li><strong>&Eacute;cran &laquo;&#160;Apprendre&#160;&raquo;</strong> : toucher une ligne d'ouverture ou de tactique rejoue la s&eacute;quence coup par coup sur un mini plateau, avec une <strong>explication en langage clair</strong> g&eacute;n&eacute;r&eacute;e depuis l'&eacute;tat r&eacute;el du plateau (capture, pouss&eacute;e, avance vers le ma&icirc;tre adverse, prise du centre, repli d&eacute;fensif).</li>
+
+        <li><strong>Correctif majeur du moteur IA</strong> d&eacute;couvert en construisant ce simulateur : l'&eacute;valuation de position &eacute;tait toujours calcul&eacute;e du point de vue des Noirs, mais la recherche minimax ne l'inversait jamais pour les Blancs &mdash; concr&egrave;tement, <strong>un bot jouant les Blancs optimisait par erreur l'avantage des Noirs</strong> une partie sur deux. Touchait potentiellement tous les Ma&icirc;tres IA et Karakuri en conditions r&eacute;elles. V&eacute;rifi&eacute; par simulation (0/20 victoires Blanches avant correctif, 15/15 apr&egrave;s sur 30 parties).</li>
+
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:8px">&#9670; NAVIGATION</li>
+
+        <li><strong>Retour au menu du mode jou&eacute;</strong> apr&egrave;s une partie, au lieu de toujours retomber sur le m&ecirc;me &eacute;cran g&eacute;n&eacute;rique : matchmaking classe ram&egrave;ne vers l'&eacute;cran Matchmaking, l'Ar&egrave;ne et le Sumo gardaient d&eacute;j&agrave; leur propre retour d&eacute;di&eacute;. Un <strong>d&eacute;fi entre joueurs</strong> ram&egrave;ne chacun des deux joueurs vers l'&eacute;cran depuis lequel <em>lui</em> a lanc&eacute; ou accept&eacute; le d&eacute;fi (Amis social ou menu Joueurs en ligne), ind&eacute;pendamment l'un de l'autre.</li>
+
+        <li>D&eacute;filement r&eacute;par&eacute; sur les &eacute;crans du menu Dev (le contenu &eacute;tait rogn&eacute; en bas, sans possibilit&eacute; de faire d&eacute;filer jusqu'au dernier &eacute;l&eacute;ment).</li>
+
+        <li>Passage en version <strong>ONLINE alpha V0.18.0</strong>.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -6343,7 +6377,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.17.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.18.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -6557,7 +6591,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.17.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.18.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -6762,7 +6796,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.17.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.18.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
