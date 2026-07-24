@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.20.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.21.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2069,7 +2069,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.20.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.21.0 &#9820;</div>
   </div>
 </div>
 
@@ -2155,6 +2155,21 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <button class="btn" style="flex:1;font-size:11px;padding:8px 4px;opacity:.8" onclick="showScreen('guild')">&#128737; Guilde</button>
       <button class="btn" style="flex:1;font-size:11px;padding:8px 4px;opacity:.8" onclick="showScreen('events-mode')">🌸 Events</button>
     </div>
+
+    <!-- Journal d'activité — fil des événements du serveur (connexions,
+         victoires PvP, vainqueurs de tournoi), alimenté par des triggers
+         SECURITY DEFINER (table activity_feed, écriture serveur uniquement).
+         Filtres persistés en local (par appareil, pas par compte). -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:10px 0 5px">
+      <span style="font-family:'VT323',monospace;font-size:11px;color:var(--gold);opacity:.6;letter-spacing:1px">&#128220; Journal</span>
+      <button onclick="toggleActivityFeedFilters()" title="Filtrer le journal" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:18px;height:18px;color:var(--gold-bright);font-family:serif;font-size:11px;cursor:pointer;padding:0;line-height:1">&#9881;</button>
+    </div>
+    <div id="activity-feed-filters" style="display:none;flex-direction:column;gap:4px;background:rgba(0,0,0,.25);border-radius:6px;padding:8px 10px;margin-bottom:6px;font-family:'VT323',monospace;font-size:12px;color:var(--parchment)">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="af-filter-connexion" onchange="saveActivityFeedFilters()"> Connexions</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="af-filter-victoire_pvp" onchange="saveActivityFeedFilters()"> Victoires joueur contre joueur</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="af-filter-victoire_tournoi" onchange="saveActivityFeedFilters()"> Vainqueurs de tournoi</label>
+    </div>
+    <div id="activity-feed-list" style="display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;background:rgba(0,0,0,.2);border-radius:6px;padding:8px 10px;font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.85"></div>
   </div>
 </div>
 
@@ -3122,8 +3137,23 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.20.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.21.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.21.0 &mdash; 24 juillet 2026</div>
+      <ul class="devlog-list">
+
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; JOURNAL D'ACTIVIT&Eacute;</li>
+
+        <li><strong>Nouveau fil d'activit&eacute;</strong> en bas de l'onglet Jouer : connexions de joueurs, victoires en ligne (avec des tournures vari&eacute;es, parfois dans le ton pince-sans-rire de Musashi) et vainqueurs de tournoi, en temps r&eacute;el. Filtrable par cat&eacute;gorie via l'ic&ocirc;ne &#9881; (pr&eacute;f&eacute;rence gard&eacute;e sur l'appareil).</li>
+
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; ONGLET DEV</li>
+
+        <li>Les outils r&eacute;serv&eacute;s aux comptes admin (R&eacute;compenses, R&eacute;pertoire d'ouvertures/tactiques/&eacute;quilibre, DevParam) sont regroup&eacute;s sous un nouvel onglet <strong>DEV</strong> dans la barre de navigation, au lieu d'&ecirc;tre dispers&eacute;s dans le menu principal et le hub Local.</li>
+
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -6501,7 +6531,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.20.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.21.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -6715,7 +6745,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.20.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.21.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -6920,7 +6950,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.20.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.21.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -8336,6 +8366,65 @@ async function refreshPlayScreen(){
     var sc2 = document.getElementById('play-streak-count'); if(sc2) sc2.textContent='0';
     var sb2 = document.getElementById('play-streak-best'); if(sb2) sb2.textContent='0';
   }
+  loadActivityFeedFilters();
+  refreshActivityFeed();
+  subscribeToActivityFeed();
+}
+
+// ── Journal d'activité (fil connexions/victoires/tournois) ────────
+var ACTIVITY_FEED_TYPES = ['connexion','victoire_pvp','victoire_tournoi'];
+var _activityFeedChannel = null;
+var _activityFeedRows = [];
+
+function loadActivityFeedFilters(){
+  var saved;
+  try{ saved = JSON.parse(localStorage.getItem('vtl_activity_feed_filters')); }catch(e){}
+  var active = (saved && Array.isArray(saved)) ? saved : ACTIVITY_FEED_TYPES.slice();
+  ACTIVITY_FEED_TYPES.forEach(function(t){
+    var cb = document.getElementById('af-filter-'+t);
+    if(cb) cb.checked = active.indexOf(t)!==-1;
+  });
+}
+function getActiveActivityFeedTypes(){
+  return ACTIVITY_FEED_TYPES.filter(function(t){
+    var cb = document.getElementById('af-filter-'+t);
+    return !cb || cb.checked;
+  });
+}
+function saveActivityFeedFilters(){
+  try{ localStorage.setItem('vtl_activity_feed_filters', JSON.stringify(getActiveActivityFeedTypes())); }catch(e){}
+  renderActivityFeed();
+}
+function toggleActivityFeedFilters(){
+  var el = document.getElementById('activity-feed-filters');
+  if(el) el.style.display = (el.style.display==='none'||!el.style.display) ? 'flex' : 'none';
+}
+async function refreshActivityFeed(){
+  if(!supa) return;
+  try{
+    const { data } = await supa.from('activity_feed').select('id,event_type,message,created_at').order('created_at', { ascending:false }).limit(30);
+    _activityFeedRows = data || [];
+    renderActivityFeed();
+  }catch(e){ console.error('refreshActivityFeed', e); }
+}
+function renderActivityFeed(){
+  var el = document.getElementById('activity-feed-list');
+  if(!el) return;
+  var active = getActiveActivityFeedTypes();
+  var rows = _activityFeedRows.filter(function(r){ return active.indexOf(r.event_type)!==-1; });
+  if(!rows.length){ el.innerHTML='<div style="opacity:.5">Rien à signaler pour l\'instant.</div>'; return; }
+  el.innerHTML = rows.map(function(r){ return '<div>'+r.message.replace(/</g,'&lt;')+'</div>'; }).join('');
+}
+function subscribeToActivityFeed(){
+  if(_activityFeedChannel || !supa || !currentUser) return;
+  _activityFeedChannel = supa.channel('activity-feed')
+    .on('postgres_changes', { event:'INSERT', schema:'public', table:'activity_feed' }, function(payload){
+      _activityFeedRows.unshift(payload.new);
+      if(_activityFeedRows.length>30) _activityFeedRows.length=30;
+      renderActivityFeed();
+    })
+    .subscribe();
+  onlineSubscriptions.push(_activityFeedChannel);
 }
 
 // ── Boucle quotidienne ───────────────────────────────────────────
@@ -20278,6 +20367,7 @@ function cleanupOnlineSubscriptions(){
   onlineSubscriptions.forEach(ch => supa.removeChannel(ch));
   onlineSubscriptions = [];
   currentOnlineGameId = null;
+  _activityFeedChannel = null;
 }
 
 // Empêche de fermer la page sans repasser hors-ligne proprement (best effort).
