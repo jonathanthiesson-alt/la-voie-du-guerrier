@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.25.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.26.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2113,7 +2113,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.25.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.26.0 &#9820;</div>
   </div>
 </div>
 
@@ -2177,22 +2177,35 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.45">record <span id="play-streak-best">—</span></div>
     </div>
 
-    <!-- Quêtes quotidiennes -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+    <!-- Quêtes quotidiennes — repliable, état mémorisé par appareil (voir
+         toggleDailyQuestsPanel/applyDailyQuestsPanelState) : si le joueur la
+         replie, elle reste repliée à sa prochaine visite de l'onglet Jouer,
+         et inversement. -->
+    <div class="profile-section-title collapsible" onclick="toggleDailyQuestsPanel()" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;cursor:pointer">
       <span style="font-family:'VT323',monospace;font-size:11px;color:var(--gold);opacity:.6;letter-spacing:1px;display:flex;align-items:center;gap:6px">
         <span data-i18n="daily_quests_title">&#128220; Quêtes du jour</span>
-        <button onclick="showModeInfo('daily')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:18px;height:18px;color:var(--gold-bright);font-family:serif;font-size:11px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button>
+        <button onclick="event.stopPropagation();showModeInfo('daily')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:18px;height:18px;color:var(--gold-bright);font-family:serif;font-size:11px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button>
       </span>
-      <span onclick="showCurrencyTooltip('shiitake')" style="font-family:VT323,monospace;font-size:12px;color:var(--gold-bright);cursor:pointer">🍄 <span class="shiitake-display">0</span></span>
+      <span style="display:flex;align-items:center;gap:8px">
+        <span onclick="event.stopPropagation();showCurrencyTooltip('shiitake')" style="font-family:VT323,monospace;font-size:12px;color:var(--gold-bright);cursor:pointer">🍄 <span class="shiitake-display">0</span></span>
+        <span class="profile-collapse-arrow" id="daily-quests-arrow">&#9662;</span>
+      </span>
     </div>
-    <div id="daily-quests-list" style="display:flex;flex-direction:column;gap:5px;margin-bottom:6px"></div>
-    <!-- Barre de progression Shiitake (paliers du mode quotidien) -->
-    <div style="position:relative;height:48px;margin:0 4px 8px">
-      <div style="position:absolute;top:0;left:0;right:0;height:9px;background:rgba(0,0,0,.4);border-radius:5px;overflow:hidden;border:1px solid rgba(180,140,90,.25)">
-        <div id="play-shiitake-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#6a4a2a,#c89050);transition:width .4s ease"></div>
+    <div id="daily-quests-body">
+      <div id="daily-quests-list" style="display:flex;flex-direction:column;gap:5px;margin-bottom:6px"></div>
+      <!-- Barre de progression Shiitake (paliers du mode quotidien) -->
+      <div style="position:relative;height:48px;margin:0 4px 8px">
+        <div style="position:absolute;top:0;left:0;right:0;height:9px;background:rgba(0,0,0,.4);border-radius:5px;overflow:hidden;border:1px solid rgba(180,140,90,.25)">
+          <div id="play-shiitake-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#6a4a2a,#c89050);transition:width .4s ease"></div>
+        </div>
+        <div id="play-shiitake-milestones" style="position:absolute;top:13px;left:0;right:0;height:34px"></div>
       </div>
-      <div id="play-shiitake-milestones" style="position:absolute;top:13px;left:0;right:0;height:34px"></div>
     </div>
+
+    <!-- Emplacement publicitaire (bandeau) — pas encore de régie pub
+         branchée, utilisé pour l'instant pour promouvoir l'événement en
+         cours (Sumo). Voir renderPlayAdBanner. -->
+    <div id="play-ad-banner" style="margin-bottom:10px"></div>
 
     <div style="display:flex;gap:6px;margin-bottom:4px">
       <button class="btn" style="flex:1;font-size:11px;padding:8px 4px;opacity:.8" onclick="showScreen('tournament')">&#127942; Tournoi</button>
@@ -2809,6 +2822,10 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
         <button class="btn btn-small btn-danger" onclick="handleMenuClick()" id="endgame-menu-btn">&#8962; Menu</button>
       </div>
       <button class="btn btn-small" onclick="shareGameResult()" style="font-size:11px;margin-top:6px;width:100%">&#128228; <span data-i18n="share_result">Partager le résultat</span></button>
+      <!-- Emplacement publicitaire (bandeau) — même contenu que celui de
+           l'onglet Jouer tant qu'aucune régie pub n'est branchée, voir
+           renderSumoAdBannerHtml. -->
+      <div id="endgame-ad-banner" style="margin-top:10px"></div>
     </div>
   </div>
 </div>
@@ -3192,13 +3209,19 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.25.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.26.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
     </div>
 
     <div class="devlog-entry">
-      <div class="devlog-version">ONLINE alpha V0.25.0 &mdash; 24 juillet 2026</div>
+      <div class="devlog-version">ONLINE alpha V0.26.0 &mdash; 24 juillet 2026</div>
       <ul class="devlog-list">
+
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; ONGLET JOUER</li>
+
+        <li><strong>Qu&ecirc;tes du jour repliables</strong> : l'&eacute;tat (repli&eacute;/d&eacute;pli&eacute;) est m&eacute;moris&eacute; sur l'appareil et repris tel quel &agrave; la prochaine visite.</li>
+
+        <li><strong>Emplacement publicitaire</strong> (bandeau) sous les qu&ecirc;tes du jour, et un second en fin de partie (victoire/d&eacute;faite). Aucune r&eacute;gie pub n'est branch&eacute;e : les deux servent pour l'instant &agrave; promouvoir l'&eacute;v&eacute;nement Sumo en cours. D&eacute;j&agrave; pr&eacute;par&eacute; pour dispara&icirc;tre pour les abonn&eacute;s (<code>profiles.is_subscriber</code>, pas encore branch&eacute; &agrave; une vraie facturation). Cliquer dessus en pleine partie en ligne compte comme un abandon (l'adversaire est pr&eacute;venu), exactement comme le bouton Quitter.</li>
 
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; ANALYSE D'&Eacute;QUILIBRE (OUTIL DEV)</li>
 
@@ -6629,7 +6652,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.25.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.26.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -6843,7 +6866,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.25.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.26.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -7048,7 +7071,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.25.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.26.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -8366,8 +8389,9 @@ async function refreshPlayScreen(){
   refreshKokuDisplays();
   if(currentUser && supa){
     try{
-      const { data } = await supa.from('profiles').select('elo_5s,daily_streak,streak_best,daily_challenge_last_solved').eq('id', currentUser.id).single();
+      const { data } = await supa.from('profiles').select('elo_5s,daily_streak,streak_best,daily_challenge_last_solved,is_subscriber').eq('id', currentUser.id).single();
       if(data){
+        _isSubscriber = !!data.is_subscriber;
         var pe = document.getElementById('play-elo'); if(pe) pe.textContent = data.elo_5s||'—';
         var sc = document.getElementById('play-streak-count'); if(sc) sc.textContent = data.daily_streak||0;
         var sb = document.getElementById('play-streak-best'); if(sb) sb.textContent = data.streak_best||0;
@@ -8384,6 +8408,68 @@ async function refreshPlayScreen(){
   loadActivityFeedFilters();
   refreshActivityFeed();
   subscribeToActivityFeed();
+  applyDailyQuestsPanelState();
+  renderPlayAdBanner();
+}
+
+// ── Quêtes du jour : volet repliable, état mémorisé par appareil ──
+function applyDailyQuestsPanelState(){
+  var collapsed=false;
+  try{ collapsed = localStorage.getItem('vtl_daily_quests_collapsed')==='1'; }catch(e){}
+  var body=document.getElementById('daily-quests-body');
+  var arrow=document.getElementById('daily-quests-arrow');
+  if(body) body.style.display = collapsed ? 'none' : '';
+  if(arrow) arrow.classList.toggle('collapsed', collapsed);
+}
+function toggleDailyQuestsPanel(){
+  var body=document.getElementById('daily-quests-body');
+  if(!body) return;
+  var collapsed = body.style.display !== 'none';
+  body.style.display = collapsed ? 'none' : '';
+  var arrow=document.getElementById('daily-quests-arrow');
+  if(arrow) arrow.classList.toggle('collapsed', collapsed);
+  try{ localStorage.setItem('vtl_daily_quests_collapsed', collapsed ? '1' : '0'); }catch(e){}
+}
+
+// ── Emplacement publicitaire (bandeau) ─────────────────────────────
+// Pas encore de régie pub branchée : sert pour l'instant à promouvoir
+// l'événement en cours (Sumo). Le jour où une vraie pub existe, il suffira
+// de remplacer le contenu de cette fonction — les deux emplacements
+// (onglet Jouer + écran de fin de partie) sont déjà en place.
+// Pas encore de facturation récurrente branchée (voir shopSubscribeClick) —
+// _isSubscriber vient de profiles.is_subscriber, alimenté par refreshPlayScreen.
+// Le jour où l'abonnement est payant pour de vrai, les pubs disparaissent
+// déjà pour quiconque a ce flag à true, sans rien changer ici.
+var _isSubscriber = false;
+// Artwork inline (SVG, pas d'image externe) : dohyo (cercle du ring de sumo)
+// avec un lutteur stylisé au centre — cohérent avec le thème samouraï/
+// cyberpunk sans dépendre d'un asset à produire séparément.
+var SUMO_BANNER_ART = '<svg viewBox="0 0 60 60" width="46" height="46" style="flex-shrink:0">'
+  +'<circle cx="30" cy="30" r="27" fill="none" stroke="#d8965a" stroke-width="3" opacity=".55"/>'
+  +'<circle cx="30" cy="30" r="20" fill="rgba(216,150,80,.12)" stroke="#f0b478" stroke-width="1.5" opacity=".7"/>'
+  +'<path d="M30 14 L36 24 L36 34 Q36 42 30 46 Q24 42 24 34 L24 24 Z" fill="#f0b478" opacity=".9"/>'
+  +'<circle cx="30" cy="20" r="5" fill="#f5cfa0"/>'
+  +'<path d="M20 34 Q30 30 40 34" stroke="#8a5a20" stroke-width="2" fill="none" opacity=".8"/>'
+  +'</svg>';
+function renderSumoAdBannerHtml(){
+  return '<div onclick="goToSumoFromBanner()" style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(90,50,20,.55),rgba(20,15,8,.45));border:1px solid rgba(216,150,80,.4);border-radius:8px;padding:9px 12px;cursor:pointer">'
+    +SUMO_BANNER_ART
+    +'<div style="flex:1;min-width:0">'
+      +'<div style="font-family:\'Cinzel\',serif;font-size:13px;color:var(--gold-bright)">SUMO <span style="font-family:\'Noto Serif JP\',serif;font-size:11px;opacity:.7">相撲</span></div>'
+      +'<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Le ring sans murs · éjecte l\'Épéiste adverse · 💗 Fame</div>'
+    +'</div>'
+    +'<div style="font-family:VT323,monospace;font-size:10px;color:#ff9dbf;text-align:right;flex-shrink:0">jusqu\'au<br>31 août</div>'
+  +'</div>';
+}
+function renderPlayAdBanner(){
+  var el=document.getElementById('play-ad-banner');
+  if(!el) return;
+  el.innerHTML = _isSubscriber ? '' : renderSumoAdBannerHtml();
+}
+function renderEndgameAdBanner(){
+  var el=document.getElementById('endgame-ad-banner');
+  if(!el) return;
+  el.innerHTML = _isSubscriber ? '' : renderSumoAdBannerHtml();
 }
 
 // ── Journal d'activité (fil connexions/victoires/tournois) ────────
@@ -9928,8 +10014,9 @@ function quitClock(){if(clockState&&clockState.interval)clearInterval(clockState
 // qu'une fois la partie déjà terminée (écran de fin). Si la partie est
 // encore active, quitter compte comme un abandon : l'adversaire est
 // déclaré vainqueur.
-async function quitOnlineGame(){
-  if(!G.onlineGameId){ showScreen('online-menu'); return; }
+async function quitOnlineGame(destScreen){
+  destScreen = destScreen || 'online-menu';
+  if(!G.onlineGameId){ showScreen(destScreen); return; }
   if(G.arenaMatchId && !G.gameOver){
     // En Arène, impossible de quitter en pleine manche — seulement une
     // fois la série (2 manches gagnées) décidée, via l'écran de fin de
@@ -9940,7 +10027,7 @@ async function quitOnlineGame(){
   if(G.gameOver){
     // Partie déjà finie (ex: on traînait encore sur l'écran après la fin) —
     // pas d'abandon à enregistrer, on repart simplement.
-    showScreen('online-menu');
+    showScreen(destScreen);
     if(typeof refreshOnlinePlayersList==='function') refreshOnlinePlayersList();
     return;
   }
@@ -9954,9 +10041,16 @@ async function quitOnlineGame(){
   stopTimer();
   G.onlineGameId = null;
   var ogb=document.getElementById('online-game-bar'); if(ogb) ogb.style.display='none';
-  showScreen('online-menu');
+  showScreen(destScreen);
   if(typeof refreshOnlinePlayersList==='function') refreshOnlinePlayersList();
   var op=document.getElementById('online-my-pseudo'); if(op && currentUser) op.textContent='Connecté : '+currentUser.pseudo;
+}
+// Clic sur le bandeau promo Sumo : si une partie en ligne est en cours,
+// ça compte comme un abandon (l'adversaire est prévenu et gagne), exactement
+// comme le bouton "Quitter" de la barre de partie — pas de sortie silencieuse.
+function goToSumoFromBanner(){
+  if(G.onlineGameId && !G.gameOver){ quitOnlineGame('sumo'); return; }
+  showScreen('sumo');
 }
 
 // ══════════════════════════════════════════════════════
@@ -12972,6 +13066,7 @@ function endGame(winner,reason){
     var logoSrc=logoSet[Math.floor(Math.random()*logoSet.length)];
     oc.innerHTML='<img src="'+logoSrc+'" alt="">';
   }
+  if(typeof renderEndgameAdBanner==='function') renderEndgameAdBanner();
 
   if(tutoFight){
     tutoFight=false;
