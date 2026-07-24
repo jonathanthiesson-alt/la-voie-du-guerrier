@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.21.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.22.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1662,10 +1662,11 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 <div id="screen-devparam" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
   <div style="width:100%;padding:10px 14px 8px;background:rgba(40,10,60,.8);border-bottom:1px solid rgba(160,80,200,.3);display:flex;align-items:center;gap:10px;flex-shrink:0">
     <button class="tuto-nav-btn" onclick="closeDevParam()" style="padding:5px 10px;font-size:11px;border-color:rgba(160,80,200,.4)">&#8617; Retour</button>
-    <div>
-      <div style="font-family:'Cinzel',serif;font-size:14px;color:rgba(200,160,240,.95);letter-spacing:2px">⚙ DEVPARAM</div>
+    <div style="flex:1">
+      <div style="font-family:'Cinzel',serif;font-size:14px;color:rgba(200,160,240,.95);letter-spacing:2px">⚙ BOTS — Ordis (IA rapide)</div>
       <div style="font-family:'VT323',monospace;font-size:12px;color:rgba(200,160,240,.4)">Paramètres des ordinateurs</div>
     </div>
+    <button class="tuto-nav-btn" onclick="openDevParam_V2()" style="padding:5px 10px;font-size:11px;border-color:rgba(240,140,40,.4);color:var(--orange-v2)">⚗ Maîtres IA</button>
   </div>
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 14px 24px">
 
@@ -1801,10 +1802,11 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 <div id="screen-devparam-v2" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
   <div style="width:100%;padding:10px 14px 8px;background:rgba(60,25,0,.8);border-bottom:1px solid rgba(240,140,40,.3);display:flex;align-items:center;gap:10px;flex-shrink:0">
     <button class="tuto-nav-btn" onclick="closeDevParam_V2()" style="padding:5px 10px;font-size:11px;border-color:rgba(240,140,40,.4);color:var(--orange-v2)">&#8617; Retour</button>
-    <div>
-      <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--orange-v2);letter-spacing:2px">⚗ DEVPARAM V2-TEST</div>
+    <div style="flex:1">
+      <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--orange-v2);letter-spacing:2px">⚗ BOTS — Ma&icirc;tres IA</div>
       <div style="font-family:'VT323',monospace;font-size:12px;color:rgba(240,140,40,.4)">Param&#232;tres des ordinateurs V2</div>
     </div>
+    <button class="tuto-nav-btn" onclick="openDevParam()" style="padding:5px 10px;font-size:11px;border-color:rgba(160,80,200,.4);color:rgba(200,160,240,.95)">⚙ Ordis</button>
   </div>
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 14px 24px">
 
@@ -2069,7 +2071,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.21.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.22.0 &#9820;</div>
   </div>
 </div>
 
@@ -2382,6 +2384,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('campaigns')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">巻</span><span data-i18n="menu_campaign">Campagne</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('opponents')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">&#9876;</span><span data-i18n="local_hub_masters">Maîtres IA</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="openLocalMode('ai')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">機</span><span data-i18n="local_hub_vs_ai">IA</span></button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="openLocalMode('ai-notable')">★<span style="margin-left:6px">Adversaires notables</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('training-bot')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">傀</span><span data-i18n="local_hub_training_bot">Karakuri</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="openLocalMode('human')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">対</span><span data-i18n="local_hub_vs_2p">2 joueurs (même appareil)</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('clock')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">⏱</span><span data-i18n="menu_clock">Pendule</span></button>
@@ -2409,8 +2412,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div class="menu-divider"></div>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('devrewards')">🎁 Récompenses</button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-repertoire')">📖 Répertoire d'ouvertures/tactiques/équilibre</button>
-    <button class="btn" style="width:100%;margin-bottom:8px" onclick="openDevParam()">⚙ DevParam</button>
-    <button class="btn" style="width:100%;margin-bottom:8px" onclick="openDevParam_V2()">⚗ DevParam V2-Test</button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="openDevParam()">🤖 Bots</button>
     <button class="btn btn-devtest" style="width:100%;margin-bottom:8px" onclick="showScreen('devlog')">録 DevLog</button>
   </div>
   </div>
@@ -2576,17 +2578,6 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     </div>
 
     <div id="adv-picker" style="display:none;margin-top:10px">
-      <!-- Toggle V2-Test -->
-      <div id="v2test-toggle-row" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:6px 10px;border-radius:5px;background:rgba(0,0,0,.2)">
-        <div style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:2px;color:rgba(200,168,110,.6)" id="adv-mode-label">⚔ ADVERSAIRES</div>
-        <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
-          <span style="font-family:'VT323',monospace;font-size:12px;color:rgba(200,168,110,.4)" id="adv-v2-label">V2-TEST</span>
-          <div class="toggle-v2-wrap" onclick="toggleAdvV2()">
-            <div class="toggle-v2-knob" id="toggle-v2-knob"></div>
-          </div>
-        </label>
-      </div>
-
       <div class="option-label" id="adv-grid-label">Choisir votre adversaire</div>
       <div class="adv-grid" id="adv-grid"></div>
     </div>
@@ -3137,8 +3128,23 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.21.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.22.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.22.0 &mdash; 24 juillet 2026</div>
+      <ul class="devlog-list">
+
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; R&Eacute;ORGANISATION DES ADVERSAIRES</li>
+
+        <li><strong>DevParam et DevParam V2-Test fusionn&eacute;s en un seul menu &laquo;&nbsp;Bots&nbsp;&raquo;</strong> (onglet DEV), avec un aller-retour direct entre les r&eacute;glages des Ordis (IA rapide) et ceux des Ma&icirc;tres IA. Shin AI garde son propre &eacute;cran de configuration, inchang&eacute;.</li>
+
+        <li><strong>Nouveau bouton &laquo;&nbsp;Adversaires notables&nbsp;&raquo;</strong> dans l'onglet Local : Shin AI, le Rival et Mokusei-Sensei (absents), et Ningen-Two ont leur propre point d'entr&eacute;e, s&eacute;par&eacute; du mode &laquo;&nbsp;IA&nbsp;&raquo; classique qui ne propose plus que les 6 ordis r&eacute;guliers.</li>
+
+        <li>Retrait du bascule &laquo;&nbsp;V2-Test&nbsp;&raquo; (r&eacute;serv&eacute; aux comptes admin) dans l'&eacute;cran &laquo;&nbsp;Vs Ordinateur&nbsp;&raquo; : les adversaires V2 sont d&eacute;sormais la galerie officielle des Ma&icirc;tres IA, ce doublon n'avait plus lieu d'&ecirc;tre.</li>
+
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -6531,7 +6537,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.21.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.22.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -6745,7 +6751,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.21.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.22.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -6950,7 +6956,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.21.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.22.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -8115,69 +8121,6 @@ var AI_PERSONALITIES = {
   5: { intro:"Sous ce crâne, il n'y a plus de pitié. Seulement l'art.", win:"Un crâne de plus dans ma collection.", loss:"…Impossible. Tu as vaincu le Crâne. Souviens-toi de ce jour.", style:"Le plus fort — calcul profond, aucune faille." }
 };
 
-function buildAdvGrid_V2(){
-  const grid=document.getElementById('adv-grid');
-  if(!grid)return;
-  grid.innerHTML='';
-
-  var lbl=document.getElementById('adv-grid-label');
-  if(lbl){lbl.textContent='⚗ Adversaires V2-Test';lbl.style.color='var(--orange-v2)';}
-
-  function makeCollapsibleV2(titleHtml, id){
-    const wrap=document.createElement('div');
-    wrap.style.marginBottom='6px';
-    const hdr=document.createElement('div');
-    hdr.className='adv-cat-header';
-    hdr.innerHTML='<span class="adv-category-title" style="border:none;margin:0;padding:0;color:var(--orange-v2)">'+titleHtml+'</span>'
-      +'<span class="adv-cat-arrow" id="arrow-'+id+'">▼</span>';
-    const body=document.createElement('div');
-    body.className='adv-cat-body';
-    body.id='body-'+id;
-    const subgrid=document.createElement('div');
-    subgrid.className='adv-subgrid';
-    body.appendChild(subgrid);
-    hdr.onclick=function(){
-      const isCol=body.classList.toggle('collapsed');
-      document.getElementById('arrow-'+id).classList.toggle('collapsed',isCol);
-    };
-    wrap.appendChild(hdr);
-    wrap.appendChild(body);
-    return{wrap,subgrid};
-  }
-  const {wrap:cat1w,subgrid:cat1grid}=makeCollapsibleV2('⚗ Adversaires V2-Test','adv-v2');
-  grid.appendChild(cat1w);
-
-  ADVERSARIES_V2.forEach(a=>{
-    const el=document.createElement('div');
-    const name=a.fullName||AI_NAMES_V2[a.customIdx]||'Ordi '+(a.id+1);
-    const shortName=AI_NAMES_V2[a.customIdx]||name;
-    const subtitle=a.subtitle||'';
-    let cls='adv-card adv-card-v2'+(a.id===selectedAdvId_V2?' selected':'');
-    el.className=cls;
-    const iconHtml='<div class="adv-icon"><span style="font-family:var(--serif-jp,serif);font-size:26px;color:var(--orange-v2);text-shadow:0 0 8px rgba(240,140,40,.4);line-height:1">'+a.icon+'</span></div>';
-    el.innerHTML=iconHtml
-      +'<div class="adv-name" style="font-size:11px;letter-spacing:.5px">'+shortName+'</div>'
-      +'<div class="adv-stars" style="font-size:10px">'+a.stars+'</div>'
-      +(subtitle?'<div style="font-family:sans-serif;font-size:10px;color:rgba(240,140,40,.45);text-align:center;margin-top:2px">'+subtitle+'</div>':'');
-    el.onclick=function(){
-      selectedAdvId_V2=a.id;
-      document.querySelectorAll('.adv-card-v2').forEach(c=>c.classList.remove('selected'));
-      el.classList.add('selected');
-    };
-    cat1grid.appendChild(el);
-  });
-
-  // Bouton DevParam V2 orange — réservé à Musashi/Wurmz
-  if(isDevAccount()){
-    const devBtn=document.createElement('button');
-    devBtn.className='btn-devparam-v2';
-    devBtn.innerHTML='⚗ DevParam V2-Test';
-    devBtn.onclick=function(){openDevParam_V2();};
-    grid.appendChild(devBtn);
-  }
-}
-
-
 let selectedAdvId=-1; // -1 = aucun adversaire sélectionné
 
 
@@ -8185,85 +8128,64 @@ function getAbsentTag(advId){
   var tags={7:"En voyage…",8:"En voyage…",9:"Porté disparu."};
   return tags[advId]||"En voyage…";
 }
+// Carte d'adversaire V1 partagée entre la grille "Adversaires" (ordis
+// réguliers) et la grille "Adversaires notables" (voir buildNotableAdvGrid) —
+// même rendu, seule la liste filtrée en amont change.
+function buildAdvCard(a){
+  const el=document.createElement('div');
+  const isShin=a.isShinAI;
+  const isAbsent=a.isAbsent;
+  const isCustom=a.isCustom;
+  const name=getAdvDisplayName(a.id);
+
+  let cls='adv-card'+(a.id===selectedAdvId?' selected':'');
+  if(isShin) cls+=' adv-card-shinai';
+  if(isAbsent) cls+=' adv-card-absent';
+  el.className=cls;
+
+  const isNT2=(a.id===9);
+  const starsHtml=isNT2?nt2StarsDisplay():a.stars;
+  const iconHtml='<div class="adv-icon"><span style="font-family:var(--serif-jp,serif);font-size:26px;color:var(--gold-bright);text-shadow:0 0 8px rgba(200,168,110,.4);line-height:1">'+a.icon+'</span></div>';
+  el.innerHTML=iconHtml
+    +'<div class="adv-name">'+name+'</div>'
+    +'<div class="adv-stars">'+starsHtml+'</div>'
+    +(a.subtitle?'<div style="font-family:\'VT323\',monospace;font-size:10px;color:rgba(200,168,110,.45);text-align:center;line-height:1.2;margin-top:2px">'+a.subtitle+'</div>':'')
+    +(isAbsent?'<div class="adv-absent-tag">'+getAbsentTag(a.id)+'</div>':'')
+    +(isShin?'<div style="font-family:var(--cinzel,serif);font-size:10px;color:var(--gold);margin-top:4px;letter-spacing:1px">⚙ CONFIG</div>':'');
+
+  el.onclick=function(){
+    if(isAbsent){showAbsentMessage(a.id);return;}
+    selectedAdvId=a.id;
+    document.querySelectorAll('.adv-card').forEach(c=>c.classList.remove('selected'));
+    el.classList.add('selected');
+    if(isShin) openShinAIScreen('local');
+  };
+  return el;
+}
 function buildAdvGrid(){
   const grid=document.getElementById('adv-grid');
   if(!grid)return;
   grid.innerHTML='';
   var lbl=document.getElementById('adv-grid-label');
   if(lbl){lbl.textContent=t('local_choose_adv');lbl.style.color='';}
-
-  function makeCollapsible(titleHtml, id, collapsed){
-    const wrap=document.createElement('div');
-    wrap.style.marginBottom='6px';
-    const hdr=document.createElement('div');
-    hdr.className='adv-cat-header';
-    hdr.innerHTML='<span class="adv-category-title" style="border:none;margin:0;padding:0">'+titleHtml+'</span>'
-      +'<span class="adv-cat-arrow'+(collapsed?' collapsed':'')+'" id="arrow-'+id+'">▼</span>';
-    const body=document.createElement('div');
-    body.className='adv-cat-body'+(collapsed?' collapsed':'');
-    body.id='body-'+id;
-    const subgrid=document.createElement('div');
-    subgrid.className='adv-subgrid';
-    body.appendChild(subgrid);
-    hdr.onclick=function(){
-      const isCol=body.classList.toggle('collapsed');
-      document.getElementById('arrow-'+id).classList.toggle('collapsed',isCol);
-    };
-    wrap.appendChild(hdr);
-    wrap.appendChild(body);
-    return{wrap,subgrid};
-  }
-
-  const {wrap:cat1,subgrid:cat1grid}=makeCollapsible('⚔ Adversaires','adv1',false);
-  grid.appendChild(cat1);
-  const {wrap:cat2,subgrid:cat2grid}=makeCollapsible('★ Adversaires Notables','adv2',true);
-  grid.appendChild(cat2);
-
   ADVERSARIES.forEach(a=>{
-    if(a.isTrainingBot) return; // le bot d'entrainement a son propre menu, pas dans la galerie des Maitres IA
-    const el=document.createElement('div');
-    const isShin=a.isShinAI;
-    const isNotable=a.isNotable;
-    const isAbsent=a.isAbsent;
-    const isCustom=a.isCustom;
-    const name=getAdvDisplayName(a.id);
-    const numStr=isCustom?'<div class="adv-num">#'+(a.id+1)+'</div>':'';
-
-    let cls='adv-card'+(a.id===selectedAdvId?' selected':'');
-    if(isShin) cls+=' adv-card-shinai';
-    if(isAbsent) cls+=' adv-card-absent';
-    el.className=cls;
-
-    const isNT2=(a.id===9);
-    const starsHtml=isNT2?nt2StarsDisplay():a.stars;
-    const iconHtml='<div class="adv-icon"><span style="font-family:var(--serif-jp,serif);font-size:26px;color:var(--gold-bright);text-shadow:0 0 8px rgba(200,168,110,.4);line-height:1">'+a.icon+'</span></div>';
-    el.innerHTML=iconHtml
-      +'<div class="adv-name">'+name+'</div>'
-      +'<div class="adv-stars">'+starsHtml+'</div>'
-      +(a.subtitle?'<div style="font-family:\'VT323\',monospace;font-size:10px;color:rgba(200,168,110,.45);text-align:center;line-height:1.2;margin-top:2px">'+a.subtitle+'</div>':'')
-      +(isAbsent?'<div class="adv-absent-tag">'+getAbsentTag(a.id)+'</div>':'')
-      +(isShin?'<div style="font-family:var(--cinzel,serif);font-size:10px;color:var(--gold);margin-top:4px;letter-spacing:1px">⚙ CONFIG</div>':'');
-
-    el.onclick=function(){
-      if(isAbsent){showAbsentMessage(a.id);return;}
-      selectedAdvId=a.id;
-      document.querySelectorAll('.adv-card').forEach(c=>c.classList.remove('selected'));
-      el.classList.add('selected');
-      if(isShin) openShinAIScreen('local');
-    };
-
-    if(isNotable) cat2grid.appendChild(el);
-    else cat1grid.appendChild(el);
+    if(a.isTrainingBot||a.isNotable) return; // entraînement et notables : menus séparés
+    grid.appendChild(buildAdvCard(a));
   });
-
-  // Bouton DevParam (violet développeur) — réservé à Musashi/Wurmz
-  if(isDevAccount()){
-    const devBtn=document.createElement('button');
-    devBtn.className='btn-devparam';
-    devBtn.innerHTML='⚙ DevParam';
-    devBtn.onclick=function(){openDevParam();};
-    grid.appendChild(devBtn);
-  }
+}
+// Adversaires notables (Shin AI, Rival/Mokusei-Sensei absents, Ningen-Two)
+// — auparavant une catégorie repliable dans "Vs Ordinateur", retirée de là
+// et promue en bouton dédié du hub Local (voir openLocalMode('ai-notable')).
+function buildNotableAdvGrid(){
+  const grid=document.getElementById('adv-grid');
+  if(!grid)return;
+  grid.innerHTML='';
+  var lbl=document.getElementById('adv-grid-label');
+  if(lbl){lbl.textContent='Choisir votre adversaire notable';lbl.style.color='';}
+  ADVERSARIES.forEach(a=>{
+    if(!a.isNotable) return;
+    grid.appendChild(buildAdvCard(a));
+  });
 }
 
 function showAbsentMessage(advId){
@@ -9694,11 +9616,7 @@ function goOnline(){
 function showInDevelopment(){
   showToast((typeof t==='function' ? t('in_development') : '🚧 En développement — bientôt disponible !'));
 }
-var advV2Mode = false;
-
-// Outils de développeur (DevParam, DevParam V2-Test, et le bascule
-// V2-Test lui-même) réservés à ces deux comptes — invisibles pour tout
-// le monde sinon, y compris en partie locale contre l'IA. Basé sur
+// Outils de développeur (Bots) réservés à ces deux comptes — basé sur
 // l'identifiant Supabase fixe (UUID) plutôt que sur le pseudo : reste
 // valide même si Musashi ou Wurmz changeait un jour de pseudo.
 var DEV_ACCOUNT_IDS = ['145a4141-d55a-467b-8c6e-e5a827a1acc4', 'be7158b0-2481-450d-b59d-74309c0c7a16']; // Wurmz, Musashi
@@ -9706,11 +9624,11 @@ function isDevAccount(){
   return typeof currentUser!=='undefined' && !!currentUser && DEV_ACCOUNT_IDS.indexOf(currentUser.id)!==-1;
 }
 
-// Point d'entrée depuis le hub Local : deux boutons distincts (Vs Ordi /
-// 2 joueurs) au lieu d'un seul écran avec un choix à faire dedans. Le
-// mode arrive déjà décidé, donc on masque le sélecteur Adversaire —
-// il ne reste plus qu'à choisir la cadence (et l'adversaire IA le cas
-// échéant).
+// Point d'entrée depuis le hub Local : trois boutons distincts (Vs Ordi /
+// Adversaires notables / 2 joueurs) au lieu d'un seul écran avec un choix
+// à faire dedans. Le mode arrive déjà décidé, donc on masque le sélecteur
+// Adversaire — il ne reste plus qu'à choisir la cadence (et l'adversaire
+// IA le cas échéant).
 function openLocalMode(mode){
   showScreen('local');
   selectLocalMode(mode);
@@ -9718,45 +9636,32 @@ function openLocalMode(mode){
   if(picker) picker.style.display = 'none';
 }
 function selectLocalMode(mode){
-  settings.vsAI=(mode==='ai');
+  var isAiMode = (mode==='ai'||mode==='ai-notable');
+  settings.vsAI=isAiMode;
+  _localNotableMode = (mode==='ai-notable');
   document.getElementById('opt-human').classList.toggle('selected',mode==='human');
   document.getElementById('opt-ai').classList.toggle('selected',mode==='ai');
   var ap=document.getElementById('adv-picker');
   var btn=document.getElementById('btn-local-next');
-  if(ap)  ap.style.display=mode==='ai'?'block':'none';
+  if(ap)  ap.style.display=isAiMode?'block':'none';
   if(btn) btn.style.display='block'; // toujours visible, IA ou JvJ
-  var v2row=document.getElementById('v2test-toggle-row');
-  if(v2row) v2row.style.display = isDevAccount() ? 'flex' : 'none';
-  if(!isDevAccount() && advV2Mode) toggleAdvV2(); // défensif : jamais en mode V2-Test hors compte dev
-  if(mode==='ai') buildAdvGridAuto();
+  if(isAiMode) buildAdvGridAuto();
 }
 
-function toggleAdvV2(){
-  advV2Mode = !advV2Mode;
-  var wrap  = document.querySelector('.toggle-v2-wrap');
-  var label = document.getElementById('adv-mode-label');
-  var v2lbl = document.getElementById('adv-v2-label');
-  var btn   = document.getElementById('btn-local-next');
-  if(wrap)  wrap.classList.toggle('on', advV2Mode);
-  if(label){ label.textContent = advV2Mode ? '⚗ V2-TEST' : '⚔ ADVERSAIRES';
-             label.style.color  = advV2Mode ? 'var(--orange-v2)' : 'rgba(200,168,110,.6)'; }
-  if(v2lbl) v2lbl.style.color = advV2Mode ? 'var(--orange-v2)' : 'rgba(200,168,110,.4)';
-  if(btn){
-    btn.style.background  = advV2Mode ? 'rgba(120,50,0,.7)' : '';
-    btn.style.borderColor = advV2Mode ? 'rgba(240,140,40,.5)' : '';
-    btn.querySelector('span').textContent = advV2Mode ? '⚗ Suivant V2-Test' : t('btn_next');
-  }
-  buildAdvGridAuto();
-}
+var _localNotableMode = false;
 
 function buildAdvGridAuto(){
-  if(advV2Mode) buildAdvGrid_V2();
-  else          buildAdvGrid();
+  if(_localNotableMode) buildNotableAdvGrid();
+  else                  buildAdvGrid();
 }
 
 function localNextAuto(){
-  if(advV2Mode) localNext_V2();
-  else          localNext();
+  _pendingBotIdx = null;
+  if(_localNotableMode && selectedAdvId<0){
+    showToast('Choisis un adversaire notable.', true);
+    return;
+  }
+  localNext();
 }
 
 
@@ -15462,8 +15367,7 @@ function openDevParam_V2(){
   showScreen('devparam-v2');
 }
 function closeDevParam_V2(){
-  showScreen('local');
-  buildAdvGrid_V2();
+  showScreen('dev-hub');
 }
 
 function renderDevParamTabs_V2(){
@@ -15546,8 +15450,7 @@ function openDevParam(){
   showScreen('devparam');
 }
 function closeDevParam(){
-  showScreen('local');
-  buildAdvGrid();
+  showScreen('dev-hub');
 }
 
 function renderDevParamTabs(){
@@ -15850,23 +15753,6 @@ function renderHomeLogoCfg(){
   html += '<input type="color" value="'+aura+'" oninput="setHomeLogoAura(this.value)" title="Couleur libre" style="width:30px;height:30px;border:2px solid rgba(200,168,110,.4);border-radius:50%;background:none;cursor:pointer;padding:0">';
   html += '</div></div>';
   box.innerHTML = html;
-}
-
-
-function localNext_V2(){
-  if(!settings.vsAI){ localNext(); return; }
-  // Utiliser ADVERSARIES_V2[selectedAdvId_V2]
-  var adv = ADVERSARIES_V2[selectedAdvId_V2];
-  if(!adv){ localNext(); return; }
-  // Injecter l'adversaire V2 temporairement dans ADVERSARIES à l'index utilisé
-  // On utilise un slot spécial id=99 pour ne pas polluer les slots 0-9
-  var tempAdv = Object.assign({}, adv, {id: 99});
-  // Patcher ADVERSARIES[99] dynamiquement
-  ADVERSARIES[99] = tempAdv;
-  settings.advId = 99;
-  selectedAdvId  = 99;  // initGame lit selectedAdvId, pas settings.advId
-  settings.vsAI  = true;
-  confirmLaunch();
 }
 
 
