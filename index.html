@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.24.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.25.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2113,7 +2113,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.24.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.25.0 &#9820;</div>
   </div>
 </div>
 
@@ -2520,34 +2520,17 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.75;text-align:center;margin-bottom:8px">
       Parties miroir (même profondeur des deux côtés), 4 premiers demi-coups variés. Un écart significatif = ≥3 écarts-types (σ) au-dessus de 50%, comme les tests SPRT entre moteurs d'échecs.
     </div>
-    <button id="dev-balance-runall-btn" class="dev-balance-btn adm-btn" style="width:100%;padding:9px;margin-bottom:4px;font-weight:bold" onclick="devBalanceRunAll()">▶▶ Lancer les 20 tests d'affilée (profondeur 6→10)<br><span id="dev-balance-runall-est" style="font-weight:normal;font-size:11px;opacity:.8"></span></button>
-    <div style="font-family:'VT323',monospace;font-size:10px;color:var(--parchment);opacity:.55;text-align:center;margin-bottom:10px">Profondeur 3-5 retirées : trop instables pour être vraiment représentatives (voir σ oscillant selon la profondeur). Nombre de parties dégressif avec la profondeur (coût de calcul exponentiel) : 150/80/40/20/10. Estimations de temps calculées après le premier lancement de chaque profondeur (avant ça, valeur approximative).</div>
+    <button id="dev-balance-runall-btn" class="dev-balance-btn adm-btn" style="width:100%;padding:9px;margin-bottom:4px;font-weight:bold" onclick="devBalanceRunAll()">▶▶ Lancer les 4 tests d'affilée (profondeur 5)<br><span id="dev-balance-runall-est" style="font-weight:normal;font-size:11px;opacity:.8"></span></button>
+    <div style="font-family:'VT323',monospace;font-size:10px;color:var(--parchment);opacity:.55;text-align:center;margin-bottom:10px">Une seule profondeur (5) pour les 4 formules — comparer à profondeur fixe suffit pour trancher, pas besoin de balayer plusieurs profondeurs à chaque fois.</div>
     <div class="menu-divider"></div>
-    <div style="font-family:'VT323',monospace;font-size:11px;color:var(--gold-bright);opacity:.85;text-align:center;margin-bottom:10px">Formule actuelle (bug de mobilité suspecté)</div>
-    <button class="dev-balance-btn adm-btn" data-depth="6" data-n="150" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('current',6,150)">▶ Profondeur 6/6 — 150 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <button class="dev-balance-btn adm-btn" data-depth="7" data-n="80" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('current',7,80)">▶ Profondeur 7/7 — 80 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <button class="dev-balance-btn adm-btn" data-depth="8" data-n="40" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('current',8,40)">▶ Profondeur 8/8 — 40 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <button class="dev-balance-btn adm-btn" data-depth="9" data-n="20" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('current',9,20)">▶ Profondeur 9/9 — 20 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <button class="dev-balance-btn adm-btn" data-depth="10" data-n="10" style="width:100%;padding:7px;margin-bottom:10px" onclick="devBalanceRunBatch('current',10,10)">▶ Profondeur 10/10 — 10 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <div style="font-family:'VT323',monospace;font-size:11px;color:var(--gold-bright);opacity:.85;text-align:center;margin-bottom:10px">Mobilité symétrisée seule (ag/df inchangés)</div>
-    <button class="dev-balance-btn adm-btn" data-depth="6" data-n="150" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('mobfix',6,150)">▶ Profondeur 6/6 — 150 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <button class="dev-balance-btn adm-btn" data-depth="7" data-n="80" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('mobfix',7,80)">▶ Profondeur 7/7 — 80 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <button class="dev-balance-btn adm-btn" data-depth="8" data-n="40" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('mobfix',8,40)">▶ Profondeur 8/8 — 40 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <button class="dev-balance-btn adm-btn" data-depth="9" data-n="20" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('mobfix',9,20)">▶ Profondeur 9/9 — 20 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <button class="dev-balance-btn adm-btn" data-depth="10" data-n="10" style="width:100%;padding:7px;margin-bottom:10px" onclick="devBalanceRunBatch('mobfix',10,10)">▶ Profondeur 10/10 — 10 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <div style="font-family:'VT323',monospace;font-size:11px;color:var(--gold-bright);opacity:.85;text-align:center;margin-bottom:10px">Totalement symétrique (ag=df ET mobilité corrigées)</div>
-    <button class="dev-balance-btn adm-btn" data-depth="6" data-n="150" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('symmetric',6,150)">▶ Profondeur 6/6 — 150 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <button class="dev-balance-btn adm-btn" data-depth="7" data-n="80" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('symmetric',7,80)">▶ Profondeur 7/7 — 80 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <button class="dev-balance-btn adm-btn" data-depth="8" data-n="40" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('symmetric',8,40)">▶ Profondeur 8/8 — 40 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <button class="dev-balance-btn adm-btn" data-depth="9" data-n="20" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('symmetric',9,20)">▶ Profondeur 9/9 — 20 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <button class="dev-balance-btn adm-btn" data-depth="10" data-n="10" style="width:100%;padding:7px;margin-bottom:10px" onclick="devBalanceRunBatch('symmetric',10,10)">▶ Profondeur 10/10 — 10 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <div style="font-family:'VT323',monospace;font-size:11px;color:var(--gold-bright);opacity:.85;text-align:center;margin-bottom:10px">Agression/défense symétrisées seules (mobilité inchangée)</div>
-    <button class="dev-balance-btn adm-btn" data-depth="6" data-n="150" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('agdffix',6,150)">▶ Profondeur 6/6 — 150 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <button class="dev-balance-btn adm-btn" data-depth="7" data-n="80" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('agdffix',7,80)">▶ Profondeur 7/7 — 80 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <button class="dev-balance-btn adm-btn" data-depth="8" data-n="40" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('agdffix',8,40)">▶ Profondeur 8/8 — 40 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <button class="dev-balance-btn adm-btn" data-depth="9" data-n="20" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('agdffix',9,20)">▶ Profondeur 9/9 — 20 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-    <button class="dev-balance-btn adm-btn" data-depth="10" data-n="10" style="width:100%;padding:7px;margin-bottom:10px" onclick="devBalanceRunBatch('agdffix',10,10)">▶ Profondeur 10/10 — 10 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
-<div id="dev-balance-progress" style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.8;text-align:center;margin-bottom:10px"></div>
+    <button class="dev-balance-btn adm-btn" data-depth="5" data-n="150" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('current',5,150)">▶ Formule actuelle (bug de mobilité suspecté) — 150 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
+    <button class="dev-balance-btn adm-btn" data-depth="5" data-n="150" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('mobfix',5,150)">▶ Mobilité symétrisée seule (ag/df inchangés) — 150 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
+    <button class="dev-balance-btn adm-btn" data-depth="5" data-n="150" style="width:100%;padding:7px;margin-bottom:4px" onclick="devBalanceRunBatch('symmetric',5,150)">▶ Totalement symétrique (ag=df ET mobilité corrigées) — 150 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
+    <button class="dev-balance-btn adm-btn" data-depth="5" data-n="150" style="width:100%;padding:7px;margin-bottom:10px" onclick="devBalanceRunBatch('agdffix',5,150)">▶ Agression/défense symétrisées seules (mobilité inchangée) — 150 parties <span class="dba-est" style="opacity:.65;font-size:10px"></span></button>
+<div id="dev-balance-progress" style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.8;text-align:center;margin-bottom:6px"></div>
+    <div style="height:8px;border-radius:4px;background:rgba(0,0,0,.4);border:1px solid rgba(212,160,23,.25);overflow:hidden;margin-bottom:10px">
+      <div id="dev-balance-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#8a6a20,var(--gold-bright,#d4a017));transition:width .2s ease"></div>
+    </div>
     <div class="menu-divider"></div>
     <div id="dev-balance-list" style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment)"></div>
     <button class="btn" style="width:100%;margin-top:10px;opacity:.7" onclick="devBalanceResetStats()">🗑 Réinitialiser les stats</button>
@@ -3209,19 +3192,19 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.24.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.25.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
     </div>
 
     <div class="devlog-entry">
-      <div class="devlog-version">ONLINE alpha V0.24.0 &mdash; 24 juillet 2026</div>
+      <div class="devlog-version">ONLINE alpha V0.25.0 &mdash; 24 juillet 2026</div>
       <ul class="devlog-list">
 
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; ANALYSE D'&Eacute;QUILIBRE (OUTIL DEV)</li>
 
-        <li>Profondeurs 3-5 retir&eacute;es des boutons de simulation (r&eacute;sultats trop instables selon la profondeur pour &ecirc;tre repr&eacute;sentatifs) : ne restent que 6 &agrave; 10, avec un nombre de parties d&eacute;gressif (150/80/40/20/10) vu le co&ucirc;t de calcul exponentiel du minimax.</li>
+        <li>Simplifi&eacute; &agrave; une seule profondeur (5) pour les 4 formules test&eacute;es, au lieu de balayer 6 &agrave; 10 &agrave; chaque fois : les tests multi-profondeurs pr&eacute;c&eacute;dents ont d&eacute;j&agrave; &eacute;tabli que le d&eacute;s&eacute;quilibre n'&eacute;tait pas structurel (sinon stable quelle que soit la profondeur) &mdash; comparer &agrave; profondeur fixe suffit pour trancher entre les 4 formules.</li>
 
-        <li><strong>Estimation du temps</strong> affich&eacute;e sur chaque bouton et pour le lot complet (20 tests) : une heuristique au d&eacute;part, remplac&eacute;e par une vraie mesure d&egrave;s qu'un lot a tourn&eacute; au moins une fois &agrave; cette profondeur (m&eacute;moris&eacute;e sur l'appareil).</li>
+        <li><strong>Barre de progression visuelle</strong> ajout&eacute;e sous le texte de progression, en plus de l'estimation de temps restant.</li>
 
       </ul>
     </div>
@@ -6646,7 +6629,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.24.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.25.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -6860,7 +6843,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.24.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.25.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -7065,7 +7048,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.24.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.25.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -14444,7 +14427,9 @@ function devBalanceRunBatch(evalKey,depth,n){
   // fin du chunk — ça donne l'impression que le clic n'a rien fait.
   var chunkSize = depth>=7?1 : depth>=6?2 : depth>=5?3 : 5;
   var progEl=document.getElementById('dev-balance-progress');
+  var barEl=document.getElementById('dev-balance-progress-bar');
   if(progEl) progEl.textContent='Démarrage… (profondeur '+depth+')';
+  if(barEl) barEl.style.width='0%';
   return new Promise(function(resolve){
     function tick(){
       var chunk=Math.min(chunkSize, n-done);
@@ -14457,8 +14442,10 @@ function devBalanceRunBatch(evalKey,depth,n){
         done++;
       }
       var prog=document.getElementById('dev-balance-progress');
+      var bar=document.getElementById('dev-balance-progress-bar');
       var etaMs = (done<n) ? (computeMs/done)*(n-done) : 0;
       prog && (prog.textContent=done+' / '+n+' parties simulées ('+DEV_BALANCE_EVALS[evalKey].label+', profondeur '+depth+')'+(etaMs?' — encore ≈ '+devBalanceFormatDuration(etaMs):''));
+      bar && (bar.style.width=Math.round(100*done/n)+'%');
       Promise.all(proms).then(function(){
         if(done<n) setTimeout(tick,0);
         else{
@@ -14478,15 +14465,12 @@ function devBalanceRunBatch(evalKey,depth,n){
 
 // Enchaîne les tests prédéfinis l'un après l'autre. Coche 'écrasé' par les
 // boutons individuels pendant le run pour éviter un double lancement.
-// Profondeurs 3-5 retirées le 2026-07-24 (résultats trop instables d'une
-// profondeur à l'autre pour être représentatifs, voir le journal de
-// version) — ne restent que 6 à 10, avec un nombre de parties dégressif
-// (150/80/40/20/10) vu le coût de calcul exponentiel du minimax.
+// Une seule profondeur (5) depuis le 2026-07-24 : les tests à plusieurs
+// profondeurs (3 à 10) ont surtout servi à établir que le déséquilibre
+// n'était pas monotone avec la profondeur (donc pas structurel) — comparer
+// les 4 formules à profondeur fixe suffit maintenant pour trancher.
 var DEV_BALANCE_ALL_JOBS=[
-  ['current',6,150],['current',7,80],['current',8,40],['current',9,20],['current',10,10],
-  ['mobfix',6,150],['mobfix',7,80],['mobfix',8,40],['mobfix',9,20],['mobfix',10,10],
-  ['symmetric',6,150],['symmetric',7,80],['symmetric',8,40],['symmetric',9,20],['symmetric',10,10],
-  ['agdffix',6,150],['agdffix',7,80],['agdffix',8,40],['agdffix',9,20],['agdffix',10,10]
+  ['current',5,150], ['mobfix',5,150], ['symmetric',5,150], ['agdffix',5,150]
 ];
 async function devBalanceRunJobs(jobs,label){
   if(_devBalanceRunning){ if(typeof showToast==='function') showToast('Une simulation est déjà en cours.', true); return; }
