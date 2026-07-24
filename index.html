@@ -2061,9 +2061,6 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <!-- Menu allégé (refonte UI) : on ne garde ici que ce qui n'est PAS
          déjà atteignable par les onglets — jouer, local, social, boutique,
          règles (déplacées dans l'onglet Local) et profil sont ailleurs. -->
-    <!-- Bouton DEV (violet) — visible uniquement pour Wurmz et Musashi -->
-    <button class="btn" id="menu-dev-btn" style="display:none;margin-top:4px;border-color:rgba(160,90,220,.6);color:#c58aff;background:linear-gradient(135deg,rgba(90,40,140,.35),rgba(40,20,60,.3))" onclick="showScreen('devrewards')"><span style="font-size:15px;vertical-align:middle;margin-right:4px">🛠</span>DEV — Récompenses</button>
-
     <button class="btn" onclick="showScreen('settings')" style="font-size:13px;padding:9px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">設</span><span data-i18n="menu_settings">Param&#232;tres</span></button>
 
     <button class="btn btn-devtest" onclick="showScreen('devlog')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">録</span><span data-i18n="menu_devlog">DevLog</span></button>
@@ -2373,7 +2370,6 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('training-bot')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">傀</span><span data-i18n="local_hub_training_bot">Karakuri</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="openLocalMode('human')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">対</span><span data-i18n="local_hub_vs_2p">2 joueurs (même appareil)</span></button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('clock')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">⏱</span><span data-i18n="menu_clock">Pendule</span></button>
-    <button id="btn-dev-repertoire" class="adm-btn" style="width:100%;display:none;margin-top:4px;padding:7px" onclick="showScreen('dev-repertoire')">🛠 Dev — Répertoire d'ouvertures</button>
   </div>
 </div>
 
@@ -2384,8 +2380,29 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
      impact sur les parties réelles : la simulation utilise allMoves/
      applyToClone comme le fait déjà minimaxPlay, sur un board local, jamais
      sur G. -->
+<!-- ═══════════ ONGLET DEV (bottom-nav, réservé aux comptes admin) ═══════════
+     Point d'entrée unique pour tous les outils dev auparavant dispersés
+     (menu principal, hub Local) : Récompenses, Répertoire d'ouvertures/
+     tactiques/équilibre, DevParam (tuning IA), DevParam V2-Test. Le DevLog
+     reste AUSSI accessible depuis le menu principal (ce n'est pas un outil
+     admin, n'importe quel joueur peut consulter les notes de version). -->
+<div id="screen-dev-hub" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('menu')">↩ MENU</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+  <div class="panel" style="max-width:380px;width:100%">
+    <div class="menu-title" style="font-size:18px;margin-top:10px">🛠 DEV</div>
+    <div class="menu-divider"></div>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('devrewards')">🎁 Récompenses</button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-repertoire')">📖 Répertoire d'ouvertures/tactiques/équilibre</button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="openDevParam()">⚙ DevParam</button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="openDevParam_V2()">⚗ DevParam V2-Test</button>
+    <button class="btn btn-devtest" style="width:100%;margin-bottom:8px" onclick="showScreen('devlog')">録 DevLog</button>
+  </div>
+  </div>
+</div>
+
 <div id="screen-dev-repertoire" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('local-hub')">↩ RETOUR</button></div>
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('dev-hub')">↩ RETOUR</button></div>
   <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
   <div class="panel" style="max-width:340px;width:100%">
     <div class="menu-title" style="font-size:18px;margin-top:10px">🛠 DEV — RÉPERTOIRE</div>
@@ -8263,14 +8280,16 @@ var NAV_TAB_MAP = {
   clock:'bn-campaign', campaigns:'bn-campaign', 'campaign-dojo':'bn-campaign', citations:'bn-campaign',
   shop:'bn-shop', events:'bn-shop',
   amis:'bn-social', messaging:'bn-social', 'public-profile':'bn-social',
-  profile:'bn-profile', settings:'bn-profile', display:'bn-profile', language:'bn-profile', 'piece-skins':'bn-profile', 'home-logo-cfg':'bn-profile'
+  profile:'bn-profile', settings:'bn-profile', display:'bn-profile', language:'bn-profile', 'piece-skins':'bn-profile', 'home-logo-cfg':'bn-profile',
+  // Onglet DEV : réservé aux comptes admin (voir updateDevButtonVisibility).
+  'dev-hub':'bn-dev', devrewards:'bn-dev', 'dev-repertoire':'bn-dev', 'dev-openings':'bn-dev', 'dev-tactics':'bn-dev', 'dev-balance':'bn-dev'
 };
 function updateBottomNav(id){
   var visible = NAV_HIDDEN_SCREENS.indexOf(id)===-1;
   document.body.classList.toggle('bottomnav-visible', visible);
   if(!visible) return;
   var activeTab = NAV_TAB_MAP[id]||null;
-  ['bn-play','bn-campaign','bn-shop','bn-social','bn-profile'].forEach(function(bid){
+  ['bn-play','bn-campaign','bn-shop','bn-social','bn-profile','bn-dev'].forEach(function(bid){
     var b = document.getElementById(bid);
     if(b) b.classList.toggle('active', bid===activeTab);
   });
@@ -8639,10 +8658,8 @@ function isDevUser(){
 }
 // Affiche/masque le bouton violet du menu selon l'utilisateur.
 function updateDevButtonVisibility(){
-  var b = document.getElementById('menu-dev-btn');
-  if(b) b.style.display = isDevUser() ? 'block' : 'none';
-  var br = document.getElementById('btn-dev-repertoire');
-  if(br) br.style.display = isDevUser() ? 'block' : 'none';
+  var bd = document.getElementById('bn-dev');
+  if(bd) bd.style.display = isDevUser() ? 'flex' : 'none';
 }
 var DEV_MODES = [
   { key:'matchmaking', label:'⚡ Matchmaking', currency:'shiso',    icon:'🌿',
@@ -14202,9 +14219,17 @@ function devBalanceRunBatch(evalKey,depth,n){
   var btns=document.querySelectorAll('.dev-balance-btn');
   btns.forEach(function(b){b.disabled=true;});
   var testLabel='depth'+depth;
+  // Taille de chunk réduite avec la profondeur : à prof.6+, une seule partie
+  // en minimax peut déjà prendre plusieurs secondes. Un chunk de 5 parties
+  // synchrones bloque le thread principal assez longtemps pour que le
+  // navigateur ne peigne même pas l'état "désactivé" des boutons avant la
+  // fin du chunk — ça donne l'impression que le clic n'a rien fait.
+  var chunkSize = depth>=7?1 : depth>=6?2 : depth>=5?3 : 5;
+  var progEl=document.getElementById('dev-balance-progress');
+  if(progEl) progEl.textContent='Démarrage… (profondeur '+depth+')';
   return new Promise(function(resolve){
     function tick(){
-      var chunk=Math.min(5, n-done);
+      var chunk=Math.min(chunkSize, n-done);
       var proms=[];
       for(var i=0;i<chunk;i++){
         var winner=devBalanceSimOneGame(depth,DEV_BALANCE_EVALS[evalKey].fn);
@@ -14224,7 +14249,7 @@ function devBalanceRunBatch(evalKey,depth,n){
         }
       });
     }
-    tick();
+    setTimeout(tick,0);
   });
 }
 
@@ -20492,7 +20517,7 @@ window.addEventListener('beforeunload', () => {
 
 <!-- ═══════════ ADMIN — PANNEAU D'ADMINISTRATION (Wurmz / Musashi) ═══════════ -->
 <div id="screen-devrewards" class="screen" style="justify-content:flex-start;padding-top:14px">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('menu')">&#8617; MENU</button></div>
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('dev-hub')">&#8617; DEV</button></div>
   <div class="panel" style="max-width:380px;width:100%;max-height:calc(100vh - 80px);display:flex;flex-direction:column;overflow:hidden;border-color:rgba(160,90,220,.4)">
     <div class="menu-title" style="font-size:16px;color:#c58aff;flex-shrink:0">&#128736; ADMINISTRATION</div>
     <div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.5;text-align:center;margin-bottom:8px;flex-shrink:0">Réservé à Wurmz &amp; Musashi</div>
@@ -20862,6 +20887,7 @@ window.addEventListener('beforeunload', () => {
   <button id="bn-shop"     onclick="navTab('shop')"><span class="bn-icon">店</span><span class="bn-label" data-i18n="bn_shop">Boutique</span></button>
   <button id="bn-social"   onclick="navTab('amis')"><span class="bn-icon">友</span><span class="bn-label" data-i18n="bn_social">Social</span></button>
   <button id="bn-profile"  onclick="navTab('profile')"><span class="bn-icon">侍</span><span class="bn-label" data-i18n="bn_profile">Profil</span></button>
+  <button id="bn-dev" style="display:none" onclick="navTab('dev-hub')"><span class="bn-icon">🛠</span><span class="bn-label">DEV</span></button>
 </nav>
 </body>
 </html>
