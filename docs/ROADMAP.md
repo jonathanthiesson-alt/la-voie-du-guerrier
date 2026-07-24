@@ -68,6 +68,15 @@ Inspirations assumées : **Fate** (invocation de figures historiques) et
 - Onboarding / tutoriel
 - Notifications push
 - Polish UI général
+- **Web Worker pour le simulateur d'équilibre Blanc/Noir (outil DEV)** — notée
+  le 2026-07-24. Actuellement les simulations tournent sur le thread
+  principal (chunks + `setTimeout` pour éviter le gel visuel, voir
+  `devBalanceRunBatch`), suffisant pour l'usage actuel mais lent aux
+  profondeurs élevées (6+). Un vrai Worker déporterait le calcul sur un
+  thread séparé — mais le moteur de jeu (`allMoves`, `applyToClone`, etc.)
+  est très couplé au reste du fichier (code DOM en tête de script), donc
+  l'extraction propre est un chantier à part entière, pas une extension
+  rapide. À faire dans une session dédiée, avec de vrais tests.
 - Performance sur mobile bas de gamme
 
 ---
