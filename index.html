@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.22.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.23.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2113,7 +2113,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.22.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.23.0 &#9820;</div>
   </div>
 </div>
 
@@ -2870,46 +2870,27 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
         <div class="elo-box"><div class="stat-val">??</div><div class="stat-lbl">&#9201; 10s</div></div>
       </div>
     </div>
-    <div class="profile-section">
-      <div class="profile-section-title" data-i18n="profile_streak_title">&#128293; S&#233;rie de victoires</div>
-      <div class="elo-grid" id="profile-streaks">
-        <div class="elo-box"><div class="stat-val">0</div><div class="stat-lbl">&#9201; 3s</div></div>
-        <div class="elo-box"><div class="stat-val">0</div><div class="stat-lbl">&#9201; 5s</div></div>
-        <div class="elo-box"><div class="stat-val">0</div><div class="stat-lbl">&#9201; 10s</div></div>
-      </div>
-    </div>
-    <div class="profile-section">
-      <div class="profile-section-title" data-i18n="profile_records_title">&#127894; Records</div>
-      <div class="stats-grid" id="profile-records" style="grid-template-columns:repeat(2,1fr)"></div>
-    </div>
-    <div class="profile-section">
-      <div class="profile-section-title collapsible" onclick="toggleProfileSection('profile','stats')">
-        <span data-i18n="profile_stats_title">&#128202; Statistiques</span>
-        <span class="profile-collapse-line"></span>
-        <span class="profile-collapse-arrow" id="profile-stats-arrow">&#9662;</span>
-      </div>
-      <div id="profile-stats-body">
-        <div class="stats-grid" id="profile-stats"></div>
-        <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold);letter-spacing:1px;opacity:.6;margin:12px 0 6px" data-i18n="profile_by_timer">PAR CADENCE ET COULEUR</div>
-        <div style="display:flex;gap:5px;margin-bottom:8px">
-          <button class="sortmode-btn" id="profile-timertab-3" onclick="setProfileStatsTimerTab(3)">&#9201; 3s</button>
-          <button class="sortmode-btn active" id="profile-timertab-5" onclick="setProfileStatsTimerTab(5)">&#9201; 5s</button>
-          <button class="sortmode-btn" id="profile-timertab-10" onclick="setProfileStatsTimerTab(10)">&#9201; 10s</button>
-        </div>
-        <div class="stats-grid" id="profile-stats-bytimer" style="grid-template-columns:repeat(2,1fr)"></div>
-      </div>
-    </div>
-    <div class="profile-section">
-      <div class="profile-section-title collapsible" onclick="toggleProfileSection('profile','ach')">
-        <span data-i18n="profile_ach_title">&#127942; Succ&#232;s</span>
-        <span class="profile-collapse-line"></span>
-        <span class="profile-collapse-arrow" id="profile-ach-arrow">&#9662;</span>
-      </div>
-      <div id="profile-ach-body">
-        <div class="ach-progress-hdr" id="profile-ach-progress"></div>
-        <div class="ach-list" id="profile-achievements"></div>
-      </div>
-    </div>
+
+    <!-- Records / Statistiques / Succès : anciennement des sections repliables
+         empilées sur cet écran, maintenant des écrans dédiés (même schéma
+         que Options / Message en combat ci-dessus) — l'onglet Profil ne
+         montre plus que l'essentiel (identité + ELO) au premier coup d'œil. -->
+    <button class="btn" onclick="showScreen('profile-records')" style="width:100%;margin-bottom:8px;font-size:13px;padding:10px 14px;text-align:left;display:flex;align-items:center;gap:10px;max-width:100%;box-sizing:border-box">
+      <span style="font-size:20px">&#127894;</span>
+      <span style="flex:1;font-family:'Cinzel',serif;letter-spacing:1px" data-i18n="profile_records_title">Records</span>
+      <span style="color:var(--gold);opacity:.5;font-size:18px">&#8250;</span>
+    </button>
+    <button class="btn" onclick="showScreen('profile-stats')" style="width:100%;margin-bottom:8px;font-size:13px;padding:10px 14px;text-align:left;display:flex;align-items:center;gap:10px;max-width:100%;box-sizing:border-box">
+      <span style="font-size:20px">&#128202;</span>
+      <span style="flex:1;font-family:'Cinzel',serif;letter-spacing:1px" data-i18n="profile_stats_title">Statistiques</span>
+      <span style="color:var(--gold);opacity:.5;font-size:18px">&#8250;</span>
+    </button>
+    <button class="btn" onclick="showScreen('profile-achievements')" style="width:100%;margin-bottom:8px;font-size:13px;padding:10px 14px;text-align:left;display:flex;align-items:center;gap:10px;max-width:100%;box-sizing:border-box">
+      <span style="font-size:20px">&#127942;</span>
+      <span style="flex:1;font-family:'Cinzel',serif;letter-spacing:1px" data-i18n="profile_ach_title">Succès</span>
+      <span style="color:var(--gold);opacity:.5;font-size:18px">&#8250;</span>
+    </button>
+
     <button class="btn btn-small" style="margin-top:14px;width:100%" onclick="openGameHistoryModal(currentUser&&currentUser.id, currentUser&&currentUser.pseudo)" data-i18n="profile_last_battles">&#9876; Derniers combats</button>
     <button class="btn btn-small" style="margin-top:14px;width:100%;border-color:rgba(200,80,80,.4);color:#f08080" onclick="openResetModal()" data-i18n="profile_reset">&#9888; R&#233;initialiser le profil</button>
   </div>
@@ -2925,6 +2906,60 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button onclick="closeGradesModal()" style="margin-top:14px;width:100%;font-family:'Cinzel',serif;font-size:13px;letter-spacing:1px;padding:10px;border:1px solid rgba(200,168,110,.3);background:rgba(0,0,0,.4);color:var(--parchment);cursor:pointer;border-radius:4px;flex-shrink:0">Fermer</button>
   </div>
 </div>
+</div>
+
+<!-- ═══════════ PROFIL — RECORDS (écran dédié, ex-section du profil) ═══════════ -->
+<div id="screen-profile-records" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('profile')" data-i18n="btn_back">&#8617; RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+  <div class="panel" style="max-width:380px;width:100%">
+    <div class="menu-title" style="font-size:18px" data-i18n="profile_records_title">&#127894; RECORDS</div>
+    <div class="menu-divider"></div>
+    <div class="profile-section">
+      <div class="profile-section-title" data-i18n="profile_streak_title">&#128293; S&#233;rie de victoires</div>
+      <div class="elo-grid" id="profile-streaks">
+        <div class="elo-box"><div class="stat-val">0</div><div class="stat-lbl">&#9201; 3s</div></div>
+        <div class="elo-box"><div class="stat-val">0</div><div class="stat-lbl">&#9201; 5s</div></div>
+        <div class="elo-box"><div class="stat-val">0</div><div class="stat-lbl">&#9201; 10s</div></div>
+      </div>
+    </div>
+    <div class="profile-section">
+      <div class="stats-grid" id="profile-records" style="grid-template-columns:repeat(2,1fr)"></div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- ═══════════ PROFIL — STATISTIQUES (écran dédié, ex-section du profil) ═══════════ -->
+<div id="screen-profile-stats" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('profile')" data-i18n="btn_back">&#8617; RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+  <div class="panel" style="max-width:380px;width:100%">
+    <div class="menu-title" style="font-size:18px" data-i18n="profile_stats_title">&#128202; STATISTIQUES</div>
+    <div class="menu-divider"></div>
+    <div class="stats-grid" id="profile-stats"></div>
+    <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold);letter-spacing:1px;opacity:.6;margin:12px 0 6px" data-i18n="profile_by_timer">PAR CADENCE ET COULEUR</div>
+    <div style="display:flex;gap:5px;margin-bottom:8px">
+      <button class="sortmode-btn" id="profile-timertab-3" onclick="setProfileStatsTimerTab(3)">&#9201; 3s</button>
+      <button class="sortmode-btn active" id="profile-timertab-5" onclick="setProfileStatsTimerTab(5)">&#9201; 5s</button>
+      <button class="sortmode-btn" id="profile-timertab-10" onclick="setProfileStatsTimerTab(10)">&#9201; 10s</button>
+    </div>
+    <div class="stats-grid" id="profile-stats-bytimer" style="grid-template-columns:repeat(2,1fr)"></div>
+  </div>
+  </div>
+</div>
+
+<!-- ═══════════ PROFIL — SUCCÈS (écran dédié, ex-section du profil) ═══════════ -->
+<div id="screen-profile-achievements" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('profile')" data-i18n="btn_back">&#8617; RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+  <div class="panel" style="max-width:380px;width:100%">
+    <div class="menu-title" style="font-size:18px" data-i18n="profile_ach_title">&#127942; SUCC&#200;S</div>
+    <div class="menu-divider"></div>
+    <div class="ach-progress-hdr" id="profile-ach-progress"></div>
+    <div class="ach-list" id="profile-achievements"></div>
+  </div>
+  </div>
 </div>
 
 <!-- Modale "Derniers combats" — position:absolute pour rester accessible
@@ -3170,8 +3205,23 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.22.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.23.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.23.0 &mdash; 24 juillet 2026</div>
+      <ul class="devlog-list">
+
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; NAVIGATION</li>
+
+        <li><strong>Retour par balayage</strong> : glisser le doigt depuis le bord gauche de l'&eacute;cran vers la droite revient &agrave; l'&eacute;cran pr&eacute;c&eacute;dent, comme le geste natif iOS/Android &mdash; demand&eacute; par des joueurs. D&eacute;sactiv&eacute; pendant une partie et par-dessus une fen&ecirc;tre modale pour ne jamais interf&eacute;rer avec le d&eacute;placement des pi&egrave;ces.</li>
+
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; ONGLET PROFIL R&Eacute;ORGANIS&Eacute;</li>
+
+        <li>L'&eacute;cran Profil ne garde en direct que l'identit&eacute; (pseudo, grade, apparence) et le classement ELO. <strong>Records, Statistiques et Succ&egrave;s</strong> deviennent des &eacute;crans d&eacute;di&eacute;s accessibles par bouton, sur le m&ecirc;me mod&egrave;le que Options et Message en combat.</li>
+
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -6579,7 +6629,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.22.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.23.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -6793,7 +6843,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.22.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.23.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -6998,7 +7048,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.22.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.23.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -8275,6 +8325,7 @@ var NAV_TAB_MAP = {
   shop:'bn-shop', events:'bn-shop',
   amis:'bn-social', messaging:'bn-social', 'public-profile':'bn-social',
   profile:'bn-profile', settings:'bn-profile', display:'bn-profile', language:'bn-profile', 'piece-skins':'bn-profile', 'home-logo-cfg':'bn-profile',
+  'profile-records':'bn-profile', 'profile-stats':'bn-profile', 'profile-achievements':'bn-profile',
   // Onglet DEV : réservé aux comptes admin (voir updateDevButtonVisibility).
   'dev-hub':'bn-dev', devrewards:'bn-dev', 'dev-repertoire':'bn-dev', 'dev-openings':'bn-dev', 'dev-tactics':'bn-dev', 'dev-balance':'bn-dev'
 };
@@ -9551,6 +9602,50 @@ function unlockWurmzTheme(){
   if(typeof updateUiThemeButtons==='function') updateUiThemeButtons();
 }
 
+// ── Retour au balayage (swipe) gauche→droite depuis le bord de l'écran ──
+// Demande de joueurs : geste "retour" natif façon iOS, en plus des boutons
+// RETOUR existants. Zone de démarrage limitée au bord gauche (comme le
+// swipe-back système) pour ne jamais entrer en conflit avec le défilement
+// vertical des listes ni avec le drag des pièces en partie.
+var _screenHistory = [];
+var _suppressHistoryPush = false;
+function goBackScreen(){
+  if(!_screenHistory.length) return false;
+  var prev = _screenHistory.pop();
+  _suppressHistoryPush = true;
+  showScreen(prev);
+  return true;
+}
+function isAnyModalOpen(){
+  var modals = document.querySelectorAll('[id$="modal"], [id$="overlay"]');
+  for(var i=0;i<modals.length;i++){
+    if(getComputedStyle(modals[i]).display!=='none') return true;
+  }
+  return false;
+}
+(function(){
+  var startX=0, startY=0, startT=0, tracking=false;
+  var EDGE_PX=28, MIN_DX=70, MAX_DY=50, MAX_MS=600;
+  document.addEventListener('touchstart', function(e){
+    tracking=false;
+    if(!e.touches || e.touches.length!==1) return;
+    var t=e.touches[0];
+    if(t.clientX>EDGE_PX) return;
+    var activeScreen=document.querySelector('.screen.active');
+    if(!activeScreen || activeScreen.id==='screen-game' || activeScreen.id==='screen-coinflip') return;
+    if(isAnyModalOpen()) return;
+    startX=t.clientX; startY=t.clientY; startT=Date.now(); tracking=true;
+  }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    if(!tracking) return;
+    tracking=false;
+    var t=e.changedTouches && e.changedTouches[0];
+    if(!t) return;
+    var dx=t.clientX-startX, dy=t.clientY-startY, dt=Date.now()-startT;
+    if(dx>MIN_DX && Math.abs(dy)<MAX_DY && dt<MAX_MS) goBackScreen();
+  }, {passive:true});
+})();
+
 function showScreen(id){
   // Garde-fou : un mode coupé par l'administration reste inaccessible
   // (sauf pour les admins). Permet de désactiver un mode qui bugue sans
@@ -9564,6 +9659,16 @@ function showScreen(id){
   if(FEATURE_SCREENS[id] && typeof guardFeature==='function'){
     if(!guardFeature(FEATURE_SCREENS[id][0], FEATURE_SCREENS[id][1])) return;
   }
+  // Historique de navigation (pour le balayage gauche→droite = retour, voir
+  // plus bas). On mémorise l'écran qu'on QUITTE, pas celui qu'on rejoint —
+  // _suppressHistoryPush évite qu'un retour ne se réenregistre lui-même.
+  var _prevActiveScreen = document.querySelector('.screen.active');
+  var _prevScreenId = _prevActiveScreen ? _prevActiveScreen.id.replace(/^screen-/,'') : null;
+  if(!_suppressHistoryPush && _prevScreenId && _prevScreenId!==id){
+    _screenHistory.push(_prevScreenId);
+    if(_screenHistory.length>30) _screenHistory.shift();
+  }
+  _suppressHistoryPush = false;
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});
   const sc=document.getElementById('screen-'+id);if(sc)sc.classList.add('active');
   // On quitte l'écran de jeu : tout son de fin de partie encore en attente
