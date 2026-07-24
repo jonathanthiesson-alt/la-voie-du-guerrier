@@ -14265,6 +14265,11 @@ var DEV_BALANCE_EVALS={
 // Comme devSimOneGame (mêmes 4 premiers demi-coups variés pour la diversité
 // des parties), mais profondeur et fonction d'éval paramétrables, et SANS
 // tenir de journal d'ouvertures/tactiques : seul le vainqueur nous intéresse.
+// Retourne {winner, plies} — plies = nombre de demi-coups joués avant la
+// victoire, pour pouvoir détecter après coup si une config gagne surtout
+// par des combinaisons-éclair issues des 4 premiers coups aléatoires (pas
+// un vrai reflet de l'équilibre du jeu en partie normale). Voir
+// renderDevBalanceList (colonne "coups moy." et "% courtes <15").
 function devBalanceSimOneGame(depth,evalFn){
   var setup=devSimSetupBoard();
   var board=setup.board, stacks=setup.stacks;
@@ -14273,7 +14278,7 @@ function devBalanceSimOneGame(depth,evalFn){
   for(var i=0;i<160;i++){
     var color=turn;
     var moves=allMoves(color,board,stacks,lm,lp,lmbc);
-    if(!moves.length) return color==='white'?'black':'white';
+    if(!moves.length) return {winner:color==='white'?'black':'white', plies:i+1};
     var chosen;
     if(i<4){
       var pool=devSimTopMoves(moves,board,stacks,lm,lp,color,2,4);
@@ -14283,16 +14288,16 @@ function devBalanceSimOneGame(depth,evalFn){
     }
     var res=applyToClone(board,stacks,chosen,lm,lp);
     lm=res.nlm; lp=res.nlp; lmbc[color]=lm;
-    if(res.won) return color;
+    if(res.won) return {winner:color, plies:i+1};
     turn=(color==='white'?'black':'white');
   }
-  return null; // limite de coups atteinte (quasi-nulle) : non comptabilisée
+  return {winner:null, plies:160}; // limite de coups atteinte (quasi-nulle) : non comptabilisée
 }
 
-async function devBalanceUploadResult(testLabel,evalKey,depth,winner){
-  if(!winner) return;
+async function devBalanceUploadResult(testLabel,evalKey,depth,result){
+  if(!result.winner) return;
   try{
-    await supa.rpc('dev_record_balance_result',{p_test_label:testLabel,p_eval_label:DEV_BALANCE_EVALS[evalKey].label,p_depth_white:depth,p_depth_black:depth,p_winner:winner});
+    await supa.rpc('dev_record_balance_result',{p_test_label:testLabel,p_eval_label:DEV_BALANCE_EVALS[evalKey].label,p_depth_white:depth,p_depth_black:depth,p_winner:result.winner,p_plies:result.plies});
   }catch(e){ console.error('devBalanceUploadResult', e); }
 }
 
@@ -14321,8 +14326,8 @@ function devBalanceRunBatch(evalKey,depth,n){
       var chunk=Math.min(chunkSize, n-done);
       var proms=[];
       for(var i=0;i<chunk;i++){
-        var winner=devBalanceSimOneGame(depth,DEV_BALANCE_EVALS[evalKey].fn);
-        proms.push(devBalanceUploadResult(testLabel,evalKey,depth,winner));
+        var result=devBalanceSimOneGame(depth,DEV_BALANCE_EVALS[evalKey].fn);
+        proms.push(devBalanceUploadResult(testLabel,evalKey,depth,result));
         done++;
       }
       var prog=document.getElementById('dev-balance-progress');
@@ -14390,7 +14395,7 @@ async function renderDevBalanceList(){
     var rows=res.data||[];
     if(!rows.length){ el.innerHTML='<div style="opacity:.6">Aucune simulation encore lancée.</div>'; return; }
     var html='<table style="width:100%;border-collapse:collapse;font-size:12px">';
-    html+='<tr style="opacity:.7"><td>Éval</td><td>Prof.</td><td>Parties</td><td>% Blanc</td><td>% Noir</td><td>Écart</td><td>σ</td></tr>';
+    html+='<tr style="opacity:.7"><td>Éval</td><td>Prof.</td><td>Parties</td><td>% Blanc</td><td>% Noir</td><td>Écart</td><td>σ</td><td>Coups moy.</td><td>% &lt;15</td></tr>';
     rows.forEach(function(r){
       var pctW=r.games?Math.round(1000*r.white_wins/r.games)/10:0;
       var pctB=r.games?Math.round(1000*r.black_wins/r.games)/10:0;
@@ -14403,7 +14408,14 @@ async function renderDevBalanceList(){
       var z = se ? gap/se : 0;
       var sig = z>=3; // ~3 écarts-types : probabilité <0,3% que ce soit le hasard
       var color = sig ? 'var(--gold-bright)' : 'inherit';
-      html+='<tr style="border-top:1px solid rgba(255,255,255,.1);color:'+color+'"><td>'+r.eval_label+'</td><td>'+r.depth_white+'/'+r.depth_black+'</td><td>'+r.games+'</td><td>'+pctW+'%</td><td>'+pctB+'%</td><td>'+gap.toFixed(1)+' pts</td><td>'+(sig?'⚠ ':'')+z.toFixed(1)+'σ</td></tr>';
+      // Coups moyens et % de parties "courtes" (<15 demi-coups, soit avant le
+      // 8e coup plein) : une config qui gagne surtout par des combinaisons-
+      // éclair issues des 4 premiers coups aléatoires n'est pas un vrai
+      // reflet de l'équilibre en partie normale — voir devBalanceSimOneGame.
+      var avgPlies = r.games ? Math.round(10*r.total_plies/r.games)/10 : 0;
+      var pctShort = r.games ? Math.round(1000*r.games_under_15/r.games)/10 : 0;
+      var shortWarn = pctShort>=10;
+      html+='<tr style="border-top:1px solid rgba(255,255,255,.1);color:'+color+'"><td>'+r.eval_label+'</td><td>'+r.depth_white+'/'+r.depth_black+'</td><td>'+r.games+'</td><td>'+pctW+'%</td><td>'+pctB+'%</td><td>'+gap.toFixed(1)+' pts</td><td>'+(sig?'⚠ ':'')+z.toFixed(1)+'σ</td><td>'+avgPlies+'</td><td'+(shortWarn?' style="color:#e08a4a"':'')+'>'+(shortWarn?'⚠ ':'')+pctShort+'%</td></tr>';
     });
     html+='</table>';
     el.innerHTML=html;
