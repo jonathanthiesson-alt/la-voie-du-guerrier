@@ -1489,6 +1489,48 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 .devlog-list li{font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.75);line-height:1.6;padding:1px 0}
 .devlog-list li code{font-family:'VT323',monospace;color:#c090f0;font-size:13px}
 
+/* ── Journal d'activité : rouleau de registre japonais ancien ────────
+   Fond papier vieilli (dégradés sépia superposés en guise de grain/
+   taches, sans image externe), bords assombris façon "brûlé/roulé",
+   texte à l'encre plutôt que la boîte plate d'origine. */
+.activity-feed-scroll{
+  position:relative;
+  background:
+    radial-gradient(ellipse at 15% 20%, rgba(120,90,45,.16), transparent 45%),
+    radial-gradient(ellipse at 85% 75%, rgba(110,80,40,.14), transparent 50%),
+    radial-gradient(ellipse at 50% 95%, rgba(90,60,25,.18), transparent 55%),
+    linear-gradient(180deg, #ecdfbf, #e2d1a8 55%, #d9c495);
+  border-radius:4px;
+  box-shadow:
+    inset 0 0 22px rgba(60,35,10,.55),
+    inset 0 0 3px rgba(30,15,0,.6);
+  border:1px solid rgba(70,45,15,.5);
+}
+.activity-feed-scroll::before{
+  content:'';
+  position:absolute; inset:0;
+  border-radius:4px;
+  background:
+    linear-gradient(90deg, rgba(35,20,5,.35), transparent 4%, transparent 96%, rgba(35,20,5,.35)),
+    linear-gradient(180deg, rgba(35,20,5,.3), transparent 8%, transparent 92%, rgba(35,20,5,.3));
+  pointer-events:none;
+}
+.activity-feed-scroll .af-entry{
+  font-family:'VT323',monospace;
+  color:#3c2a14;
+  text-shadow:0 1px 0 rgba(255,245,220,.3);
+  border-bottom:1px dashed rgba(90,60,25,.25);
+  padding:3px 2px;
+}
+.activity-feed-scroll .af-entry:last-child{border-bottom:none}
+.activity-feed-scroll .af-time{
+  color:rgba(75,50,20,.65);
+  font-size:10px;
+  margin-right:5px;
+  letter-spacing:.5px;
+}
+.activity-feed-scroll .af-empty{color:rgba(75,50,20,.55);font-style:italic}
+
 
 /* ── V2-Test orange ── */
 :root{--orange-v2:rgba(240,140,40,.95)}
@@ -2171,7 +2213,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="af-filter-victoire_pvp" onchange="saveActivityFeedFilters()"> Victoires joueur contre joueur</label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="af-filter-victoire_tournoi" onchange="saveActivityFeedFilters()"> Vainqueurs de tournoi</label>
     </div>
-    <div id="activity-feed-list" style="display:flex;flex-direction:column;gap:4px;max-height:180px;overflow-y:auto;background:rgba(0,0,0,.2);border-radius:6px;padding:8px 10px;font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.85"></div>
+    <div id="activity-feed-list" class="activity-feed-scroll" style="display:flex;flex-direction:column;gap:2px;max-height:180px;overflow-y:auto;padding:8px 10px;font-size:12px"></div>
   </div>
 </div>
 
@@ -8334,8 +8376,11 @@ function renderActivityFeed(){
   if(!el) return;
   var active = getActiveActivityFeedTypes();
   var rows = _activityFeedRows.filter(function(r){ return active.indexOf(r.event_type)!==-1; });
-  if(!rows.length){ el.innerHTML='<div style="opacity:.5">Rien à signaler pour l\'instant.</div>'; return; }
-  el.innerHTML = rows.map(function(r){ return '<div>'+r.message.replace(/</g,'&lt;')+'</div>'; }).join('');
+  if(!rows.length){ el.innerHTML='<div class="af-empty">Rien à signaler pour l\'instant.</div>'; return; }
+  el.innerHTML = rows.map(function(r){
+    var time = r.created_at ? new Date(r.created_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) : '';
+    return '<div class="af-entry"><span class="af-time">'+time+'</span>'+r.message.replace(/</g,'&lt;')+'</div>';
+  }).join('');
 }
 function subscribeToActivityFeed(){
   if(_activityFeedChannel || !supa || !currentUser) return;
