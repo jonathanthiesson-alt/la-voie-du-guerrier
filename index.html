@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.26.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.27.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2113,7 +2113,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.26.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.27.0 &#9820;</div>
   </div>
 </div>
 
@@ -3209,13 +3209,19 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.26.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.27.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
     </div>
 
     <div class="devlog-entry">
-      <div class="devlog-version">ONLINE alpha V0.26.0 &mdash; 24 juillet 2026</div>
+      <div class="devlog-version">ONLINE alpha V0.27.0 &mdash; 24 juillet 2026</div>
       <ul class="devlog-list">
+
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; ADMINISTRATION — HABITUDES DE JEU</li>
+
+        <li>L'onglet <strong>Stats</strong> de l'Administration affiche maintenant les habitudes de jeu de <strong>tous les comptes</strong> sur les 30 derniers jours : parties en ligne par cadence et par mode, local vs en ligne, &eacute;crans les plus visit&eacute;s, r&eacute;partition mobile/bureau, achats boutique par pack.</li>
+
+        <li>Nouvel &eacute;v&eacute;nement de t&eacute;l&eacute;m&eacute;trie <code>screen_view</code> (dans <code>showScreen</code>) pour tracer la navigation r&eacute;elle des joueurs &mdash; les &eacute;crans les plus visit&eacute;s ne seront fiables qu'&agrave; partir de maintenant, l'historique avant ce changement n'existe pas.</li>
 
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; ONGLET JOUER</li>
 
@@ -6652,7 +6658,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.26.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.27.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -6866,7 +6872,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.26.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.27.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -7071,7 +7077,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.26.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.27.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -9209,7 +9215,54 @@ async function renderAdminStats(){
   }).join('');
   html += '</div>';
   html += '<button class="adm-btn" style="width:100%;padding:7px;margin-top:8px" onclick="refreshDevRewardsScreen()">🔄 Rafraîchir</button>';
+
+  // ── Habitudes de jeu (30 derniers jours, tous les comptes confondus) ──
+  // Alimenté par telemetry_events : les parties en ligne viennent de
+  // online_games directement (fiable, jamais manqué), le reste (écrans
+  // visités, plateforme, local vs en ligne, achats boutique) vient des
+  // événements de télémétrie envoyés par le client (voir logTelemetryEvent
+  // et le hook dans showScreen pour 'screen_view').
+  html += '<div id="admin-usage-stats" style="margin-top:14px">Chargement des habitudes de jeu…</div>';
   body.innerHTML = html;
+  renderAdminUsageStats();
+}
+function admUsageBarList(rows, color){
+  if(!rows || !rows.length) return '<div style="opacity:.5;font-family:VT323,monospace;font-size:11px;padding:4px 0">Aucune donnée sur cette période.</div>';
+  var max = Math.max.apply(null, rows.map(function(r){return r.count;}));
+  return rows.map(function(r){
+    var pct = max ? Math.round(100*r.count/max) : 0;
+    return '<div style="margin-bottom:5px">'
+      + '<div style="display:flex;justify-content:space-between;font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.85"><span>'+escapeHtml(String(r.label))+'</span><span>'+r.count+'</span></div>'
+      + '<div style="height:6px;border-radius:3px;background:rgba(0,0,0,.35);overflow:hidden;margin-top:2px"><div style="height:100%;width:'+pct+'%;background:'+color+'"></div></div>'
+      + '</div>';
+  }).join('');
+}
+async function renderAdminUsageStats(){
+  var el = document.getElementById('admin-usage-stats');
+  if(!el) return;
+  try{
+    const { data } = await supa.rpc('admin_usage_stats', { p_days: 30 });
+    if(!data || !data.ok){ el.innerHTML='<div style="opacity:.5;text-align:center;font-family:VT323,monospace">Accès refusé.</div>'; return; }
+    var html = '<div class="adm-h">📊 HABITUDES DE JEU — 30 DERNIERS JOURS</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:10px">';
+    [
+      {v:data.distinct_active_players, l:'👤 Joueurs actifs'},
+      {v:data.sessions_started,        l:'🔓 Sessions'},
+      {v:data.daily_challenge_solves,  l:'🎯 Défis résolus'}
+    ].forEach(function(c){
+      html += '<div class="adm-card" style="text-align:center;margin:0"><div style="font-family:\'Cinzel\',serif;font-size:16px;color:var(--gold-bright)">'+c.v+'</div><div style="font-family:VT323,monospace;font-size:9px;opacity:.6">'+c.l+'</div></div>';
+    });
+    html += '</div>';
+
+    html += '<div class="adm-card"><div class="adm-h" style="margin-top:0">⏱ Parties en ligne par cadence</div>'+admUsageBarList(data.games_by_cadence,'var(--gold-bright)')+'</div>';
+    html += '<div class="adm-card"><div class="adm-h" style="margin-top:0">🎮 Parties en ligne par mode</div>'+admUsageBarList(data.games_by_mode,'#6abf40')+'</div>';
+    html += '<div class="adm-card"><div class="adm-h" style="margin-top:0">🏠 Local vs en ligne (toutes parties)</div>'+admUsageBarList(data.games_local_vs_online,'#f0b478')+'</div>';
+    html += '<div class="adm-card"><div class="adm-h" style="margin-top:0">🧭 Écrans les plus visités</div>'+admUsageBarList(data.top_screens,'#c58aff')+'</div>';
+    html += '<div class="adm-card"><div class="adm-h" style="margin-top:0">📱 Plateforme</div>'+admUsageBarList(data.platform_split,'#4ab0d0')+'</div>';
+    html += '<div class="adm-card"><div class="adm-h" style="margin-top:0">🛒 Achats boutique par pack</div>'+admUsageBarList(data.shop_purchases_by_pack,'#e0a050')+'</div>';
+
+    el.innerHTML = html;
+  }catch(e){ el.innerHTML='<div style="opacity:.5;text-align:center;font-family:VT323,monospace">Erreur de chargement.</div>'; console.error('renderAdminUsageStats', e); }
 }
 
 // ── SECTION : GESTION DES JOUEURS ────────────────────────────────
@@ -9754,6 +9807,10 @@ function showScreen(id){
     _screenHistory.push(_prevScreenId);
     if(_screenHistory.length>30) _screenHistory.shift();
   }
+  // Télémétrie de navigation — alimente l'outil d'analyse d'utilisation
+  // (Administration → Stats). Un seul événement par changement d'écran réel
+  // (pas de doublon quand on rappelle showScreen sur l'écran déjà actif).
+  if(_prevScreenId!==id && typeof logTelemetryEvent==='function') logTelemetryEvent('screen_view', {screen:id});
   _suppressHistoryPush = false;
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active')});
   const sc=document.getElementById('screen-'+id);if(sc)sc.classList.add('active');
