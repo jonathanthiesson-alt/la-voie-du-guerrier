@@ -68,15 +68,32 @@ Inspirations assumées : **Fate** (invocation de figures historiques) et
 - Onboarding / tutoriel
 - Notifications push
 - Polish UI général
-- **Web Worker pour le simulateur d'équilibre Blanc/Noir (outil DEV)** — notée
-  le 2026-07-24. Actuellement les simulations tournent sur le thread
-  principal (chunks + `setTimeout` pour éviter le gel visuel, voir
-  `devBalanceRunBatch`), suffisant pour l'usage actuel mais lent aux
-  profondeurs élevées (6+). Un vrai Worker déporterait le calcul sur un
-  thread séparé — mais le moteur de jeu (`allMoves`, `applyToClone`, etc.)
-  est très couplé au reste du fichier (code DOM en tête de script), donc
-  l'extraction propre est un chantier à part entière, pas une extension
-  rapide. À faire dans une session dédiée, avec de vrais tests.
+- ~~**Web Worker pour le simulateur d'équilibre Blanc/Noir**~~ — **FAIT le
+  2026-07-26** via le nouvel outil **Laboratoire** (onglet DEV). Le calcul
+  tourne dans un Web Worker (thread séparé, plus de gel, on peut naviguer
+  pendant que ça tourne). Le couplage du moteur au `G` global a été contourné
+  sans le découper : le Worker exécute une **copie exacte du moteur vivant
+  extraite à l'exécution** (`Function.toString()` concaténé dans le script du
+  Worker, voir `labBuildEngineSource`). Vérifié identique au bit près en mode
+  déterministe. Verdict d'équilibre en direct avec significativité (σ).
+- **LABORATOIRE — feuille de route** (validée par Jonathan le 2026-07-26,
+  périmètre « tout, y compris worker serveur »). Chaque étape s'appuie sur la
+  précédente ; l'ordre est contraint (le worker serveur a besoin du moteur
+  extrait, déjà fait à l'étape 1).
+  1. ✅ **Clé de voûte + Labo navigateur** — moteur extrait, Web Worker,
+     verdict d'équilibre sur le format **standard**. Fait le 2026-07-26.
+  2. ☐ **Formats en données** — `LAB_FORMATS` est déjà le point d'extension
+     (un format = `{rows, cols, v2, sumo, voids, setup}`). Rendre le moteur
+     réellement agnostique aux dimensions (aujourd'hui `isValid`/`evalPosition`
+     supposent 5×5 en dur) et ajouter le format **Sumo** + une pièce test.
+     Petit éditeur DEV pour cloner/créer un format.
+  3. ☐ **Worker serveur** — porter la source du moteur (déjà sans DOM) dans une
+     **Edge Function Deno**, déclenchée par lots via `pg_cron`, écrivant les
+     stats dans Supabase. Objectif : les simulations tournent **sans appareil
+     allumé**.
+  4. ☐ **Publier un format comme événement** — pont entre un format du registre
+     et le système d'événements live (comme le Sumo), pour tester une variante
+     auprès des vrais joueurs. Boucle « forger → tester → publier » bouclée.
 - Performance sur mobile bas de gamme
 
 ---
