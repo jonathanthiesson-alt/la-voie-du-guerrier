@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.27.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.28.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2113,7 +2113,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.27.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.28.0 &#9820;</div>
   </div>
 </div>
 
@@ -2468,6 +2468,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('devrewards')">🛠 Administration</button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-repertoire')">📖 Répertoire d'ouvertures/tactiques/équilibre</button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="openDevParam()">🤖 Bots</button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-lab')">🔬 Laboratoire (simulations & équilibre)</button>
     <button class="btn btn-devtest" style="width:100%;margin-bottom:8px" onclick="showScreen('devlog')">録 DevLog</button>
   </div>
   </div>
@@ -2547,6 +2548,55 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div class="menu-divider"></div>
     <div id="dev-balance-list" style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment)"></div>
     <button class="btn" style="width:100%;margin-top:10px;opacity:.7" onclick="devBalanceResetStats()">🗑 Réinitialiser les stats</button>
+  </div>
+  </div>
+</div>
+
+<!-- LABORATOIRE — simulateur bot vs bot en Web Worker (calcul déporté sur un
+     thread séparé : pas de gel, on peut naviguer pendant que ça tourne).
+     Verdict d'équilibre Blanc/Noir en direct. Point d'extension futur pour
+     les formats/pièces/dimensions et les modes événement. Voir labStartRun /
+     labBuildEngineSource / LAB_FORMATS. Réservé aux comptes dev. -->
+<div id="screen-dev-lab" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('dev-hub')">↩ RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+  <div class="panel" style="max-width:440px;width:100%">
+    <div class="menu-title" style="font-size:18px;margin-top:10px">🔬 LABORATOIRE</div>
+    <div class="menu-divider"></div>
+    <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.75;text-align:center;margin-bottom:12px">
+      Parties bot vs bot dans un Web Worker (thread séparé : aucun gel, tu peux quitter cet écran, ça continue). Verdict d'équilibre en direct avec sa significativité (σ).
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;font-family:'VT323',monospace;font-size:14px;color:var(--parchment)">
+      <label style="display:flex;justify-content:space-between;align-items:center;gap:10px">Format
+        <select id="lab-format" style="flex:1;max-width:230px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px"></select>
+      </label>
+      <label style="display:flex;justify-content:space-between;align-items:center;gap:10px">Profondeur Blanc
+        <select id="lab-depth-w" style="width:80px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px">
+          <option>1</option><option>2</option><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option>
+        </select>
+      </label>
+      <label style="display:flex;justify-content:space-between;align-items:center;gap:10px">Profondeur Noir
+        <select id="lab-depth-b" style="width:80px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px">
+          <option>1</option><option>2</option><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option>
+        </select>
+      </label>
+      <div style="font-size:11px;opacity:.55;margin-top:-4px">Même profondeur des deux côtés = test d'équilibre pur (la couleur est la seule variable). Profondeurs différentes = tester la force relative des niveaux.</div>
+      <label style="display:flex;justify-content:space-between;align-items:center;gap:10px">Nombre de parties
+        <input id="lab-games" type="number" min="1" value="200" style="width:90px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px">
+      </label>
+      <label style="display:flex;justify-content:space-between;align-items:center;gap:10px">Formule d'éval
+        <select id="lab-eval" style="flex:1;max-width:230px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px"></select>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px"><input id="lab-opening" type="checkbox" checked> Varier les 4 premiers demi-coups (diversité d'ouvertures)</label>
+    </div>
+    <button id="lab-start-btn" class="adm-btn" style="width:100%;padding:11px;margin-top:12px;font-weight:bold" onclick="labStartRun()">▶ Lancer la simulation</button>
+    <button id="lab-stop-btn" class="btn" style="width:100%;padding:8px;margin-top:6px;display:none;opacity:.85" onclick="labStopRun()">■ Arrêter</button>
+    <div id="lab-progress" style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.85;text-align:center;margin-top:12px;margin-bottom:6px"></div>
+    <div style="height:8px;border-radius:4px;background:rgba(0,0,0,.4);border:1px solid rgba(212,160,23,.25);overflow:hidden;margin-bottom:12px">
+      <div id="lab-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#8a6a20,var(--gold-bright,#d4a017));transition:width .2s ease"></div>
+    </div>
+    <div class="menu-divider"></div>
+    <div id="lab-results" style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment)"></div>
   </div>
   </div>
 </div>
@@ -3209,8 +3259,23 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.27.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.28.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.28.0 &mdash; 26 juillet 2026</div>
+      <ul class="devlog-list">
+
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; LABORATOIRE (OUTIL DEV)</li>
+
+        <li>Nouvel outil <strong>Laboratoire</strong> dans l'onglet DEV : fait tourner des parties bot vs bot dans un <strong>Web Worker</strong> (thread s&eacute;par&eacute; &mdash; plus aucun gel, on peut quitter l'&eacute;cran, la simulation continue). R&eacute;serv&eacute; aux comptes dev.</li>
+
+        <li><strong>Verdict d'&eacute;quilibre en direct</strong> : taux de victoire Blanc/Noir, coups moyens, part de parties courtes, et surtout la <strong>significativit&eacute; statistique (&sigma;)</strong> &mdash; &laquo;&nbsp;&eacute;quilibr&eacute;&nbsp;&raquo; sous 2&sigma;, &laquo;&nbsp;d&eacute;s&eacute;quilibre significatif&nbsp;&raquo; au-del&agrave; de 3&sigma;. Profondeur 1&agrave;7 r&eacute;glable ind&eacute;pendamment pour chaque camp, nombre de parties et formule d'&eacute;val au choix.</li>
+
+        <li>Le moteur du Worker est une <strong>copie exacte du moteur vivant</strong>, extraite &agrave; l'ex&eacute;cution (aucune duplication de code, donc aucune d&eacute;rive possible) &mdash; v&eacute;rifi&eacute; identique au bit pr&egrave;s en mode d&eacute;terministe. Cette m&ecirc;me base servira au futur &laquo;&nbsp;worker serveur&nbsp;&raquo; et aux formats de jeu param&eacute;trables (pi&egrave;ces, dimensions, modes &eacute;v&eacute;nement).</li>
+
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -6658,7 +6723,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.27.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.28.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -6872,7 +6937,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.27.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.28.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -7077,7 +7142,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.27.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.28.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -8356,7 +8421,7 @@ var NAV_TAB_MAP = {
   profile:'bn-profile', settings:'bn-profile', display:'bn-profile', language:'bn-profile', 'piece-skins':'bn-profile', 'home-logo-cfg':'bn-profile',
   'profile-records':'bn-profile', 'profile-stats':'bn-profile', 'profile-achievements':'bn-profile',
   // Onglet DEV : réservé aux comptes admin (voir updateDevButtonVisibility).
-  'dev-hub':'bn-dev', devrewards:'bn-dev', 'dev-repertoire':'bn-dev', 'dev-openings':'bn-dev', 'dev-tactics':'bn-dev', 'dev-balance':'bn-dev'
+  'dev-hub':'bn-dev', devrewards:'bn-dev', 'dev-repertoire':'bn-dev', 'dev-openings':'bn-dev', 'dev-tactics':'bn-dev', 'dev-balance':'bn-dev', 'dev-lab':'bn-dev'
 };
 function updateBottomNav(id){
   var visible = NAV_HIDDEN_SCREENS.indexOf(id)===-1;
@@ -9864,6 +9929,7 @@ function showScreen(id){
   if(id==='dev-openings') renderDevOpeningsList();
   if(id==='dev-tactics') renderDevTacticsList();
   if(id==='dev-balance'){ renderDevBalanceList(); renderDevBalanceEstimates(); }
+  if(id==='dev-lab'){ labOnShowScreen(); }
   if(id==='opponents'){ refreshOpponentsScreen(); }
   if(id==='messaging'||id==='online-menu'){ restoreAmisAdoptedPanels(); }
   if(id==='league') openLeagueScreen();
@@ -14679,6 +14745,294 @@ async function renderDevBalanceList(){
 async function devBalanceResetStats(){
   if(!confirm('Effacer toutes les stats d\'équilibre accumulées ?')) return;
   try{ await supa.rpc('dev_reset_balance_stats'); renderDevBalanceList(); }catch(e){ console.error(e); }
+}
+
+// ══════════════════════════════════════════════════════
+// LABORATOIRE — simulateur de parties bot vs bot en Web Worker
+// ══════════════════════════════════════════════════════
+// Objectif : trancher LA question du projet — le jeu est-il équilibré comme
+// les échecs ? On fait tourner des milliers de parties miroir (même moteur,
+// même profondeur des deux côtés) et on lit le taux de victoire Blanc/Noir
+// avec sa significativité statistique (σ). Contrairement à l'ancien
+// simulateur d'équilibre (devBalanceRunBatch) qui calcule sur le THREAD
+// PRINCIPAL (chunks + setTimeout, l'UI rame et l'onglet doit rester au
+// premier plan), le Laboratoire déporte tout le calcul dans un Web Worker :
+// thread séparé, aucun gel, on peut naviguer dans l'app pendant que ça tourne.
+//
+// CLÉ DE VOÛTE — pourquoi un moteur "extrait à l'exécution" :
+// un Worker n'a accès NI au DOM NI aux fonctions du thread principal. Il lui
+// faut sa propre copie du moteur. Plutôt que dupliquer ~600 lignes (qui
+// dériveraient à la première correction de règle), on récupère la SOURCE
+// VIVANTE des fonctions via Function.toString() et on la concatène dans le
+// script du Worker (labBuildEngineSource). Une seule source de vérité, copie
+// exacte, et le jeu live n'est jamais modifié (on lit sa source, c'est tout).
+// Bonus : cette même source pourra alimenter l'Edge Function Deno du futur
+// "worker serveur" (elle est déjà sans DOM, pilotée par un descripteur de
+// format). Le moteur suppose ENCORE un plateau 5×5 en dur (isValid,
+// evalPosition) : les autres dimensions viendront avec les formats data.
+//
+// LAB_FORMATS = point d'extension unique. Un format = tout ce qui définit
+// une variante jouable : dimensions, cases interdites (voids), règles (v2,
+// sumo) et disposition de départ. Ajouter Sumo / de nouvelles pièces / un
+// autre plateau = ajouter une entrée ici (chantier des milestones suivants).
+var LAB_FORMATS={
+  standard:{
+    id:'standard', name:'Standard 5×5', rows:5, cols:5, v2:true, sumo:false,
+    voids:['0,0','0,4','4,0','4,4'], // 4 coins retirés (= VOID_STD) → 21 cases
+    setup:[
+      {type:'epeiste',color:'white',r:0,c:2},{type:'sword',color:'white',r:0,c:1},{type:'sword',color:'white',r:0,c:3},{type:'shield',color:'white',r:1,c:2},
+      {type:'epeiste',color:'black',r:4,c:2},{type:'sword',color:'black',r:4,c:1},{type:'sword',color:'black',r:4,c:3},{type:'shield',color:'black',r:3,c:2}
+    ]
+  }
+};
+// Formules d'éval testables (les mêmes que l'analyse d'équilibre). Par défaut
+// "current" = la formule de PRODUCTION (evalTrainer) : c'est elle qui décide
+// si le jeu TEL QU'IL TOURNE est équilibré. Les autres sont des candidates de
+// correction (voir DEV_BALANCE_EVALS et la note d'analyse plus haut).
+var LAB_EVAL_LABELS={
+  current:'Formule actuelle (production)',
+  symmetric:'Candidate — totalement symétrique',
+  agdffix:'Candidate — agression/défense symétrisées',
+  mobfix:'Candidate — mobilité symétrisée'
+};
+
+var _labWorker=null;
+var _labRun={running:false,done:0,target:0,w:0,b:0,draw:0,plies:0,under15:0,startMs:0,cfg:null};
+
+// Corps d'une fonction, sans son enveloppe `function nom(){ … }` : sert à
+// réinjecter le driver écrit en VRAI JS (donc validé par node --check) au
+// niveau racine du script Worker. On n'exécute JAMAIS labWorkerDriver sur le
+// thread principal — on ne lit que sa source.
+function labExtractBody(fn){
+  var s=fn.toString();
+  var i=s.indexOf('{');
+  var j=s.lastIndexOf('}');
+  return s.slice(i+1,j);
+}
+
+// Ce driver s'exécute DANS le Worker (jamais ici). Il référence des fonctions
+// (allMoves, minimaxPlay, evalBalance*…) et FORMAT qui n'existent pas sur le
+// thread principal mais seront présentes dans le Worker (préambule + moteur
+// concaténés avant ce corps). Sur le thread principal on se contente de le
+// toString() — aucun de ces symboles n'est résolu ici.
+function labWorkerDriver(){
+  function labOpp(c){ return c==='white'?'black':'white'; }
+  function labSetupState(){
+    var rows=FORMAT.rows||5, cols=FORMAT.cols||5;
+    var board=[], stacks=[];
+    for(var r=0;r<rows;r++){ var br=[], sr=[]; for(var c=0;c<cols;c++){ br.push(null); sr.push(null); } board.push(br); stacks.push(sr); }
+    FORMAT.setup.forEach(function(p){ board[p.r][p.c]={type:p.type,color:p.color}; });
+    return {board:board,stacks:stacks};
+  }
+  // Copie fidèle de devBalanceSimOneGame, mais profondeur asymétrique
+  // (depthW/depthB), éval paramétrable et aléa d'ouverture réglable.
+  function labSimOne(depthW,depthB,evalFn,openingN){
+    var st=labSetupState();
+    var board=st.board, stacks=st.stacks;
+    var lm=null, lp=null, lmbc={white:null,black:null};
+    var turn='white', maxPlies=160;
+    for(var i=0;i<maxPlies;i++){
+      var color=turn;
+      var depth=(color==='white')?depthW:depthB;
+      var moves=allMoves(color,board,stacks,lm,lp,lmbc);
+      if(!moves.length) return {winner:labOpp(color),plies:i+1};
+      var chosen;
+      if(i<openingN){
+        var pool=devSimTopMoves(moves,board,stacks,lm,lp,color,2,4);
+        chosen=pool[Math.floor(Math.random()*pool.length)];
+      }else{
+        chosen=minimaxPlay(moves,board,stacks,lm,lp,depth,evalFn,color)||moves[0];
+      }
+      var res=applyToClone(board,stacks,chosen,lm,lp);
+      lm=res.nlm; lp=res.nlp; lmbc[color]=lm;
+      if(res.won) return {winner:color,plies:i+1};
+      turn=labOpp(color);
+    }
+    return {winner:null,plies:maxPlies}; // limite atteinte → nul, non comptabilisé
+  }
+  var EVALS={current:evalBalanceCurrent,symmetric:evalBalanceSymmetric,agdffix:evalBalanceAgDfFixed,mobfix:evalBalanceMobilityFixed};
+  onmessage=function(ev){
+    var d=ev.data;
+    if(!d||d.cmd!=='run') return;
+    var evalFn=EVALS[d.evalKey]||evalTrainer;
+    for(var k=0;k<d.batch;k++){
+      var g=labSimOne(d.depthW,d.depthB,evalFn,d.openingN);
+      postMessage({type:'game',winner:g.winner,plies:g.plies});
+    }
+    postMessage({type:'batchDone',n:d.batch});
+  };
+}
+
+// Construit la source complète du script Worker : préambule (format injecté +
+// stubs sans DOM) + moteur vivant (toString) + driver.
+function labBuildEngineSource(format){
+  var engineFns=[isValid,findMaster,dist,threatCount,cloneBS,applyToClone,allMoves,legalMoves,execMove,evalPosition,evalTrainer,evalBalanceCurrent,evalBalanceMobilityFixed,evalBalanceSymmetric,evalBalanceAgDfFixed,minimaxFn,minimaxPlay,devSimTopMoves];
+  var prelude=[
+    'var FORMAT='+JSON.stringify(format)+';',
+    'var VOID_STD=new Set(FORMAT.voids||[]);',
+    'var DO=[{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1}];',
+    'var DA=[{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1},{dr:-1,dc:-1},{dr:-1,dc:1},{dr:1,dc:-1},{dr:1,dc:1}];',
+    'var PP={totalCaptures:0,totalPushes:0};',
+    'function playSound(){} function haptic(){}',
+    'var G={simulating:true,cols:FORMAT.cols||5,sumoMode:!!FORMAT.sumo,turn:null,lastMovedByColor:{white:null,black:null}};',
+    'function isV2mode(){return !!FORMAT.v2;}'
+  ].join('\n');
+  var body=engineFns.map(function(f){ return f.toString(); }).join('\n\n');
+  var driver=labExtractBody(labWorkerDriver);
+  return prelude+'\n\n'+body+'\n\n'+driver;
+}
+
+// Profondeur élevée = 1 partie/lot (arrêt réactif) ; faible = gros lots
+// (moins d'aller-retours de messages). Le lot tourne en synchrone DANS le
+// Worker, donc sa taille borne le délai de réponse à un Stop.
+function labBatchSize(){
+  var d=Math.max(_labRun.cfg.depthW,_labRun.cfg.depthB);
+  return d>=6?1 : d>=5?2 : d>=4?5 : 25;
+}
+
+function labStartRun(){
+  if(!isDevUser()){ if(typeof showToast==='function') showToast('Réservé aux comptes dev.', true); return; }
+  if(_labRun.running) return;
+  var formatKey=(document.getElementById('lab-format')||{}).value||'standard';
+  var depthW=+((document.getElementById('lab-depth-w')||{}).value||5);
+  var depthB=+((document.getElementById('lab-depth-b')||{}).value||5);
+  var n=+((document.getElementById('lab-games')||{}).value||200);
+  var evalKey=(document.getElementById('lab-eval')||{}).value||'current';
+  var openingN=(document.getElementById('lab-opening')||{}).checked?4:0;
+  if(!n||n<1){ if(typeof showToast==='function') showToast('Nombre de parties invalide.', true); return; }
+  if(!LAB_FORMATS[formatKey]){ if(typeof showToast==='function') showToast('Format inconnu.', true); return; }
+  _labRun={running:true,done:0,target:n,w:0,b:0,draw:0,plies:0,under15:0,startMs:performance.now(),cfg:{formatKey:formatKey,depthW:depthW,depthB:depthB,evalKey:evalKey,openingN:openingN}};
+  if(_labWorker){ _labWorker.terminate(); _labWorker=null; }
+  try{
+    var src=labBuildEngineSource(LAB_FORMATS[formatKey]);
+    var url=URL.createObjectURL(new Blob([src],{type:'text/javascript'}));
+    _labWorker=new Worker(url);
+    _labWorker.onmessage=labOnWorkerMessage;
+    _labWorker.onerror=function(e){ console.error('lab worker', e); if(typeof showToast==='function') showToast('Erreur Worker : '+(e.message||'inconnue'), true); labStopRun(); };
+  }catch(err){
+    console.error('labStartRun', err);
+    if(typeof showToast==='function') showToast('Impossible de démarrer le Worker.', true);
+    _labRun.running=false; return;
+  }
+  labSetControlsDisabled(true);
+  labRequestBatch();
+  labUpdateUI();
+}
+
+function labRequestBatch(){
+  if(!_labRun.running || !_labWorker) return;
+  var remaining=_labRun.target-_labRun.done;
+  if(remaining<=0){ labFinishRun(); return; }
+  var batch=Math.min(labBatchSize(),remaining);
+  _labWorker.postMessage({cmd:'run',batch:batch,depthW:_labRun.cfg.depthW,depthB:_labRun.cfg.depthB,evalKey:_labRun.cfg.evalKey,openingN:_labRun.cfg.openingN});
+}
+
+function labOnWorkerMessage(ev){
+  var d=ev.data;
+  if(!d) return;
+  if(d.type==='game'){
+    if(!_labRun.running) return;
+    _labRun.done++;
+    if(d.winner==='white') _labRun.w++;
+    else if(d.winner==='black') _labRun.b++;
+    else _labRun.draw++;
+    if(d.winner){ _labRun.plies+=d.plies; if(d.plies<15) _labRun.under15++; }
+    labUploadGame(d.winner,d.plies);
+    if(_labRun.done%3===0 || _labRun.done===_labRun.target) labUpdateUI();
+  }else if(d.type==='batchDone'){
+    labUpdateUI();
+    labRequestBatch();
+  }
+}
+
+// Persistance Supabase (fire-and-forget, réutilise la RPC d'équilibre). On
+// n'enregistre QUE les runs "sérieux" (profondeur ≥4 des deux côtés) : les
+// profondeurs faibles servent aux vérifications rapides et inonderaient la
+// table (une partie quasi instantanée = une RPC). Les stats locales, elles,
+// comptent toujours tout.
+function labUploadGame(winner,plies){
+  if(!winner) return;
+  var cfg=_labRun.cfg;
+  if(cfg.depthW<4 || cfg.depthB<4) return;
+  try{
+    supa.rpc('dev_record_balance_result',{p_test_label:'labo:'+cfg.formatKey,p_eval_label:(LAB_EVAL_LABELS[cfg.evalKey]||cfg.evalKey),p_depth_white:cfg.depthW,p_depth_black:cfg.depthB,p_winner:winner,p_plies:plies});
+  }catch(e){}
+}
+
+function labFinishRun(){
+  _labRun.running=false;
+  labSetControlsDisabled(false);
+  labUpdateUI();
+  if(typeof showToast==='function') showToast('Laboratoire : '+_labRun.done+' parties terminées.');
+}
+
+function labStopRun(){
+  if(!_labRun.running && !_labWorker) return;
+  _labRun.running=false;
+  if(_labWorker){ _labWorker.terminate(); _labWorker=null; }
+  labSetControlsDisabled(false);
+  labUpdateUI();
+}
+
+function labSetControlsDisabled(dis){
+  ['lab-format','lab-depth-w','lab-depth-b','lab-games','lab-eval','lab-opening','lab-start-btn'].forEach(function(idv){ var e=document.getElementById(idv); if(e) e.disabled=dis; });
+  var sb=document.getElementById('lab-stop-btn'); if(sb) sb.style.display=dis?'block':'none';
+}
+
+function labUpdateUI(){
+  var r=_labRun;
+  var bar=document.getElementById('lab-progress-bar');
+  if(bar) bar.style.width=(r.target?Math.round(100*r.done/r.target):0)+'%';
+  var prog=document.getElementById('lab-progress');
+  if(prog){
+    var pct=r.target?Math.round(100*r.done/r.target):0;
+    var eta='';
+    if(r.running && r.done>0){
+      var per=(performance.now()-r.startMs)/r.done;
+      eta=' · reste ≈ '+devBalanceFormatDuration(per*(r.target-r.done));
+    }
+    prog.textContent=r.done+' / '+r.target+' parties ('+pct+'%)'+(r.running?eta:'');
+  }
+  var out=document.getElementById('lab-results');
+  if(!out) return;
+  var dec=r.w+r.b;
+  var wp=dec?(100*r.w/dec):0, bp=dec?(100*r.b/dec):0;
+  var avg=dec?(r.plies/dec):0;
+  var shortPct=dec?(100*r.under15/dec):0;
+  var verdict;
+  if(dec>=30){
+    var p=r.w/dec, se=0.5/Math.sqrt(dec), sigma=Math.abs(p-0.5)/se;
+    var fav=(r.w>r.b)?'Blancs':'Noirs';
+    if(sigma<2) verdict='<span style="color:#7fdca0">✔ Équilibré</span> — écart '+sigma.toFixed(1)+'σ (non significatif)';
+    else if(sigma<3) verdict='<span style="color:#e0c040">≈ Limite</span> — léger avantage '+fav+' ('+sigma.toFixed(1)+'σ)';
+    else verdict='<span style="color:#e07a5a">✘ Déséquilibre significatif</span> en faveur des '+fav+' ('+sigma.toFixed(1)+'σ)';
+  }else{
+    verdict='<span style="opacity:.6">Verdict dès 30 parties décisives…</span>';
+  }
+  out.innerHTML=
+    '<div style="display:flex;justify-content:space-between;padding:2px 0"><span>⚪ Victoires Blanc</span><b>'+r.w+' ('+wp.toFixed(1)+'%)</b></div>'+
+    '<div style="display:flex;justify-content:space-between;padding:2px 0"><span>⚫ Victoires Noir</span><b>'+r.b+' ('+bp.toFixed(1)+'%)</b></div>'+
+    '<div style="display:flex;justify-content:space-between;padding:2px 0;opacity:.7"><span>Nuls (limite 160 coups)</span><span>'+r.draw+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;padding:2px 0;opacity:.7"><span>Coups moyens (parties décisives)</span><span>'+avg.toFixed(1)+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;padding:2px 0;opacity:.7"><span>Parties courtes (&lt;15 coups)</span><span>'+shortPct.toFixed(0)+'%</span></div>'+
+    '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(212,160,23,.25);text-align:center;font-size:13px">'+verdict+'</div>';
+}
+
+function labOnShowScreen(){
+  // Remplit le sélecteur de formats à la volée (source unique = LAB_FORMATS).
+  var sel=document.getElementById('lab-format');
+  if(sel && !sel.options.length){
+    Object.keys(LAB_FORMATS).forEach(function(k){
+      var o=document.createElement('option'); o.value=k; o.textContent=LAB_FORMATS[k].name; sel.appendChild(o);
+    });
+  }
+  var esel=document.getElementById('lab-eval');
+  if(esel && !esel.options.length){
+    Object.keys(LAB_EVAL_LABELS).forEach(function(k){
+      var o=document.createElement('option'); o.value=k; o.textContent=LAB_EVAL_LABELS[k]; esel.appendChild(o);
+    });
+  }
+  labUpdateUI();
 }
 
 // Rempli par renderDevOpeningsList/renderDevTacticsList, consommé par
