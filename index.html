@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.30.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.31.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2113,7 +2113,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.30.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.31.0 &#9820;</div>
   </div>
 </div>
 
@@ -2601,10 +2601,10 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <details style="margin-top:4px">
       <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">✎ Format personnalisé (avancé)</summary>
       <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.7;margin:8px 0">
-        Édite un format en données (dimensions 3→9, cases interdites <code>voids</code>, pièces existantes, <code>sumo</code>/<code>v2</code>), charge-le : il apparaît dans le sélecteur ci-dessus, prêt à simuler. <em>Les nouveaux TYPES de pièces (mouvements inédits) arrivent à l'étape suivante.</em>
+        Édite un format en données (dimensions 3→9, cases interdites <code>voids</code>, <code>sumo</code>/<code>v2</code>, positions), charge-le : il apparaît dans le sélecteur ci-dessus, prêt à simuler. <strong style="color:var(--gold-bright)">Nouveaux types de pièces</strong> : ajoute un champ <code>pieces</code>. Chaque pièce a au moins une primitive de mouvement — <code>slide</code> (glisse jusqu'à un obstacle, <code>range</code> optionnel), <code>step</code> (1 case), <code>jumps</code> (sauts qui ignorent les obstacles) — avec des directions <code>"ortho"</code>/<code>"diag"</code>/<code>"all"</code> ou une liste <code>[[dr,dc]…]</code>. Ex. Lancier = <code>{"slide":"ortho"}</code>, Cavalier = <code>{"jumps":[[2,1],[1,2],…]}</code>. Options : <code>capture</code> (défaut vrai), <code>king</code> (le prendre = victoire), <code>glyph</code>/<code>name</code>. <em>Charge la démo « Lanciers » puis « Copier le format ici » pour un gabarit complet.</em>
       </div>
       <button class="btn" style="width:100%;padding:6px;margin-bottom:6px;font-size:12px" onclick="labDumpFormatJson()">⇩ Copier le format sélectionné ici pour l'éditer</button>
-      <textarea id="lab-custom-json" spellcheck="false" placeholder='{ "name":"Mon format", "rows":5, "cols":5, "v2":true, "sumo":false, "voids":["0,0","0,4","4,0","4,4"], "setup":[ {"type":"epeiste","color":"white","r":0,"c":2}, ... ] }' style="width:100%;box-sizing:border-box;height:150px;font-family:monospace;font-size:11px;background:rgba(0,0,0,.45);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px;padding:6px"></textarea>
+      <textarea id="lab-custom-json" spellcheck="false" placeholder='{ "name":"Mon format", "rows":7, "cols":7, "v2":true, "sumo":false, "voids":["0,0","0,6","6,0","6,6"], "pieces":{ "lance":{"glyph":"槍","slide":"ortho","capture":true} }, "setup":[ {"type":"epeiste","color":"white","r":0,"c":3}, {"type":"lance","color":"white","r":0,"c":1}, ... ] }' style="width:100%;box-sizing:border-box;height:150px;font-family:monospace;font-size:11px;background:rgba(0,0,0,.45);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px;padding:6px"></textarea>
       <button class="adm-btn" style="width:100%;padding:8px;margin-top:6px" onclick="labLoadCustomFormat()">✓ Charger ce format personnalisé</button>
     </details>
   </div>
@@ -3269,8 +3269,23 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.30.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.31.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.31.0 &mdash; 26 juillet 2026</div>
+      <ul class="devlog-list">
+
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; LABORATOIRE — NOUVEAUX TYPES DE PI&Egrave;CES</li>
+
+        <li>On peut d&eacute;sormais <strong>inventer des pi&egrave;ces</strong> aux mouvements in&eacute;dits, d&eacute;crites en donn&eacute;es (aucun code) et test&eacute;es dans le Laboratoire. Trois primitives : <strong>slide</strong> (glisse en ligne jusqu'&agrave; un obstacle, comme une tour/lance), <strong>step</strong> (une case) et <strong>jumps</strong> (sauts qui ignorent les obstacles, comme un cavalier), combinables, dans les directions <em>ortho</em>/<em>diag</em>/<em>all</em> ou une liste sur mesure.</li>
+
+        <li>Deux formats de d&eacute;mo ajout&eacute;s : <strong>Lanciers glisseurs 7&times;7</strong> et <strong>Cavaliers sauteurs 5&times;5</strong>. L'&eacute;diteur de format accepte un champ <code>pieces</code> pour cr&eacute;er les siennes, avec l'option <code>king</code> (la capturer = victoire) et un plateau/des r&egrave;gles (sumo, dimensions) totalement libres.</li>
+
+        <li style="list-style:none;margin-left:-14px;color:rgba(200,168,110,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">Le jeu standard reste <strong>strictement inchang&eacute;</strong> : les 3 pi&egrave;ces natives gardent leurs r&egrave;gles (v&eacute;rifi&eacute; par des parties d&eacute;terministes identiques). Les pi&egrave;ces custom n'existent que dans les formats exp&eacute;rimentaux.</li>
+
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -6765,7 +6780,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.30.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.31.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -6979,7 +6994,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.30.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.31.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -7184,7 +7199,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.30.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.31.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -13861,11 +13876,74 @@ function drawBestMoveArrow(cs,rows,cols){
 // ══════════════════════════════════════════════════════
 function isV2mode(){return true;} // Rempart V2 est l'unique mode de jeu désormais
 
+// ── Pièces PILOTÉES PAR DONNÉES (formats expérimentaux du Laboratoire) ──────
+// Les 3 pièces natives (épéiste/épée/bouclier) gardent leurs règles écrites à
+// la main (poussées, empilement, anti-retour, sumo) : elles SONT le jeu, on n'y
+// touche pas. À côté, un format peut définir de NOUVEAUX types via un
+// descripteur de mouvement, interprété ici. Trois primitives couvrent
+// l'essentiel des pièces d'un abstrait :
+//   • slide : glisse en ligne jusqu'au 1er obstacle (tour/fou/lance…), portée
+//             réglable ;
+//   • step  : avance d'exactement 1 case (roi…) ;
+//   • jumps : sauts absolus qui IGNORENT les obstacles intermédiaires (cavalier).
+// Chaque champ accepte un mot-clé de directions ('ortho'=4, 'diag'=4, 'all'=8)
+// OU un tableau explicite de vecteurs [dr,dc]. capture:false → pièce pacifique.
+// Une pièce peut cumuler les trois (ex. une "reine" = slide:'all').
+function labResolveDirs(spec){
+  if(Array.isArray(spec)) return spec.map(function(v){return {dr:v[0],dc:v[1]};});
+  if(spec==='ortho') return [{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1}];
+  if(spec==='diag')  return [{dr:-1,dc:-1},{dr:-1,dc:1},{dr:1,dc:-1},{dr:1,dc:1}];
+  if(spec==='all')   return [{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1},{dr:-1,dc:-1},{dr:-1,dc:1},{dr:1,dc:-1},{dr:1,dc:1}];
+  return [];
+}
+// Génère les coups d'une pièce custom. Capture "à l'échiquéenne" : on se pose
+// SUR la pièce adverse (elle est retirée). La victoire (capture d'un roi) est
+// tranchée dans execMove, pas ici — legalMoves marque juste isCapture.
+function labGenericMoves(color,board,stacks,r,c,p,def){
+  var moves=[];
+  var canCap=def.capture!==false;
+  // Tente d'atterrir en (tr,tc). Retourne 'empty' (continue le glissement),
+  // sinon 'stop' (obstacle : allié bloquant, pile, ou capture terminale).
+  function land(tr,tc){
+    if(!isValid(tr,tc)) return 'stop';
+    if(stacks[tr][tc]!==null) return 'stop'; // pile figée → infranchissable
+    var occ=board[tr][tc];
+    if(!occ){ moves.push({r:tr,c:tc,isCapture:false,isPush:false}); return 'empty'; }
+    if(occ.color!==color && canCap) moves.push({r:tr,c:tc,isCapture:true,isPush:false});
+    return 'stop'; // toute case occupée arrête la ligne (capture ou blocage)
+  }
+  if(def.slide){
+    var sdirs=labResolveDirs(def.slide);
+    var maxK=(def.range===undefined||def.range===null)?99:def.range; // 99 = illimité (plateau ≤ 9)
+    for(var si=0;si<sdirs.length;si++){
+      var d=sdirs[si];
+      for(var k=1;k<=maxK;k++){ if(land(r+d.dr*k, c+d.dc*k)!=='empty') break; }
+    }
+  }
+  if(def.step){
+    var pdirs=labResolveDirs(def.step);
+    for(var pi=0;pi<pdirs.length;pi++){ var pd=pdirs[pi]; land(r+pd.dr, c+pd.dc); }
+  }
+  if(def.jumps){
+    for(var ji=0;ji<def.jumps.length;ji++){ var jd=def.jumps[ji]; land(r+jd[0], c+jd[1]); }
+  }
+  return moves;
+}
+
 function legalMoves(color,board,stacks,sel,lastMoved,lastPush){
   const moves=[];
   if(!sel)return moves;
   const{r,c}=sel;const p=board[r][c];
   if(!p||p.color!==color)return moves;
+  // Pièce expérimentale (type défini dans G.pieceDefs, rempli par le format côté
+  // Worker) → mouvement piloté par données. Le jeu live n'a que les 3 types cœur
+  // et aucun pieceDefs → cette dérivation n'est JAMAIS empruntée en production.
+  // On exclut aussi explicitement les 3 types natifs : même si un format les
+  // redéfinissait, ils gardent leurs règles historiques ci-dessous.
+  if(p.type!=='epeiste'&&p.type!=='sword'&&p.type!=='shield'){
+    var _pd=(typeof G!=='undefined')&&G&&G.pieceDefs;
+    if(_pd&&_pd[p.type]) return labGenericMoves(color,board,stacks,r,c,p,_pd[p.type]);
+  }
   const dirs=p.type==='epeiste'?DA:DO;
   const enemy=color==='white'?'black':'white';
 
@@ -13891,8 +13969,12 @@ function legalMoves(color,board,stacks,sel,lastMoved,lastPush){
         moves.push({r:tr,c:tc,isCapture:false,isPush:false});
       }else if(tgt&&!tStk){
         const pr=tr+d.dr,pc=tc+d.dc;
-        if(tgt.color===color&&tgt.type!=='epeiste'){
+        if(tgt.color===color&&(tgt.type==='sword'||tgt.type==='shield')){
           // Pousse pion allié (sword ou shield) si case derrière libre
+          // NB: la liste est explicite (pas "!=='epeiste'") pour que les pièces
+          // CUSTOM des formats expérimentaux ne soient PAS traitées comme des
+          // pions poussables — l'épéiste les voit comme un obstacle. Identique
+          // au jeu live, qui n'a que sword/shield comme non-épéistes.
           // Note: en V2 le bouclier allié PEUT être poussé par l'Épeiste
           if(isValid(pr,pc)&&!stacks[pr][pc]){
             if(board[pr][pc]&&board[pr][pc].type==='epeiste'&&board[pr][pc].color===enemy){
@@ -13935,8 +14017,10 @@ function legalMoves(color,board,stacks,sel,lastMoved,lastPush){
         if(tgt.type==='epeiste'&&tgt.color!==color){
           // Capture directe de l'épeiste adverse — toujours valide
           moves.push({r:tr,c:tc,isCapture:true,isPush:false});
-        }else if(tgt.type!=='epeiste'){
+        }else if(tgt.type==='sword'||tgt.type==='shield'){
           // Pousse pion non-épeiste (sword ou shield allié/adverse)
+          // Liste explicite (cf. épéiste) : les pièces custom ne sont pas
+          // poussables → l'épée les voit comme un obstacle. Identique au live.
           // V2: bouclier ne peut pas être poussé
           if(isV2mode()&&tgt.type==='shield'){}
           else{
@@ -13979,7 +14063,8 @@ function legalMoves(color,board,stacks,sel,lastMoved,lastPush){
       }else if(tgt&&!tStk){
         if(!isV2mode()){
           // STANDARD : le Bouclier empile sur tout pion non-épeiste (immobilise)
-          if(tgt.type!=='epeiste'){
+          // Liste explicite (cf. épéiste/épée) : n'empile pas sur une pièce custom.
+          if(tgt.type==='sword'||tgt.type==='shield'){
             moves.push({r:tr,c:tc,isCapture:false,isPush:false,isStack:true});
           }
           // Ne monte jamais sur un épeiste
@@ -14083,12 +14168,21 @@ function execMove(fr,fc,tr,tc,mv){
     return false;
   }
   if(mv.isCapture){
+    const victim=b[tr][tc]; // lire AVANT d'écraser la case
     b[tr][tc]=p;b[fr][fc]=uf;s[fr][fc]=null;
     G.lastPush=null;G.lastMoved={color:p.color,type:p.type,fromR:fr,fromC:fc,toR:tr,toC:tc};
     if(G.lastMovedByColor)G.lastMovedByColor[p.color]={type:p.type,fromR:fr,fromC:fc,toR:tr,toC:tc};
     G.captureCount=(G.captureCount||0)+1;
     if(!G.simulating){PP.totalCaptures++;playSound('capture');haptic('capture');}
-    return true;
+    // Une capture n'est une VICTOIRE que si la pièce prise est ROYALE. Jeu live :
+    // seul l'épéiste est jamais capturé (isCapture ne sort que là) → toujours
+    // victoire, comportement STRICTEMENT inchangé. Dans un format expérimental,
+    // une pièce custom peut capturer une pièce NON-royale (retrait simple, la
+    // partie continue) ou le roi custom d'un camp (pieceDefs[type].king → victoire).
+    if(!victim||victim.type==='epeiste')return true;
+    var _vd=(typeof G!=='undefined')&&G&&G.pieceDefs;
+    if(_vd&&_vd[victim.type]&&_vd[victim.type].king)return true;
+    return false;
   }
   if(mv.isStack){
     const victim=b[tr][tc];
@@ -14203,6 +14297,19 @@ function evalPosition(board,stacks,ag,df,cb,mb){
         const d=dist({r,c},wm);sc+=ag*(7-d)*14;if(d===1)sc+=ag*50;if(d===2)sc+=ag*20;
       }else{
         const d=dist({r,c},bm);sc-=df*(7-d)*14;if(d===1)sc-=df*60;if(d===2)sc-=df*25;
+      }
+    }
+    else if(p.type!=='epeiste'&&p.type!=='shield'){
+      // Pièce expérimentale (formats du Laboratoire). GUARDÉ par G.pieceDefs →
+      // TOTALEMENT inerte dans le jeu live (aucune pièce custom, evalPosition
+      // rend le même score qu'avant). On lui donne une valeur de matériel
+      // générique + une légère pression vers le roi adverse (comme une épée, en
+      // plus doux), pour que l'IA la valorise et la défende dans les sims.
+      const _def=(typeof G!=='undefined')&&G&&G.pieceDefs&&G.pieceDefs[p.type];
+      if(_def){
+        const mat=_def.king?0:22;
+        if(p.color==='black'){ const d=dist({r,c},wm); sc+=mat+ag*(9-Math.min(d,9))*4; }
+        else { const d=dist({r,c},bm); sc-=mat+df*(9-Math.min(d,9))*4; }
       }
     }
     if(cb){const cd=dist({r,c},{r:cr,c:cc});sc+=(p.color==='black'?1:-1)*cb*(3-Math.min(cd,3));}
@@ -14865,6 +14972,43 @@ var LAB_FORMATS={
       {type:'epeiste',color:'white',r:0,c:3},{type:'sword',color:'white',r:0,c:2},{type:'sword',color:'white',r:0,c:4},{type:'shield',color:'white',r:1,c:3},
       {type:'epeiste',color:'black',r:6,c:3},{type:'sword',color:'black',r:6,c:2},{type:'sword',color:'black',r:6,c:4},{type:'shield',color:'black',r:5,c:3}
     ]
+  },
+  // ── Démos de NOUVEAUX TYPES DE PIÈCES (mouvements inédits, pilotés par
+  // données via le champ `pieces`). Elles prouvent qu'on peut inventer une
+  // pièce sans toucher au moteur. `pieces` mappe un nom de type → descripteur
+  // {slide|step|jumps, range?, capture?, glyph?, name?, king?}. La capture est
+  // "à l'échiquéenne" : on se pose sur la pièce adverse (prendre un épéiste =
+  // victoire). Voir labGenericMoves / labResolveDirs pour les règles exactes.
+
+  // Le scénario exact demandé par Jonathan : une pièce qui « glisse de X cases
+  // tant qu'elle ne rencontre pas d'obstacle » (le Lancier, comme une tour),
+  // sur un plateau d'AUTRE dimension (7×7). Combinable avec sumo:true si on veut
+  // aussi « pas de bords » (poussées éjectantes) — laissé à false ici pour une
+  // démo lisible façon échecs.
+  demoLance:{
+    id:'demoLance', name:'Démo — Lanciers glisseurs 7×7', rows:7, cols:7, v2:true, sumo:false,
+    voids:['0,0','0,6','6,0','6,6'],
+    pieces:{ lance:{ glyph:'槍', name:'Lancier', slide:'ortho', capture:true } },
+    setup:[
+      {type:'epeiste',color:'white',r:0,c:3},{type:'lance',color:'white',r:0,c:1},{type:'lance',color:'white',r:0,c:5},{type:'shield',color:'white',r:1,c:3},
+      {type:'epeiste',color:'black',r:6,c:3},{type:'lance',color:'black',r:6,c:1},{type:'lance',color:'black',r:6,c:5},{type:'shield',color:'black',r:5,c:3}
+    ]
+  },
+  // Deuxième primitive : le SAUT (jumps) — le Cavalier saute en L et IGNORE les
+  // obstacles intermédiaires. Sur un 5×5 serré (contact rapide) avec une épée
+  // par camp pour la menace décisive. Les cavaliers matent mal (ils ne peuvent
+  // pas coincer un roi mobile), donc le mode reste NUL-lourd : mesuré ~90% de
+  // nulles en 6×6 cavaliers seuls, encore ~55% ici malgré l'épée et le plateau
+  // resserré. C'est une VRAIE trouvaille du Labo — l'outil détecte un mode
+  // bancal en quelques secondes, exactement à quoi il sert.
+  demoCavaliers:{
+    id:'demoCavaliers', name:'Démo — Cavaliers sauteurs 5×5', rows:5, cols:5, v2:true, sumo:false,
+    voids:[],
+    pieces:{ cavalier:{ glyph:'馬', name:'Cavalier', jumps:[[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]], capture:true } },
+    setup:[
+      {type:'epeiste',color:'white',r:0,c:2},{type:'cavalier',color:'white',r:0,c:1},{type:'cavalier',color:'white',r:0,c:3},{type:'sword',color:'white',r:1,c:2},
+      {type:'epeiste',color:'black',r:4,c:2},{type:'cavalier',color:'black',r:4,c:1},{type:'cavalier',color:'black',r:4,c:3},{type:'sword',color:'black',r:3,c:2}
+    ]
   }
 };
 // Formules d'éval testables (les mêmes que l'analyse d'équilibre). Par défaut
@@ -14955,7 +15099,7 @@ function labBuildEngineSource(format){
   // isValid EXCLU du toString : la version vivante code 5×5 en dur. On la
   // remplace par une version pilotée par le format (dimensions + voids), pour
   // que le moteur du Worker soit réellement agnostique aux dimensions.
-  var engineFns=[findMaster,dist,threatCount,cloneBS,applyToClone,allMoves,legalMoves,execMove,evalPosition,evalTrainer,evalBalanceCurrent,evalBalanceMobilityFixed,evalBalanceSymmetric,evalBalanceAgDfFixed,minimaxFn,minimaxPlay,devSimTopMoves];
+  var engineFns=[findMaster,dist,threatCount,cloneBS,applyToClone,allMoves,labResolveDirs,labGenericMoves,legalMoves,execMove,evalPosition,evalTrainer,evalBalanceCurrent,evalBalanceMobilityFixed,evalBalanceSymmetric,evalBalanceAgDfFixed,minimaxFn,minimaxPlay,devSimTopMoves];
   var prelude=[
     'var FORMAT='+JSON.stringify(format)+';',
     'var VOID_STD=new Set(FORMAT.voids||[]);',
@@ -14964,7 +15108,7 @@ function labBuildEngineSource(format){
     'var DA=[{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1},{dr:-1,dc:-1},{dr:-1,dc:1},{dr:1,dc:-1},{dr:1,dc:1}];',
     'var PP={totalCaptures:0,totalPushes:0};',
     'function playSound(){} function haptic(){}',
-    'var G={simulating:true,rows:FORMAT.rows||5,cols:FORMAT.cols||5,sumoMode:!!FORMAT.sumo,turn:null,lastMovedByColor:{white:null,black:null}};',
+    'var G={simulating:true,rows:FORMAT.rows||5,cols:FORMAT.cols||5,sumoMode:!!FORMAT.sumo,pieceDefs:(FORMAT.pieces||null),turn:null,lastMovedByColor:{white:null,black:null}};',
     'function isV2mode(){return !!FORMAT.v2;}'
   ].join('\n');
   var body=engineFns.map(function(f){ return f.toString(); }).join('\n\n');
@@ -15126,25 +15270,56 @@ function labOnShowScreen(){
 }
 
 // ── Éditeur de format (avancé, DEV) ─────────────────────────────────
-// Un format = données pures (dimensions, voids, pièces existantes, sumo/v2).
-// Le dev édite un JSON, on valide, on l'ajoute à LAB_FORMATS sous la clé
-// "custom" et on le rend simulable comme les autres. Les nouveaux TYPES de
-// pièces (mouvements inédits) ne sont PAS encore possibles : legalMoves code
-// encore les 3 pièces (épéiste/épée/bouclier) en dur — ce sera l'étape
-// suivante (transformer legalMoves en interpréteur de règles piloté par des
-// données de pièces). Ici on peut déjà : changer dimensions, cases interdites,
-// nombre/position des pièces, activer sumo/v2.
+// Un format = données pures (dimensions, voids, pièces, sumo/v2). Le dev édite
+// un JSON, on valide, on l'ajoute à LAB_FORMATS sous la clé "custom" et on le
+// rend simulable comme les autres. On peut : changer dimensions, cases
+// interdites, nombre/position des pièces, activer sumo/v2, ET DÉFINIR DE
+// NOUVEAUX TYPES DE PIÈCES via le champ optionnel `pieces` (mouvements inédits
+// interprétés par labGenericMoves, cf. les démos Lanciers/Cavaliers).
+//   pieces:{ nom:{ slide|step:'ortho'|'diag'|'all'|[[dr,dc]…], range?:n,
+//                  jumps?:[[dr,dc]…], capture?:bool, king?:bool, glyph?, name? } }
+// Une pièce doit avoir au moins une primitive de mouvement (slide/step/jumps).
+function labValidatePieceDef(name, def){
+  if(!def||typeof def!=='object') return 'Pièce "'+name+'" : descripteur invalide.';
+  if(['epeiste','sword','shield'].indexOf(name)>=0) return 'Le type "'+name+'" est natif — choisis un autre nom pour une pièce custom.';
+  var hasMove=false;
+  function dirsOK(spec){
+    if(spec===undefined) return true;
+    if(['ortho','diag','all'].indexOf(spec)>=0){ hasMove=true; return true; }
+    if(Array.isArray(spec)){ for(var i=0;i<spec.length;i++){ if(!Array.isArray(spec[i])||spec[i].length!==2) return false; } if(spec.length) hasMove=true; return true; }
+    return false;
+  }
+  if(!dirsOK(def.slide)) return 'Pièce "'+name+'" : slide invalide (ortho/diag/all ou [[dr,dc]…]).';
+  if(!dirsOK(def.step))  return 'Pièce "'+name+'" : step invalide (ortho/diag/all ou [[dr,dc]…]).';
+  if(def.jumps!==undefined){
+    if(!Array.isArray(def.jumps)) return 'Pièce "'+name+'" : jumps doit être une liste de [dr,dc].';
+    for(var j=0;j<def.jumps.length;j++){ if(!Array.isArray(def.jumps[j])||def.jumps[j].length!==2) return 'Pièce "'+name+'" : saut #'+(j+1)+' invalide (attendu [dr,dc]).'; }
+    if(def.jumps.length) hasMove=true;
+  }
+  if(def.range!==undefined && !(+def.range>=1)) return 'Pièce "'+name+'" : range doit être ≥ 1.';
+  if(!hasMove) return 'Pièce "'+name+'" : aucune primitive de mouvement (slide, step ou jumps requis).';
+  return null;
+}
 function labValidateFormat(f){
   if(!f||typeof f!=='object') return {ok:false,err:'Format vide ou invalide.'};
   var rows=+f.rows, cols=+f.cols;
   if(!(rows>=3&&rows<=9&&cols>=3&&cols<=9)) return {ok:false,err:'rows et cols doivent être entre 3 et 9.'};
   if(!Array.isArray(f.setup)||!f.setup.length) return {ok:false,err:'setup doit être une liste de pièces non vide.'};
+  // Types de pièces custom (optionnels) → étendent la liste des types valides.
+  var pieces=(f.pieces&&typeof f.pieces==='object')?f.pieces:null;
+  var validTypes={epeiste:1,sword:1,shield:1};
+  if(pieces){
+    for(var name in pieces){ if(!Object.prototype.hasOwnProperty.call(pieces,name)) continue;
+      var perr=labValidatePieceDef(name, pieces[name]); if(perr) return {ok:false,err:perr};
+      validTypes[name]=1;
+    }
+  }
   var voids=Array.isArray(f.voids)?f.voids:[];
   var voidSet=new Set(voids);
   var seen={}, kings={white:0,black:0};
   for(var i=0;i<f.setup.length;i++){
     var p=f.setup[i];
-    if(!p||['epeiste','sword','shield'].indexOf(p.type)<0) return {ok:false,err:'Pièce #'+(i+1)+' : type invalide (epeiste/sword/shield).'};
+    if(!p||!validTypes[p.type]) return {ok:false,err:'Pièce #'+(i+1)+' : type inconnu "'+(p&&p.type)+'" (natifs epeiste/sword/shield, ou un type déclaré dans "pieces").'};
     if(['white','black'].indexOf(p.color)<0) return {ok:false,err:'Pièce #'+(i+1)+' : couleur invalide (white/black).'};
     var r=+p.r, c=+p.c;
     if(!(r>=0&&r<rows&&c>=0&&c<cols)) return {ok:false,err:'Pièce #'+(i+1)+' : position ('+r+','+c+') hors plateau.'};
@@ -15154,7 +15329,9 @@ function labValidateFormat(f){
     if(p.type==='epeiste') kings[p.color]++;
   }
   if(kings.white!==1||kings.black!==1) return {ok:false,err:'Exactement un épéiste par camp requis (blanc:'+kings.white+', noir:'+kings.black+').'};
-  return {ok:true, format:{id:'custom', name:(f.name||'Format personnalisé'), rows:rows, cols:cols, v2:(f.v2!==false), sumo:!!f.sumo, voids:voids, setup:f.setup.map(function(p){return {type:p.type,color:p.color,r:+p.r,c:+p.c};})}};
+  var out={id:'custom', name:(f.name||'Format personnalisé'), rows:rows, cols:cols, v2:(f.v2!==false), sumo:!!f.sumo, voids:voids, setup:f.setup.map(function(p){return {type:p.type,color:p.color,r:+p.r,c:+p.c};})};
+  if(pieces) out.pieces=pieces; // transmis tel quel au Worker (G.pieceDefs)
+  return {ok:true, format:out};
 }
 
 function labDumpFormatJson(){
@@ -15162,7 +15339,10 @@ function labDumpFormatJson(){
   var key=sel?sel.value:'standard';
   var f=LAB_FORMATS[key]||LAB_FORMATS.standard;
   var ta=document.getElementById('lab-custom-json');
-  if(ta) ta.value=JSON.stringify({name:f.name,rows:f.rows,cols:f.cols,v2:f.v2,sumo:f.sumo,voids:f.voids,setup:f.setup}, null, 1);
+  var dump={name:f.name,rows:f.rows,cols:f.cols,v2:f.v2,sumo:f.sumo,voids:f.voids};
+  if(f.pieces) dump.pieces=f.pieces; // gabarit de pièces custom si le format en a
+  dump.setup=f.setup;
+  if(ta) ta.value=JSON.stringify(dump, null, 1);
 }
 
 function labLoadCustomFormat(){

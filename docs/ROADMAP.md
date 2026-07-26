@@ -82,15 +82,23 @@ Inspirations assumées : **Fate** (invocation de figures historiques) et
   extrait, déjà fait à l'étape 1).
   1. ✅ **Clé de voûte + Labo navigateur** — moteur extrait, Web Worker,
      verdict d'équilibre sur le format **standard**. Fait le 2026-07-26.
-  2. ◐ **Formats en données** — *partiellement fait le 2026-07-26.* Moteur
-     rendu **agnostique aux dimensions** (`isValid`/`findMaster`/`evalPosition`/
-     `allMoves`/`minimaxFn` lisent `G.rows`/`G.cols`, plus de 5×5 en dur ;
-     standard vérifié inchangé par régression). Formats **Sumo** et « Élargi
-     7×7 » ajoutés à `LAB_FORMATS`. **Éditeur de format** (JSON validé) dans le
-     Labo. **RESTE** : les nouveaux **types de pièces** (mouvements inédits) —
-     `legalMoves` code encore les 3 pièces en dur ; il faut le transformer en
-     interpréteur de règles piloté par des données de pièces. C'est le vrai
-     morceau de « ajouter des pièces », à faire en étape dédiée et testée.
+  2. ✅ **Formats en données** — fait le 2026-07-26 (dimensions puis pièces).
+     Moteur rendu **agnostique aux dimensions** (`isValid`/`findMaster`/
+     `evalPosition`/`allMoves`/`minimaxFn` lisent `G.rows`/`G.cols`, plus de 5×5
+     en dur ; standard vérifié inchangé par régression). Formats **Sumo** et
+     « Élargi 7×7 » ajoutés à `LAB_FORMATS`. **Éditeur de format** (JSON validé).
+     **Nouveaux types de pièces (V0.31.0)** : `legalMoves` délègue tout type non
+     natif à `labGenericMoves`, un **interpréteur de mouvement piloté par
+     données** — primitives `slide` (glisse jusqu'à obstacle), `step` (1 case),
+     `jumps` (sauts qui ignorent les obstacles), directions `ortho`/`diag`/`all`
+     ou liste `[[dr,dc]…]`, options `range`/`capture`/`king`. Capture à
+     l'échiquéenne, victoire tranchée dans `execMove` (roi = épéiste ou
+     `king:true`). Démos **Lanciers 7×7** et **Cavaliers 5×5**. Le jeu live
+     (3 pièces natives) est **strictement inchangé** : dérivation gardée par
+     `G.pieceDefs` (absent en prod), régression déterministe identique. Limite
+     connue restante : l'**éval** ne donne aux pièces custom qu'une valeur de
+     matériel générique + pression vers le roi (pas de modèle de menace fin par
+     type) → les verdicts d'équilibre sur formats custom sont préliminaires.
   3. ☐ **Worker serveur** — porter la source du moteur (déjà sans DOM) dans une
      **Edge Function Deno**, déclenchée par lots via `pg_cron`, écrivant les
      stats dans Supabase. Objectif : les simulations tournent **sans appareil
