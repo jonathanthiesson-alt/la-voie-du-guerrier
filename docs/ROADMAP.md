@@ -82,11 +82,15 @@ Inspirations assumées : **Fate** (invocation de figures historiques) et
   extrait, déjà fait à l'étape 1).
   1. ✅ **Clé de voûte + Labo navigateur** — moteur extrait, Web Worker,
      verdict d'équilibre sur le format **standard**. Fait le 2026-07-26.
-  2. ☐ **Formats en données** — `LAB_FORMATS` est déjà le point d'extension
-     (un format = `{rows, cols, v2, sumo, voids, setup}`). Rendre le moteur
-     réellement agnostique aux dimensions (aujourd'hui `isValid`/`evalPosition`
-     supposent 5×5 en dur) et ajouter le format **Sumo** + une pièce test.
-     Petit éditeur DEV pour cloner/créer un format.
+  2. ◐ **Formats en données** — *partiellement fait le 2026-07-26.* Moteur
+     rendu **agnostique aux dimensions** (`isValid`/`findMaster`/`evalPosition`/
+     `allMoves`/`minimaxFn` lisent `G.rows`/`G.cols`, plus de 5×5 en dur ;
+     standard vérifié inchangé par régression). Formats **Sumo** et « Élargi
+     7×7 » ajoutés à `LAB_FORMATS`. **Éditeur de format** (JSON validé) dans le
+     Labo. **RESTE** : les nouveaux **types de pièces** (mouvements inédits) —
+     `legalMoves` code encore les 3 pièces en dur ; il faut le transformer en
+     interpréteur de règles piloté par des données de pièces. C'est le vrai
+     morceau de « ajouter des pièces », à faire en étape dédiée et testée.
   3. ☐ **Worker serveur** — porter la source du moteur (déjà sans DOM) dans une
      **Edge Function Deno**, déclenchée par lots via `pg_cron`, écrivant les
      stats dans Supabase. Objectif : les simulations tournent **sans appareil
