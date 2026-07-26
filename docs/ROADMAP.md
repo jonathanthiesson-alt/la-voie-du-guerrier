@@ -99,10 +99,22 @@ Inspirations assumées : **Fate** (invocation de figures historiques) et
      connue restante : l'**éval** ne donne aux pièces custom qu'une valeur de
      matériel générique + pression vers le roi (pas de modèle de menace fin par
      type) → les verdicts d'équilibre sur formats custom sont préliminaires.
-  3. ☐ **Worker serveur** — porter la source du moteur (déjà sans DOM) dans une
-     **Edge Function Deno**, déclenchée par lots via `pg_cron`, écrivant les
-     stats dans Supabase. Objectif : les simulations tournent **sans appareil
-     allumé**.
+  3. ◐ **Worker serveur** — fait le 2026-07-26 via **GitHub Actions** (en
+     attente d'un secret repo pour s'activer). Objectif atteint : les
+     simulations tournent **sans appareil allumé**, en **profondeur 4-5**.
+     *Pivot assumé* : l'Edge Function Deno a été construite, déployée ET testée,
+     mais le minimax prof. 4-5 **dépasse le budget CPU** d'une Edge Function
+     (échec mesuré dès 3 parties en prof. 4 → `WORKER_RESOURCE_LIMIT`). Le même
+     moteur extrait tourne sans limite en **Node**, et le repo est **public** →
+     GitHub Actions y est gratuit/illimité. Solution retenue :
+     `scripts/balance-worker.mjs` (lit `index.html` du checkout, extrait le
+     moteur — source vivante, zéro dérive — simule, écrit dans `dev_balance_stats`
+     via l'RPC `dev_record_balance_result`) + `.github/workflows/balance-worker.yml`
+     (cron horaire + `workflow_dispatch`, ~100 parties/tick prof. 4). **RESTE
+     (côté Jonathan)** : ajouter le secret repo `SUPABASE_SERVICE_ROLE_KEY`
+     (Settings → Secrets → Actions) — sans lui le worker se met en veille (exit
+     0). Et supprimer l'Edge Function `balance-worker` déployée mais abandonnée
+     (Dashboard → Edge Functions), non supprimable via l'outil MCP.
   4. ☐ **Publier un format comme événement** — pont entre un format du registre
      et le système d'événements live (comme le Sumo), pour tester une variante
      auprès des vrais joueurs. Boucle « forger → tester → publier » bouclée.

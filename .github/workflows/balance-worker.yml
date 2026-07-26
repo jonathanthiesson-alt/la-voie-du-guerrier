@@ -1,0 +1,53 @@
+# ════════════════════════════════════════════════════════════════════════
+# Worker serveur d'équilibre — fait tourner des parties bot vs bot en prof. 4-5
+# et écrit le taux Blanc/Noir dans dev_balance_stats, SANS aucun appareil
+# allumé. Moteur extrait de index.html (source vivante, zéro dérive).
+#
+# ⚠️ PRÉ-REQUIS (une fois, par Jonathan) : ajouter le secret repo
+#    SUPABASE_SERVICE_ROLE_KEY  (Settings → Secrets and variables → Actions →
+#    New repository secret). Sûr sur repo public : les secrets ne sont JAMAIS
+#    exposés aux workflows des PR de forks, et le script ne l'affiche jamais.
+# ════════════════════════════════════════════════════════════════════════
+name: Balance worker (sims d'équilibre)
+
+on:
+  schedule:
+    - cron: "0 * * * *"      # toutes les heures (UTC) — ~100 parties/tick
+  workflow_dispatch:          # + bouton « Run workflow » (déclenchement manuel)
+    inputs:
+      format:
+        description: "Format (standard, sumo, large7, demoLance, demoCavaliers…)"
+        default: "standard"
+      depth:
+        description: "Profondeur de recherche (1-6)"
+        default: "4"
+      games:
+        description: "Nombre de parties"
+        default: "100"
+      evalKey:
+        description: "Formule d'éval (symmetric, current, agdffix, mobfix)"
+        default: "symmetric"
+
+# Évite deux runs simultanés (ils écriraient en parallèle dans la même table).
+concurrency:
+  group: balance-worker
+  cancel-in-progress: false
+
+jobs:
+  sim:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Simulations d'équilibre
+        run: node scripts/balance-worker.mjs
+        env:
+          SUPABASE_URL: "https://ikssbshpvpqlcgrbjldz.supabase.co"
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BW_FORMAT: ${{ github.event.inputs.format || 'standard' }}
+          BW_DEPTH: ${{ github.event.inputs.depth || '4' }}
+          BW_GAMES: ${{ github.event.inputs.games || '100' }}
+          BW_EVAL: ${{ github.event.inputs.evalKey || 'symmetric' }}
