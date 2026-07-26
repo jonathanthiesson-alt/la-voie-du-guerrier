@@ -2607,6 +2607,50 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <textarea id="lab-custom-json" spellcheck="false" placeholder='{ "name":"Mon format", "rows":7, "cols":7, "v2":true, "sumo":false, "voids":["0,0","0,6","6,0","6,6"], "pieces":{ "lance":{"glyph":"槍","slide":"ortho","capture":true} }, "setup":[ {"type":"epeiste","color":"white","r":0,"c":3}, {"type":"lance","color":"white","r":0,"c":1}, ... ] }' style="width:100%;box-sizing:border-box;height:150px;font-family:monospace;font-size:11px;background:rgba(0,0,0,.45);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px;padding:6px"></textarea>
       <button class="adm-btn" style="width:100%;padding:8px;margin-top:6px" onclick="labLoadCustomFormat()">✓ Charger ce format personnalisé</button>
     </details>
+
+    <div class="menu-divider"></div>
+    <details style="margin-top:4px">
+      <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">🤖 Worker automatique (serveur)</summary>
+      <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.7;margin:8px 0">
+        Fait tourner des parties <strong>toutes les heures sur GitHub</strong> (sans ton appareil allumé), cumulées dans les stats ci-dessus (label <code>srv:…</code>), <strong>sans doublons</strong>. Configure ici : ça s'applique au prochain passage horaire.
+      </div>
+      <div id="lab-worker-status" style="font-family:'VT323',monospace;font-size:12px;text-align:center;margin-bottom:10px;padding:7px;border-radius:5px;background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.2)">Chargement…</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-family:'VT323',monospace;font-size:13px;color:var(--parchment)">
+        <label style="display:flex;align-items:center;gap:8px"><input id="lab-worker-enabled" type="checkbox"> <strong>Actif</strong> <span style="opacity:.55;font-size:11px">(décoché = en veille)</span></label>
+        <label style="display:flex;justify-content:space-between;align-items:center;gap:10px">Mode profondeur
+          <select id="lab-worker-mode" onchange="labWorkerToggleMode()" style="flex:1;max-width:210px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px">
+            <option value="cycle">Cycle (monte puis recommence)</option>
+            <option value="fixed">Fixe</option>
+          </select>
+        </label>
+        <label id="lab-worker-fixed-row" style="display:none;justify-content:space-between;align-items:center;gap:10px">Profondeur fixe
+          <select id="lab-worker-fixed-depth" style="width:80px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px">
+            <option>4</option><option>5</option><option>6</option>
+          </select>
+        </label>
+        <div id="lab-worker-cycle-row" style="display:flex;justify-content:space-between;align-items:center;gap:10px">Cycle de profondeur
+          <span style="display:flex;align-items:center;gap:6px">
+            <select id="lab-worker-cmin" style="width:60px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px"><option>4</option><option>5</option></select>
+            →
+            <select id="lab-worker-cmax" style="width:60px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px"><option>5</option><option>6</option></select>
+          </span>
+        </div>
+        <label style="display:flex;justify-content:space-between;align-items:center;gap:10px">Format
+          <select id="lab-worker-format" style="flex:1;max-width:210px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px"></select>
+        </label>
+        <label style="display:flex;justify-content:space-between;align-items:center;gap:10px">Formule d'éval
+          <select id="lab-worker-eval" style="flex:1;max-width:210px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px"></select>
+        </label>
+        <label style="display:flex;justify-content:space-between;align-items:center;gap:10px">Parties/heure (cible)
+          <input id="lab-worker-games" type="number" min="1" value="100" style="width:80px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px">
+        </label>
+        <label style="display:flex;justify-content:space-between;align-items:center;gap:10px">Budget de temps (s)
+          <input id="lab-worker-budget" type="number" min="30" value="600" style="width:80px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px">
+        </label>
+        <div style="font-size:10px;opacity:.55;margin-top:-2px">La prof. 5-6 est lente : le budget borne chaque passage (moins de parties aux hautes profondeurs, c'est normal).</div>
+      </div>
+      <button class="adm-btn" style="width:100%;padding:9px;margin-top:10px" onclick="labWorkerSaveConfig()">✓ Enregistrer la config du worker</button>
+    </details>
   </div>
   </div>
 </div>
@@ -15272,6 +15316,81 @@ function labOnShowScreen(){
     });
   }
   labUpdateUI();
+  if(typeof labWorkerLoadConfig==='function') labWorkerLoadConfig();
+}
+
+// ── Worker automatique (serveur) — pilotage depuis le Labo ──────────────
+// La config vit dans dev_worker_config (une ligne), lue/écrite via les RPC
+// admin dev_get_worker_config / dev_set_worker_config. L'Action GitHub la lit
+// chaque heure et applique (profondeur fixe ou cycle, marche/arrêt). L'Action,
+// elle, lit la table en direct (service_role) et fait avancer cycle_current.
+var _labWorkerCfg=null;
+async function labWorkerLoadConfig(){
+  var fsel=document.getElementById('lab-worker-format');
+  if(fsel && !fsel.options.length){
+    Object.keys(LAB_FORMATS).forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=LAB_FORMATS[k].name; fsel.appendChild(o); });
+  }
+  var esel=document.getElementById('lab-worker-eval');
+  if(esel && !esel.options.length){
+    Object.keys(LAB_EVAL_LABELS).forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=LAB_EVAL_LABELS[k]; esel.appendChild(o); });
+  }
+  var status=document.getElementById('lab-worker-status');
+  if(typeof isDevUser==='function' && !isDevUser()){ if(status) status.textContent='Réservé aux comptes dev.'; return; }
+  try{
+    var res=await supa.rpc('dev_get_worker_config');
+    if(res.error) throw res.error;
+    var c=Array.isArray(res.data)?res.data[0]:res.data; _labWorkerCfg=c;
+    if(!c){ if(status) status.textContent='Config introuvable.'; return; }
+    var setV=function(id,v){ var e=document.getElementById(id); if(e) e.value=v; };
+    var en=document.getElementById('lab-worker-enabled'); if(en) en.checked=!!c.enabled;
+    setV('lab-worker-mode', c.mode||'cycle');
+    setV('lab-worker-fixed-depth', c.fixed_depth||4);
+    setV('lab-worker-cmin', c.cycle_min||4);
+    setV('lab-worker-cmax', c.cycle_max||6);
+    setV('lab-worker-format', c.format||'standard');
+    setV('lab-worker-eval', c.eval_key||'symmetric');
+    setV('lab-worker-games', c.games||100);
+    setV('lab-worker-budget', c.time_budget_sec||600);
+    labWorkerToggleMode();
+    labWorkerRenderStatus(c);
+  }catch(e){ if(status) status.textContent='Erreur de lecture : '+(e.message||e); }
+}
+function labWorkerToggleMode(){
+  var mode=(document.getElementById('lab-worker-mode')||{}).value||'cycle';
+  var fr=document.getElementById('lab-worker-fixed-row');
+  var cr=document.getElementById('lab-worker-cycle-row');
+  if(fr) fr.style.display = mode==='fixed' ? 'flex' : 'none';
+  if(cr) cr.style.display = mode==='cycle' ? 'flex' : 'none';
+}
+function labWorkerRenderStatus(c){
+  var status=document.getElementById('lab-worker-status'); if(!status||!c) return;
+  if(!c.enabled){ status.innerHTML='<span style="color:#e0a060">⏸ En veille</span> — le worker ne tourne pas.'; return; }
+  var prof = c.mode==='cycle' ? ('cycle '+c.cycle_min+'→'+c.cycle_max+' · profondeur actuelle '+c.cycle_current) : ('profondeur fixe '+c.fixed_depth);
+  status.innerHTML='<span style="color:#88dd88">● Actif</span> — '+prof+' · '+c.games+' parties/h · '+c.format;
+}
+async function labWorkerSaveConfig(){
+  if(typeof isDevUser==='function' && !isDevUser()){ if(typeof showToast==='function') showToast('Réservé aux comptes dev.', true); return; }
+  var val=function(id){ var e=document.getElementById(id); return e?e.value:null; };
+  var cmin=+val('lab-worker-cmin'), cmax=+val('lab-worker-cmax');
+  if(cmax<cmin){ if(typeof showToast==='function') showToast('Le max du cycle doit être ≥ au min.', true); return; }
+  var params={
+    p_enabled: !!(document.getElementById('lab-worker-enabled')||{}).checked,
+    p_mode: val('lab-worker-mode'),
+    p_fixed_depth: +val('lab-worker-fixed-depth'),
+    p_cycle_min: cmin, p_cycle_max: cmax,
+    p_format: val('lab-worker-format'),
+    p_eval_key: val('lab-worker-eval'),
+    p_opening: _labWorkerCfg ? _labWorkerCfg.opening : 6,
+    p_games: +val('lab-worker-games'),
+    p_time_budget_sec: +val('lab-worker-budget')
+  };
+  try{
+    var res=await supa.rpc('dev_set_worker_config', params);
+    if(res.error) throw res.error;
+    var c=Array.isArray(res.data)?res.data[0]:res.data; _labWorkerCfg=c;
+    labWorkerRenderStatus(c);
+    if(typeof showToast==='function') showToast(c && c.enabled ? 'Worker activé et configuré.' : 'Config enregistrée (worker en veille).');
+  }catch(e){ if(typeof showToast==='function') showToast('Erreur : '+(e.message||e), true); }
 }
 
 // ── Éditeur de format (avancé, DEV) ─────────────────────────────────
