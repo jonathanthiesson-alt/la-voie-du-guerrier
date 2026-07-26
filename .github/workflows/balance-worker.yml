@@ -27,6 +27,9 @@ on:
       evalKey:
         description: "Formule d'éval (symmetric, current, agdffix, mobfix)"
         default: "symmetric"
+      opening:
+        description: "Demi-coups d'ouverture aléatoire (diversité des parties)"
+        default: "6"
 
 # Évite deux runs simultanés (ils écriraient en parallèle dans la même table).
 concurrency:
@@ -51,3 +54,4 @@ jobs:
           BW_DEPTH: ${{ github.event.inputs.depth || '4' }}
           BW_GAMES: ${{ github.event.inputs.games || '100' }}
           BW_EVAL: ${{ github.event.inputs.evalKey || 'symmetric' }}
+          BW_OPENING: ${{ github.event.inputs.opening || '6' }}

@@ -20,6 +20,7 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { createHash } from "node:crypto";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const html = readFileSync(join(ROOT, "index.html"), "utf8");
@@ -162,12 +163,36 @@ async function upsertStats(base, key, testLabel, evalLabel, depth, agg) {
   }
 }
 
+// Insertion anti-doublon : insert groupé dans dev_balance_games en visant la
+// contrainte UNIQUE (on_conflict) avec resolution=ignore-duplicates. PostgREST
+// ne renvoie ALORS que les lignes RÉELLEMENT insérées (les parties déjà vues
+// dans un run précédent sont écartées). `games` est déjà dédupliqué localement.
+async function insertGamesDedup(base, key, testLabel, evalLabel, depth, games) {
+  if (!games.length) return [];
+  const rows = games.map((g) => ({
+    test_label: testLabel, eval_label: evalLabel,
+    depth_white: depth, depth_black: depth,
+    sig: g.sig, winner: g.winner, plies: g.plies,
+  }));
+  const res = await sbFetch(base, key,
+    "dev_balance_games?on_conflict=test_label,eval_label,depth_white,depth_black,sig", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Prefer: "resolution=ignore-duplicates,return=representation" },
+      body: JSON.stringify(rows),
+    });
+  return await res.json(); // uniquement les lignes insérées (doublons exclus)
+}
+
 // ── Config (env, avec valeurs par défaut « prof. 4 / 100 parties ») ──────
 const FORMAT_ID = process.env.BW_FORMAT || "standard";
 const DEPTH = Math.min(Math.max(+(process.env.BW_DEPTH || 4), 1), 6);
 const GAMES = Math.min(Math.max(+(process.env.BW_GAMES || 100), 1), 2000);
 const EVAL_KEY = process.env.BW_EVAL || "symmetric";
-const OPENING_N = process.env.BW_OPENING !== undefined ? +process.env.BW_OPENING : 4;
+// Ouverture à 6 demi-coups par défaut (vs 4 côté navigateur) : élargit
+// l'espace de parties DISTINCTES (~top-4^6 ≈ des milliers) pour que l'anti-
+// doublon ne plafonne pas trop tôt. Les coups restent parmi les meilleurs
+// (top-4), donc du jeu plausible, pas des ouvertures au hasard.
+const OPENING_N = process.env.BW_OPENING !== undefined ? +process.env.BW_OPENING : 6;
 const PERSIST = process.env.BW_PERSIST !== "0"; // BW_PERSIST=0 → dry-run local
 
 const SUPABASE_URL = process.env.SUPABASE_URL || "";
@@ -208,14 +233,35 @@ async function main() {
   if (!PERSIST) { console.log("↩ dry-run (BW_PERSIST=0) : rien écrit."); return; }
   if (!dec) { console.log("○ Aucune partie décisive à enregistrer (que des nulles)."); return; }
 
-  // Agrégat du lot sur les parties DÉCISIVES (comme l'RPC : nulles ignorées).
-  const agg = { games: dec, white: w, black: b, plies: 0, under15: 0 };
-  for (const m of decisive) { agg.plies += m.plies; if (m.plies < 15) agg.under15++; }
-
   const testLabel = "srv:" + FORMAT_ID;
   const evalLabel = EVAL_LABELS[EVAL_KEY] || EVAL_KEY;
+
+  // Signature (sha1 de la séquence de coups) + DÉDUP LOCAL : une même partie ne
+  // compte pas deux fois dans un même run.
+  const bySig = new Map();
+  for (const m of decisive) {
+    const sig = createHash("sha1").update(m.moves || "").digest("hex");
+    if (!bySig.has(sig)) bySig.set(sig, { sig, winner: m.winner, plies: m.plies });
+  }
+  const local = [...bySig.values()];
+
+  // Anti-doublon EN BASE : il ne reste que les parties INÉDITES (jamais vues).
+  const fresh = await insertGamesDedup(SUPABASE_URL, SERVICE_KEY, testLabel, evalLabel, DEPTH, local);
+  const dupLocal = decisive.length - local.length;
+  const dupDb = local.length - fresh.length;
+  if (!fresh.length) {
+    console.log(`○ ${dec} décisives simulées, 0 inédite (${dupLocal} doublons internes, ${dupDb} déjà en base) → stats inchangées.`);
+    return;
+  }
+
+  // On n'incrémente les stats QUE par les parties inédites → σ honnête.
+  const agg = { games: fresh.length, white: 0, black: 0, plies: 0, under15: 0 };
+  for (const g of fresh) {
+    if (g.winner === "white") agg.white++; else if (g.winner === "black") agg.black++;
+    agg.plies += g.plies || 0; if ((g.plies || 0) < 15) agg.under15++;
+  }
   await upsertStats(SUPABASE_URL, SERVICE_KEY, testLabel, evalLabel, DEPTH, agg);
-  console.log(`✓ ${dec} parties décisives cumulées dans dev_balance_stats (label "${testLabel}", éval "${evalLabel}").`);
+  console.log(`✓ ${fresh.length} parties INÉDITES enregistrées (ignorés : ${dupLocal} doublons internes + ${dupDb} déjà en base) → dev_balance_stats "${testLabel}" prof.${DEPTH}.`);
 }
 
 main().catch((e) => { console.error("✗ balance-worker :", e.message); process.exit(1); });

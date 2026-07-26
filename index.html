@@ -15061,11 +15061,15 @@ function labWorkerDriver(){
     var board=st.board, stacks=st.stacks;
     var lm=null, lp=null, lmbc={white:null,black:null};
     var turn='white', maxPlies=160;
+    // On enregistre la séquence de coups : elle IDENTIFIE la partie (ouverture
+    // aléatoire + suite déterministe). Le worker serveur en tire une signature
+    // pour ne jamais compter deux fois la même partie (voir dev_balance_games).
+    var mvs=[];
     for(var i=0;i<maxPlies;i++){
       var color=turn;
       var depth=(color==='white')?depthW:depthB;
       var moves=allMoves(color,board,stacks,lm,lp,lmbc);
-      if(!moves.length) return {winner:labOpp(color),plies:i+1};
+      if(!moves.length) return {winner:labOpp(color),plies:i+1,moves:mvs.join('|')};
       var chosen;
       if(i<openingN){
         var pool=devSimTopMoves(moves,board,stacks,lm,lp,color,2,4);
@@ -15073,12 +15077,13 @@ function labWorkerDriver(){
       }else{
         chosen=minimaxPlay(moves,board,stacks,lm,lp,depth,evalFn,color)||moves[0];
       }
+      mvs.push(chosen.fr+'.'+chosen.fc+'.'+chosen.tr+'.'+chosen.tc);
       var res=applyToClone(board,stacks,chosen,lm,lp);
       lm=res.nlm; lp=res.nlp; lmbc[color]=lm;
-      if(res.won) return {winner:color,plies:i+1};
+      if(res.won) return {winner:color,plies:i+1,moves:mvs.join('|')};
       turn=labOpp(color);
     }
-    return {winner:null,plies:maxPlies}; // limite atteinte → nul, non comptabilisé
+    return {winner:null,plies:maxPlies,moves:mvs.join('|')}; // limite atteinte → nul, non comptabilisé
   }
   var EVALS={current:evalBalanceCurrent,symmetric:evalBalanceSymmetric,agdffix:evalBalanceAgDfFixed,mobfix:evalBalanceMobilityFixed};
   onmessage=function(ev){
@@ -15087,7 +15092,7 @@ function labWorkerDriver(){
     var evalFn=EVALS[d.evalKey]||evalTrainer;
     for(var k=0;k<d.batch;k++){
       var g=labSimOne(d.depthW,d.depthB,evalFn,d.openingN);
-      postMessage({type:'game',winner:g.winner,plies:g.plies});
+      postMessage({type:'game',winner:g.winner,plies:g.plies,moves:g.moves});
     }
     postMessage({type:'batchDone',n:d.batch});
   };
