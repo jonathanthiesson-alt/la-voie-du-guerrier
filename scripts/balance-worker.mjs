@@ -112,25 +112,54 @@ const EVAL_LABELS = {
   agdffix: "Variante — ag=df seul",
   mobfix: "Variante — mobilité seule",
 };
-async function postGame(base, key, payload) {
-  const res = await fetch(base + "/rest/v1/rpc/dev_record_balance_result", {
-    method: "POST",
-    headers: {
-      "apikey": key,
-      "Authorization": "Bearer " + key,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
+// On écrit EN DIRECT dans la table (service_role → contourne la RLS), et non
+// via l'RPC dev_record_balance_result : celle-ci est gardée par is_admin_user()
+// qui exige un UTILISATEUR admin (auth.uid()), or le service_role n'est pas un
+// utilisateur → « admin only ». On agrège tout le lot en UNE écriture sur la
+// ligne unique (test_label, eval_label, depth_white, depth_black), avec la MÊME
+// sémantique que l'RPC (games/wins/plies comptés sur les parties DÉCISIVES ;
+// les nulles ne sont pas enregistrées). Pas de course : le workflow a un
+// concurrency-group et le label `srv:` est distinct de celui du navigateur.
+async function sbFetch(base, key, path, init) {
+  const res = await fetch(base + "/rest/v1/" + path, {
+    ...init,
+    headers: { apikey: key, Authorization: "Bearer " + key, ...(init && init.headers) },
   });
-  if (!res.ok) throw new Error("RPC " + res.status + " : " + (await res.text()).slice(0, 200));
+  if (!res.ok) throw new Error((init && init.method || "GET") + " " + res.status + " : " + (await res.text()).slice(0, 200));
+  return res;
 }
-// Petit pool de concurrence pour ne pas ouvrir des centaines de requêtes d'un coup.
-async function pool(items, size, worker) {
-  let i = 0;
-  const runners = Array.from({ length: Math.min(size, items.length) }, async () => {
-    while (i < items.length) { const idx = i++; await worker(items[idx]); }
-  });
-  await Promise.all(runners);
+async function upsertStats(base, key, testLabel, evalLabel, depth, agg) {
+  const filter = `test_label=eq.${encodeURIComponent(testLabel)}` +
+    `&eval_label=eq.${encodeURIComponent(evalLabel)}` +
+    `&depth_white=eq.${depth}&depth_black=eq.${depth}`;
+  const rows = await (await sbFetch(base, key,
+    `dev_balance_stats?${filter}&select=id,games,white_wins,black_wins,total_plies,games_under_15`)).json();
+  const now = new Date().toISOString();
+  const prev = rows[0];
+  if (prev) {
+    await sbFetch(base, key, `dev_balance_stats?id=eq.${prev.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({
+        games: prev.games + agg.games,
+        white_wins: prev.white_wins + agg.white,
+        black_wins: prev.black_wins + agg.black,
+        total_plies: Number(prev.total_plies) + agg.plies,
+        games_under_15: prev.games_under_15 + agg.under15,
+        updated_at: now,
+      }),
+    });
+  } else {
+    await sbFetch(base, key, "dev_balance_stats", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({
+        test_label: testLabel, eval_label: evalLabel, depth_white: depth, depth_black: depth,
+        games: agg.games, white_wins: agg.white, black_wins: agg.black,
+        total_plies: agg.plies, games_under_15: agg.under15, updated_at: now,
+      }),
+    });
+  }
 }
 
 // ── Config (env, avec valeurs par défaut « prof. 4 / 100 parties ») ──────
@@ -177,15 +206,16 @@ async function main() {
   console.log(`■ ${n} parties (${draw} nulles non comptées) · Blancs ${w} / Noirs ${b} · ${wp}% Blancs · σ=${sigma} · ${(plies / Math.max(n, 1)).toFixed(1)} coups/partie · ${Date.now() - t0} ms`);
 
   if (!PERSIST) { console.log("↩ dry-run (BW_PERSIST=0) : rien écrit."); return; }
+  if (!dec) { console.log("○ Aucune partie décisive à enregistrer (que des nulles)."); return; }
+
+  // Agrégat du lot sur les parties DÉCISIVES (comme l'RPC : nulles ignorées).
+  const agg = { games: dec, white: w, black: b, plies: 0, under15: 0 };
+  for (const m of decisive) { agg.plies += m.plies; if (m.plies < 15) agg.under15++; }
 
   const testLabel = "srv:" + FORMAT_ID;
   const evalLabel = EVAL_LABELS[EVAL_KEY] || EVAL_KEY;
-  await pool(decisive, 8, (m) => postGame(SUPABASE_URL, SERVICE_KEY, {
-    p_test_label: testLabel, p_eval_label: evalLabel,
-    p_depth_white: DEPTH, p_depth_black: DEPTH,
-    p_winner: m.winner, p_plies: m.plies,
-  }));
-  console.log(`✓ ${decisive.length} parties décisives écrites dans dev_balance_stats (label "${testLabel}").`);
+  await upsertStats(SUPABASE_URL, SERVICE_KEY, testLabel, evalLabel, DEPTH, agg);
+  console.log(`✓ ${dec} parties décisives cumulées dans dev_balance_stats (label "${testLabel}", éval "${evalLabel}").`);
 }
 
 main().catch((e) => { console.error("✗ balance-worker :", e.message); process.exit(1); });
