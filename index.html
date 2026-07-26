@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.28.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.29.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2113,7 +2113,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.28.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.29.0 &#9820;</div>
   </div>
 </div>
 
@@ -2597,6 +2597,16 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     </div>
     <div class="menu-divider"></div>
     <div id="lab-results" style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment)"></div>
+    <div class="menu-divider"></div>
+    <details style="margin-top:4px">
+      <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">✎ Format personnalisé (avancé)</summary>
+      <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.7;margin:8px 0">
+        Édite un format en données (dimensions 3→9, cases interdites <code>voids</code>, pièces existantes, <code>sumo</code>/<code>v2</code>), charge-le : il apparaît dans le sélecteur ci-dessus, prêt à simuler. <em>Les nouveaux TYPES de pièces (mouvements inédits) arrivent à l'étape suivante.</em>
+      </div>
+      <button class="btn" style="width:100%;padding:6px;margin-bottom:6px;font-size:12px" onclick="labDumpFormatJson()">⇩ Copier le format sélectionné ici pour l'éditer</button>
+      <textarea id="lab-custom-json" spellcheck="false" placeholder='{ "name":"Mon format", "rows":5, "cols":5, "v2":true, "sumo":false, "voids":["0,0","0,4","4,0","4,4"], "setup":[ {"type":"epeiste","color":"white","r":0,"c":2}, ... ] }' style="width:100%;box-sizing:border-box;height:150px;font-family:monospace;font-size:11px;background:rgba(0,0,0,.45);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px;padding:6px"></textarea>
+      <button class="adm-btn" style="width:100%;padding:8px;margin-top:6px" onclick="labLoadCustomFormat()">✓ Charger ce format personnalisé</button>
+    </details>
   </div>
   </div>
 </div>
@@ -3259,8 +3269,25 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.28.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.29.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.29.0 &mdash; 26 juillet 2026</div>
+      <ul class="devlog-list">
+
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; LABORATOIRE — FORMATS EN DONN&Eacute;ES</li>
+
+        <li>Le moteur de simulation est d&eacute;sormais <strong>agnostique aux dimensions</strong> : plateau de 3&times;3 &agrave; 9&times;9, cases interdites param&eacute;trables. Le jeu standard 5&times;5 est <strong>strictement inchang&eacute;</strong> (v&eacute;rifi&eacute; identique au coup pr&egrave;s sur des parties d&eacute;terministes de r&eacute;f&eacute;rence).</li>
+
+        <li>Nouveaux formats testables dans le Labo : le <strong>Sumo</strong> (l'&eacute;v&eacute;nement en cours, avec sa physique de pouss&eacute;e &eacute;jectante) et un <strong>&laquo;&nbsp;&Eacute;largi 7&times;7&nbsp;&raquo;</strong> exp&eacute;rimental. On peut enfin mesurer l'&eacute;quilibre d'un &eacute;v&eacute;nement, pas seulement du standard.</li>
+
+        <li><strong>&Eacute;diteur de format</strong> (section avanc&eacute;e) : on d&eacute;finit un format en donn&eacute;es (dimensions, cases interdites, pi&egrave;ces, sumo/v2), on le charge, il appara&icirc;t dans le s&eacute;lecteur, pr&ecirc;t &agrave; simuler. Validation compl&egrave;te (un &eacute;p&eacute;iste par camp, pi&egrave;ces dans le plateau, etc.).</li>
+
+        <li style="list-style:none;margin-left:-14px;color:rgba(200,168,110,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">Prochaine &eacute;tape : les nouveaux TYPES de pi&egrave;ces (mouvements in&eacute;dits), qui demandent de transformer le g&eacute;n&eacute;rateur de coups en interpr&eacute;teur de r&egrave;gles.</li>
+
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -6723,7 +6750,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.28.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.29.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -6937,7 +6964,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.28.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.29.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -7142,7 +7169,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.28.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.29.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -14101,8 +14128,8 @@ function allMoves(color,board,stacks,lm,lp,lmbc){
   // IMPORTANT: préserver lastMovedByColor pour que l'anti-retour s'applique à l'IA
   G.lastMovedByColor=lmbc||G.lastMovedByColor||{white:null,black:null};
   const result=[];
-  const cols=G.cols||5;
-  for(let r=0;r<5;r++)for(let c=0;c<cols;c++){
+  const cols=G.cols||5;const rows=G.rows||5;
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
     const p=board[r][c];if(!p||p.color!==color)continue;
     legalMoves(color,board,stacks,{r,c},lm,lp).forEach(m=>result.push({fr:r,fc:c,tr:m.r,tc:m.c,action:m}));
   }
@@ -14114,8 +14141,8 @@ function rnd(arr){return arr[Math.floor(Math.random()*arr.length)]}
 
 // ── Helpers ────────────────────────────────────────────
 function findMaster(color,board){
-  const cols=(G&&G.cols)||5;
-  for(let r=0;r<5;r++)for(let c=0;c<cols;c++){
+  const cols=(G&&G.cols)||5;const rows=(G&&G.rows)||5;
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
     if(board[r]&&board[r][c]&&board[r][c].type==='epeiste'&&board[r][c].color===color)return{r,c};
   }
   return null;
@@ -14149,8 +14176,12 @@ function threatCount(color,board,stacks){
 function evalPosition(board,stacks,ag,df,cb,mb){
   const bm=findMaster('black',board);const wm=findMaster('white',board);
   if(!bm)return -100000;if(!wm)return 100000;
+  // Dimensions du plateau depuis G (rempli par le format côté Worker, ou 5×5
+  // par défaut dans le jeu live) — centre calculé, plus de 5×5 en dur.
+  const rows=(G&&G.rows)||5, cols=(G&&G.cols)||5;
+  const cr=Math.floor((rows-1)/2), cc=Math.floor((cols-1)/2);
   let sc=0;
-  for(let r=0;r<5;r++)for(let c=0;c<5;c++){
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
     const p=board[r][c];const su=stacks[r][c];if(!p)continue;
     if(p.type==='sword'){
       if(p.color==='black'){
@@ -14159,7 +14190,7 @@ function evalPosition(board,stacks,ag,df,cb,mb){
         const d=dist({r,c},bm);sc-=df*(7-d)*14;if(d===1)sc-=df*60;if(d===2)sc-=df*25;
       }
     }
-    if(cb){const cd=dist({r,c},{r:2,c:2});sc+=(p.color==='black'?1:-1)*cb*(3-Math.min(cd,3));}
+    if(cb){const cd=dist({r,c},{r:cr,c:cc});sc+=(p.color==='black'?1:-1)*cb*(3-Math.min(cd,3));}
     if(su)sc+=(su.color==='white'?35:-45);
   }
   sc-=df*threatCount('black',board,stacks)*70;
@@ -14274,9 +14305,9 @@ function minimaxFn(board,stacks,depth,isMax,alpha,beta,lm,lp,evalFn,rootColor){
       const _mc=isMax?rootColor:oppRoot,_oc=isMax?oppRoot:rootColor;
       const _km=findMaster(_mc,nb);
       let exposePenalty=0;
-      if(_km){[[-1,0],[1,0],[0,-1],[0,1]].forEach(([dr,dc])=>{
+      if(_km){var _kr=(G&&G.rows)||5,_kc=(G&&G.cols)||5;[[-1,0],[1,0],[0,-1],[0,1]].forEach(([dr,dc])=>{
         const nr=_km.r+dr,nc=_km.c+dc;
-        if(nr>=0&&nr<5&&nc>=0&&nc<5&&nb[nr]&&nb[nr][nc]&&nb[nr][nc].color===_oc&&nb[nr][nc].type==='sword')exposePenalty+=3000;
+        if(nr>=0&&nr<_kr&&nc>=0&&nc<_kc&&nb[nr]&&nb[nr][nc]&&nb[nr][nc].color===_oc&&nb[nr][nc].type==='sword')exposePenalty+=3000;
       });}
       best=Math.max(best,minimaxFn(nb,ns,depth-1,false,alpha,beta,nlm,nlp,evalFn,rootColor)-exposePenalty);
       alpha=Math.max(alpha,best);if(beta<=alpha)break;
@@ -14783,6 +14814,28 @@ var LAB_FORMATS={
       {type:'epeiste',color:'white',r:0,c:2},{type:'sword',color:'white',r:0,c:1},{type:'sword',color:'white',r:0,c:3},{type:'shield',color:'white',r:1,c:2},
       {type:'epeiste',color:'black',r:4,c:2},{type:'sword',color:'black',r:4,c:1},{type:'sword',color:'black',r:4,c:3},{type:'shield',color:'black',r:3,c:2}
     ]
+  },
+  // Sumo = événement en cours. MÊME plateau et MÊME disposition que le standard
+  // (une partie Sumo démarre exactement comme une classée) ; seule la physique
+  // change : sumo:true active les poussées éjectantes (sortie du ring = défaite,
+  // gérées par les branches G.sumoMode de legalMoves/execMove).
+  sumo:{
+    id:'sumo', name:'Sumo 相撲 (événement)', rows:5, cols:5, v2:true, sumo:true,
+    voids:['0,0','0,4','4,0','4,4'],
+    setup:[
+      {type:'epeiste',color:'white',r:0,c:2},{type:'sword',color:'white',r:0,c:1},{type:'sword',color:'white',r:0,c:3},{type:'shield',color:'white',r:1,c:2},
+      {type:'epeiste',color:'black',r:4,c:2},{type:'sword',color:'black',r:4,c:1},{type:'sword',color:'black',r:4,c:3},{type:'shield',color:'black',r:3,c:2}
+    ]
+  },
+  // Format expérimental : prouve que le moteur gère d'autres dimensions.
+  // Disposition symétrique analogue au standard, sur un 7×7 aux coins retirés.
+  large7:{
+    id:'large7', name:'Élargi 7×7 (expérimental)', rows:7, cols:7, v2:true, sumo:false,
+    voids:['0,0','0,6','6,0','6,6'],
+    setup:[
+      {type:'epeiste',color:'white',r:0,c:3},{type:'sword',color:'white',r:0,c:2},{type:'sword',color:'white',r:0,c:4},{type:'shield',color:'white',r:1,c:3},
+      {type:'epeiste',color:'black',r:6,c:3},{type:'sword',color:'black',r:6,c:2},{type:'sword',color:'black',r:6,c:4},{type:'shield',color:'black',r:5,c:3}
+    ]
   }
 };
 // Formules d'éval testables (les mêmes que l'analyse d'équilibre). Par défaut
@@ -14866,15 +14919,19 @@ function labWorkerDriver(){
 // Construit la source complète du script Worker : préambule (format injecté +
 // stubs sans DOM) + moteur vivant (toString) + driver.
 function labBuildEngineSource(format){
-  var engineFns=[isValid,findMaster,dist,threatCount,cloneBS,applyToClone,allMoves,legalMoves,execMove,evalPosition,evalTrainer,evalBalanceCurrent,evalBalanceMobilityFixed,evalBalanceSymmetric,evalBalanceAgDfFixed,minimaxFn,minimaxPlay,devSimTopMoves];
+  // isValid EXCLU du toString : la version vivante code 5×5 en dur. On la
+  // remplace par une version pilotée par le format (dimensions + voids), pour
+  // que le moteur du Worker soit réellement agnostique aux dimensions.
+  var engineFns=[findMaster,dist,threatCount,cloneBS,applyToClone,allMoves,legalMoves,execMove,evalPosition,evalTrainer,evalBalanceCurrent,evalBalanceMobilityFixed,evalBalanceSymmetric,evalBalanceAgDfFixed,minimaxFn,minimaxPlay,devSimTopMoves];
   var prelude=[
     'var FORMAT='+JSON.stringify(format)+';',
     'var VOID_STD=new Set(FORMAT.voids||[]);',
+    'function isValid(r,c){return r>=0&&r<(FORMAT.rows||5)&&c>=0&&c<(FORMAT.cols||5)&&!VOID_STD.has(r+","+c);}',
     'var DO=[{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1}];',
     'var DA=[{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1},{dr:-1,dc:-1},{dr:-1,dc:1},{dr:1,dc:-1},{dr:1,dc:1}];',
     'var PP={totalCaptures:0,totalPushes:0};',
     'function playSound(){} function haptic(){}',
-    'var G={simulating:true,cols:FORMAT.cols||5,sumoMode:!!FORMAT.sumo,turn:null,lastMovedByColor:{white:null,black:null}};',
+    'var G={simulating:true,rows:FORMAT.rows||5,cols:FORMAT.cols||5,sumoMode:!!FORMAT.sumo,turn:null,lastMovedByColor:{white:null,black:null}};',
     'function isV2mode(){return !!FORMAT.v2;}'
   ].join('\n');
   var body=engineFns.map(function(f){ return f.toString(); }).join('\n\n');
@@ -15033,6 +15090,65 @@ function labOnShowScreen(){
     });
   }
   labUpdateUI();
+}
+
+// ── Éditeur de format (avancé, DEV) ─────────────────────────────────
+// Un format = données pures (dimensions, voids, pièces existantes, sumo/v2).
+// Le dev édite un JSON, on valide, on l'ajoute à LAB_FORMATS sous la clé
+// "custom" et on le rend simulable comme les autres. Les nouveaux TYPES de
+// pièces (mouvements inédits) ne sont PAS encore possibles : legalMoves code
+// encore les 3 pièces (épéiste/épée/bouclier) en dur — ce sera l'étape
+// suivante (transformer legalMoves en interpréteur de règles piloté par des
+// données de pièces). Ici on peut déjà : changer dimensions, cases interdites,
+// nombre/position des pièces, activer sumo/v2.
+function labValidateFormat(f){
+  if(!f||typeof f!=='object') return {ok:false,err:'Format vide ou invalide.'};
+  var rows=+f.rows, cols=+f.cols;
+  if(!(rows>=3&&rows<=9&&cols>=3&&cols<=9)) return {ok:false,err:'rows et cols doivent être entre 3 et 9.'};
+  if(!Array.isArray(f.setup)||!f.setup.length) return {ok:false,err:'setup doit être une liste de pièces non vide.'};
+  var voids=Array.isArray(f.voids)?f.voids:[];
+  var voidSet=new Set(voids);
+  var seen={}, kings={white:0,black:0};
+  for(var i=0;i<f.setup.length;i++){
+    var p=f.setup[i];
+    if(!p||['epeiste','sword','shield'].indexOf(p.type)<0) return {ok:false,err:'Pièce #'+(i+1)+' : type invalide (epeiste/sword/shield).'};
+    if(['white','black'].indexOf(p.color)<0) return {ok:false,err:'Pièce #'+(i+1)+' : couleur invalide (white/black).'};
+    var r=+p.r, c=+p.c;
+    if(!(r>=0&&r<rows&&c>=0&&c<cols)) return {ok:false,err:'Pièce #'+(i+1)+' : position ('+r+','+c+') hors plateau.'};
+    if(voidSet.has(r+','+c)) return {ok:false,err:'Pièce #'+(i+1)+' : posée sur une case interdite.'};
+    if(seen[r+','+c]) return {ok:false,err:'Deux pièces sur la même case ('+r+','+c+').'};
+    seen[r+','+c]=1;
+    if(p.type==='epeiste') kings[p.color]++;
+  }
+  if(kings.white!==1||kings.black!==1) return {ok:false,err:'Exactement un épéiste par camp requis (blanc:'+kings.white+', noir:'+kings.black+').'};
+  return {ok:true, format:{id:'custom', name:(f.name||'Format personnalisé'), rows:rows, cols:cols, v2:(f.v2!==false), sumo:!!f.sumo, voids:voids, setup:f.setup.map(function(p){return {type:p.type,color:p.color,r:+p.r,c:+p.c};})}};
+}
+
+function labDumpFormatJson(){
+  var sel=document.getElementById('lab-format');
+  var key=sel?sel.value:'standard';
+  var f=LAB_FORMATS[key]||LAB_FORMATS.standard;
+  var ta=document.getElementById('lab-custom-json');
+  if(ta) ta.value=JSON.stringify({name:f.name,rows:f.rows,cols:f.cols,v2:f.v2,sumo:f.sumo,voids:f.voids,setup:f.setup}, null, 1);
+}
+
+function labLoadCustomFormat(){
+  var ta=document.getElementById('lab-custom-json');
+  if(!ta) return;
+  var f;
+  try{ f=JSON.parse(ta.value); }catch(e){ if(typeof showToast==='function') showToast('JSON invalide : '+e.message, true); return; }
+  var v=labValidateFormat(f);
+  if(!v.ok){ if(typeof showToast==='function') showToast(v.err, true); return; }
+  LAB_FORMATS.custom=v.format;
+  var sel=document.getElementById('lab-format');
+  if(sel){
+    var opt=null;
+    for(var i=0;i<sel.options.length;i++){ if(sel.options[i].value==='custom'){ opt=sel.options[i]; break; } }
+    if(!opt){ opt=document.createElement('option'); opt.value='custom'; sel.appendChild(opt); }
+    opt.textContent='✎ '+v.format.name+' ('+v.format.rows+'×'+v.format.cols+(v.format.sumo?', sumo':'')+')';
+    sel.value='custom';
+  }
+  if(typeof showToast==='function') showToast('Format personnalisé chargé — prêt à simuler.');
 }
 
 // Rempli par renderDevOpeningsList/renderDevTacticsList, consommé par
