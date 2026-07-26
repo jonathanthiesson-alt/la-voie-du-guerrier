@@ -30,6 +30,9 @@ on:
       opening:
         description: "Demi-coups d'ouverture aléatoire (diversité des parties)"
         default: "6"
+      use_config:
+        description: "Ignorer les champs ci-dessus et suivre dev_worker_config (comme le cron)"
+        default: "false"
 
 # Évite deux runs simultanés (ils écriraient en parallèle dans la même table).
 concurrency:
@@ -50,8 +53,12 @@ jobs:
         env:
           SUPABASE_URL: "https://ikssbshpvpqlcgrbjldz.supabase.co"
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          BW_FORMAT: ${{ github.event.inputs.format || 'standard' }}
-          BW_DEPTH: ${{ github.event.inputs.depth || '4' }}
-          BW_GAMES: ${{ github.event.inputs.games || '100' }}
-          BW_EVAL: ${{ github.event.inputs.evalKey || 'symmetric' }}
-          BW_OPENING: ${{ github.event.inputs.opening || '6' }}
+          # Pas de valeurs par défaut ici : sur le CRON (schedule) ces champs sont
+          # VIDES → le runner bascule en mode config (dev_worker_config). En
+          # dispatch, les inputs ont leurs propres défauts → mode manuel.
+          BW_FORMAT: ${{ github.event.inputs.format }}
+          BW_DEPTH: ${{ github.event.inputs.depth }}
+          BW_GAMES: ${{ github.event.inputs.games }}
+          BW_EVAL: ${{ github.event.inputs.evalKey }}
+          BW_OPENING: ${{ github.event.inputs.opening }}
+          BW_USE_CONFIG: ${{ github.event.inputs.use_config }}

@@ -95,15 +95,25 @@ function buildScript(src, format) {
   const driver = extractBody(src, "labWorkerDriver");
   return prelude + "\n\n" + body + "\n\n" + driver;
 }
-function runScript(script, cfg) {
+// Compile le moteur UNE fois (coûteux : new Function sur ~600 lignes) et rend
+// une fonction qui lance des LOTS successifs. Utile pour respecter un budget de
+// temps : on lance par petits lots et on s'arrête quand le budget est atteint.
+// Chaque partie repart d'un plateau neuf (labSetupState), donc réutiliser
+// l'instance entre les lots est sûr.
+function makeRunner(script) {
   const results = [];
   const factory = new Function(
     "postMessage",
     "var onmessage;\n" + script + "\nreturn {get onmessage(){return onmessage;}};",
   );
   const api = factory((msg) => results.push(msg));
-  api.onmessage({ data: Object.assign({ cmd: "run" }, cfg) });
-  return results;
+  return function runChunk(cfg, batch) {
+    results.length = 0;
+    api.onmessage({ data: Object.assign({ cmd: "run", batch }, cfg) });
+    const out = [];
+    for (const m of results) if (m.type === "game") out.push({ winner: m.winner, plies: m.plies, moves: m.moves });
+    return out;
+  };
 }
 
 // ── Écriture des résultats dans Supabase (RPC dev_record_balance_result) ──
@@ -183,85 +193,128 @@ async function insertGamesDedup(base, key, testLabel, evalLabel, depth, games) {
   return await res.json(); // uniquement les lignes insérées (doublons exclus)
 }
 
-// ── Config (env, avec valeurs par défaut « prof. 4 / 100 parties ») ──────
-const FORMAT_ID = process.env.BW_FORMAT || "standard";
-const DEPTH = Math.min(Math.max(+(process.env.BW_DEPTH || 4), 1), 6);
-const GAMES = Math.min(Math.max(+(process.env.BW_GAMES || 100), 1), 2000);
-const EVAL_KEY = process.env.BW_EVAL || "symmetric";
-// Ouverture à 6 demi-coups par défaut (vs 4 côté navigateur) : élargit
-// l'espace de parties DISTINCTES (~top-4^6 ≈ des milliers) pour que l'anti-
-// doublon ne plafonne pas trop tôt. Les coups restent parmi les meilleurs
-// (top-4), donc du jeu plausible, pas des ouvertures au hasard.
-const OPENING_N = process.env.BW_OPENING !== undefined ? +process.env.BW_OPENING : 6;
-const PERSIST = process.env.BW_PERSIST !== "0"; // BW_PERSIST=0 → dry-run local
-
-const SUPABASE_URL = process.env.SUPABASE_URL || "";
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
-
-async function main() {
-  const t0 = Date.now();
-  // Avant de dépenser du CPU : si on doit écrire mais que le secret repo n'est
-  // pas encore posé, on ne fait RIEN (exit 0, pas d'échec rouge). Le worker
-  // s'active tout seul dès que SUPABASE_SERVICE_ROLE_KEY est ajouté.
-  if (PERSIST && (!SUPABASE_URL || !SERVICE_KEY)) {
-    console.log("⏸ Secret SUPABASE_SERVICE_ROLE_KEY absent → worker en veille. Ajoute-le dans Settings → Secrets and variables → Actions pour l'activer. (Dry-run local : BW_PERSIST=0.)");
-    return;
-  }
-  const format = getFormat(html, FORMAT_ID);
-  const script = buildScript(html, format);
-  console.log(`▶ balance-worker : ${FORMAT_ID}, prof. ${DEPTH}, ${GAMES} parties, éval ${EVAL_KEY}`);
-
-  const results = runScript(script, {
-    batch: GAMES, depthW: DEPTH, depthB: DEPTH, evalKey: EVAL_KEY, openingN: OPENING_N,
+// Lecture/écriture de la config du worker (Action = service_role, accès direct
+// à la table, la RLS étant contournée — le navigateur, lui, passe par les RPC).
+async function readWorkerConfig(base, key) {
+  const rows = await (await sbFetch(base, key, "dev_worker_config?id=eq.1&select=*")).json();
+  return rows[0] || null;
+}
+async function setCycleCurrent(base, key, next) {
+  await sbFetch(base, key, "dev_worker_config?id=eq.1", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+    body: JSON.stringify({ cycle_current: next }),
   });
+}
 
-  let w = 0, b = 0, draw = 0, plies = 0, n = 0;
-  const decisive = [];
-  for (const m of results) {
-    if (m.type !== "game") continue;
-    n++; plies += m.plies;
-    if (m.winner === "white") { w++; decisive.push(m); }
-    else if (m.winner === "black") { b++; decisive.push(m); }
-    else draw++;
-  }
-  const dec = w + b;
-  const wp = dec ? (100 * w / dec).toFixed(1) : "—";
-  const se = dec ? 0.5 / Math.sqrt(dec) : 0;
-  const sigma = dec ? (Math.abs(w / dec - 0.5) / se).toFixed(2) : "—";
-  console.log(`■ ${n} parties (${draw} nulles non comptées) · Blancs ${w} / Noirs ${b} · ${wp}% Blancs · σ=${sigma} · ${(plies / Math.max(n, 1)).toFixed(1)} coups/partie · ${Date.now() - t0} ms`);
-
-  if (!PERSIST) { console.log("↩ dry-run (BW_PERSIST=0) : rien écrit."); return; }
-  if (!dec) { console.log("○ Aucune partie décisive à enregistrer (que des nulles)."); return; }
-
-  const testLabel = "srv:" + FORMAT_ID;
-  const evalLabel = EVAL_LABELS[EVAL_KEY] || EVAL_KEY;
-
-  // Signature (sha1 de la séquence de coups) + DÉDUP LOCAL : une même partie ne
-  // compte pas deux fois dans un même run.
+// Dédup (local + base) puis incrémente dev_balance_stats par les parties INÉDITES.
+async function persistDecisive(base, key, format, evalKey, depth, decisive) {
+  const testLabel = "srv:" + format;
+  const evalLabel = EVAL_LABELS[evalKey] || evalKey;
   const bySig = new Map();
   for (const m of decisive) {
     const sig = createHash("sha1").update(m.moves || "").digest("hex");
     if (!bySig.has(sig)) bySig.set(sig, { sig, winner: m.winner, plies: m.plies });
   }
   const local = [...bySig.values()];
+  const fresh = await insertGamesDedup(base, key, testLabel, evalLabel, depth, local);
+  const out = { fresh: fresh.length, dupLocal: decisive.length - local.length, dupDb: local.length - fresh.length };
+  if (fresh.length) {
+    const agg = { games: fresh.length, white: 0, black: 0, plies: 0, under15: 0 };
+    for (const g of fresh) {
+      if (g.winner === "white") agg.white++; else if (g.winner === "black") agg.black++;
+      agg.plies += g.plies || 0; if ((g.plies || 0) < 15) agg.under15++;
+    }
+    await upsertStats(base, key, testLabel, evalLabel, depth, agg);
+  }
+  return out;
+}
 
-  // Anti-doublon EN BASE : il ne reste que les parties INÉDITES (jamais vues).
-  const fresh = await insertGamesDedup(SUPABASE_URL, SERVICE_KEY, testLabel, evalLabel, DEPTH, local);
-  const dupLocal = decisive.length - local.length;
-  const dupDb = local.length - fresh.length;
-  if (!fresh.length) {
-    console.log(`○ ${dec} décisives simulées, 0 inédite (${dupLocal} doublons internes, ${dupDb} déjà en base) → stats inchangées.`);
+// ── Config d'exécution ───────────────────────────────────────────────────
+// Deux sources : MANUEL (dispatch avec profondeur / dry-run local → variables
+// BW_*) ou CONFIG (cron → lit dev_worker_config). Le cron ne fournit pas
+// BW_DEPTH → mode config. BW_USE_CONFIG='true' force le mode config même en
+// dispatch (pour tester le pilotage depuis le Labo).
+const USE_CONFIG = process.env.BW_USE_CONFIG === "true";
+const MANUAL = !USE_CONFIG && !!(process.env.BW_DEPTH && String(process.env.BW_DEPTH).trim());
+const PERSIST = process.env.BW_PERSIST !== "0"; // BW_PERSIST=0 → dry-run local
+const SUPABASE_URL = process.env.SUPABASE_URL || "";
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+
+async function main() {
+  const t0 = Date.now();
+  // Si on doit écrire mais que le secret repo n'est pas posé : veille (exit 0,
+  // pas d'échec rouge). S'active seul dès que SUPABASE_SERVICE_ROLE_KEY est là.
+  if (PERSIST && (!SUPABASE_URL || !SERVICE_KEY)) {
+    console.log("⏸ Secret SUPABASE_SERVICE_ROLE_KEY absent → worker en veille. Ajoute-le dans Settings → Secrets and variables → Actions. (Dry-run local : BW_PERSIST=0.)");
     return;
   }
 
-  // On n'incrémente les stats QUE par les parties inédites → σ honnête.
-  const agg = { games: fresh.length, white: 0, black: 0, plies: 0, under15: 0 };
-  for (const g of fresh) {
-    if (g.winner === "white") agg.white++; else if (g.winner === "black") agg.black++;
-    agg.plies += g.plies || 0; if ((g.plies || 0) < 15) agg.under15++;
+  // Résolution des paramètres.
+  let fmtId, depth, evalKey, opening, gamesTarget, budgetSec, advanceCycleTo = null;
+  if (MANUAL) {
+    fmtId = process.env.BW_FORMAT || "standard";
+    depth = Math.min(Math.max(+process.env.BW_DEPTH, 1), 6);
+    evalKey = process.env.BW_EVAL || "symmetric";
+    opening = process.env.BW_OPENING !== undefined && process.env.BW_OPENING !== "" ? +process.env.BW_OPENING : 6;
+    gamesTarget = Math.min(Math.max(+(process.env.BW_GAMES || 100), 1), 2000);
+    budgetSec = Math.min(Math.max(+(process.env.BW_BUDGET || 1800), 30), 3300);
+    console.log(`▶ manuel : ${fmtId}, prof.${depth}, cible ${gamesTarget} parties / ${budgetSec}s, éval ${evalKey}, ouverture ${opening}`);
+  } else {
+    if (!PERSIST) { console.log("↩ dry-run sans profondeur : fournis BW_DEPTH pour un essai local."); return; }
+    const cfg = await readWorkerConfig(SUPABASE_URL, SERVICE_KEY);
+    if (!cfg) { console.log("⚠ dev_worker_config introuvable — rien à faire."); return; }
+    if (!cfg.enabled) { console.log("⏸ Worker désactivé (dev_worker_config.enabled=false). Rien à faire."); return; }
+    fmtId = cfg.format; evalKey = cfg.eval_key; opening = cfg.opening;
+    gamesTarget = cfg.games; budgetSec = cfg.time_budget_sec;
+    if (cfg.mode === "cycle") {
+      depth = Math.min(Math.max(cfg.cycle_current, cfg.cycle_min), cfg.cycle_max);
+      advanceCycleTo = depth >= cfg.cycle_max ? cfg.cycle_min : depth + 1; // prochain tick
+      console.log(`▶ config : ${fmtId}, prof.${depth} (cycle ${cfg.cycle_min}→${cfg.cycle_max}), cible ${gamesTarget} / ${budgetSec}s, éval ${evalKey}, ouverture ${opening}`);
+    } else {
+      depth = Math.min(Math.max(cfg.fixed_depth, 1), 6);
+      console.log(`▶ config : ${fmtId}, prof.${depth} (fixe), cible ${gamesTarget} / ${budgetSec}s, éval ${evalKey}, ouverture ${opening}`);
+    }
   }
-  await upsertStats(SUPABASE_URL, SERVICE_KEY, testLabel, evalLabel, DEPTH, agg);
-  console.log(`✓ ${fresh.length} parties INÉDITES enregistrées (ignorés : ${dupLocal} doublons internes + ${dupDb} déjà en base) → dev_balance_stats "${testLabel}" prof.${DEPTH}.`);
+
+  const fmtObj = getFormat(html, fmtId);
+  const runChunk = makeRunner(buildScript(html, fmtObj));
+
+  // Boucle par lots, bornée par la cible de parties ET le budget de temps
+  // (la prof. 5-6 est lente → le budget garde chaque run sous la limite du job).
+  const CHUNK = 10, budgetMs = budgetSec * 1000;
+  const decisive = [];
+  let n = 0, draw = 0, w = 0, b = 0, plies = 0;
+  while (n < gamesTarget && (Date.now() - t0) < budgetMs) {
+    const games = runChunk({ depthW: depth, depthB: depth, evalKey, openingN: opening }, Math.min(CHUNK, gamesTarget - n));
+    for (const g of games) {
+      n++; plies += g.plies;
+      if (g.winner === "white") { w++; decisive.push(g); }
+      else if (g.winner === "black") { b++; decisive.push(g); }
+      else draw++;
+    }
+  }
+  const dec = w + b;
+  const wp = dec ? (100 * w / dec).toFixed(1) : "—";
+  const sigma = dec ? (Math.abs(w / dec - 0.5) / (0.5 / Math.sqrt(dec))).toFixed(2) : "—";
+  console.log(`■ ${n} parties (${draw} nulles) · Blancs ${w}/Noirs ${b} · ${wp}% Blancs · σ=${sigma} · ${(plies / Math.max(n, 1)).toFixed(1)} coups · ${Date.now() - t0}ms`);
+
+  if (PERSIST) {
+    if (dec) {
+      const r = await persistDecisive(SUPABASE_URL, SERVICE_KEY, fmtId, evalKey, depth, decisive);
+      if (r.fresh) console.log(`✓ ${r.fresh} parties INÉDITES → dev_balance_stats "srv:${fmtId}" prof.${depth} (ignorés : ${r.dupLocal} internes + ${r.dupDb} déjà en base).`);
+      else console.log(`○ 0 inédite (${r.dupLocal} internes, ${r.dupDb} déjà en base) → stats inchangées.`);
+    } else {
+      console.log("○ Que des nulles → rien à enregistrer.");
+    }
+    // Avance le cycle pour le prochain tick (mode config cycle uniquement).
+    if (advanceCycleTo !== null) {
+      await setCycleCurrent(SUPABASE_URL, SERVICE_KEY, advanceCycleTo);
+      console.log(`↻ Cycle : prochaine profondeur = ${advanceCycleTo}.`);
+    }
+  } else {
+    console.log("↩ dry-run : rien écrit.");
+  }
 }
 
 main().catch((e) => { console.error("✗ balance-worker :", e.message); process.exit(1); });
