@@ -119,6 +119,14 @@ Inspirations assumées : **Fate** (invocation de figures historiques) et
      lot en une écriture upsert sur la clé unique. **RESTE (côté Jonathan)** :
      supprimer l'Edge Function `balance-worker` déployée mais abandonnée
      (Dashboard → Edge Functions), non supprimable via l'outil MCP.
+     **Enrichi le 2026-07-26** : (a) **anti-doublon** — chaque partie a une
+     signature (sha1 de sa séquence de coups), stockée dans `dev_balance_games`
+     (contrainte UNIQUE) ; seules les parties INÉDITES comptent (σ honnête).
+     Ouverture serveur élargie à 6 demi-coups. (b) **Pilotage depuis le Labo** —
+     table `dev_worker_config` + RPC admin + panneau « 🤖 Worker automatique »
+     dans le Labo : marche/arrêt, profondeur **fixe** ou **cycle 4→5→6→4** (le
+     runner avance le curseur à chaque tick), budget de temps (borne les runs en
+     prof. 5-6). Config live actuellement **désactivée** (à activer depuis le Labo).
   4. ☐ **Publier un format comme événement** — pont entre un format du registre
      et le système d'événements live (comme le Sumo), pour tester une variante
      auprès des vrais joueurs. Boucle « forger → tester → publier » bouclée.
