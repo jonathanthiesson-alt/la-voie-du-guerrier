@@ -99,21 +99,25 @@ Inspirations assumées : **Fate** (invocation de figures historiques) et
      connue restante : l'**éval** ne donne aux pièces custom qu'une valeur de
      matériel générique + pression vers le roi (pas de modèle de menace fin par
      type) → les verdicts d'équilibre sur formats custom sont préliminaires.
-  3. ◐ **Worker serveur** — fait le 2026-07-26 via **GitHub Actions** (en
-     attente d'un secret repo pour s'activer). Objectif atteint : les
-     simulations tournent **sans appareil allumé**, en **profondeur 4-5**.
+  3. ✅ **Worker serveur** — fait et VALIDÉ EN CONDITIONS RÉELLES le 2026-07-26
+     via **GitHub Actions**. Objectif atteint : les simulations tournent **sans
+     appareil allumé**, en **profondeur 4-5**, et s'accumulent dans
+     `dev_balance_stats` (vérifié : écriture + cumul + exclusion des nulles OK).
      *Pivot assumé* : l'Edge Function Deno a été construite, déployée ET testée,
      mais le minimax prof. 4-5 **dépasse le budget CPU** d'une Edge Function
      (échec mesuré dès 3 parties en prof. 4 → `WORKER_RESOURCE_LIMIT`). Le même
      moteur extrait tourne sans limite en **Node**, et le repo est **public** →
      GitHub Actions y est gratuit/illimité. Solution retenue :
      `scripts/balance-worker.mjs` (lit `index.html` du checkout, extrait le
-     moteur — source vivante, zéro dérive — simule, écrit dans `dev_balance_stats`
-     via l'RPC `dev_record_balance_result`) + `.github/workflows/balance-worker.yml`
-     (cron horaire + `workflow_dispatch`, ~100 parties/tick prof. 4). **RESTE
-     (côté Jonathan)** : ajouter le secret repo `SUPABASE_SERVICE_ROLE_KEY`
-     (Settings → Secrets → Actions) — sans lui le worker se met en veille (exit
-     0). Et supprimer l'Edge Function `balance-worker` déployée mais abandonnée
+     moteur — source vivante, zéro dérive — simule, puis écrit **en direct** dans
+     `dev_balance_stats` avec le `service_role`) + `.github/workflows/balance-worker.yml`
+     (cron horaire + `workflow_dispatch`, ~100 parties/tick prof. 4). **Piège
+     rencontré** : l'RPC `dev_record_balance_result` est gardée par
+     `is_admin_user()` (exige un UTILISATEUR admin via `auth.uid()`), or le
+     `service_role` n'est pas un utilisateur → « admin only ». D'où l'écriture
+     directe dans la table (le `service_role` contourne la RLS), en agrégeant le
+     lot en une écriture upsert sur la clé unique. **RESTE (côté Jonathan)** :
+     supprimer l'Edge Function `balance-worker` déployée mais abandonnée
      (Dashboard → Edge Functions), non supprimable via l'outil MCP.
   4. ☐ **Publier un format comme événement** — pont entre un format du registre
      et le système d'événements live (comme le Sumo), pour tester une variante
