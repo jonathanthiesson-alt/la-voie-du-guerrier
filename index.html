@@ -2639,6 +2639,15 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <button class="adm-btn" style="width:100%;padding:9px;margin-top:6px" onclick="labEdApply()">✓ Charger ce mode dans le sélecteur</button>
     </details>
     <div class="menu-divider"></div>
+    <details style="margin-top:4px" ontoggle="if(this.open&&typeof labLoadPublishedList==='function')labLoadPublishedList()">
+      <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">📤 Modes publiés (partagés)</summary>
+      <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.7;margin:8px 0">
+        Publie le mode courant pour le <strong>partager avec les autres admins</strong> (Thomas) : il est stocké côté serveur et rechargeable ici, chez l'un comme chez l'autre. <em>Étape ① — ne rend pas encore le mode jouable par les vrais joueurs en ligne, c'est l'étape suivante.</em>
+      </div>
+      <button class="adm-btn" style="width:100%;padding:8px;margin-bottom:8px" onclick="labPublishCurrentMode()">📤 Publier le mode courant</button>
+      <div id="lab-published-list" style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment)">…</div>
+    </details>
+    <div class="menu-divider"></div>
     <details style="margin-top:4px">
       <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">✎ Format personnalisé (avancé)</summary>
       <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.7;margin:8px 0">
@@ -16154,6 +16163,70 @@ function labEdApply(){
   if(!_labEd) labEdInit();
   labEdToJson();          // synchronise le textarea
   labLoadCustomFormat();  // valide + enregistre + sélectionne dans le Labo
+}
+
+// ── Registre de modes PUBLIÉS (milestone 5 ①) ────────────────────────────
+// Publie un format côté serveur (table dev_published_formats, RPC admin) pour le
+// partager entre admins (Jonathan ↔ Thomas) et le recharger dans le Labo. Ne
+// touche PAS au moteur live — un mode publié n'est pas encore jouable en ligne.
+var _labPublishedCache=null;
+async function labPublishCurrentMode(){
+  if(typeof isDevUser==='function' && !isDevUser()){ if(typeof showToast==='function') showToast('Réservé aux comptes dev.', true); return; }
+  var fmt=null;
+  // Priorité à l'état COURANT de l'éditeur (validé) ; sinon le dernier custom chargé.
+  if(typeof _labEd!=='undefined' && _labEd){ var v=labValidateFormat(labEdCurrentFormat()); if(!v.ok){ if(typeof showToast==='function') showToast(v.err, true); return; } fmt=v.format; }
+  else if(LAB_FORMATS.custom){ fmt=LAB_FORMATS.custom; }
+  if(!fmt){ if(typeof showToast==='function') showToast('Aucun mode à publier — construis-en un dans l\'éditeur.', true); return; }
+  var name=prompt('Nom du mode publié :', fmt.name||'Mon mode');
+  if(name===null) return; name=name.trim(); if(!name){ if(typeof showToast==='function') showToast('Nom requis.', true); return; }
+  fmt=Object.assign({}, fmt, {name:name});
+  try{
+    var res=await supa.rpc('dev_publish_format',{p_name:name, p_format:fmt});
+    if(res.error) throw res.error;
+    if(typeof showToast==='function') showToast('Mode « '+name+' » publié (partagé avec les admins).');
+    labLoadPublishedList();
+  }catch(e){ if(typeof showToast==='function') showToast('Erreur de publication : '+(e.message||e), true); }
+}
+async function labLoadPublishedList(){
+  var el=document.getElementById('lab-published-list'); if(!el) return;
+  if(typeof isDevUser==='function' && !isDevUser()){ el.innerHTML='<div style="opacity:.6">Réservé aux comptes dev.</div>'; return; }
+  el.innerHTML='Chargement…';
+  try{
+    var res=await supa.from('dev_published_formats').select('*').order('updated_at',{ascending:false});
+    if(res.error) throw res.error;
+    _labPublishedCache=res.data||[];
+    if(!_labPublishedCache.length){ el.innerHTML='<div style="opacity:.6">Aucun mode publié pour l\'instant. Construis un mode puis « Publier le mode courant ».</div>'; return; }
+    var esc=(typeof escapeHtml==='function')?escapeHtml:function(s){return String(s);};
+    var html='';
+    _labPublishedCache.forEach(function(r){
+      var f=r.format||{};
+      var meta=(f.rows||'?')+'×'+(f.cols||'?')+(f.sumo?', sumo':'')+(f.pieces?', '+Object.keys(f.pieces).length+' pièce(s)':'');
+      html+='<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.08)">'
+        +'<span><b>'+esc(r.name)+'</b> <span style="opacity:.55">'+meta+(r.author?' · '+esc(r.author):'')+'</span></span>'
+        +'<span style="white-space:nowrap"><button onclick="labLoadPublishedMode(\''+r.id+'\')" style="padding:2px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(212,160,23,.35);background:rgba(0,0,0,.3);color:var(--parchment)">Charger</button> '
+        +'<button onclick="labDeletePublishedMode(\''+r.id+'\')" style="padding:2px 7px;border-radius:4px;cursor:pointer;border:1px solid rgba(200,60,60,.4);background:rgba(0,0,0,.3);color:#e0706a">🗑</button></span></div>';
+    });
+    el.innerHTML=html;
+  }catch(e){ console.error('labLoadPublishedList', e); el.innerHTML='Erreur de chargement.'; }
+}
+function labLoadPublishedMode(id){
+  var r=(_labPublishedCache||[]).find(function(x){ return x.id===id; });
+  if(!r){ if(typeof showToast==='function') showToast('Mode introuvable — rafraîchis la liste.', true); return; }
+  var v=labValidateFormat(r.format);
+  if(!v.ok){ if(typeof showToast==='function') showToast('Format publié invalide : '+v.err, true); return; }
+  labRegisterCustomFormat(v.format, true); // → LAB_FORMATS.custom + sélecteurs + sélectionné
+  if(typeof _labEd!=='undefined' && _labEd){ labEdAdopt(r.format); if(typeof labEdRender==='function') labEdRender(); }
+  if(typeof showToast==='function') showToast('Mode « '+r.name+' » chargé — prêt à simuler / éditer.');
+}
+async function labDeletePublishedMode(id){
+  var r=(_labPublishedCache||[]).find(function(x){ return x.id===id; });
+  if(!confirm('Supprimer le mode publié « '+(r?r.name:'?')+' » ? (pour tous les admins)')) return;
+  try{
+    var res=await supa.rpc('dev_delete_published_format',{p_id:id});
+    if(res.error) throw res.error;
+    if(typeof showToast==='function') showToast('Mode publié supprimé.');
+    labLoadPublishedList();
+  }catch(e){ if(typeof showToast==='function') showToast('Erreur : '+(e.message||e), true); }
 }
 
 // Rempli par renderDevOpeningsList/renderDevTacticsList, consommé par

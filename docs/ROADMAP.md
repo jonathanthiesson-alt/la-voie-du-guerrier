@@ -153,9 +153,24 @@ Inspirations assumées : **Fate** (invocation de figures historiques) et
        - ✅ **Lot d — Éval par type.** `labPieceValue` : valeur `value` explicite ou
          **estimée par mobilité** (glisseur > sauteur > marcheur ; poussée ajoute,
          poussable retire) au lieu d'une valeur unique (22) → verdicts fiables.
-  5. ☐ **Publier un format comme événement** — pont entre un format du registre
-     et le système d'événements live (comme le Sumo), pour tester une variante
-     auprès des vrais joueurs. Boucle « forger → tester → publier » bouclée.
+  5. ◐ **Publier un format comme événement** — étagé (le « pont vers les vrais
+     joueurs » est plus profond qu'il n'y paraît : le moteur LIVE/en ligne est
+     câblé 5×5 + pièces natives, `game_state` ne porte que le drapeau `sumo`, et
+     le Sumo est une fonctionnalité SUR-MESURE — pas un cadre générique. Bonne
+     nouvelle : grâce aux Lots a–d le MOTEUR est déjà piloté par données ; il
+     manque surtout le rendu multi-dimensions, le format dans `game_state`, et le
+     flux de publication). Découpage :
+       - ✅ **① Registre de modes publiés** (2026-07-27) — table
+         `dev_published_formats` (jsonb) + RLS lecture `is_admin_user()` + RPC
+         `dev_publish_format`/`dev_delete_published_format` (migration appliquée).
+         Section « 📤 Modes publiés » dans le Labo : publier le mode courant,
+         lister, charger (→ éditeur + registre), supprimer. Partage admin
+         (Jonathan ↔ Thomas). Ne touche PAS au moteur live.
+       - ☐ **② Jouable en LOCAL vs IA** — généraliser `isValid` + le rendu du
+         plateau pour le chemin solo/vs-bot (online intact). Risque moyen.
+       - ☐ **③ Jouable en ligne à 2** — `game_state` porte le format, rendu 2
+         clients, matchmaking. Le but final (test à 2 comptes avec Thomas). Gros
+         épic, à étager. Boucle « forger → tester → publier » bouclée à la fin.
 - Performance sur mobile bas de gamme
 
 ---
