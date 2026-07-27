@@ -2466,9 +2466,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div class="menu-title" style="font-size:18px;margin-top:10px">🛠 DEV</div>
     <div class="menu-divider"></div>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('devrewards')">🛠 Administration</button>
-    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-repertoire')">📖 Répertoire d'ouvertures/tactiques/équilibre</button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="openDevParam()">🤖 Bots</button>
-    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-lab')">🔬 Laboratoire (simulations & équilibre)</button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-lab')">🔬 Laboratoire (équilibre · ouvertures · tactiques · modes)</button>
     <button class="btn btn-devtest" style="width:100%;margin-bottom:8px" onclick="showScreen('devlog')">録 DevLog</button>
   </div>
   </div>
@@ -2597,6 +2596,29 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     </div>
     <div class="menu-divider"></div>
     <div id="lab-results" style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment)"></div>
+    <div class="menu-divider"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;font-family:'VT323',monospace;font-size:13px;color:var(--gold-bright);margin-bottom:6px">
+      <span>📊 Stats cumulées <span style="opacity:.6;font-size:11px">(worker serveur inclus)</span></span>
+      <button class="btn" style="padding:3px 9px;font-size:11px" onclick="labLoadAccumStats()">↻ Rafraîchir</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px;font-family:'VT323',monospace;font-size:11px;color:var(--parchment)">
+      <label style="display:inline-flex;align-items:center;gap:3px">Mode <select id="lab-accum-label" onchange="labRenderAccumStats()" style="padding:3px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:4px"><option value="">Tous</option></select></label>
+      <label style="display:inline-flex;align-items:center;gap:3px">Éval <select id="lab-accum-eval" onchange="labRenderAccumStats()" style="padding:3px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:4px"><option value="">Tous</option></select></label>
+      <label style="display:inline-flex;align-items:center;gap:3px">Prof. <select id="lab-accum-depth" onchange="labRenderAccumStats()" style="padding:3px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:4px"><option value="">Tous</option></select></label>
+    </div>
+    <div id="lab-accum" style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);overflow-x:auto">…</div>
+    <div class="menu-divider"></div>
+    <details style="margin-top:4px" ontoggle="if(this.open&&typeof renderDevOpeningsList==='function')renderDevOpeningsList('lab-openings-list')">
+      <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">📖 Répertoire d'ouvertures</summary>
+      <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.7;margin:8px 0">Meilleures ouvertures par camp (mesurées sur les parties simulées, format standard). Touche une ligne pour la rejouer coup par coup.</div>
+      <div id="lab-openings-list" style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment)">…</div>
+    </details>
+    <div class="menu-divider"></div>
+    <details style="margin-top:4px" ontoggle="if(this.open&&typeof renderDevTacticsList==='function')renderDevTacticsList('lab-tactics-list')">
+      <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">⚔ Répertoire de tactiques</summary>
+      <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.7;margin:8px 0">Motifs tactiques récurrents (capture, poussée, poussée décisive) détectés dans les simulations. Touche une ligne pour voir la position et l'explication.</div>
+      <div id="lab-tactics-list" style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment)">…</div>
+    </details>
     <div class="menu-divider"></div>
     <details style="margin-top:4px" ontoggle="if(this.open&&typeof labEdInit==='function')labEdInit()">
       <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">🎨 Éditeur visuel de mode</summary>
@@ -15107,40 +15129,93 @@ async function devBalanceRunJobs(jobs,label){
 }
 function devBalanceRunAll(){ return devBalanceRunJobs(DEV_BALANCE_ALL_JOBS,'série complète'); }
 
-async function renderDevBalanceList(){
-  var el=document.getElementById('dev-balance-list');
+// Construit le tableau HTML d'un jeu de lignes dev_balance_stats. Partagé par
+// l'écran « Analyse d'équilibre » ET le récap du Labo (avec filtres) — une seule
+// source de vérité pour le rendu (colonnes, calcul de σ, avertissements).
+function balanceStatsTableHTML(rows){
+  var html='<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  html+='<tr style="opacity:.7"><td>Test</td><td>Éval</td><td>Prof.</td><td>Parties</td><td>% Blanc</td><td>% Noir</td><td>Écart</td><td>σ</td><td>Coups moy.</td><td>% &lt;15</td></tr>';
+  rows.forEach(function(r){
+    var pctW=r.games?Math.round(1000*r.white_wins/r.games)/10:0;
+    var pctB=r.games?Math.round(1000*r.black_wins/r.games)/10:0;
+    var gap=Math.abs(pctB-50);
+    // Erreur-type d'une proportion sous H0 (50/50) : SE=50/√n en points de
+    // pourcentage. z = écart/SE = nombre d'écarts-types au-dessus de 50%,
+    // même logique que les tests SPRT utilisés pour comparer des moteurs
+    // d'échecs (Stockfish, etc.) — plus parlant qu'un seuil fixe en points.
+    var se = r.games ? 50/Math.sqrt(r.games) : 0;
+    var z = se ? gap/se : 0;
+    var sig = z>=3; // ~3 écarts-types : probabilité <0,3% que ce soit le hasard
+    var color = sig ? 'var(--gold-bright)' : 'inherit';
+    // Coups moyens et % de parties "courtes" (<15 demi-coups, soit avant le
+    // 8e coup plein) : une config qui gagne surtout par des combinaisons-
+    // éclair issues des 4 premiers coups aléatoires n'est pas un vrai
+    // reflet de l'équilibre en partie normale — voir devBalanceSimOneGame.
+    var avgPlies = r.games ? Math.round(10*r.total_plies/r.games)/10 : 0;
+    var pctShort = r.games ? Math.round(1000*r.games_under_15/r.games)/10 : 0;
+    var shortWarn = pctShort>=10;
+    html+='<tr style="border-top:1px solid rgba(255,255,255,.1);color:'+color+'"><td style="opacity:.85">'+r.test_label+'</td><td>'+r.eval_label+'</td><td>'+r.depth_white+'/'+r.depth_black+'</td><td>'+r.games+'</td><td>'+pctW+'%</td><td>'+pctB+'%</td><td>'+gap.toFixed(1)+' pts</td><td>'+(sig?'⚠ ':'')+z.toFixed(1)+'σ</td><td>'+avgPlies+'</td><td'+(shortWarn?' style="color:#e08a4a"':'')+'>'+(shortWarn?'⚠ ':'')+pctShort+'%</td></tr>';
+  });
+  html+='</table>';
+  return html;
+}
+async function renderDevBalanceList(targetId){
+  var el=document.getElementById(targetId||'dev-balance-list');
   if(!el) return;
   el.innerHTML='Chargement…';
   try{
-    var res=await supa.from('dev_balance_stats').select('*').order('eval_label').order('depth_white');
+    var res=await supa.from('dev_balance_stats').select('*').order('test_label').order('eval_label').order('depth_white');
     var rows=res.data||[];
-    if(!rows.length){ el.innerHTML='<div style="opacity:.6">Aucune simulation encore lancée.</div>'; return; }
-    var html='<table style="width:100%;border-collapse:collapse;font-size:12px">';
-    html+='<tr style="opacity:.7"><td>Éval</td><td>Prof.</td><td>Parties</td><td>% Blanc</td><td>% Noir</td><td>Écart</td><td>σ</td><td>Coups moy.</td><td>% &lt;15</td></tr>';
-    rows.forEach(function(r){
-      var pctW=r.games?Math.round(1000*r.white_wins/r.games)/10:0;
-      var pctB=r.games?Math.round(1000*r.black_wins/r.games)/10:0;
-      var gap=Math.abs(pctB-50);
-      // Erreur-type d'une proportion sous H0 (50/50) : SE=50/√n en points de
-      // pourcentage. z = écart/SE = nombre d'écarts-types au-dessus de 50%,
-      // même logique que les tests SPRT utilisés pour comparer des moteurs
-      // d'échecs (Stockfish, etc.) — plus parlant qu'un seuil fixe en points.
-      var se = r.games ? 50/Math.sqrt(r.games) : 0;
-      var z = se ? gap/se : 0;
-      var sig = z>=3; // ~3 écarts-types : probabilité <0,3% que ce soit le hasard
-      var color = sig ? 'var(--gold-bright)' : 'inherit';
-      // Coups moyens et % de parties "courtes" (<15 demi-coups, soit avant le
-      // 8e coup plein) : une config qui gagne surtout par des combinaisons-
-      // éclair issues des 4 premiers coups aléatoires n'est pas un vrai
-      // reflet de l'équilibre en partie normale — voir devBalanceSimOneGame.
-      var avgPlies = r.games ? Math.round(10*r.total_plies/r.games)/10 : 0;
-      var pctShort = r.games ? Math.round(1000*r.games_under_15/r.games)/10 : 0;
-      var shortWarn = pctShort>=10;
-      html+='<tr style="border-top:1px solid rgba(255,255,255,.1);color:'+color+'"><td>'+r.eval_label+'</td><td>'+r.depth_white+'/'+r.depth_black+'</td><td>'+r.games+'</td><td>'+pctW+'%</td><td>'+pctB+'%</td><td>'+gap.toFixed(1)+' pts</td><td>'+(sig?'⚠ ':'')+z.toFixed(1)+'σ</td><td>'+avgPlies+'</td><td'+(shortWarn?' style="color:#e08a4a"':'')+'>'+(shortWarn?'⚠ ':'')+pctShort+'%</td></tr>';
-    });
-    html+='</table>';
-    el.innerHTML=html;
+    if(!rows.length){ el.innerHTML='<div style="opacity:.6">Aucune simulation encore enregistrée (le worker serveur écrit sous le label srv:…, en profondeur ≥4).</div>'; return; }
+    el.innerHTML=balanceStatsTableHTML(rows);
   }catch(e){ console.error('renderDevBalanceList', e); el.innerHTML='Erreur de chargement.'; }
+}
+
+// ── Récap des stats cumulées DANS le Labo, avec FILTRES ──────────────────
+// Les lignes sont mises en cache (_labAccumRows) : le fetch Supabase ne se fait
+// qu'au chargement / rafraîchissement, pas à chaque changement de filtre.
+var _labAccumRows=null;
+async function labLoadAccumStats(){
+  var el=document.getElementById('lab-accum'); if(!el) return;
+  el.innerHTML='Chargement…';
+  try{
+    var res=await supa.from('dev_balance_stats').select('*').order('test_label').order('eval_label').order('depth_white');
+    _labAccumRows=res.data||[];
+  }catch(e){ console.error('labLoadAccumStats', e); el.innerHTML='Erreur de chargement.'; return; }
+  labPopulateAccumFilters(_labAccumRows);
+  labRenderAccumStats();
+}
+function labPopulateAccumFilters(rows){
+  function uniq(arr){ var s={}, o=[]; arr.forEach(function(x){ if(x!=null&&!s[x]){ s[x]=1; o.push(x); } }); return o.sort(); }
+  function fill(id, values){
+    var sel=document.getElementById(id); if(!sel) return;
+    var cur=sel.value; // préserve la sélection courante si toujours valide
+    var opts='<option value="">Tous</option>';
+    values.forEach(function(v){ opts+='<option value="'+String(v).replace(/"/g,'&quot;')+'">'+v+'</option>'; });
+    sel.innerHTML=opts;
+    if(cur && values.indexOf(cur)>=0) sel.value=cur;
+  }
+  fill('lab-accum-label', uniq(rows.map(function(r){ return r.test_label; })));
+  fill('lab-accum-eval',  uniq(rows.map(function(r){ return r.eval_label; })));
+  fill('lab-accum-depth', uniq(rows.map(function(r){ return r.depth_white+'/'+r.depth_black; })));
+}
+function labRenderAccumStats(){
+  var el=document.getElementById('lab-accum'); if(!el) return;
+  if(_labAccumRows===null){ labLoadAccumStats(); return; } // pas encore chargé → fetch
+  if(!_labAccumRows.length){ el.innerHTML='<div style="opacity:.6">Aucune simulation encore enregistrée (le worker serveur écrit sous le label srv:…, en profondeur ≥4).</div>'; return; }
+  var fL=(document.getElementById('lab-accum-label')||{}).value||'';
+  var fE=(document.getElementById('lab-accum-eval')||{}).value||'';
+  var fD=(document.getElementById('lab-accum-depth')||{}).value||'';
+  var rows=_labAccumRows.filter(function(r){
+    if(fL && r.test_label!==fL) return false;
+    if(fE && r.eval_label!==fE) return false;
+    if(fD && (r.depth_white+'/'+r.depth_black)!==fD) return false;
+    return true;
+  });
+  if(!rows.length){ el.innerHTML='<div style="opacity:.6">Aucune ligne pour ce filtre.</div>'; return; }
+  // Total agrégé (utile quand on filtre sur un mode : combien de parties au total)
+  var tot=rows.reduce(function(a,r){ return a+r.games; },0);
+  el.innerHTML=balanceStatsTableHTML(rows)+'<div style="opacity:.55;font-size:11px;margin-top:4px">'+rows.length+' ligne(s) · '+tot+' parties cumulées</div>';
 }
 
 async function devBalanceResetStats(){
@@ -15308,20 +15383,28 @@ function labWorkerDriver(){
   }
   // Copie fidèle de devBalanceSimOneGame, mais profondeur asymétrique
   // (depthW/depthB), éval paramétrable et aléa d'ouverture réglable.
-  function labSimOne(depthW,depthB,evalFn,openingN){
+  // rec=true → on enregistre AUSSI le répertoire (ouvertures + tactiques), même
+  // logique que l'ancien devSimOneGame main-thread, mais dans le Worker (aucun
+  // gel). Réservé au format standard/prof.≥4 (voir labRequestBatch) pour ne pas
+  // polluer les répertoires avec des modes custom ou du jeu superficiel. Les
+  // CLÉS d'ouverture/tactique (devOpeningKey/devTacticMotifKey) sont calculées
+  // côté PRINCIPAL (elles n'existent pas dans le Worker) : on ne renvoie ici que
+  // les données brutes, uploadées par labOnWorkerMessage via devSimUploadGame.
+  function labSimOne(depthW,depthB,evalFn,openingN,rec){
     var st=labSetupState();
     var board=st.board, stacks=st.stacks;
     var lm=null, lp=null, lmbc={white:null,black:null};
     var turn='white', maxPlies=160;
-    // On enregistre la séquence de coups : elle IDENTIFIE la partie (ouverture
-    // aléatoire + suite déterministe). Le worker serveur en tire une signature
-    // pour ne jamais compter deux fois la même partie (voir dev_balance_games).
+    // La séquence de coups IDENTIFIE la partie (ouverture aléatoire + suite
+    // déterministe) → signature anti-doublon côté worker serveur.
     var mvs=[];
+    var openingMoves={white:[],black:[]}, fullSequence=[], tactics=[];
+    var winner=null, plies=maxPlies;
     for(var i=0;i<maxPlies;i++){
       var color=turn;
       var depth=(color==='white')?depthW:depthB;
       var moves=allMoves(color,board,stacks,lm,lp,lmbc);
-      if(!moves.length) return {winner:labOpp(color),plies:i+1,moves:mvs.join('|')};
+      if(!moves.length){ winner=labOpp(color); plies=i+1; break; }
       var chosen;
       if(i<openingN){
         var pool=devSimTopMoves(moves,board,stacks,lm,lp,color,2,4);
@@ -15330,12 +15413,30 @@ function labWorkerDriver(){
         chosen=minimaxPlay(moves,board,stacks,lm,lp,depth,evalFn,color)||moves[0];
       }
       mvs.push(chosen.fr+'.'+chosen.fc+'.'+chosen.tr+'.'+chosen.tc);
+      var moverType, boardBefore, evalBefore;
+      if(rec){
+        moverType=board[chosen.fr][chosen.fc]?board[chosen.fr][chosen.fc].type:'epeiste';
+        boardBefore=cloneBS(board,stacks).board;
+        evalBefore=evalTrainer(board,stacks);
+      }
       var res=applyToClone(board,stacks,chosen,lm,lp);
       lm=res.nlm; lp=res.nlp; lmbc[color]=lm;
-      if(res.won) return {winner:color,plies:i+1,moves:mvs.join('|')};
+      if(rec){
+        var mvRecord={fr:chosen.fr,fc:chosen.fc,tr:chosen.tr,tc:chosen.tc,action:chosen.action,type:moverType};
+        if(openingMoves[color].length<4) openingMoves[color].push(mvRecord);
+        if(i<8) fullSequence.push({color:color,fr:chosen.fr,fc:chosen.fc,tr:chosen.tr,tc:chosen.tc,action:chosen.action,type:moverType});
+        var swing=(evalTrainer(board,stacks)-evalBefore)*(color==='white'?1:-1);
+        if(swing>=40 && chosen.action && (chosen.action.isCapture||chosen.action.isPush||chosen.action.pushCaptures)){
+          var mtype=chosen.action.pushCaptures?'push-capture':(chosen.action.isCapture?'capture':'push');
+          tactics.push({type:mtype,board:boardBefore,move:{fr:chosen.fr,fc:chosen.fc,tr:chosen.tr,tc:chosen.tc,action:chosen.action},side:color,swing:swing});
+        }
+      }
+      if(res.won){ winner=color; plies=i+1; break; }
       turn=labOpp(color);
     }
-    return {winner:null,plies:maxPlies,moves:mvs.join('|')}; // limite atteinte → nul, non comptabilisé
+    var result={winner:winner,plies:plies,moves:mvs.join('|')};
+    if(rec) result.rep={openingMoves:openingMoves,fullSequence:fullSequence,tactics:tactics};
+    return result;
   }
   var EVALS={current:evalBalanceCurrent,symmetric:evalBalanceSymmetric,agdffix:evalBalanceAgDfFixed,mobfix:evalBalanceMobilityFixed};
   onmessage=function(ev){
@@ -15343,8 +15444,8 @@ function labWorkerDriver(){
     if(!d||d.cmd!=='run') return;
     var evalFn=EVALS[d.evalKey]||evalTrainer;
     for(var k=0;k<d.batch;k++){
-      var g=labSimOne(d.depthW,d.depthB,evalFn,d.openingN);
-      postMessage({type:'game',winner:g.winner,plies:g.plies,moves:g.moves});
+      var g=labSimOne(d.depthW,d.depthB,evalFn,d.openingN,d.record);
+      postMessage({type:'game',winner:g.winner,plies:g.plies,moves:g.moves,rep:g.rep||null});
     }
     postMessage({type:'batchDone',n:d.batch});
   };
@@ -15415,7 +15516,11 @@ function labRequestBatch(){
   var remaining=_labRun.target-_labRun.done;
   if(remaining<=0){ labFinishRun(); return; }
   var batch=Math.min(labBatchSize(),remaining);
-  _labWorker.postMessage({cmd:'run',batch:batch,depthW:_labRun.cfg.depthW,depthB:_labRun.cfg.depthB,evalKey:_labRun.cfg.evalKey,openingN:_labRun.cfg.openingN});
+  // record : alimente aussi les répertoires ouvertures/tactiques — UNIQUEMENT
+  // sur le format standard en profondeur ≥4 (jeu sérieux du vrai jeu). Sur un
+  // mode custom ou du jeu superficiel, on n'enregistre que l'équilibre.
+  var rec=(_labRun.cfg.formatKey==='standard' && Math.min(_labRun.cfg.depthW,_labRun.cfg.depthB)>=4);
+  _labWorker.postMessage({cmd:'run',batch:batch,depthW:_labRun.cfg.depthW,depthB:_labRun.cfg.depthB,evalKey:_labRun.cfg.evalKey,openingN:_labRun.cfg.openingN,record:rec});
 }
 
 function labOnWorkerMessage(ev){
@@ -15429,6 +15534,11 @@ function labOnWorkerMessage(ev){
     else _labRun.draw++;
     if(d.winner){ _labRun.plies+=d.plies; if(d.plies<15) _labRun.under15++; }
     labUploadGame(d.winner,d.plies);
+    // Répertoire (ouvertures/tactiques) : le Worker n'a renvoyé `rep` que sur les
+    // runs standard prof.≥4. On uploade via la MÊME RPC que l'ancien simulateur
+    // (devSimUploadGame calcule les clés côté principal). Remplace le simulateur
+    // main-thread : le Labo alimente désormais les 3 tables, sans gel.
+    if(d.rep && typeof devSimUploadGame==='function'){ devSimUploadGame({winner:d.winner,openingMoves:d.rep.openingMoves,fullSequence:d.rep.fullSequence,tactics:d.rep.tactics}); }
     if(_labRun.done%3===0 || _labRun.done===_labRun.target) labUpdateUI();
   }else if(d.type==='batchDone'){
     labUpdateUI();
@@ -15454,6 +15564,9 @@ function labFinishRun(){
   _labRun.running=false;
   labSetControlsDisabled(false);
   labUpdateUI();
+  // Les runs profondeur ≥4 se sont enregistrés (labUploadGame) → rafraîchir le
+  // récap cumulé pour qu'il reflète tout de suite les nouvelles parties.
+  if(typeof labLoadAccumStats==='function') labLoadAccumStats();
   if(typeof showToast==='function') showToast('Laboratoire : '+_labRun.done+' parties terminées.');
 }
 
@@ -15529,6 +15642,10 @@ function labOnShowScreen(){
   // deux sélecteurs après un rechargement. APRÈS le peuplement des formats natifs
   // (sinon la garde « selecteur vide » sauterait les formats standard).
   if(typeof labRestoreCustomFormat==='function') labRestoreCustomFormat();
+  // Stats cumulées (dev_balance_stats, worker serveur inclus) affichées DANS le
+  // Labo — avant, elles n'étaient visibles que sur l'écran « Analyse d'équilibre »
+  // alors que le panneau worker prétend qu'elles sont « cumulées ci-dessus ».
+  if(typeof labLoadAccumStats==='function') labLoadAccumStats();
 }
 
 // ── Worker automatique (serveur) — pilotage depuis le Labo ──────────────
@@ -16045,8 +16162,8 @@ function labEdApply(){
 var _devOpeningsCache = {white:[], black:[]};
 var _devTacticsCache = [];
 
-async function renderDevOpeningsList(){
-  var el=document.getElementById('dev-openings-list');
+async function renderDevOpeningsList(targetId){
+  var el=document.getElementById(targetId||'dev-openings-list');
   if(!el) return;
   el.innerHTML='Chargement…';
   try{
@@ -16059,7 +16176,7 @@ async function renderDevOpeningsList(){
     _devOpeningsCache.black=(b.data||[]).slice().sort(function(a,c){ return (c.wins/c.games)-(a.wins/a.games); }).slice(0,15);
     function renderSide(title,side,rows){
       var html='<div style="font-weight:bold;margin:8px 0 4px">'+title+'</div>';
-      if(!rows.length){ html+='<div style="opacity:.6">Pas encore assez de données (min. 50 parties par ouverture). Lance des simulations depuis l\'écran Dev.</div>'; return html; }
+      if(!rows.length){ html+='<div style="opacity:.6">Pas encore assez de données (min. 50 parties par ouverture). Lance une simulation en format standard (prof. ≥4) ci-dessus.</div>'; return html; }
       rows.forEach(function(r,idx){
         var pct=Math.round(100*r.wins/r.games);
         // moves_json = les 8 premiers demi-coups (les deux camps mélangés,
@@ -16077,14 +16194,14 @@ async function renderDevOpeningsList(){
 }
 
 var DEV_TACTIC_LABEL={capture:'Capture','push':'Poussée','push-capture':'Poussée décisive'};
-async function renderDevTacticsList(){
-  var el=document.getElementById('dev-tactics-list');
+async function renderDevTacticsList(targetId){
+  var el=document.getElementById(targetId||'dev-tactics-list');
   if(!el) return;
   el.innerHTML='Chargement…';
   try{
     var res=await supa.from('dev_tactic_stats').select('*').gte('occurrences',8).order('occurrences',{ascending:false}).limit(30);
     _devTacticsCache=res.data||[];
-    if(!_devTacticsCache.length){ el.innerHTML='Pas encore assez de données (min. 8 occurrences). Lance des simulations depuis l\'écran Dev.'; return; }
+    if(!_devTacticsCache.length){ el.innerHTML='Pas encore assez de données (min. 8 occurrences). Lance une simulation en format standard (prof. ≥4) ci-dessus.'; return; }
     var html='';
     _devTacticsCache.forEach(function(r,idx){
       html+='<div style="cursor:pointer;border-bottom:1px solid rgba(255,255,255,.1);padding:6px 0" onclick="devOpenLearnTactic('+idx+')">'
@@ -16179,7 +16296,7 @@ function devBuildOpeningSteps(seq){
 function devOpenLearnOpening(side,idx){
   var row=_devOpeningsCache[side]&&_devOpeningsCache[side][idx];
   if(!row) return;
-  _devLearnReturnScreen='dev-openings';
+  _devLearnReturnScreen='dev-lab'; // ouvertures/tactiques rapatriées dans le Labo
   _devLearnSteps=devBuildOpeningSteps(row.moves_json);
   _devLearnIndex=0;
   var pct=row.games?Math.round(100*row.wins/row.games):0;
@@ -16192,7 +16309,7 @@ function devOpenLearnOpening(side,idx){
 function devOpenLearnTactic(idx){
   var row=_devTacticsCache[idx];
   if(!row) return;
-  _devLearnReturnScreen='dev-tactics';
+  _devLearnReturnScreen='dev-lab'; // ouvertures/tactiques rapatriées dans le Labo
   var board=row.board_before_json;
   var storedAction=row.move_json&&row.move_json.action;
   var mv={fr:row.move_json.fr,fc:row.move_json.fc,tr:row.move_json.tr,tc:row.move_json.tc,
