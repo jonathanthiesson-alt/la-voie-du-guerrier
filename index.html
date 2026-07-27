@@ -2637,6 +2637,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
         <button class="btn" style="flex:1;padding:7px;font-size:12px" onclick="labEdFromJson()">← JSON</button>
       </div>
       <button class="adm-btn" style="width:100%;padding:9px;margin-top:6px" onclick="labEdApply()">✓ Charger ce mode dans le sélecteur</button>
+      <button class="btn" style="width:100%;padding:9px;margin-top:6px" onclick="labPlayCurrentModeVsAI()">▶ Tester ce mode vs IA (local)</button>
     </details>
     <div class="menu-divider"></div>
     <details style="margin-top:4px" ontoggle="if(this.open&&typeof labLoadPublishedList==='function')labLoadPublishedList()">
@@ -10770,9 +10771,18 @@ async function resolveArenaRoundEnd(winnerColor){
       // SUMO : RPC d\u00e9di\u00e9 \u2014 pas de Koku/Tamashii, mais de la Fame \u5fc3 vers\u00e9e
       // aux DEUX joueurs \u00e0 la fin du match (2 au vainqueur, 1 au vaincu).
       var _rpcName = (match.mode==='sumo') ? 'record_sumo_round_win' : 'record_arena_round_win';
+      // 🔴 BUG CORRIGÉ (score d'arène faux, ex. « 2 victoires » après 1 perdue +
+      // 1 gagnée) : les couleurs S'INVERSENT à chaque manche paire (createArena
+      // Round, équité du 1er coup), mais les RPC comptent par COULEUR DE PLATEAU
+      // et créditent le white_player_id/black_player_id FIXE du match. En manche
+      // paire, la couleur du plateau ≠ le slot fixe → la victoire (et le Koku/la
+      // Fame) était attribuée au MAUVAIS joueur. Comme SEUL le vainqueur appelle
+      // ce RPC (branche iWon), on passe sa couleur DE SLOT dans le match (fixe),
+      // pas sa couleur de plateau du tour — le comptage redevient juste.
+      var myMatchColor = (currentUser && match.white_player_id===currentUser.id) ? 'white' : 'black';
       const { data, error } = await supa.rpc(_rpcName, (match.mode==='sumo')
-        ? { p_arena_match_id: match.id, p_winner_color: winnerColor }
-        : { p_arena_match_id: match.id, p_winner_color: winnerColor, p_timer_seconds: match.timer_seconds });
+        ? { p_arena_match_id: match.id, p_winner_color: myMatchColor }
+        : { p_arena_match_id: match.id, p_winner_color: myMatchColor, p_timer_seconds: match.timer_seconds });
       if(error) throw error;
       result = data;
     }catch(e){
@@ -10829,8 +10839,13 @@ function showArenaRoundEndOverlay(result, match){
   var box = ov ? ov.querySelector('.modal-box') : null;
   if(!ov || !box) return;
   if(_arenaRoundCountdownInterval){ clearInterval(_arenaRoundCountdownInterval); _arenaRoundCountdownInterval=null; }
-  var myWins = (myColorOnline==='white') ? result.wins_white : result.wins_black;
-  var oppWins = (myColorOnline==='white') ? result.wins_black : result.wins_white;
+  // wins_white/wins_black sont indexés sur les SLOTS FIXES du match (white_player_id
+  // /black_player_id), pas sur la couleur du plateau qui s'inverse chaque manche.
+  // On lit donc mon score via mon slot fixe, sinon en manche paire on affichait
+  // le score de l'adversaire (cause du « 2 victoires » erroné). Voir resolveArenaRoundEnd.
+  var iAmMatchWhite = !!(currentUser && match && match.white_player_id===currentUser.id);
+  var myWins = iAmMatchWhite ? result.wins_white : result.wins_black;
+  var oppWins = iAmMatchWhite ? result.wins_black : result.wins_white;
   if(result.match_done){
     // Match décidé (une manche à 2) : écran de fin STANDARD-like, avec
     // Analyse (sélecteur de manches) disponible et SANS bouton Revanche —
@@ -11923,11 +11938,19 @@ function pressClock(color){
 // Mode standard/rempart : 5×5 sans coins
 const VOID_STD=new Set(['0,0','0,4','4,0','4,4']);
 
+// isVoid/isValid lisent le plateau COURANT via G quand un format custom est
+// actif (G.voidSet / G.rows / G.cols), et retombent sur le standard 5×5 + VOID_STD
+// sinon. Une partie standard/en ligne ne pose JAMAIS G.voidSet et a G.rows/cols=5
+// → comportement STRICTEMENT identique à avant (câblé en dur auparavant).
 function isVoid(r,c){
-  return VOID_STD.has(r+','+c);
+  var v=(typeof G!=='undefined'&&G&&G.voidSet)?G.voidSet:VOID_STD;
+  return v.has(r+','+c);
 }
 function isValid(r,c){
-  return r>=0&&r<5&&c>=0&&c<5&&!VOID_STD.has(r+','+c);
+  var R=(typeof G!=='undefined'&&G&&G.rows)||5;
+  var C=(typeof G!=='undefined'&&G&&G.cols)||5;
+  var v=(typeof G!=='undefined'&&G&&G.voidSet)?G.voidSet:VOID_STD;
+  return r>=0&&r<R&&c>=0&&c<C&&!v.has(r+','+c);
 }
 const DO=[{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1}];
 const DA=[{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1},{dr:-1,dc:-1},{dr:-1,dc:1},{dr:1,dc:-1},{dr:1,dc:1}];
@@ -12328,34 +12351,56 @@ var _pmsgTimeout = null;
 // donne son poids au rare compliment qui lui échappe, comme s'il admettait
 // à contrecœur d'avoir remarqué quelque chose. Il ne félicite pas : il
 // constate, agacé d'être impressionné.
+// Répliques de Musashi-sensei — le dojo doit paraître VIVANT : on double les
+// pools et on mêle du dialogue à de brèves DIDASCALIES (un sourcil qui se lève,
+// un silence, un regard) affichées telles quelles dans sa bulle. pickNpcReply
+// évite de resservir la même deux fois de suite. Non traduit (Musashi parle
+// français ; hors LANGS). Ajouter des variantes ici = plus de vie, zéro risque.
 var MUSASHI_REPLIES = {
   0: [ // Bonjour
     "Bonjour. Le mot est joli. Il n'a jamais paré un seul coup.",
     "Tu salues ton adversaire ? Charmant. Moi je salue les survivants.",
     "Économise ta politesse, petit. Tu en auras besoin pour t'excuser tout à l'heure.",
     "Bonjour. Voilà. C'est fait. On peut mourir maintenant ?",
-    "Ah, la courtoisie. Le dernier refuge de ceux qui n'ont pas de plan."
+    "Ah, la courtoisie. Le dernier refuge de ceux qui n'ont pas de plan.",
+    "Un sourcil se lève à peine. C'est mon bonjour. Ne t'attends pas à mieux.",
+    "Bonjour. Je note l'heure : on saura ainsi quand ta défaite a commencé.",
+    "Salut à toi. Et adieu, tant qu'on y est — ça m'évitera de le redire.",
+    "Le vieux maître incline la tête, un centimètre. Voilà. N'en demande pas plus.",
+    "Bonjour, petit bousier. Le soleil se lève ; toi, tu vas te coucher."
   ],
   1: [ // Bien joué (le joueur félicite Musashi)
     "Évidemment. Tu croyais quoi ?",
     "Ne me félicite pas. Félicite les quarante ans qui m'ont appris ce coup.",
     "« Bien joué ». Tu applaudis l'orage aussi, quand il te tombe dessus ?",
     "J'accepte. Non pas ton compliment — ta reddition.",
-    "Garde tes applaudissements. Ils font fuir la concentration."
+    "Garde tes applaudissements. Ils font fuir la concentration.",
+    "Un sourcil se hausse, malgré lui. Tu t'étonnes encore, après tout ce temps ?",
+    "Un compliment. Le premier cadeau que je te rendrai — en pièces prises.",
+    "Je sais. C'est bien pour ça que je l'ai joué.",
+    "Range ton admiration, elle t'encombre les mains. Et tu en as besoin."
   ],
   2: [ // Quelle erreur !
     "Une erreur ? Non. Un enseignement. Le tien, généralement.",
     "Tu as vu l'erreur. C'est déjà mieux qu'hier, où tu la commettais.",
     "Les erreurs ne me dérangent pas. Ce sont les répétitions qui me fatiguent.",
     "Oh, tu comptes les miennes ? Prends un carnet plus petit.",
-    "Rate encore. Rate mieux. C'est tout ce que je demande."
+    "Rate encore. Rate mieux. C'est tout ce que je demande.",
+    "Une faute par toi vue est une faute à moitié corrigée. L'autre moitié te coûtera la partie.",
+    "Musashi ferme les yeux un instant. Recommence — et réfléchis avant, cette fois, pas après.",
+    "Ne t'excuse pas auprès du plateau. Lui, il ne pardonne pas.",
+    "L'erreur est humaine. La répéter est un choix. Choisis mieux."
   ],
   3: [ // Revanche ?
     "Une revanche ? Tu n'as pas fini de perdre celle-ci.",
     "Encore ? Bien. L'entêtement est le seul talent que je ne peux pas t'enseigner.",
     "La revanche est un plat qui se mange froid. Le tien est encore sur le feu.",
     "Autant que tu voudras. J'ai le temps. Ce n'est pas ton cas.",
-    "Reviens. Je serai là. C'est le drame des vieux maîtres."
+    "Reviens. Je serai là. C'est le drame des vieux maîtres.",
+    "Le vieux maître range déjà les pièces. Assieds-toi. On n'a pas fini de t'apprendre à perdre.",
+    "La revanche ? On appelle ça comme ça quand on n'a pas compris la première leçon.",
+    "Reviens quand tu veux. Le dojo ne dort jamais. Moi non plus.",
+    "Encore une ? J'aime les élèves têtus. Ils tombent de plus haut."
   ],
   4: [ // Message personnalisé
     "Tu parles beaucoup, petit bousier. Tu vas de boule en boule et tu appelles ça un chemin.",
@@ -12363,7 +12408,10 @@ var MUSASHI_REPLIES = {
     "Petit bousier… tu pousses, tu pousses, et tu crois que le monde avance.",
     "J'ai entendu. J'ai choisi de ne pas répondre. C'est aussi une réponse.",
     "Cause toujours. Le plateau, lui, ne t'écoute pas.",
-    "Tiens, il parle. Le silence te réussissait mieux."
+    "Tiens, il parle. Le silence te réussissait mieux.",
+    "Un long regard, puis rien. …Non. Ça ne mérite pas de réponse. Joue.",
+    "Tu remplis le silence de bruit. Le silence, lui, sait déjà qui gagne.",
+    "Parle, parle. Pendant ce temps, ta tour dort et ton roi tremble."
   ]
 };
 // Le compliment sincère : rare, court, et il lui échappe. Voir pickNpcReply.
@@ -12373,7 +12421,10 @@ var MUSASHI_PRAISE = [
   "…Ça, c'était bien joué. N'y prends pas goût.",
   "…Hm. Je n'avais pas vu venir ce coup. Ça faisait longtemps.",
   "…Où as-tu appris ça ? Non. Ne réponds pas. Garde-le.",
-  "…Bien. Voilà. C'était bien. N'en parlons plus."
+  "…Bien. Voilà. C'était bien. N'en parlons plus.",
+  "…Ah. Ça, je ne l'attendais pas.",
+  "Le sourcil se lève, malgré lui. …Continue.",
+  "…Retiens ce coup. Moi, je le referai contre toi."
 ];
 // 1 fois sur 100, l'indice. C'est l'autre moitié de l'easter egg de
 // l'accueil : Musashi est le seul à savoir, et il le lâche comme une
@@ -12788,7 +12839,11 @@ function initGame(){
   const fc=settings._forcedStart||'white'; // les Blancs commencent toujours par défaut
   settings._forcedStart=null;
   const isV2=true; // Rempart V2 est l'unique mode de jeu désormais
-  const rows=5, cols=5;
+  // Mode PERSONNALISÉ (Labo, milestone 5 ②) : si un format est injecté, la partie
+  // locale vs IA prend ses dimensions / cases mortes / pièces. Sinon standard 5×5
+  // strictement inchangé (cf reste null pour TOUTES les parties normales/en ligne).
+  const cf = settings._customFormat || null; settings._customFormat = null;
+  const rows = cf ? (+cf.rows||5) : 5, cols = cf ? (+cf.cols||5) : 5;
   analysisData=[];showBestMove=true;showMoveQuality=true;
   var savedChId=G._chapterId||null,savedChXp=G._chapterXp||null;
   // In vsAI mode: player is always at bottom, AI at top.
@@ -12822,8 +12877,13 @@ function initGame(){
     messageLog:[],
     _chapterId:savedChId,_chapterXp:savedChXp
   };
-  setupBoard();
-  if(G.vsAI) startSoloGameBroadcast(); // visible "EN COMBAT" + spectable pour les autres joueurs connectés
+  // Format custom → le moteur data-driven (Lots a–d) prend le relais : voidSet
+  // pour isValid/isVoid, pieceDefs pour les pièces inventées, sumoMode pour les
+  // bords éjectants. Absents en partie standard → moteur natif inchangé.
+  if(cf){ G.voidSet=new Set(cf.voids||[]); G.pieceDefs=cf.pieces||null; G.sumoMode=!!cf.sumo; }
+  if(cf){ (cf.setup||[]).forEach(function(p){ if(p.r>=0&&p.r<rows&&p.c>=0&&p.c<cols) G.board[p.r][p.c]={type:p.type,color:p.color}; }); }
+  else setupBoard();
+  if(G.vsAI && G.gameMode!=='labtest') startSoloGameBroadcast(); // visible "EN COMBAT" + spectable (pas pour un test Labo : plateau custom illisible côté spectateur 5×5)
   // Noms personnalisés
   var p1name=(typeof currentUser!=='undefined'&&currentUser)?currentUser.pseudo:(PP.name||'Joueur');
   var p2name=G.vsAI?(ADVERSARIES[G.advId]?getAdvDisplayName(G.advId):(PP.p2name||'Joueur 2')):(PP.p2name||'Joueur 2');
@@ -13752,6 +13812,20 @@ function mkPiece(piece,cs,isStackBottom,topType,col){
     el.style.top='50%';
     el.style.left='50%';
     el.style.transform='translate(-50%,-50%)';
+  }
+  // Pièce CUSTOM (format du Labo) : pas d'art natif → jeton coloré + glyphe. Le
+  // déclencheur est G.pieceDefs (absent en partie standard/en ligne : les 3 pièces
+  // natives n'y sont jamais, donc rendu natif strictement inchangé).
+  var _cd=(typeof G!=='undefined'&&G&&G.pieceDefs)?G.pieceDefs[piece.type]:null;
+  if(_cd){
+    el.style.display='flex'; el.style.alignItems='center'; el.style.justifyContent='center';
+    el.style.borderRadius='50%'; el.style.boxSizing='border-box'; el.style.border='1px solid rgba(0,0,0,.35)';
+    el.style.background=(piece.color==='white')?'radial-gradient(circle at 35% 30%, #f5ecd0, #d8c8a0)':'radial-gradient(circle at 35% 30%, #5a5560, #2a2630)';
+    el.style.fontFamily="'Noto Serif JP',serif"; el.style.fontWeight='700'; el.style.lineHeight='1';
+    el.style.fontSize=Math.round(sz*0.6)+'px';
+    el.style.color=(piece.color==='white')?'#1a1206':'#f5ece0';
+    el.textContent=(_cd.glyph)||(_cd.name?String(_cd.name).charAt(0):'?');
+    return el;
   }
   // Utiliser le skin choisi pour ce pion
   var _role = (typeof G!=='undefined'&&G.bottomColor) ? getSkinRole(piece.color) : 'player1';
@@ -16203,7 +16277,8 @@ async function labLoadPublishedList(){
       var meta=(f.rows||'?')+'×'+(f.cols||'?')+(f.sumo?', sumo':'')+(f.pieces?', '+Object.keys(f.pieces).length+' pièce(s)':'');
       html+='<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.08)">'
         +'<span><b>'+esc(r.name)+'</b> <span style="opacity:.55">'+meta+(r.author?' · '+esc(r.author):'')+'</span></span>'
-        +'<span style="white-space:nowrap"><button onclick="labLoadPublishedMode(\''+r.id+'\')" style="padding:2px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(212,160,23,.35);background:rgba(0,0,0,.3);color:var(--parchment)">Charger</button> '
+        +'<span style="white-space:nowrap"><button onclick="labPlayPublishedMode(\''+r.id+'\')" style="padding:2px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(212,160,23,.5);background:var(--gold-bright);color:#1a1206">▶</button> '
+        +'<button onclick="labLoadPublishedMode(\''+r.id+'\')" style="padding:2px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(212,160,23,.35);background:rgba(0,0,0,.3);color:var(--parchment)">Charger</button> '
         +'<button onclick="labDeletePublishedMode(\''+r.id+'\')" style="padding:2px 7px;border-radius:4px;cursor:pointer;border:1px solid rgba(200,60,60,.4);background:rgba(0,0,0,.3);color:#e0706a">🗑</button></span></div>';
     });
     el.innerHTML=html;
@@ -16227,6 +16302,39 @@ async function labDeletePublishedMode(id){
     if(typeof showToast==='function') showToast('Mode publié supprimé.');
     labLoadPublishedList();
   }catch(e){ if(typeof showToast==='function') showToast('Erreur : '+(e.message||e), true); }
+}
+
+// ── Jouer un mode custom EN LOCAL vs IA (milestone 5 ②) ───────────────────
+// Réutilise le lanceur natif initGame() en lui injectant le format via
+// settings._customFormat. L'IA est le bot générique (Karakuri Sage = minimax +
+// evalTrainer, id 12) qui gère les pièces custom sans heuristique 5×5. Le online
+// n'est PAS touché ; une partie standard ne pose jamais settings._customFormat.
+function labPlayModeVsAI(format){
+  if(typeof isDevUser==='function' && !isDevUser()){ if(typeof showToast==='function') showToast('Réservé aux comptes dev.', true); return; }
+  var v=labValidateFormat(format);
+  if(!v.ok){ if(typeof showToast==='function') showToast('Format invalide : '+v.err, true); return; }
+  settings.vsAI=true;
+  settings.gameMode='labtest';
+  settings.timerSeconds=0;          // pas de minuteur : test tranquille
+  selectedAdvId=12;                 // bot générique (minimax + evalTrainer, gère les pièces custom)
+  settings._playerColor='white';    // toi en bas (Blanc)
+  settings._forcedStart='white';
+  settings._onlineBottomColor=null;
+  settings._customFormat=v.format;  // lu par initGame
+  if(typeof showScreen==='function') showScreen('game');
+  initGame();
+}
+function labPlayCurrentModeVsAI(){
+  var fmt=null;
+  if(typeof _labEd!=='undefined' && _labEd) fmt=labEdCurrentFormat();
+  else if(LAB_FORMATS.custom) fmt=LAB_FORMATS.custom;
+  if(!fmt){ if(typeof showToast==='function') showToast('Construis un mode dans l\'éditeur d\'abord.', true); return; }
+  labPlayModeVsAI(fmt);
+}
+function labPlayPublishedMode(id){
+  var r=(_labPublishedCache||[]).find(function(x){ return x.id===id; });
+  if(!r){ if(typeof showToast==='function') showToast('Mode introuvable — rafraîchis la liste.', true); return; }
+  labPlayModeVsAI(r.format);
 }
 
 // Rempli par renderDevOpeningsList/renderDevTacticsList, consommé par
