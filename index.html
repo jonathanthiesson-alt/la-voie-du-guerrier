@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.32.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.33.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2113,7 +2113,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.32.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.33.0 &#9820;</div>
   </div>
 </div>
 
@@ -2561,10 +2561,37 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
   <div class="panel" style="max-width:440px;width:100%">
     <div class="menu-title" style="font-size:18px;margin-top:10px">🔬 LABORATOIRE</div>
-    <div class="menu-divider"></div>
-    <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.75;text-align:center;margin-bottom:12px">
-      Parties bot vs bot dans un Web Worker (thread séparé : aucun gel, tu peux quitter cet écran, ça continue). Verdict d'équilibre en direct avec sa significativité (σ).
+    <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.6;text-align:center;margin:-2px 0 6px">Forge un mode → essaie-le → mesure-le → partage-le.</div>
+    <style>
+      #screen-dev-lab .lab-tabs{display:flex;gap:4px;margin:4px 0 12px;width:100%}
+      #screen-dev-lab .lab-tab-btn{flex:1;padding:7px 3px;font-family:'VT323',monospace;font-size:12.5px;cursor:pointer;background:rgba(0,0,0,.3);color:var(--parchment);border:1px solid rgba(212,160,23,.22);border-bottom:2px solid transparent;border-radius:6px 6px 0 0;opacity:.66;transition:all .15s;line-height:1.2}
+      #screen-dev-lab .lab-tab-btn:hover{opacity:.92}
+      #screen-dev-lab .lab-tab-btn.active{opacity:1;background:rgba(212,160,23,.15);border-color:rgba(212,160,23,.5);border-bottom-color:var(--gold-bright,#d4a017);color:var(--gold-bright,#d4a017);font-weight:bold}
+      #screen-dev-lab .lab-note{font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.72;margin:4px 0 12px;line-height:1.4;text-align:center}
+      #screen-dev-lab .lab-help{font-family:'VT323',monospace;font-size:11px;color:var(--parchment);background:rgba(212,160,23,.07);border-left:2px solid rgba(212,160,23,.4);border-radius:0 5px 5px 0;padding:7px 9px;margin:8px 0;line-height:1.45}
+      #screen-dev-lab .lab-help b{color:var(--gold-bright,#d4a017)}
+      #screen-dev-lab .lab-help code{color:var(--gold-bright,#d4a017);opacity:.9}
+    </style>
+    <div class="lab-tabs">
+      <button class="lab-tab-btn" id="lab-tabbtn-creer" onclick="labShowTab('creer')">🎨<br>Créer</button>
+      <button class="lab-tab-btn" id="lab-tabbtn-jouer" onclick="labShowTab('jouer')">▶<br>Jouer</button>
+      <button class="lab-tab-btn" id="lab-tabbtn-analyser" onclick="labShowTab('analyser')">📊<br>Analyser</button>
+      <button class="lab-tab-btn" id="lab-tabbtn-partager" onclick="labShowTab('partager')">📤<br>Partager</button>
     </div>
+
+    <!-- ═══ JOUER : essayer un mode contre l'IA (l'onglet le plus direct) ═══ -->
+    <div class="lab-tab-panel" data-tab="jouer" style="display:none">
+      <div class="lab-note">Choisis un mode et joue tout de suite contre l'IA. Parfait pour expérimenter une idée en deux clics.</div>
+      <label style="display:flex;justify-content:space-between;align-items:center;gap:10px;font-family:'VT323',monospace;font-size:14px;color:var(--parchment)">Mode
+        <select id="lab-play-format" style="flex:1;max-width:230px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px"></select>
+      </label>
+      <button class="adm-btn" style="width:100%;padding:12px;margin-top:12px;font-weight:bold" onclick="labPlaySelectedModeVsAI()">▶ Jouer contre l'IA</button>
+      <div class="lab-help">Le mode que tu es en train de <b>construire</b> a son propre bouton ▶ dans l'onglet <b>Créer</b>. Les modes <b>publiés</b> (partagés avec Thomas) se jouent depuis l'onglet <b>Partager</b>.</div>
+    </div>
+
+    <!-- ═══ ANALYSER : mesurer l'équilibre (deux IA s'affrontent) ═══ -->
+    <div class="lab-tab-panel" data-tab="analyser" style="display:none">
+    <div class="lab-note">Deux IA s'affrontent des centaines de fois pour mesurer si un mode est équilibré. Le calcul tourne dans un thread à part : tu peux quitter l'écran, ça continue.</div>
     <div style="display:flex;flex-direction:column;gap:8px;font-family:'VT323',monospace;font-size:14px;color:var(--parchment)">
       <label style="display:flex;justify-content:space-between;align-items:center;gap:10px">Format
         <select id="lab-format" style="flex:1;max-width:230px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px"></select>
@@ -2596,6 +2623,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     </div>
     <div class="menu-divider"></div>
     <div id="lab-results" style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment)"></div>
+    <div class="lab-help"><b>Comment lire le verdict :</b> deux IA identiques jouent des centaines de parties ; si le mode est équilibré, Blancs et Noirs gagnent chacun ~50 %. <b>σ (sigma)</b> = la marge d'incertitude : plus il y a de parties, plus σ rétrécit et plus le résultat est fiable. Un écart au 50/50 <b>plus petit que σ</b> n'est pas significatif (ça peut n'être que du hasard).</div>
     <div class="menu-divider"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;font-family:'VT323',monospace;font-size:13px;color:var(--gold-bright);margin-bottom:6px">
       <span>📊 Stats cumulées <span style="opacity:.6;font-size:11px">(worker serveur inclus)</span></span>
@@ -2607,24 +2635,26 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <label style="display:inline-flex;align-items:center;gap:3px">Prof. <select id="lab-accum-depth" onchange="labRenderAccumStats()" style="padding:3px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:4px"><option value="">Tous</option></select></label>
     </div>
     <div id="lab-accum" style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);overflow-x:auto">…</div>
+    <div class="lab-help"><b>Stats cumulées :</b> toutes les parties simulées additionnées — les tiennes <b>et</b> celles du worker serveur (label <code>srv:…</code>) — regroupées par mode / éval / profondeur. <b>%B</b> = part de victoires des Blancs ; <b>N</b> = nombre de parties distinctes.</div>
     <div class="menu-divider"></div>
     <details style="margin-top:4px" ontoggle="if(this.open&&typeof renderDevOpeningsList==='function')renderDevOpeningsList('lab-openings-list')">
       <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">📖 Répertoire d'ouvertures</summary>
       <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.7;margin:8px 0">Meilleures ouvertures par camp (mesurées sur les parties simulées, format standard). Touche une ligne pour la rejouer coup par coup.</div>
+      <div class="lab-help"><b>Comment ça se lit :</b> chaque ligne est une séquence de premiers coups. La <b>notation</b> = lettre de la pièce + case de départ <b>–</b> case d'arrivée (ex. <code>É d1–d2</code>). Le <b>%</b> est le taux de victoire du camp qui joue cette ouverture ; le nombre entre parenthèses = combien de parties l'ont employée (min. 50 pour l'afficher).</div>
       <div id="lab-openings-list" style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment)">…</div>
     </details>
     <div class="menu-divider"></div>
     <details style="margin-top:4px" ontoggle="if(this.open&&typeof renderDevTacticsList==='function')renderDevTacticsList('lab-tactics-list')">
       <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">⚔ Répertoire de tactiques</summary>
       <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.7;margin:8px 0">Motifs tactiques récurrents (capture, poussée, poussée décisive) détectés dans les simulations. Touche une ligne pour voir la position et l'explication.</div>
+      <div class="lab-help"><b>Les motifs :</b> <b>Capture</b> = prendre une pièce adverse ; <b>Poussée</b> = repousser une pièce d'une case ; <b>Poussée décisive</b> = une éjection qui fait gagner. <b>×N</b> = combien de fois le motif est apparu ; <b>impact moyen</b> = le gain d'évaluation moyen qu'il procure (plus c'est haut, plus le coup est fort).</div>
       <div id="lab-tactics-list" style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment)">…</div>
     </details>
-    <div class="menu-divider"></div>
-    <details style="margin-top:4px" ontoggle="if(this.open&&typeof labEdInit==='function')labEdInit()">
-      <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">🎨 Éditeur visuel de mode</summary>
-      <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.7;margin:8px 0">
-        Construis un mode à la souris. Choisis un <strong>outil</strong>, puis clique sur le plateau : poser une pièce, tracer des cases mortes, effacer, ou voir les <strong>coups</strong> d'une pièce (vert = déplacement, rouge = capture, orange = poussée). Gère les types de pièces et leurs règles plus bas. <strong>→ JSON</strong> recopie tout dans l'éditeur avancé ; <strong>✓ Charger</strong> l'ajoute au sélecteur de formats en haut.
-      </div>
+    </div><!-- ═══ fin ANALYSER ═══ -->
+
+    <!-- ═══ CRÉER : forger un mode à la souris (onglet d'accueil) ═══ -->
+    <div class="lab-tab-panel" data-tab="creer" style="display:none">
+      <div class="lab-note">Construis ton mode à la souris. Choisis un <strong>outil</strong>, puis clique sur le plateau : poser une pièce, tracer des cases mortes, effacer, ou voir les <strong>coups</strong> d'une pièce (vert = déplacement, rouge = capture, orange = poussée). Règle les types de pièces plus bas. Puis <strong>▶ Tester</strong> pour l'essayer, ou <strong>✓ Charger</strong> pour le retrouver dans Jouer et Analyser.</div>
       <div id="lab-ed-dims"></div>
       <div id="lab-ed-toolbar" style="margin:8px 0"></div>
       <div id="lab-ed-board" style="margin:4px auto;max-width:320px"></div>
@@ -2636,11 +2666,12 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
         <button class="btn" style="flex:1;padding:7px;font-size:12px" onclick="labEdToJson()">→ JSON</button>
         <button class="btn" style="flex:1;padding:7px;font-size:12px" onclick="labEdFromJson()">← JSON</button>
       </div>
-      <button class="adm-btn" style="width:100%;padding:9px;margin-top:6px" onclick="labEdApply()">✓ Charger ce mode dans le sélecteur</button>
+      <button class="adm-btn" style="width:100%;padding:9px;margin-top:6px" onclick="labEdApply()">✓ Charger ce mode (→ Jouer / Analyser)</button>
       <button class="btn" style="width:100%;padding:9px;margin-top:6px" onclick="labPlayCurrentModeVsAI()">▶ Tester ce mode vs IA (local)</button>
-    </details>
-    <div class="menu-divider"></div>
-    <details style="margin-top:4px" ontoggle="if(this.open&&typeof labLoadPublishedList==='function')labLoadPublishedList()">
+    </div><!-- ═══ fin CRÉER (éditeur) ═══ -->
+
+    <!-- ═══ PARTAGER : publier un mode (partagé avec Thomas) ═══ -->
+    <details class="lab-tab-panel" data-tab="partager" open style="margin-top:4px;display:none" ontoggle="if(this.open&&typeof labLoadPublishedList==='function')labLoadPublishedList()">
       <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">📤 Modes publiés (partagés)</summary>
       <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.7;margin:8px 0">
         Publie le mode courant pour le <strong>partager avec les autres admins</strong> (Thomas) : il est stocké côté serveur et rechargeable ici, chez l'un comme chez l'autre. <em>Étape ① — ne rend pas encore le mode jouable par les vrais joueurs en ligne, c'est l'étape suivante.</em>
@@ -2648,9 +2679,10 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <button class="adm-btn" style="width:100%;padding:8px;margin-bottom:8px" onclick="labPublishCurrentMode()">📤 Publier le mode courant</button>
       <div id="lab-published-list" style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment)">…</div>
     </details>
-    <div class="menu-divider"></div>
-    <details style="margin-top:4px">
-      <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">✎ Format personnalisé (avancé)</summary>
+
+    <!-- Format personnalisé = repli « experts » de l'onglet Créer (édition en données) -->
+    <details class="lab-tab-panel" data-tab="creer" style="margin-top:4px;display:none">
+      <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">✎ Format personnalisé (avancé, en JSON)</summary>
       <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.7;margin:8px 0">
         Édite un format en données (dimensions 3→9, cases interdites <code>voids</code>, <code>sumo</code>/<code>v2</code>, positions), charge-le : il apparaît dans le sélecteur ci-dessus, prêt à simuler. <strong style="color:var(--gold-bright)">Nouveaux types de pièces</strong> : ajoute un champ <code>pieces</code>. Chaque pièce a au moins une primitive de mouvement — <code>slide</code> (glisse jusqu'à un obstacle, <code>range</code> optionnel), <code>step</code> (1 case), <code>jumps</code> (sauts qui ignorent les obstacles) — avec des directions absolues <code>"ortho"</code>/<code>"diag"</code>/<code>"all"</code>, <strong>relatives à la couleur</strong> <code>"forward"</code>/<code>"back"</code>/<code>"fdiag"</code>/<code>"sideways"</code> (un seul descripteur sert aux deux camps, ex. pion), ou une liste <code>[[dr,dc]…]</code>. <strong style="color:var(--gold-bright)">Déplacement ≠ capture</strong> : ajoute <code>captureStep</code>/<code>captureSlide</code>/<code>captureJumps</code> → les primitives de base deviennent non-capturantes (pion = <code>{"step":"forward","captureStep":"fdiag"}</code>). <strong style="color:var(--gold-bright)">Poussée</strong> : <code>push</code> (<code>true</code>, une liste de types, ou <code>{"chain":true}</code>) pousse d'une case toute pièce <code>pushable</code> ou le roi adverse (en sumo, l'éjecter = victoire) ; <code>pushable:true</code> = la pièce SUBIT les poussées. Ex. Lancier = <code>{"slide":"ortho"}</code>, Cavalier = <code>{"jumps":[[2,1],[1,2],…]}</code>. Options : <code>capture</code> (défaut vrai), <code>king</code> (le prendre = victoire), <code>range</code>/<code>captureRange</code>, <code>glyph</code>/<code>name</code>. <em>Charge la démo « Pousseurs » ou « Lanciers » puis « Copier le format ici » pour un gabarit complet.</em>
       </div>
@@ -2659,8 +2691,10 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <button class="adm-btn" style="width:100%;padding:8px;margin-top:6px" onclick="labLoadCustomFormat()">✓ Charger ce format personnalisé</button>
     </details>
 
-    <div class="menu-divider"></div>
-    <details style="margin-top:4px">
+    <!-- Worker automatique = second volet de l'onglet Partager (simulation serveur
+         continue). Replié par défaut : Thomas voit d'abord les Modes publiés ;
+         le pilotage du worker (surtout pour Jonathan) est un accordéon à déplier. -->
+    <details class="lab-tab-panel" data-tab="partager" style="margin-top:4px;display:none">
       <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">🤖 Worker automatique (serveur)</summary>
       <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.7;margin:8px 0">
         Fait tourner des parties <strong>toutes les heures sur GitHub</strong> (sans ton appareil allumé), cumulées dans les stats ci-dessus (label <code>srv:…</code>), <strong>sans doublons</strong>. Configure ici : ça s'applique au prochain passage horaire.
@@ -3364,8 +3398,25 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.32.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.33.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.33.0 &mdash; 27 juillet 2026</div>
+      <ul class="devlog-list">
+
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; LABORATOIRE — ATELIER R&Eacute;ORGANIS&Eacute; EN 4 ONGLETS</li>
+
+        <li>Le Laboratoire n'est plus un long d&eacute;filement : il suit la <strong>boucle cr&eacute;ative</strong> en quatre onglets clairs &mdash; <strong>Cr&eacute;er</strong> (forger un mode &agrave; la souris), <strong>Jouer</strong> (l'essayer aussit&ocirc;t contre l'IA), <strong>Analyser</strong> (mesurer son &eacute;quilibre) et <strong>Partager</strong> (le publier, piloter le worker serveur). On atterrit sur <strong>Cr&eacute;er</strong> : l'outil se pr&eacute;sente d'abord comme un atelier de cr&eacute;ation, plus comme un banc de test.</li>
+
+        <li>Nouvel onglet <strong>Jouer</strong> : on choisit un mode dans une liste (standard, sumo, d&eacute;mos, ou le sien) et on lance une partie contre l'IA en un clic &mdash; parfait pour exp&eacute;rimenter une id&eacute;e.</li>
+
+        <li>Chaque analyse a d&eacute;sormais son <strong>encart &laquo; comment &ccedil;a se lit &raquo;</strong> en langage clair : le verdict d'&eacute;quilibre et son &sigma;, les stats cumul&eacute;es, la notation des ouvertures, les motifs tactiques. De quoi comprendre les chiffres et les symboles sans conna&icirc;tre le jargon.</li>
+
+        <li style="list-style:none;margin-left:-14px;color:rgba(200,168,110,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">R&eacute;organisation d'interface uniquement : aucune fonction du moteur ni du jeu n'est modifi&eacute;e (m&ecirc;mes identifiants, m&ecirc;mes traitements, simplement r&eacute;partis par onglet).</li>
+
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -6892,7 +6943,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.32.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.33.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -7106,7 +7157,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.32.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.33.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -7311,7 +7362,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.32.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.33.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -15705,6 +15756,42 @@ function labUpdateUI(){
     '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(212,160,23,.25);text-align:center;font-size:13px">'+verdict+'</div>';
 }
 
+// ── Onglets du Labo (Créer / Jouer / Analyser / Partager) ───────────────
+// Le Labo est organisé comme la boucle créative « forger → essayer → mesurer
+// → partager ». Chaque section HTML porte class="lab-tab-panel" data-tab="…".
+// labShowTab affiche TOUS les panneaux d'un onglet et cache les autres — donc
+// l'ordre du DOM n'a pas à changer (une même section peut être n'importe où),
+// et chaque onglet déclenche son propre chargement paresseux (comme le faisaient
+// les ontoggle des anciens <details>). On mémorise le dernier onglet ouvert.
+function labShowTab(name){
+  var TABS=['creer','jouer','analyser','partager'];
+  if(TABS.indexOf(name)<0) name='creer';
+  var panels=document.querySelectorAll('#screen-dev-lab .lab-tab-panel');
+  for(var i=0;i<panels.length;i++){
+    panels[i].style.display=(panels[i].getAttribute('data-tab')===name)?'block':'none';
+  }
+  TABS.forEach(function(t){ var b=document.getElementById('lab-tabbtn-'+t); if(b) b.classList.toggle('active', t===name); });
+  try{ localStorage.setItem('vdg_lab_tab', name); }catch(e){}
+  if(name==='creer'){ if(typeof labEdInit==='function') labEdInit(); }
+  else if(name==='jouer'){ labFillPlaySelect(); }
+  else if(name==='analyser'){ if(typeof labLoadAccumStats==='function') labLoadAccumStats(); }
+  else if(name==='partager'){ if(typeof labLoadPublishedList==='function') labLoadPublishedList(); if(typeof labWorkerLoadConfig==='function') labWorkerLoadConfig(); }
+}
+// Remplit le sélecteur « Mode » de l'onglet Jouer (mêmes formats que le reste,
+// mode personnalisé restauré compris). Conserve la sélection courante.
+function labFillPlaySelect(){
+  var s=document.getElementById('lab-play-format'); if(!s||typeof LAB_FORMATS==='undefined') return;
+  var cur=s.value; s.innerHTML='';
+  Object.keys(LAB_FORMATS).forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=LAB_FORMATS[k].name; s.appendChild(o); });
+  if(cur){ s.value=cur; }
+}
+function labPlaySelectedModeVsAI(){
+  var s=document.getElementById('lab-play-format'); var k=s?s.value:null;
+  var fmt=(k&&typeof LAB_FORMATS!=='undefined')?LAB_FORMATS[k]:null;
+  if(!fmt){ if(typeof showToast==='function') showToast('Choisis un mode.', true); return; }
+  labPlayModeVsAI(fmt);
+}
+
 function labOnShowScreen(){
   // Remplit le sélecteur de formats à la volée (source unique = LAB_FORMATS).
   var sel=document.getElementById('lab-format');
@@ -15720,15 +15807,16 @@ function labOnShowScreen(){
     });
   }
   labUpdateUI();
-  if(typeof labWorkerLoadConfig==='function') labWorkerLoadConfig();
   // Restaure le dernier mode personnalisé (localStorage) → il réapparaît dans les
-  // deux sélecteurs après un rechargement. APRÈS le peuplement des formats natifs
-  // (sinon la garde « selecteur vide » sauterait les formats standard).
+  // sélecteurs après un rechargement. APRÈS le peuplement des formats natifs
+  // (sinon la garde « sélecteur vide » sauterait les formats standard) et AVANT
+  // d'ouvrir un onglet (pour que labFillPlaySelect voie le mode restauré).
   if(typeof labRestoreCustomFormat==='function') labRestoreCustomFormat();
-  // Stats cumulées (dev_balance_stats, worker serveur inclus) affichées DANS le
-  // Labo — avant, elles n'étaient visibles que sur l'écran « Analyse d'équilibre »
-  // alors que le panneau worker prétend qu'elles sont « cumulées ci-dessus ».
-  if(typeof labLoadAccumStats==='function') labLoadAccumStats();
+  // On atterrit sur le dernier onglet ouvert (Créer par défaut, pour que l'outil
+  // se présente d'abord comme un atelier de création). Chaque onglet déclenche
+  // lui-même son chargement paresseux (worker, stats cumulées, liste publiée…).
+  var lastTab='creer'; try{ lastTab=localStorage.getItem('vdg_lab_tab')||'creer'; }catch(e){}
+  labShowTab(lastTab);
 }
 
 // ── Worker automatique (serveur) — pilotage depuis le Labo ──────────────
