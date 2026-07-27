@@ -153,24 +153,40 @@ Inspirations assumées : **Fate** (invocation de figures historiques) et
        - ✅ **Lot d — Éval par type.** `labPieceValue` : valeur `value` explicite ou
          **estimée par mobilité** (glisseur > sauteur > marcheur ; poussée ajoute,
          poussable retire) au lieu d'une valeur unique (22) → verdicts fiables.
-  5. ◐ **Publier un format comme événement** — étagé (le « pont vers les vrais
-     joueurs » est plus profond qu'il n'y paraît : le moteur LIVE/en ligne est
-     câblé 5×5 + pièces natives, `game_state` ne porte que le drapeau `sumo`, et
-     le Sumo est une fonctionnalité SUR-MESURE — pas un cadre générique. Bonne
-     nouvelle : grâce aux Lots a–d le MOTEUR est déjà piloté par données ; il
-     manque surtout le rendu multi-dimensions, le format dans `game_state`, et le
-     flux de publication). Découpage :
+  5. ✅ **Publier un format comme événement / le jouer** — BOUCLÉ. La clé qui a
+     tout débloqué : le protocole en ligne est **snapshot-based** (le joueur qui
+     bouge écrit le plateau complet dans `game_state`, l'adversaire l'affiche sans
+     rejouer la légalité). Il suffisait donc que le **descripteur de format
+     voyage** jusqu'aux deux clients — le moteur data-driven (Lots a–d) et le
+     rendu agnostique aux dimensions étaient déjà là. Découpage :
        - ✅ **① Registre de modes publiés** (2026-07-27) — table
          `dev_published_formats` (jsonb) + RLS lecture `is_admin_user()` + RPC
          `dev_publish_format`/`dev_delete_published_format` (migration appliquée).
          Section « 📤 Modes publiés » dans le Labo : publier le mode courant,
          lister, charger (→ éditeur + registre), supprimer. Partage admin
          (Jonathan ↔ Thomas). Ne touche PAS au moteur live.
-       - ☐ **② Jouable en LOCAL vs IA** — généraliser `isValid` + le rendu du
-         plateau pour le chemin solo/vs-bot (online intact). Risque moyen.
-       - ☐ **③ Jouable en ligne à 2** — `game_state` porte le format, rendu 2
-         clients, matchmaking. Le but final (test à 2 comptes avec Thomas). Gros
-         épic, à étager. Boucle « forger → tester → publier » bouclée à la fin.
+       - ✅ **② Jouable en LOCAL vs IA** (2026-07-27) — `isValid`/`isVoid`
+         généralisés (lisent `G.rows/cols/voidSet`, repli 5×5), rendu déjà
+         agnostique. `initGame` lit `settings._customFormat` (dimensions, cases
+         mortes, `pieceDefs`, sumo). Bouton « ▶ Tester ce mode vs IA » dans le Labo.
+       - ✅ **③ Jouable en ligne à 2** (2026-07-28) — 4 lots :
+         **A** le format voyage dans `game_state.format` (`createOnlineGame(…,
+         customFormat)` pose `settings._customFormat` avant `initGame` ;
+         `enterOnlineGame` configure `G` depuis `gameState.format` pour les deux
+         clients ; `pushOnlineMove` le reconduit à chaque coup ; revanche
+         préservée via `G._customFormat`). **B** défi privé : colonne
+         `challenges.custom_format jsonb` (migration appliquée 2026-07-28),
+         `sendChallenge(…, customFormat)`, routage à l'acceptation, sélecteur
+         « Mode perso (Labo) » dans le popup de défi (dev), libellé côté receveur.
+         **C** garde-fous : toujours `ranked:false`, orientation Noir sur NxN
+         (flip agnostique vérifié), victoire custom propagée (`won`→`pushOnlineMove`),
+         format persistant par coup. **D** tests navigateur (supa mocké) : chemins
+         créateur/joiner, routage du défi, exclusion mutuelle, `pushOnlineMove` ;
+         contre-épreuves standard identiques. **Anti-triche** : client-authoritative,
+         comme le jeu standard actuel — acceptable en défi privé ; la validation
+         serveur reste un épic séparé si un jour on ouvre du custom **classé public**.
+         Boucle « forger → tester → publier → **jouer à 2** » bouclée. Reste à
+         valider en conditions réelles à 2 comptes (Jonathan + Thomas).
 - Performance sur mobile bas de gamme
 
 ---

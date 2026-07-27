@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.33.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.34.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2113,7 +2113,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.33.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.34.0 &#9820;</div>
   </div>
 </div>
 
@@ -2674,8 +2674,9 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <details class="lab-tab-panel" data-tab="partager" open style="margin-top:4px;display:none" ontoggle="if(this.open&&typeof labLoadPublishedList==='function')labLoadPublishedList()">
       <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">📤 Modes publiés (partagés)</summary>
       <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.7;margin:8px 0">
-        Publie le mode courant pour le <strong>partager avec les autres admins</strong> (Thomas) : il est stocké côté serveur et rechargeable ici, chez l'un comme chez l'autre. <em>Étape ① — ne rend pas encore le mode jouable par les vrais joueurs en ligne, c'est l'étape suivante.</em>
+        Publie le mode courant pour le <strong>partager avec les autres admins</strong> (Thomas) : il est stocké côté serveur et rechargeable ici, chez l'un comme chez l'autre.
       </div>
+      <div class="lab-help">▶ <b>Jouer un mode à 2 en ligne :</b> va dans <b>Amis</b>, défie un joueur, et choisis ton mode dans <b>« Mode perso (Labo) »</b> du popup de défi. Le format voyage avec le défi — l'adversaire n'a rien à installer. Toujours amical (hors ELO).</div>
       <button class="adm-btn" style="width:100%;padding:8px;margin-bottom:8px" onclick="labPublishCurrentMode()">📤 Publier le mode courant</button>
       <div id="lab-published-list" style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment)">…</div>
     </details>
@@ -3398,8 +3399,23 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.33.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.34.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.34.0 &mdash; 28 juillet 2026</div>
+      <ul class="devlog-list">
+
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; MODES PERSONNALIS&Eacute;S JOUABLES EN LIGNE &Agrave; 2</li>
+
+        <li>Les modes construits dans le <strong>Labo</strong> peuvent enfin se jouer <strong>en ligne, &agrave; deux</strong> ! On d&eacute;fie un ami (menu <strong>Amis</strong>), on choisit son mode dans <strong>&laquo; Mode perso &raquo;</strong> du popup de d&eacute;fi, et la partie se lance sur ce plateau &mdash; dimensions libres, cases mortes, pi&egrave;ces invent&eacute;es comprises. <strong>L'adversaire n'a rien &agrave; installer</strong> : le mode voyage avec le d&eacute;fi.</li>
+
+        <li>Sous le capot : le descripteur de mode voyage dans l'&eacute;tat de partie, et les <strong>deux joueurs</strong> reconstruisent le m&ecirc;me plateau. Le moteur invent&eacute; (pouss&eacute;es, pi&egrave;ces sur mesure) tourne c&ocirc;t&eacute; joueur qui joue ; l'autre re&ccedil;oit et affiche. Toujours <strong>amical</strong> (aucun effet sur l'ELO, les gains ou l'XP).</li>
+
+        <li style="list-style:none;margin-left:-14px;color:rgba(200,168,110,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">Les parties standard en ligne restent <strong>strictement inchang&eacute;es</strong> (v&eacute;rifi&eacute; : sans mode perso, l'&eacute;tat de partie et le classement sont identiques &agrave; avant).</li>
+
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -6943,7 +6959,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.33.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.34.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -7157,7 +7173,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.33.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.34.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -7362,7 +7378,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.33.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.34.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -20238,7 +20254,64 @@ function openChallengeConfigPopup(playerId, playerPseudo){
   selectChallengeTimer(5);     // valeurs par défaut à chaque ouverture
   selectChallengeMode('quick');
   selectChallengeRanked(true);
+  challengeConfigCustomFormat = null;      // aucun mode perso par défaut
+  populateChallengeCustomFormats();        // peuple le sélecteur (dev uniquement)
   popup.classList.add('active');
+}
+
+// Mode PERSONNALISÉ (Labo, milestone 5 ③) — le format à défier, choisi dans le
+// sélecteur ci-dessous ; null = défi normal. Peuplé à l'ouverture du popup, dev only.
+var challengeConfigCustomFormat = null;
+var _cfgCustomFormats = {}; // clé d'option -> descripteur de format
+async function populateChallengeCustomFormats(){
+  _cfgCustomFormats = {};
+  var sel = document.getElementById('cfg-custom-format');
+  var grp = document.getElementById('cfg-custom-group');
+  if(!sel || !grp) return;
+  // Réservé aux comptes dev (seuls Jonathan/Thomas ont des modes publiés/expérimentaux).
+  if(typeof isDevUser==='function' && !isDevUser()){ grp.style.display='none'; return; }
+  sel.innerHTML = '<option value="">— Aucun (partie standard) —</option>';
+  // 1) Formats expérimentaux/démo du Labo (tout sauf standard & sumo natifs) + mode custom local.
+  try{
+    if(typeof LAB_FORMATS!=='undefined'){
+      Object.keys(LAB_FORMATS).forEach(function(k){
+        if(k==='standard' || k==='sumo') return; // le standard a déjà l'online natif ; le sumo est sur-mesure
+        var f = LAB_FORMATS[k]; if(!f) return;
+        var key = 'lab:'+k; _cfgCustomFormats[key] = f;
+        var o = document.createElement('option'); o.value = key; o.textContent = f.name||k; sel.appendChild(o);
+      });
+    }
+  }catch(e){}
+  // 2) Modes publiés (partagés entre admins) — lecture directe, RLS dev.
+  try{
+    var res = await supa.from('dev_published_formats').select('*').order('updated_at',{ascending:false}).limit(50);
+    (res.data||[]).forEach(function(r){
+      if(!r.format) return; var key = 'pub:'+r.id; _cfgCustomFormats[key] = r.format;
+      var o = document.createElement('option'); o.value = key;
+      o.textContent = '📤 '+(r.name||r.format.name||'mode')+(r.author?' ('+r.author+')':''); sel.appendChild(o);
+    });
+  }catch(e){}
+  grp.style.display = '';
+}
+// Choisir un mode perso neutralise Arène/Compétitive (un mode perso est toujours
+// une partie rapide amicale) sans passer par selectChallengeMode (qui, lui,
+// EFFACE le mode perso — les deux sélections s'excluent mutuellement).
+function selectChallengeCustomFormat(key){
+  challengeConfigCustomFormat = (key && _cfgCustomFormats[key]) ? _cfgCustomFormats[key] : null;
+  var arena=document.getElementById('cfgmode-arena'), quick=document.getElementById('cfgmode-quick');
+  var rk1=document.getElementById('cfgranked-1'), rk0=document.getElementById('cfgranked-0');
+  var hint=document.getElementById('challenge-config-ranked-hint');
+  if(challengeConfigCustomFormat){
+    challengeConfigMode='quick'; challengeConfigRanked=false;
+    if(quick) quick.classList.add('selected');
+    if(arena){ arena.classList.remove('selected'); arena.style.opacity='.3'; }
+    if(rk0) rk0.classList.add('selected');
+    if(rk1){ rk1.classList.remove('selected'); rk1.style.opacity='.3'; }
+    if(hint) hint.textContent='Mode perso : toujours amical (aucun effet ELO/gains/XP).';
+  } else {
+    if(arena) arena.style.opacity=''; if(rk1) rk1.style.opacity='';
+    if(hint) hint.textContent = challengeConfigRanked ? 'Compte pour l\'ELO, les gains et l\'XP.' : 'Pour le fun : aucun effet sur l\'ELO, les gains ou l\'XP.';
+  }
 }
 function closeChallengeConfigPopup(){
   const popup = document.getElementById('challenge-config-popup');
@@ -20256,6 +20329,14 @@ function selectChallengeMode(m){
   var elQ=document.getElementById('cfgmode-quick'), elA=document.getElementById('cfgmode-arena');
   if(elQ) elQ.classList.toggle('selected', m==='quick');
   if(elA) elA.classList.toggle('selected', m==='arena');
+  // Choisir explicitement Rapide/Arène annule un éventuel mode perso (les deux
+  // sélections s'excluent), et restaure l'apparence normale des boutons.
+  if(typeof challengeConfigCustomFormat!=='undefined' && challengeConfigCustomFormat){
+    challengeConfigCustomFormat = null;
+    var cs=document.getElementById('cfg-custom-format'); if(cs) cs.value='';
+    if(elA) elA.style.opacity='';
+    var rk1=document.getElementById('cfgranked-1'); if(rk1) rk1.style.opacity='';
+  }
 }
 function selectChallengeRanked(ranked){
   challengeConfigRanked = ranked;
@@ -20272,7 +20353,7 @@ async function confirmSendChallenge(){
   const targetId = popup.dataset.targetId;
   const targetPseudo = popup.dataset.targetPseudo;
   popup.classList.remove('active');
-  await sendChallenge(targetId, targetPseudo, challengeConfigTimer, challengeConfigMode, challengeConfigRanked);
+  await sendChallenge(targetId, targetPseudo, challengeConfigTimer, challengeConfigMode, challengeConfigRanked, challengeConfigCustomFormat);
 }
 
 // ── Système de revanche après une partie en ligne ───────────────
@@ -20448,8 +20529,12 @@ async function launchRematchGame(){
   // matchmaking, où chaque nouvelle recherche est déjà un tirage indépendant).
   var iAmWhite = Math.random()<0.5;
   stopRematchTimer();
-  // La revanche garde le même statut classé/amical que la partie d'origine.
-  await createOnlineGame(iAmWhite?currentUser.id:oldOpponentId, iAmWhite?oldOpponentId:currentUser.id, oldGame.timer_seconds, oldGame.ranked);
+  // La revanche garde le même statut classé/amical que la partie d'origine, ET
+  // le même mode personnalisé le cas échéant : G._customFormat est déjà en mémoire
+  // (posé par enterOnlineGame) → pas besoin de relire game_state en base, on évite
+  // ainsi de nommer une colonne neuve dans un select critique (piège CLAUDE.md).
+  var _rematchFmt = (typeof G!=='undefined' && G && G._customFormat) ? G._customFormat : null;
+  await createOnlineGame(iAmWhite?currentUser.id:oldOpponentId, iAmWhite?oldOpponentId:currentUser.id, oldGame.timer_seconds, oldGame.ranked, _rematchFmt);
   await supa.from('online_games').update({ rematch_game_id: G.onlineGameId }).eq('id', oldGameId);
 }
 
@@ -21601,13 +21686,21 @@ let challengePopupDeadline = null;
 let challengePopupTimerInterval = null;
 let challengePopupExpired = false;
 
-async function sendChallenge(challengedId, challengedPseudo, timerSeconds, mode, ranked){
-  const { error } = await supa.from('challenges').insert({
+async function sendChallenge(challengedId, challengedPseudo, timerSeconds, mode, ranked, customFormat){
+  // Mode PERSONNALISÉ (Labo, milestone 5 ③) : le défi embarque le descripteur de
+  // format. On NE crée PAS de valeur mode='custom' (pour ne pas heurter une
+  // éventuelle contrainte CHECK sur `mode`) : le custom est reconnu par la simple
+  // présence de custom_format à l'acceptation. Un mode perso n'est jamais classé.
+  var row = {
     challenger_id: currentUser.id, challenged_id: challengedId, timer_seconds: timerSeconds,
-    mode: (mode==='arena') ? 'arena' : 'quick', ranked: (ranked!==false)
-  });
+    mode: (mode==='arena') ? 'arena' : 'quick', ranked: customFormat ? false : (ranked!==false)
+  };
+  // On n'ajoute la colonne QUE si un format est fourni : un défi normal ne
+  // référence jamais custom_format (insert inchangé, indépendant de la migration).
+  if(customFormat) row.custom_format = customFormat;
+  const { error } = await supa.from('challenges').insert(row);
   if(error){ showToast('Impossible d\'envoyer le défi : '+error.message, true); return; }
-  showToast('Défi envoyé à '+challengedPseudo+' ('+timerSeconds+'s/coup) !');
+  showToast('Défi'+(customFormat?' « '+(customFormat.name||'mode perso')+' »':'')+' envoyé à '+challengedPseudo+' ('+timerSeconds+'s/coup) !');
 }
 
 // ── Partie de tournoi prête : l'adversaire est prévenu en temps réel ──
@@ -21728,7 +21821,11 @@ async function showChallengePopup(challenge){
   const text = document.getElementById('challenge-popup-text');
   if(!popup || !text) return;
   const timerLabel = challenge.timer_seconds ? (' ('+challenge.timer_seconds+'s/coup)') : '';
-  const modeLabel = challenge.mode==='arena' ? ' — Arène' : ' — Partie rapide';
+  // Mode PERSONNALISÉ (milestone 5 ③) : le défi porte custom_format → on annonce
+  // le nom du mode inventé (le realtime transmet toute la ligne, colonne comprise).
+  const modeLabel = challenge.custom_format
+    ? (' — Mode perso « '+((challenge.custom_format.name)||'Labo')+' »')
+    : (challenge.mode==='arena' ? ' — Arène' : ' — Partie rapide');
   const rankedLabel = challenge.ranked===false ? ' 🤝 amicale' : ' ⚔ classée';
   text.textContent = (challenger ? challenger.pseudo : 'Un joueur') + ' vous défie en duel !' + timerLabel + modeLabel + rankedLabel;
   popup.dataset.challengeId = challenge.id;
@@ -21833,6 +21930,12 @@ async function respondToChallengeCore(challengeId, challengerId, timerSeconds, a
       await createArenaMatch(whiteId, blackId, timerSeconds, row.ranked);
       // L'Arène a déjà son propre retour dédié (écran de fin de série) —
       // rien à faire ici, contrairement au mode rapide ci-dessous.
+    } else if(row && row.custom_format){
+      // Mode PERSONNALISÉ (milestone 5 ③) : partie en ligne sur le mode du Labo.
+      // Le format voyage dans game_state (createOnlineGame) → l'adversaire (le
+      // challenger) le lira à son entrée. Toujours amical (jamais classé).
+      await createOnlineGame(whiteId, blackId, timerSeconds, false, row.custom_format);
+      _lastGameFromFriendChallenge = _challengeOriginScreen;
     } else {
       await createOnlineGame(whiteId, blackId, timerSeconds, row ? row.ranked : true);
       _lastGameFromFriendChallenge = _challengeOriginScreen;
@@ -21847,24 +21950,34 @@ function quickRespondChallenge(event, challengeId, challengerId, timerSeconds, a
 }
 
 // ── Création et synchronisation de la partie en ligne ──────────
-async function createOnlineGame(whitePlayerId, blackPlayerId, timerSeconds, ranked){
+async function createOnlineGame(whitePlayerId, blackPlayerId, timerSeconds, ranked, customFormat){
   settings.timerSeconds = timerSeconds || 5; // AVANT initGame(), pour que G.timeLeft soit correct dès la création
   settings._onlineBottomColor = (currentUser.id === whitePlayerId) ? 'white' : 'black';
   settings._buildingOnlineGame = true;
   pieceInputLocked = true;
+  // Mode PERSONNALISÉ en ligne (milestone 5 ③) : un format construit dans le Labo
+  // sert de plateau. On le pose sur settings._customFormat AVANT initGame() (même
+  // chemin éprouvé que le local vs IA, M5②) → le plateau de départ est le bon
+  // (dimensions, cases mortes, pièces inventées). Absent = standard 5×5 inchangé.
+  if(customFormat){ settings._customFormat = customFormat; }
   initGame(); // construit G.board/G.stacks via le moteur LOCAL existant, inchangé
+  // game_state porte le plateau ET (en custom) le DESCRIPTEUR de format, pour que
+  // l'adversaire configure G à l'identique et rende le même plateau (voir
+  // enterOnlineGame). Rangé DANS le jsonb existant → aucune colonne neuve à risque.
+  var _gs = { board: G.board, stacks: G.stacks, lastMoved: G.lastMoved, lastMovedByColor: G.lastMovedByColor };
+  if(customFormat){ _gs.format = customFormat; }
   const { data, error } = await supa.from('online_games').insert({
     white_player_id: whitePlayerId,
     black_player_id: blackPlayerId,
-    game_state: { board: G.board, stacks: G.stacks, lastMoved: G.lastMoved, lastMovedByColor: G.lastMovedByColor },
+    game_state: _gs,
     turn: G.turn,
     timer_seconds: settings.timerSeconds,
-    ranked: (ranked!==false)
+    ranked: customFormat ? false : (ranked!==false) // un mode perso ne compte jamais pour l'ELO/les gains
   }).select().single();
   if(error){ pieceInputLocked = false; showToast('Impossible de créer la partie : '+error.message, true); return; }
   // Le créateur applique directement l'état qu'il vient de générer
   // (inutile de le refetch, on l'a déjà localement).
-  await enterOnlineGame(data.id, whitePlayerId, { board: G.board, stacks: G.stacks, lastMoved: G.lastMoved, lastMovedByColor: G.lastMovedByColor }, G.turn, settings.timerSeconds, data.ranked);
+  await enterOnlineGame(data.id, whitePlayerId, _gs, G.turn, settings.timerSeconds, data.ranked);
 }
 
 // Appelée chez le CHALLENGER quand son défi vient d'être accepté : il
@@ -22066,6 +22179,23 @@ async function enterOnlineGame(gameId, whitePlayerId, gameState, turn, timerSeco
     sumoMode: !!(gameState && gameState.sumo),
     sumoFallen: (gameState && gameState.sumoFallen) ? gameState.sumoFallen.slice() : []
   };
+
+  // Mode PERSONNALISÉ en ligne (milestone 5 ③) : le descripteur de format voyage
+  // dans game_state.format (posé à la création, voir createOnlineGame). Les DEUX
+  // clients — créateur ET adversaire — configurent ICI G à l'identique, sinon le
+  // bloc G ci-dessus (rows:5, cols:5, ni voidSet ni pieceDefs) réécraserait le
+  // plateau custom en 5×5 même chez le créateur. Le plateau lui-même arrive déjà
+  // rempli dans gameState.board ; on ne fixe ici que les dimensions/règles que le
+  // rendu (renderBoard) et le moteur (isValid/legalMoves data-driven, Lots a–d)
+  // lisent sur G. Absent en partie standard → 5×5 natif strictement inchangé.
+  if(gameState && gameState.format){
+    var _cf = gameState.format;
+    G.rows = (+_cf.rows)||5; G.cols = (+_cf.cols)||5;
+    G.voidSet = new Set(_cf.voids||[]);
+    G.pieceDefs = _cf.pieces||null;
+    G.sumoMode = !!_cf.sumo;
+    G._customFormat = _cf; // conservé pour d'éventuelles relectures (revanche, etc.)
+  }
 
   // Récupère le pseudo de l'adversaire pour l'affichage (les deux IDs
   // sont connus via la ligne de partie ; on identifie celui qui n'est
@@ -22298,7 +22428,12 @@ async function pushOnlineMove(won, movedColor){
     game_state: { board: G.board, stacks: G.stacks, lastMoved: G.lastMoved, lastMovedByColor: G.lastMovedByColor, lastPush: G.lastPush,
       // SUMO : le drapeau et la liste des tombés voyagent avec chaque coup,
       // sinon l'adversaire ne verrait jamais les pions éjectés.
-      sumo: G.sumoMode || undefined, sumoFallen: G.sumoMode ? (G.sumoFallen||[]) : undefined },
+      sumo: G.sumoMode || undefined, sumoFallen: G.sumoMode ? (G.sumoFallen||[]) : undefined,
+      // Mode PERSONNALISÉ (milestone 5 ③) : le descripteur de format reste dans
+      // CHAQUE snapshot (pas seulement à la création) — sinon le tout premier coup
+      // l'effacerait, et une reconnexion / un spectateur / le watchdog ne pourraient
+      // plus configurer le plateau custom. Absent en partie standard → rien ne change.
+      format: (typeof G!=='undefined' && G && G._customFormat) ? G._customFormat : undefined },
     turn: nextTurn,
     updated_at: new Date().toISOString()
   };
@@ -22901,6 +23036,16 @@ window.addEventListener('beforeunload', () => {
         <div class="opt-btn selected" id="cfgmode-quick" onclick="selectChallengeMode('quick')">Partie rapide</div>
         <div class="opt-btn" id="cfgmode-arena" onclick="selectChallengeMode('arena')">Ar&#232;ne (BO3)</div>
       </div>
+    </div>
+    <!-- Mode PERSONNALISÉ (Labo, milestone 5 ③) — réservé aux comptes dev : défie
+         un ami sur un mode construit/publié dans le Labo. Le format voyage avec le
+         défi puis dans game_state ; toujours amical (hors ELO). -->
+    <div class="option-group" id="cfg-custom-group" style="display:none">
+      <div class="option-label">Mode perso (Labo)</div>
+      <select id="cfg-custom-format" onchange="selectChallengeCustomFormat(this.value)" style="width:100%;box-sizing:border-box;padding:6px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px;font-family:'VT323',monospace;font-size:13px">
+        <option value="">&#8212; Aucun (partie standard) &#8212;</option>
+      </select>
+      <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.6;margin-top:4px">D&#233;fie un ami sur un mode invent&#233; dans le Labo. Toujours amical (hors ELO).</div>
     </div>
     <div class="option-group">
       <div class="option-label">Timer par coup</div>

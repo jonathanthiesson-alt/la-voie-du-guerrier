@@ -2,6 +2,42 @@
 
 ---
 
+# ⏳ À VALIDER (2 comptes) : modes personnalisés en ligne (M5 ③, 2026-07-28)
+
+**Livré et testé au navigateur (supa mocké), reste la validation réelle à 2
+comptes (Jonathan + Thomas).** Un mode construit dans le Labo se joue désormais
+en ligne à deux via un **défi privé**.
+
+## Protocole (2 comptes, 2 appareils/onglets)
+
+1. **Compte A** (dev) : Labo → onglet **Créer**, forge un petit mode (ex. 7×7
+   avec une lance), puis **✓ Charger**. (Ou onglet **Partager** → publie-le.)
+2. **Compte A** : menu **Amis** → défie le compte B → dans le popup, choisis le
+   mode dans **« Mode perso (Labo) »** → Envoyer.
+3. **Compte B** : le popup de défi annonce **« Mode perso « … » »** → Accepter.
+4. **Attendu** : les DEUX voient le **même plateau custom** (dimensions, cases
+   mortes, pièces), chacun dans sa bonne orientation. Un coup (dont une
+   **poussée**) se propage. La partie va jusqu'à la **victoire** (capture/éjection).
+   Aucun effet ELO/gains (partie **amicale** forcée).
+5. **Contre-épreuve** : un défi **normal** (sans mode perso) est strictement
+   identique à avant (classé possible, plateau 5×5 natif).
+
+## Points de vigilance (d'après le code)
+
+- **`game_state.format`** porte le descripteur ; il est reconduit à **chaque
+  coup** (`pushOnlineMove`) — donc une reconnexion/un spectateur retrouvent le
+  mode. Si le plateau adverse s'affiche en 5×5, c'est que le format n'a pas
+  voyagé (vérifier `createOnlineGame`/`enterOnlineGame`).
+- **`G = {...}` dans `enterOnlineGame` écrase tout** (cf. §tournois leçon 4) :
+  la config custom (rows/cols/voidSet/pieceDefs) est posée **APRÈS** ce bloc,
+  jamais avant.
+- **Anti-triche** : client-authoritative (comme le standard). OK en défi privé ;
+  ne pas ouvrir de custom **classé public** sans validation serveur.
+- La colonne `challenges.custom_format jsonb` est **additive nullable** : un défi
+  normal ne la référence jamais (insert inchangé).
+
+---
+
 # ✅ RÉSOLU ET VALIDÉ : les tournois (2026-07-14)
 
 **Confirmé par Jonathan en conditions réelles (2 comptes) : « le tournoi
