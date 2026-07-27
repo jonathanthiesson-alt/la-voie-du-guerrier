@@ -127,7 +127,33 @@ Inspirations assumées : **Fate** (invocation de figures historiques) et
      dans le Labo : marche/arrêt, profondeur **fixe** ou **cycle 4→5→6→4** (le
      runner avance le curseur à chaque tick), budget de temps (borne les runs en
      prof. 5-6). Config live actuellement **désactivée** (à activer depuis le Labo).
-  4. ☐ **Publier un format comme événement** — pont entre un format du registre
+  4. ✅ **Éditeur de modes de jeu complet** — fait et vérifié le 2026-07-27
+     (V0.32.0). Les 4 lots livrés, testés (28 tests unitaires moteur + smoke live).
+     Le jeu standard reste **strictement inchangé** (garde `G.pieceDefs`/`mv.gpush`,
+     absents en prod ; régressions déterministes identiques).
+       - ✅ **Lot a — Modèle de pièce complet (moteur, piloté par données).**
+         Poussée `push` (`true` | liste de types | `{chain,targets}`) + `pushable`
+         (bords/void/sumo : hors sumo mur = illégal ; en sumo éjection, éjecter le
+         roi adverse = victoire ; toute la résolution — file, éjections, victoire —
+         pré-calculée dans `labGenericMoves`, appliquée par une branche `mv.gpush`
+         dédiée d'`execMove`). Asymétrie déplacement≠capture (`captureStep`/
+         `captureSlide`/`captureJumps`). Direction **relative à la couleur**
+         (`forward`/`back`/`fdiag`/`bdiag`/`sideways`). Démo **Onis pousseurs sumo**.
+       - ✅ **Lot b — Éditeur visuel (mini-plateau dans le Labo).** Grille
+         interactive : dimensions ±, cases mortes cliquables, pose des pièces
+         Blanc/Noir (construit `setup`), **aperçu des coups légaux** en surbrillance
+         (moteur jetable via `new Function`, zéro dérive). Formulaire de type avec
+         **gabarits** (Tour/Fou/Cavalier/Pion/Pousseur…) — point-and-click, aucun
+         JSON requis (réponse au « JSON trop raide » pour Thomas/Musashi).
+       - ✅ **Lot c — Cohérence & aller-retour.** Validation croisée (types
+         référencés, `push.targets` existants), JSON ⇄ éditeur sans perte,
+         **persistance** (localStorage → survit au reload) + un mode custom peut
+         tourner sur le **worker serveur** (colonne `dev_worker_config.custom_format`,
+         RPC + `balance-worker.mjs` mis à jour, migration appliquée 2026-07-27).
+       - ✅ **Lot d — Éval par type.** `labPieceValue` : valeur `value` explicite ou
+         **estimée par mobilité** (glisseur > sauteur > marcheur ; poussée ajoute,
+         poussable retire) au lieu d'une valeur unique (22) → verdicts fiables.
+  5. ☐ **Publier un format comme événement** — pont entre un format du registre
      et le système d'événements live (comme le Sumo), pour tester une variante
      auprès des vrais joueurs. Boucle « forger → tester → publier » bouclée.
 - Performance sur mobile bas de gamme

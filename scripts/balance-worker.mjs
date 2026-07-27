@@ -29,8 +29,8 @@ const html = readFileSync(join(ROOT, "index.html"), "utf8");
 // exclus : redéfinis dans le préambule à partir du descripteur de format).
 const ENGINE_NAMES = [
   "findMaster", "dist", "threatCount", "cloneBS", "applyToClone", "allMoves",
-  "labResolveDirs", "labGenericMoves", "legalMoves", "execMove", "evalPosition",
-  "evalTrainer", "evalBalanceCurrent", "evalBalanceMobilityFixed",
+  "labResolveDirs", "labGenericMoves", "labPieceValue", "legalMoves", "execMove",
+  "evalPosition", "evalTrainer", "evalBalanceCurrent", "evalBalanceMobilityFixed",
   "evalBalanceSymmetric", "evalBalanceAgDfFixed", "minimaxFn", "minimaxPlay",
   "devSimTopMoves",
 ];
@@ -251,7 +251,7 @@ async function main() {
   }
 
   // Résolution des paramètres.
-  let fmtId, depth, evalKey, opening, gamesTarget, budgetSec, advanceCycleTo = null;
+  let fmtId, depth, evalKey, opening, gamesTarget, budgetSec, advanceCycleTo = null, customFormat = null;
   if (MANUAL) {
     fmtId = process.env.BW_FORMAT || "standard";
     depth = Math.min(Math.max(+process.env.BW_DEPTH, 1), 6);
@@ -259,6 +259,8 @@ async function main() {
     opening = process.env.BW_OPENING !== undefined && process.env.BW_OPENING !== "" ? +process.env.BW_OPENING : 6;
     gamesTarget = Math.min(Math.max(+(process.env.BW_GAMES || 100), 1), 2000);
     budgetSec = Math.min(Math.max(+(process.env.BW_BUDGET || 1800), 30), 3300);
+    // Dispatch manuel d'un mode custom : le descripteur JSON via BW_CUSTOM_FORMAT.
+    if (fmtId === "custom" && process.env.BW_CUSTOM_FORMAT) customFormat = JSON.parse(process.env.BW_CUSTOM_FORMAT);
     console.log(`▶ manuel : ${fmtId}, prof.${depth}, cible ${gamesTarget} parties / ${budgetSec}s, éval ${evalKey}, ouverture ${opening}`);
   } else {
     if (!PERSIST) { console.log("↩ dry-run sans profondeur : fournis BW_DEPTH pour un essai local."); return; }
@@ -267,6 +269,7 @@ async function main() {
     if (!cfg.enabled) { console.log("⏸ Worker désactivé (dev_worker_config.enabled=false). Rien à faire."); return; }
     fmtId = cfg.format; evalKey = cfg.eval_key; opening = cfg.opening;
     gamesTarget = cfg.games; budgetSec = cfg.time_budget_sec;
+    customFormat = cfg.custom_format || null; // mode 'custom' construit dans le Labo
     if (cfg.mode === "cycle") {
       depth = Math.min(Math.max(cfg.cycle_current, cfg.cycle_min), cfg.cycle_max);
       advanceCycleTo = depth >= cfg.cycle_max ? cfg.cycle_min : depth + 1; // prochain tick
@@ -277,7 +280,16 @@ async function main() {
     }
   }
 
-  const fmtObj = getFormat(html, fmtId);
+  // Le mode 'custom' n'est PAS dans index.html : son descripteur vient de la
+  // config (dev_worker_config.custom_format) ou de BW_CUSTOM_FORMAT. Les autres
+  // formats sont extraits du registre LAB_FORMATS d'index.html (source vivante).
+  let fmtObj;
+  if (fmtId === "custom") {
+    if (!customFormat) { console.log("⚠ format 'custom' demandé mais aucun descripteur (dev_worker_config.custom_format vide). Charge un mode depuis le Labo puis ré-enregistre la config."); return; }
+    fmtObj = customFormat;
+  } else {
+    fmtObj = getFormat(html, fmtId);
+  }
   const runChunk = makeRunner(buildScript(html, fmtObj));
 
   // Boucle par lots, bornée par la cible de parties ET le budget de temps

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.31.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.32.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2113,7 +2113,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.31.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.32.0 &#9820;</div>
   </div>
 </div>
 
@@ -2598,10 +2598,29 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div class="menu-divider"></div>
     <div id="lab-results" style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment)"></div>
     <div class="menu-divider"></div>
+    <details style="margin-top:4px" ontoggle="if(this.open&&typeof labEdInit==='function')labEdInit()">
+      <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">🎨 Éditeur visuel de mode</summary>
+      <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.7;margin:8px 0">
+        Construis un mode à la souris. Choisis un <strong>outil</strong>, puis clique sur le plateau : poser une pièce, tracer des cases mortes, effacer, ou voir les <strong>coups</strong> d'une pièce (vert = déplacement, rouge = capture, orange = poussée). Gère les types de pièces et leurs règles plus bas. <strong>→ JSON</strong> recopie tout dans l'éditeur avancé ; <strong>✓ Charger</strong> l'ajoute au sélecteur de formats en haut.
+      </div>
+      <div id="lab-ed-dims"></div>
+      <div id="lab-ed-toolbar" style="margin:8px 0"></div>
+      <div id="lab-ed-board" style="margin:4px auto;max-width:320px"></div>
+      <div id="lab-ed-info" style="font-family:'VT323',monospace;font-size:11px;color:var(--gold-bright);min-height:16px;margin:6px 0;text-align:center;line-height:1.3"></div>
+      <div class="menu-divider"></div>
+      <div id="lab-ed-types"></div>
+      <div id="lab-ed-typeform" style="display:none"></div>
+      <div style="display:flex;gap:6px;margin-top:12px">
+        <button class="btn" style="flex:1;padding:7px;font-size:12px" onclick="labEdToJson()">→ JSON</button>
+        <button class="btn" style="flex:1;padding:7px;font-size:12px" onclick="labEdFromJson()">← JSON</button>
+      </div>
+      <button class="adm-btn" style="width:100%;padding:9px;margin-top:6px" onclick="labEdApply()">✓ Charger ce mode dans le sélecteur</button>
+    </details>
+    <div class="menu-divider"></div>
     <details style="margin-top:4px">
       <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">✎ Format personnalisé (avancé)</summary>
       <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.7;margin:8px 0">
-        Édite un format en données (dimensions 3→9, cases interdites <code>voids</code>, <code>sumo</code>/<code>v2</code>, positions), charge-le : il apparaît dans le sélecteur ci-dessus, prêt à simuler. <strong style="color:var(--gold-bright)">Nouveaux types de pièces</strong> : ajoute un champ <code>pieces</code>. Chaque pièce a au moins une primitive de mouvement — <code>slide</code> (glisse jusqu'à un obstacle, <code>range</code> optionnel), <code>step</code> (1 case), <code>jumps</code> (sauts qui ignorent les obstacles) — avec des directions <code>"ortho"</code>/<code>"diag"</code>/<code>"all"</code> ou une liste <code>[[dr,dc]…]</code>. Ex. Lancier = <code>{"slide":"ortho"}</code>, Cavalier = <code>{"jumps":[[2,1],[1,2],…]}</code>. Options : <code>capture</code> (défaut vrai), <code>king</code> (le prendre = victoire), <code>glyph</code>/<code>name</code>. <em>Charge la démo « Lanciers » puis « Copier le format ici » pour un gabarit complet.</em>
+        Édite un format en données (dimensions 3→9, cases interdites <code>voids</code>, <code>sumo</code>/<code>v2</code>, positions), charge-le : il apparaît dans le sélecteur ci-dessus, prêt à simuler. <strong style="color:var(--gold-bright)">Nouveaux types de pièces</strong> : ajoute un champ <code>pieces</code>. Chaque pièce a au moins une primitive de mouvement — <code>slide</code> (glisse jusqu'à un obstacle, <code>range</code> optionnel), <code>step</code> (1 case), <code>jumps</code> (sauts qui ignorent les obstacles) — avec des directions absolues <code>"ortho"</code>/<code>"diag"</code>/<code>"all"</code>, <strong>relatives à la couleur</strong> <code>"forward"</code>/<code>"back"</code>/<code>"fdiag"</code>/<code>"sideways"</code> (un seul descripteur sert aux deux camps, ex. pion), ou une liste <code>[[dr,dc]…]</code>. <strong style="color:var(--gold-bright)">Déplacement ≠ capture</strong> : ajoute <code>captureStep</code>/<code>captureSlide</code>/<code>captureJumps</code> → les primitives de base deviennent non-capturantes (pion = <code>{"step":"forward","captureStep":"fdiag"}</code>). <strong style="color:var(--gold-bright)">Poussée</strong> : <code>push</code> (<code>true</code>, une liste de types, ou <code>{"chain":true}</code>) pousse d'une case toute pièce <code>pushable</code> ou le roi adverse (en sumo, l'éjecter = victoire) ; <code>pushable:true</code> = la pièce SUBIT les poussées. Ex. Lancier = <code>{"slide":"ortho"}</code>, Cavalier = <code>{"jumps":[[2,1],[1,2],…]}</code>. Options : <code>capture</code> (défaut vrai), <code>king</code> (le prendre = victoire), <code>range</code>/<code>captureRange</code>, <code>glyph</code>/<code>name</code>. <em>Charge la démo « Pousseurs » ou « Lanciers » puis « Copier le format ici » pour un gabarit complet.</em>
       </div>
       <button class="btn" style="width:100%;padding:6px;margin-bottom:6px;font-size:12px" onclick="labDumpFormatJson()">⇩ Copier le format sélectionné ici pour l'éditer</button>
       <textarea id="lab-custom-json" spellcheck="false" placeholder='{ "name":"Mon format", "rows":7, "cols":7, "v2":true, "sumo":false, "voids":["0,0","0,6","6,0","6,6"], "pieces":{ "lance":{"glyph":"槍","slide":"ortho","capture":true} }, "setup":[ {"type":"epeiste","color":"white","r":0,"c":3}, {"type":"lance","color":"white","r":0,"c":1}, ... ] }' style="width:100%;box-sizing:border-box;height:150px;font-family:monospace;font-size:11px;background:rgba(0,0,0,.45);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px;padding:6px"></textarea>
@@ -3313,8 +3332,25 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.31.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.32.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.32.0 &mdash; 27 juillet 2026</div>
+      <ul class="devlog-list">
+
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; LABORATOIRE — &Eacute;DITEUR DE MODES DE JEU</li>
+
+        <li><strong>&Eacute;diteur visuel de mode</strong> (souris, plus de JSON obligatoire) : on r&egrave;gle les dimensions, on trace les cases mortes, on pose les pi&egrave;ces des deux camps et on visualise les <strong>coups d'une pi&egrave;ce en surbrillance</strong> (vert = d&eacute;placement, rouge = capture, orange = pouss&eacute;e). Des <strong>gabarits</strong> (Tour, Fou, Cavalier, Pion, Pousseur&hellip;) cr&eacute;ent une pi&egrave;ce en un clic, sans rien taper.</li>
+
+        <li><strong>Pi&egrave;ces plus riches</strong> : d&eacute;placement <em>relatif &agrave; la couleur</em> (avant/avant-diagonale, comme un pion ou une lance), <strong>d&eacute;placement &ne; capture</strong> (le pion avance tout droit et prend en diagonale), et surtout la <strong>pouss&eacute;e</strong> pilot&eacute;e par donn&eacute;es &mdash; une pi&egrave;ce peut en <em>pousser</em> une autre (en cha&icirc;ne), une pi&egrave;ce peut &ecirc;tre <em>poussable</em>, et en sumo l'&eacute;jection du roi adverse gagne. D&eacute;mo ajout&eacute;e : <strong>Onis pousseurs sumo 5&times;5</strong>.</li>
+
+        <li>Les verdicts d'&eacute;quilibre sur les modes custom sont d&eacute;sormais <strong>fiables</strong> : chaque type de pi&egrave;ce re&ccedil;oit une <strong>valeur propre</strong> (estim&eacute;e d'apr&egrave;s sa mobilit&eacute;, ou fix&eacute;e &agrave; la main) au lieu d'une valeur unique pour toutes. Un mode custom peut aussi tourner sur le <strong>worker serveur</strong> (simulations horaires sans appareil allum&eacute;).</li>
+
+        <li style="list-style:none;margin-left:-14px;color:rgba(200,168,110,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">Le jeu standard reste <strong>strictement inchang&eacute;</strong> : tout le nouveau moteur est gard&eacute; par un drapeau absent en production (v&eacute;rifi&eacute; par 28 tests unitaires + parties d&eacute;terministes identiques).</li>
+
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -6824,7 +6860,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.31.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.32.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -7038,7 +7074,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.31.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.32.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -7243,7 +7279,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.31.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.32.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -13053,7 +13089,7 @@ function attemptPlayMusic(el, label){
         // Vérifie que la situation est toujours d'actualité avant de
         // rejouer (le combat n'est peut-être plus en cours, la musique du
         // menu peut-être déjà relancée par ailleurs, etc.)
-        if(el.id==='fight-music' && (!_fightMusicActive || !userPrefs.fightMusic)) return;
+        if(el.id==='fight-music'){ var _act=document.querySelector('.screen.active'); if(!_fightMusicActive || !userPrefs.fightMusic || !_act || _act.id!=='screen-game') return; }
         if(el.id==='menu-music' && (!_menuMusicIntended || !userPrefs.menuMusic)) return;
         if(!el.paused) return;
         el.play().catch(function(err2){ console.warn('[audio] '+label+' : 2e tentative aussi refusée', err2&&err2.name); });
@@ -13089,6 +13125,17 @@ function pickRandomFightSong(){
 // d'arrêter volontairement (fin de partie / sortie du combat).
 var _fightMusicActive = false;
 function startFightMusic(){
+  // 🔴 GARDE-FOU D'ÉCRAN (bug vécu : « une musique de combat se lance en
+  // arrivant aux menus après Se connecter »). startFightMusic() n'est atteint
+  // que par des chemins DIFFÉRÉS — setTimeout de démarrage, callback du décompte
+  // « 3,2,1 Combattez », polling "prêt" toutes les 500 ms (markReadyAndWaitFor
+  // Opponent). Si l'écran a changé entre-temps (match avorté, retour au menu,
+  // reprise de session juste après le login), l'appel différé jouait la musique
+  // de combat PAR-DESSUS le menu. On ne démarre donc QUE si l'écran de jeu est
+  // réellement actif. On sort AVANT stopMenuMusic() pour ne pas couper, au
+  // passage, la musique du menu sur lequel on se trouve.
+  var _active = document.querySelector('.screen.active');
+  if(!_active || _active.id !== 'screen-game') return;
   stopMenuMusic();
   // On ne coupe volontairement PAS le son du décompte ici : sa fin (le
   // « tadoum ») doit se prolonger PAR-DESSUS le début de la musique de
@@ -13924,54 +13971,173 @@ function isV2mode(){return true;} // Rempart V2 est l'unique mode de jeu désorm
 // Les 3 pièces natives (épéiste/épée/bouclier) gardent leurs règles écrites à
 // la main (poussées, empilement, anti-retour, sumo) : elles SONT le jeu, on n'y
 // touche pas. À côté, un format peut définir de NOUVEAUX types via un
-// descripteur de mouvement, interprété ici. Trois primitives couvrent
-// l'essentiel des pièces d'un abstrait :
+// descripteur de mouvement, interprété ici. Primitives de DÉPLACEMENT :
 //   • slide : glisse en ligne jusqu'au 1er obstacle (tour/fou/lance…), portée
-//             réglable ;
+//             réglable via `range` ;
 //   • step  : avance d'exactement 1 case (roi…) ;
 //   • jumps : sauts absolus qui IGNORENT les obstacles intermédiaires (cavalier).
-// Chaque champ accepte un mot-clé de directions ('ortho'=4, 'diag'=4, 'all'=8)
-// OU un tableau explicite de vecteurs [dr,dc]. capture:false → pièce pacifique.
-// Une pièce peut cumuler les trois (ex. une "reine" = slide:'all').
-function labResolveDirs(spec){
-  if(Array.isArray(spec)) return spec.map(function(v){return {dr:v[0],dc:v[1]};});
-  if(spec==='ortho') return [{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1}];
-  if(spec==='diag')  return [{dr:-1,dc:-1},{dr:-1,dc:1},{dr:1,dc:-1},{dr:1,dc:1}];
-  if(spec==='all')   return [{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1},{dr:-1,dc:-1},{dr:-1,dc:1},{dr:1,dc:-1},{dr:1,dc:1}];
+// Chaque champ accepte un mot-clé de directions OU un tableau. Mots-clés
+// ABSOLUS ('ortho'=4, 'diag'=4, 'all'=8) et RELATIFS À LA COULEUR ('forward',
+// 'back', 'fdiag', 'bdiag', 'sideways' — "avant" = vers l'adversaire) : un seul
+// descripteur sert alors aux deux camps (pion, vraie lance shogi). On peut aussi
+// donner une LISTE de mots-clés (['forward','sideways']) ou de vecteurs [[dr,dc]…].
+// ASYMÉTRIE DÉPLACEMENT ≠ CAPTURE : si un champ captureSlide/captureStep/
+// captureJumps est présent, les primitives de base deviennent NON capturantes et
+// la capture ne se fait QUE par ces champs (pion : `step:'forward'` +
+// `captureStep:'fdiag'`). Sinon `capture` (défaut vrai) gouverne la capture
+// à l'échiquéenne (on se pose sur l'adverse). POUSSÉE : `push` (true, une liste
+// de types, ou {chain?,targets?}) → la pièce pousse d'une case, dans sa direction
+// de déplacement, toute pièce POUSSABLE (`pushable:true`) ou le ROI adverse ;
+// `chain:true` pousse une file. Comportement bords : hors sumo une poussée
+// contre le mur est illégale ; en sumo la pièce poussée est ÉJECTÉE (éjecter le
+// roi adverse = victoire). La victoire est tranchée dans execMove via mv.win.
+function labResolveDirs(spec,color){
+  // f = "vers l'avant" selon la couleur. Blanc démarre en haut → avancer = r
+  // croissant (f=+1) ; Noir en bas → f=-1. Les mots-clés relatifs s'en servent.
+  var f=(color==='black')?-1:1;
+  function kw(w){
+    switch(w){
+      case 'ortho':    return [{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1}];
+      case 'diag':     return [{dr:-1,dc:-1},{dr:-1,dc:1},{dr:1,dc:-1},{dr:1,dc:1}];
+      case 'all':      return [{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1},{dr:-1,dc:-1},{dr:-1,dc:1},{dr:1,dc:-1},{dr:1,dc:1}];
+      case 'forward':  return [{dr:f,dc:0}];
+      case 'back':     return [{dr:-f,dc:0}];
+      case 'fdiag':    return [{dr:f,dc:-1},{dr:f,dc:1}];
+      case 'bdiag':    return [{dr:-f,dc:-1},{dr:-f,dc:1}];
+      case 'sideways': return [{dr:0,dc:-1},{dr:0,dc:1}];
+      default:         return [];
+    }
+  }
+  if(typeof spec==='string') return kw(spec);
+  if(Array.isArray(spec)){
+    var out=[];
+    for(var i=0;i<spec.length;i++){
+      var e=spec[i];
+      if(typeof e==='string') out=out.concat(kw(e));
+      else if(Array.isArray(e)&&e.length===2) out.push({dr:e[0],dc:e[1]}); // vecteur ABSOLU
+    }
+    return out;
+  }
   return [];
 }
 // Génère les coups d'une pièce custom. Capture "à l'échiquéenne" : on se pose
-// SUR la pièce adverse (elle est retirée). La victoire (capture d'un roi) est
-// tranchée dans execMove, pas ici — legalMoves marque juste isCapture.
+// SUR la pièce adverse (elle est retirée). La victoire (roi pris/éjecté) est
+// tranchée dans execMove — legalMoves marque isCapture, ou mv.win pour la poussée.
 function labGenericMoves(color,board,stacks,r,c,p,def){
   var moves=[];
-  var canCap=def.capture!==false;
-  // Tente d'atterrir en (tr,tc). Retourne 'empty' (continue le glissement),
-  // sinon 'stop' (obstacle : allié bloquant, pile, ou capture terminale).
-  function land(tr,tc){
-    if(!isValid(tr,tc)) return 'stop';
-    if(stacks[tr][tc]!==null) return 'stop'; // pile figée → infranchissable
-    var occ=board[tr][tc];
-    if(!occ){ moves.push({r:tr,c:tc,isCapture:false,isPush:false}); return 'empty'; }
-    if(occ.color!==color && canCap) moves.push({r:tr,c:tc,isCapture:true,isPush:false});
-    return 'stop'; // toute case occupée arrête la ligne (capture ou blocage)
+  var enemy=(color==='white')?'black':'white';
+  var defs=(typeof G!=='undefined')&&G&&G.pieceDefs;
+  // Une pièce est ROYALE si c'est l'épéiste natif OU une pièce custom king:true.
+  function isKingPiece(q){ if(!q) return false; if(q.type==='epeiste') return true; var qd=defs&&defs[q.type]; return !!(qd&&qd.king); }
+  // Cible POUSSABLE : une pièce custom déclarée pushable (peu importe la couleur),
+  // OU le roi ADVERSE (le shove-out du roi est le cœur d'un mode sumo-like). Le
+  // roi allié n'est jamais une cible (évite les poussées suicidaires → execMove
+  // ne peut alors renvoyer "victoire" que pour un roi ADVERSE retiré).
+  function pushableTarget(q){
+    if(!q) return false;
+    if(isKingPiece(q)) return q.color===enemy;
+    var qd=defs&&defs[q.type]; return !!(qd&&qd.pushable);
   }
-  if(def.slide){
-    var sdirs=labResolveDirs(def.slide);
-    var maxK=(def.range===undefined||def.range===null)?99:def.range; // 99 = illimité (plateau ≤ 9)
-    for(var si=0;si<sdirs.length;si++){
-      var d=sdirs[si];
-      for(var k=1;k<=maxK;k++){ if(land(r+d.dr*k, c+d.dc*k)!=='empty') break; }
+  var pushSpec=def.push, pushTargets=null, pushChain=false;
+  if(pushSpec===true){ /* toute cible poussable */ }
+  else if(Array.isArray(pushSpec)) pushTargets=pushSpec;
+  else if(pushSpec&&typeof pushSpec==='object'){ pushChain=!!pushSpec.chain; if(Array.isArray(pushSpec.targets)) pushTargets=pushSpec.targets; }
+  function isPushCandidate(q){ if(!pushableTarget(q)) return false; if(pushTargets&&pushTargets.indexOf(q.type)<0) return false; return true; }
+  // Résout la file poussée à partir de (tr,tc) dans la direction (dr,dc) et
+  // renvoie un descriptif de coup (disp=déplacements du plus loin au plus proche,
+  // ejects=sorties de ring, win=roi adverse retiré) ou null si la poussée est
+  // bloquée. Les rois ne font JAMAIS partie d'une file (on les capture, on ne les
+  // fait pas glisser) : pousser une pièce SUR le roi adverse = push-capture.
+  function tryPush(tr,tc,dr,dc){
+    var line=[], cr=tr, cc=tc;
+    while(true){
+      line.push({r:cr,c:cc,q:board[cr][cc]});
+      var nr=cr+dr, nc=cc+dc;
+      if(!isValid(nr,nc)){ return (G&&G.sumoMode) ? buildPush(line,true,dr,dc,null) : null; }
+      if(stacks[nr][nc]!==null) return null; // pile figée derrière → bloqué
+      var nq=board[nr][nc];
+      if(!nq) return buildPush(line,false,dr,dc,null); // case libre → la file glisse d'1
+      if(isKingPiece(nq)&&nq.color===enemy) return buildPush(line,false,dr,dc,{r:nr,c:nc}); // pousse SUR le roi adverse → victoire
+      if(pushChain&&!isKingPiece(nq)&&pushableTarget(nq)&&(!pushTargets||pushTargets.indexOf(nq.type)>=0)){ cr=nr; cc=nc; continue; }
+      return null; // obstacle non poussable → bloqué
     }
   }
-  if(def.step){
-    var pdirs=labResolveDirs(def.step);
-    for(var pi=0;pi<pdirs.length;pi++){ var pd=pdirs[pi]; land(r+pd.dr, c+pd.dc); }
+  function buildPush(line,ejectLast,dr,dc,captureKingAt){
+    var disp=[], ejects=[], win=false;
+    for(var i=line.length-1;i>=0;i--){
+      var seg=line[i];
+      if(ejectLast&&i===line.length-1){ ejects.push({r:seg.r,c:seg.c}); if(isKingPiece(seg.q)&&seg.q.color===enemy) win=true; }
+      else disp.push({fr:seg.r,fc:seg.c,tr:seg.r+dr,tc:seg.c+dc});
+    }
+    if(captureKingAt) win=true;
+    return {r:line[0].r,c:line[0].c,isCapture:false,isPush:true,gpush:true,dir:{dr:dr,dc:dc},disp:disp,ejects:ejects,win:win};
   }
-  if(def.jumps){
-    for(var ji=0;ji<def.jumps.length;ji++){ var jd=def.jumps[ji]; land(r+jd[0], c+jd[1]); }
+  // Parcourt une direction : atterrissage sur case vide (si canMove), capture
+  // (si canCap), et/ou poussée (si canPush). Toute case occupée arrête la ligne.
+  function ray(dr,dc,maxK,canMove,canCap,canPush){
+    for(var k=1;k<=maxK;k++){
+      var tr=r+dr*k, tc=c+dc*k;
+      if(!isValid(tr,tc)) break;
+      if(stacks[tr][tc]!==null) break; // pile figée → infranchissable
+      var occ=board[tr][tc];
+      if(!occ){ if(canMove) moves.push({r:tr,c:tc,isCapture:false,isPush:false}); continue; }
+      if(canPush&&isPushCandidate(occ)){ var pm=tryPush(tr,tc,dr,dc); if(pm) moves.push(pm); }
+      if(canCap&&occ.color===enemy) moves.push({r:tr,c:tc,isCapture:true,isPush:false});
+      break; // case occupée → fin de la ligne
+    }
   }
+  // Saut : atterrit directement (ignore les obstacles), pas de poussée possible
+  // (une trajectoire en L n'a pas de direction de poussée unique).
+  function jumpTo(tr,tc,canMove,canCap){
+    if(!isValid(tr,tc)) return;
+    if(stacks[tr][tc]!==null) return;
+    var occ=board[tr][tc];
+    if(!occ){ if(canMove) moves.push({r:tr,c:tc,isCapture:false,isPush:false}); return; }
+    if(canCap&&occ.color===enemy) moves.push({r:tr,c:tc,isCapture:true,isPush:false});
+  }
+  var hasCapSpecific=!!(def.captureSlide||def.captureStep||def.captureJumps);
+  var canCapBase=(def.capture!==false)&&!hasCapSpecific; // primitives de base : capturent sauf si asymétrie déclarée
+  var canPush=!!def.push;
+  var maxK=(def.range===undefined||def.range===null)?99:def.range; // 99 = illimité (plateau ≤ 9)
+  var d,i;
+  if(def.slide){ var sd=labResolveDirs(def.slide,color); for(i=0;i<sd.length;i++){ d=sd[i]; ray(d.dr,d.dc,maxK,true,canCapBase,canPush); } }
+  if(def.step){  var pd=labResolveDirs(def.step,color);  for(i=0;i<pd.length;i++){ d=pd[i]; ray(d.dr,d.dc,1,true,canCapBase,canPush); } }
+  if(def.jumps){ for(i=0;i<def.jumps.length;i++){ jumpTo(r+def.jumps[i][0], c+def.jumps[i][1], true, canCapBase); } }
+  // Primitives CAPTURE-SEULE (ex. diagonale du pion) : ne posent pas sur une case
+  // vide, ne poussent pas — elles ne servent qu'à prendre.
+  var cmaxK=(def.captureRange===undefined||def.captureRange===null)?99:def.captureRange;
+  if(def.captureSlide){ var cs=labResolveDirs(def.captureSlide,color); for(i=0;i<cs.length;i++){ d=cs[i]; ray(d.dr,d.dc,cmaxK,false,true,false); } }
+  if(def.captureStep){  var ct=labResolveDirs(def.captureStep,color);  for(i=0;i<ct.length;i++){ d=ct[i]; ray(d.dr,d.dc,1,false,true,false); } }
+  if(def.captureJumps){ for(i=0;i<def.captureJumps.length;i++){ jumpTo(r+def.captureJumps[i][0], c+def.captureJumps[i][1], false, true); } }
   return moves;
+}
+
+// Valeur de matériel d'une pièce custom pour l'éval (Lot d). Sans elle, toutes
+// les pièces custom valaient pareil (22 en dur) → l'IA jouait un « fou » comme un
+// « pion » et les verdicts d'équilibre sur modes custom étaient trompeurs. Un
+// champ `value` explicite est prioritaire ; sinon la valeur est ESTIMÉE par la
+// mobilité (un glisseur longue portée > un sauteur > un marcheur ; la poussée
+// ajoute, être poussable retire). Mémoïsée sur le descripteur (def._val) car
+// evalPosition l'appelle très souvent. GUARDÉE par G.pieceDefs → inerte en live.
+function labPieceValue(def){
+  if(!def) return 0;
+  if(def._val!==undefined) return def._val;
+  if(typeof def.value==='number'){ def._val=Math.max(0,def.value); return def._val; }
+  var rng=(def.range===undefined||def.range===null)?5:Math.min(+def.range||1,5);
+  function nd(spec){ return labResolveDirs(spec,'white').length; }
+  var v=1;
+  if(def.slide)        v+=nd(def.slide)*(1+rng*0.4);   // ligne entière → fort, croît avec la portée
+  if(def.step)         v+=nd(def.step)*0.7;             // 1 case → modéré
+  if(def.jumps)        v+=def.jumps.length*0.8;         // sauteur → médian
+  if(def.captureSlide) v+=nd(def.captureSlide)*(0.5+rng*0.2);
+  if(def.captureStep)  v+=nd(def.captureStep)*0.35;
+  if(def.captureJumps) v+=def.captureJumps.length*0.4;
+  if(def.push) v+=1.5;                                  // levier tactique
+  if(def.pushable) v-=0.6;                              // fragilité
+  if(def.capture===false && !(def.captureStep||def.captureSlide||def.captureJumps)) v-=1; // pacifique
+  var mat=Math.round(v*5);
+  if(mat<8) mat=8; if(mat>60) mat=60;
+  def._val=mat; return mat;
 }
 
 function legalMoves(color,board,stacks,sel,lastMoved,lastPush){
@@ -14162,6 +14328,30 @@ function execMove(fr,fc,tr,tc,mv){
   const uf=s[fr][fc];
   const dr=tr-fr,dc=tc-fc;
 
+  // Poussée d'une pièce CUSTOM (formats du Laboratoire). Toute la résolution
+  // (file déplacée, éjections de ring, victoire) a été faite dans labGenericMoves
+  // et stockée dans le coup (mv.disp / mv.ejects / mv.win). Branche gardée par
+  // mv.gpush → le jeu live (qui n'en produit jamais) est STRICTEMENT inchangé.
+  // On applique les déplacements du plus LOIN au plus proche (mv.disp est déjà
+  // dans cet ordre) pour ne jamais écraser une case avant de l'avoir libérée.
+  if(mv.isPush&&mv.gpush){
+    var _udr=(mv.dir?mv.dir.dr:dr), _udc=(mv.dir?mv.dir.dc:dc);
+    if(mv.ejects){ for(var _ei=0;_ei<mv.ejects.length;_ei++){ var _ej=mv.ejects[_ei]; var _fell=b[_ej.r][_ej.c];
+      if(_fell&&!G.simulating){ G.sumoFallen=G.sumoFallen||[]; G.sumoFallen.push({color:_fell.color,type:_fell.type,r:_ej.r,c:_ej.c,dr:_udr,dc:_udc}); }
+      b[_ej.r][_ej.c]=null; s[_ej.r][_ej.c]=null; } }
+    if(mv.disp){ for(var _di=0;_di<mv.disp.length;_di++){ var _dp=mv.disp[_di];
+      b[_dp.tr][_dp.tc]=b[_dp.fr][_dp.fc]; s[_dp.tr][_dp.tc]=s[_dp.fr][_dp.fc];
+      b[_dp.fr][_dp.fc]=null; s[_dp.fr][_dp.fc]=null; } }
+    b[tr][tc]=p; b[fr][fc]=uf; s[fr][fc]=null;
+    G.lastPush=null;
+    G.lastMoved={color:p.color,type:p.type,fromR:fr,fromC:fc,toR:tr,toC:tc};
+    if(G.lastMovedByColor)G.lastMovedByColor[p.color]={type:p.type,fromR:fr,fromC:fc,toR:tr,toC:tc};
+    G.pushCount=(G.pushCount||0)+1;
+    if(!G.simulating){ if(typeof PP!=='undefined')PP.totalPushes++; playSound('push'); haptic('push'); }
+    if(mv.win){ G.captureCount=(G.captureCount||0)+1; G._pushCapWin=true; if(!G.simulating){ if(typeof PP!=='undefined')PP.totalCaptures++; playSound('capture'); haptic('capture'); } return true; }
+    return false;
+  }
+
   if(mv.isPush){
     const pr=tr+dr,pc=tc+dc;
     const pushed=b[tr][tc];
@@ -14351,7 +14541,7 @@ function evalPosition(board,stacks,ag,df,cb,mb){
       // plus doux), pour que l'IA la valorise et la défende dans les sims.
       const _def=(typeof G!=='undefined')&&G&&G.pieceDefs&&G.pieceDefs[p.type];
       if(_def){
-        const mat=_def.king?0:22;
+        const mat=_def.king?0:labPieceValue(_def); // Lot d : valeur par type (mobilité/`value`) au lieu de 22 en dur
         if(p.color==='black'){ const d=dist({r,c},wm); sc+=mat+ag*(9-Math.min(d,9))*4; }
         else { const d=dist({r,c},bm); sc-=mat+df*(9-Math.min(d,9))*4; }
       }
@@ -15053,6 +15243,24 @@ var LAB_FORMATS={
       {type:'epeiste',color:'white',r:0,c:2},{type:'cavalier',color:'white',r:0,c:1},{type:'cavalier',color:'white',r:0,c:3},{type:'sword',color:'white',r:1,c:2},
       {type:'epeiste',color:'black',r:4,c:2},{type:'cavalier',color:'black',r:4,c:1},{type:'cavalier',color:'black',r:4,c:3},{type:'sword',color:'black',r:3,c:2}
     ]
+  },
+  // Troisième mécanique : la POUSSÉE pilotée par données (comme l'épéiste, mais
+  // pour une pièce inventée). L'Oni avance d'un pas ortho, CAPTURE (prendre le
+  // roi = victoire) ET pousse en chaîne toute pièce POUSSABLE ou le roi adverse ;
+  // en sumo, éjecter le roi hors du ring gagne aussi. Le Rocher est `pushable`
+  // (il SUBIT la poussée) et avance seul. NB : sans capture (mode 100% poussée),
+  // ce mode est ~100% nul à faible profondeur — l'éval ne récompense pas encore
+  // finement la mise au bord (ce sera l'objet du Lot d « éval par type »).
+  demoPousse:{
+    id:'demoPousse', name:'Démo — Onis pousseurs sumo 5×5', rows:5, cols:5, v2:true, sumo:true, voids:[],
+    pieces:{
+      oni:{ glyph:'鬼', name:'Oni pousseur', step:'ortho', push:{chain:true}, capture:true },
+      roche:{ glyph:'岩', name:'Rocher', step:'forward', pushable:true, capture:false }
+    },
+    setup:[
+      {type:'epeiste',color:'white',r:0,c:2},{type:'oni',color:'white',r:0,c:1},{type:'oni',color:'white',r:0,c:3},{type:'roche',color:'white',r:1,c:2},
+      {type:'epeiste',color:'black',r:4,c:2},{type:'oni',color:'black',r:4,c:1},{type:'oni',color:'black',r:4,c:3},{type:'roche',color:'black',r:3,c:2}
+    ]
   }
 };
 // Formules d'éval testables (les mêmes que l'analyse d'équilibre). Par défaut
@@ -15148,7 +15356,7 @@ function labBuildEngineSource(format){
   // isValid EXCLU du toString : la version vivante code 5×5 en dur. On la
   // remplace par une version pilotée par le format (dimensions + voids), pour
   // que le moteur du Worker soit réellement agnostique aux dimensions.
-  var engineFns=[findMaster,dist,threatCount,cloneBS,applyToClone,allMoves,labResolveDirs,labGenericMoves,legalMoves,execMove,evalPosition,evalTrainer,evalBalanceCurrent,evalBalanceMobilityFixed,evalBalanceSymmetric,evalBalanceAgDfFixed,minimaxFn,minimaxPlay,devSimTopMoves];
+  var engineFns=[findMaster,dist,threatCount,cloneBS,applyToClone,allMoves,labResolveDirs,labGenericMoves,labPieceValue,legalMoves,execMove,evalPosition,evalTrainer,evalBalanceCurrent,evalBalanceMobilityFixed,evalBalanceSymmetric,evalBalanceAgDfFixed,minimaxFn,minimaxPlay,devSimTopMoves];
   var prelude=[
     'var FORMAT='+JSON.stringify(format)+';',
     'var VOID_STD=new Set(FORMAT.voids||[]);',
@@ -15317,6 +15525,10 @@ function labOnShowScreen(){
   }
   labUpdateUI();
   if(typeof labWorkerLoadConfig==='function') labWorkerLoadConfig();
+  // Restaure le dernier mode personnalisé (localStorage) → il réapparaît dans les
+  // deux sélecteurs après un rechargement. APRÈS le peuplement des formats natifs
+  // (sinon la garde « selecteur vide » sauterait les formats standard).
+  if(typeof labRestoreCustomFormat==='function') labRestoreCustomFormat();
 }
 
 // ── Worker automatique (serveur) — pilotage depuis le Labo ──────────────
@@ -15373,17 +15585,23 @@ async function labWorkerSaveConfig(){
   var val=function(id){ var e=document.getElementById(id); return e?e.value:null; };
   var cmin=+val('lab-worker-cmin'), cmax=+val('lab-worker-cmax');
   if(cmax<cmin){ if(typeof showToast==='function') showToast('Le max du cycle doit être ≥ au min.', true); return; }
+  var fmtKey=val('lab-worker-format');
   var params={
     p_enabled: !!(document.getElementById('lab-worker-enabled')||{}).checked,
     p_mode: val('lab-worker-mode'),
     p_fixed_depth: +val('lab-worker-fixed-depth'),
     p_cycle_min: cmin, p_cycle_max: cmax,
-    p_format: val('lab-worker-format'),
+    p_format: fmtKey,
     p_eval_key: val('lab-worker-eval'),
     p_opening: _labWorkerCfg ? _labWorkerCfg.opening : 6,
     p_games: +val('lab-worker-games'),
-    p_time_budget_sec: +val('lab-worker-budget')
+    p_time_budget_sec: +val('lab-worker-budget'),
+    // Si le worker doit tourner sur le mode PERSONNALISÉ, on lui transmet le
+    // descripteur complet (l'Action GitHub ne peut pas le lire dans index.html —
+    // il n'y est pas). Sinon null → le worker prend un format nommé du registre.
+    p_custom_format: (fmtKey==='custom' && LAB_FORMATS.custom) ? LAB_FORMATS.custom : null
   };
+  if(fmtKey==='custom' && !LAB_FORMATS.custom){ if(typeof showToast==='function') showToast('Aucun mode personnalisé chargé — construis-le d\'abord dans l\'éditeur.', true); return; }
   try{
     var res=await supa.rpc('dev_set_worker_config', params);
     if(res.error) throw res.error;
@@ -15403,25 +15621,52 @@ async function labWorkerSaveConfig(){
 //   pieces:{ nom:{ slide|step:'ortho'|'diag'|'all'|[[dr,dc]…], range?:n,
 //                  jumps?:[[dr,dc]…], capture?:bool, king?:bool, glyph?, name? } }
 // Une pièce doit avoir au moins une primitive de mouvement (slide/step/jumps).
+var LAB_DIR_KW={ortho:1,diag:1,all:1,forward:1,back:1,fdiag:1,bdiag:1,sideways:1};
 function labValidatePieceDef(name, def){
   if(!def||typeof def!=='object') return 'Pièce "'+name+'" : descripteur invalide.';
   if(['epeiste','sword','shield'].indexOf(name)>=0) return 'Le type "'+name+'" est natif — choisis un autre nom pour une pièce custom.';
   var hasMove=false;
+  // Accepte un mot-clé (absolu ou relatif à la couleur), une LISTE de mots-clés,
+  // ou une liste de vecteurs [dr,dc]. Doit rester en phase avec labResolveDirs.
   function dirsOK(spec){
     if(spec===undefined) return true;
-    if(['ortho','diag','all'].indexOf(spec)>=0){ hasMove=true; return true; }
-    if(Array.isArray(spec)){ for(var i=0;i<spec.length;i++){ if(!Array.isArray(spec[i])||spec[i].length!==2) return false; } if(spec.length) hasMove=true; return true; }
+    if(typeof spec==='string'){ if(LAB_DIR_KW[spec]){ hasMove=true; return true; } return false; }
+    if(Array.isArray(spec)){
+      if(!spec.length) return true;
+      for(var i=0;i<spec.length;i++){ var e=spec[i];
+        if(typeof e==='string'){ if(!LAB_DIR_KW[e]) return false; }
+        else if(!(Array.isArray(e)&&e.length===2&&typeof e[0]==='number'&&typeof e[1]==='number')) return false;
+      }
+      hasMove=true; return true;
+    }
     return false;
   }
-  if(!dirsOK(def.slide)) return 'Pièce "'+name+'" : slide invalide (ortho/diag/all ou [[dr,dc]…]).';
-  if(!dirsOK(def.step))  return 'Pièce "'+name+'" : step invalide (ortho/diag/all ou [[dr,dc]…]).';
-  if(def.jumps!==undefined){
-    if(!Array.isArray(def.jumps)) return 'Pièce "'+name+'" : jumps doit être une liste de [dr,dc].';
-    for(var j=0;j<def.jumps.length;j++){ if(!Array.isArray(def.jumps[j])||def.jumps[j].length!==2) return 'Pièce "'+name+'" : saut #'+(j+1)+' invalide (attendu [dr,dc]).'; }
-    if(def.jumps.length) hasMove=true;
+  var DIRHINT=' (mots-clés ortho/diag/all/forward/back/fdiag/bdiag/sideways, ou [[dr,dc]…]).';
+  if(!dirsOK(def.slide))        return 'Pièce "'+name+'" : slide invalide'+DIRHINT;
+  if(!dirsOK(def.step))         return 'Pièce "'+name+'" : step invalide'+DIRHINT;
+  if(!dirsOK(def.captureSlide)) return 'Pièce "'+name+'" : captureSlide invalide'+DIRHINT;
+  if(!dirsOK(def.captureStep))  return 'Pièce "'+name+'" : captureStep invalide'+DIRHINT;
+  function jumpsOK(spec,label){
+    if(spec===undefined) return null;
+    if(!Array.isArray(spec)) return 'Pièce "'+name+'" : '+label+' doit être une liste de [dr,dc].';
+    for(var j=0;j<spec.length;j++){ if(!Array.isArray(spec[j])||spec[j].length!==2) return 'Pièce "'+name+'" : '+label+' #'+(j+1)+' invalide (attendu [dr,dc]).'; }
+    if(spec.length) hasMove=true; return null;
   }
+  var je=jumpsOK(def.jumps,'jumps'); if(je) return je;
+  var je2=jumpsOK(def.captureJumps,'captureJumps'); if(je2) return je2;
   if(def.range!==undefined && !(+def.range>=1)) return 'Pièce "'+name+'" : range doit être ≥ 1.';
-  if(!hasMove) return 'Pièce "'+name+'" : aucune primitive de mouvement (slide, step ou jumps requis).';
+  if(def.captureRange!==undefined && !(+def.captureRange>=1)) return 'Pièce "'+name+'" : captureRange doit être ≥ 1.';
+  // Poussée : true, une liste de types cibles, ou {chain?:bool, targets?:[types]}.
+  if(def.push!==undefined){
+    var ps=def.push;
+    if(ps===true){}
+    else if(Array.isArray(ps)){ for(var pi=0;pi<ps.length;pi++){ if(typeof ps[pi]!=='string') return 'Pièce "'+name+'" : push[] doit lister des noms de types.'; } }
+    else if(ps&&typeof ps==='object'){ if(ps.targets!==undefined&&!Array.isArray(ps.targets)) return 'Pièce "'+name+'" : push.targets doit être une liste de types.'; }
+    else return 'Pièce "'+name+'" : push doit être true, une liste de types, ou {chain?,targets?}.';
+  }
+  if(def.pushable!==undefined && typeof def.pushable!=='boolean') return 'Pièce "'+name+'" : pushable doit être true ou false.';
+  if(def.value!==undefined && !(typeof def.value==='number' && def.value>=0)) return 'Pièce "'+name+'" : value (force) doit être un nombre ≥ 0.';
+  if(!hasMove) return 'Pièce "'+name+'" : aucune primitive de mouvement (slide, step, jumps, ou une variante capture* requise).';
   return null;
 }
 function labValidateFormat(f){
@@ -15436,6 +15681,15 @@ function labValidateFormat(f){
     for(var name in pieces){ if(!Object.prototype.hasOwnProperty.call(pieces,name)) continue;
       var perr=labValidatePieceDef(name, pieces[name]); if(perr) return {ok:false,err:perr};
       validTypes[name]=1;
+    }
+    // 2e passe : les cibles de poussée (push.targets) doivent référencer des
+    // types EXISTANTS (natifs ou déclarés) — cohérence croisée impossible dans
+    // labValidatePieceDef qui ne voit qu'une pièce à la fois.
+    for(var pname in pieces){ if(!Object.prototype.hasOwnProperty.call(pieces,pname)) continue;
+      var pdef=pieces[pname], tg=null;
+      if(Array.isArray(pdef.push)) tg=pdef.push;
+      else if(pdef.push&&typeof pdef.push==='object'&&Array.isArray(pdef.push.targets)) tg=pdef.push.targets;
+      if(tg){ for(var ti=0;ti<tg.length;ti++){ if(!validTypes[tg[ti]]) return {ok:false,err:'Pièce "'+pname+'" : push cible un type inconnu "'+tg[ti]+'".'}; } }
     }
   }
   var voids=Array.isArray(f.voids)?f.voids:[];
@@ -15476,16 +15730,313 @@ function labLoadCustomFormat(){
   try{ f=JSON.parse(ta.value); }catch(e){ if(typeof showToast==='function') showToast('JSON invalide : '+e.message, true); return; }
   var v=labValidateFormat(f);
   if(!v.ok){ if(typeof showToast==='function') showToast(v.err, true); return; }
-  LAB_FORMATS.custom=v.format;
-  var sel=document.getElementById('lab-format');
-  if(sel){
+  labRegisterCustomFormat(v.format, true);
+  if(typeof showToast==='function') showToast('Format personnalisé chargé — prêt à simuler.');
+}
+// Enregistre le format custom : mémoire vive (LAB_FORMATS.custom), persistance
+// (localStorage → survit au rechargement) et option « ✎ … » dans les DEUX
+// sélecteurs (simulation locale ET worker serveur). `select`=le sélectionner.
+function labRegisterCustomFormat(fmt, select){
+  LAB_FORMATS.custom=fmt;
+  try{ localStorage.setItem('vdg_lab_custom_format', JSON.stringify(fmt)); }catch(e){}
+  var label='✎ '+fmt.name+' ('+fmt.rows+'×'+fmt.cols+(fmt.sumo?', sumo':'')+')';
+  ['lab-format','lab-worker-format'].forEach(function(id){
+    var sel=document.getElementById(id); if(!sel) return;
     var opt=null;
     for(var i=0;i<sel.options.length;i++){ if(sel.options[i].value==='custom'){ opt=sel.options[i]; break; } }
     if(!opt){ opt=document.createElement('option'); opt.value='custom'; sel.appendChild(opt); }
-    opt.textContent='✎ '+v.format.name+' ('+v.format.rows+'×'+v.format.cols+(v.format.sumo?', sumo':'')+')';
-    sel.value='custom';
+    opt.textContent=label;
+  });
+  if(select){ var s=document.getElementById('lab-format'); if(s) s.value='custom'; }
+}
+// Restaure le format custom mémorisé (localStorage) au chargement de l'écran.
+function labRestoreCustomFormat(){
+  if(LAB_FORMATS.custom){ labRegisterCustomFormat(LAB_FORMATS.custom, false); return; }
+  try{ var raw=localStorage.getItem('vdg_lab_custom_format'); if(!raw) return;
+    var f=JSON.parse(raw); var v=labValidateFormat(f); if(v.ok) labRegisterCustomFormat(v.format, false);
+  }catch(e){}
+}
+
+// ══════════════════════════════════════════════════════
+// ÉDITEUR VISUEL DE MODE (Lot b) — construit un format en données à la souris :
+// dimensions, cases mortes, pièces + leurs règles, avec APERÇU des coups légaux.
+// Round-trip avec l'éditeur JSON avancé (labEdToJson/labEdFromJson) et
+// enregistrement via labLoadCustomFormat (labEdApply). Réservé dev, écran Labo.
+// ══════════════════════════════════════════════════════
+var _labEd=null;
+var LAB_ED_GLYPH={epeiste:'王',sword:'歩',shield:'盾'};      // glyphes des 3 pièces natives
+var LAB_ED_DIRSET=['ortho','diag','forward','back','fdiag','bdiag','sideways'];
+
+function labEdDefaultState(){
+  return {name:'Mon mode', rows:5, cols:5, v2:true, sumo:false, voids:[], pieces:{},
+    setup:[{type:'epeiste',color:'white',r:0,c:2},{type:'epeiste',color:'black',r:4,c:2}],
+    tool:'place', brushColor:'white', brushType:'epeiste', sel:null, previewMoves:[], editingType:null};
+}
+// Compile un moteur JETABLE (mêmes fonctions VIVANTES que le jeu, via toString)
+// avec un isValid piloté par le format : le legalMoves LIVE est câblé en 5×5, on
+// ne peut donc PAS l'utiliser tel quel pour prévisualiser un plateau d'une autre
+// taille. Même technique que le Worker → zéro dérive.
+function labMakePreviewEngine(format){
+  var fns=[labResolveDirs,labGenericMoves,legalMoves];
+  var prelude=[
+    'var FORMAT='+JSON.stringify(format)+';',
+    'var VOID_STD=new Set(FORMAT.voids||[]);',
+    'function isValid(r,c){return r>=0&&r<(FORMAT.rows||5)&&c>=0&&c<(FORMAT.cols||5)&&!VOID_STD.has(r+","+c);}',
+    'var DO=[{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1}];',
+    'var DA=[{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1},{dr:-1,dc:-1},{dr:-1,dc:1},{dr:1,dc:-1},{dr:1,dc:1}];',
+    'var G={simulating:true,rows:FORMAT.rows||5,cols:FORMAT.cols||5,sumoMode:!!FORMAT.sumo,pieceDefs:(FORMAT.pieces||null),lastMovedByColor:{white:null,black:null}};',
+    'function isV2mode(){return !!FORMAT.v2;}'
+  ].join('\n');
+  var body=fns.map(function(f){return f.toString();}).join('\n\n');
+  return (new Function(prelude+'\n\n'+body+'\n\nreturn {legalMoves:legalMoves};'))();
+}
+
+function labEdInit(){
+  if(_labEd){ labEdRender(); return; }
+  _labEd=labEdDefaultState();
+  // Si le JSON avancé contient déjà un format valide, on repart de lui.
+  var ta=document.getElementById('lab-custom-json');
+  if(ta&&ta.value.trim()){ try{ var f=JSON.parse(ta.value); if(labValidateFormat(f).ok) labEdAdopt(f); }catch(e){} }
+  labEdRender();
+}
+function labEdAdopt(f){
+  _labEd.name=f.name||'Mon mode'; _labEd.rows=+f.rows||5; _labEd.cols=+f.cols||5;
+  _labEd.v2=(f.v2!==false); _labEd.sumo=!!f.sumo;
+  _labEd.voids=Array.isArray(f.voids)?f.voids.slice():[];
+  _labEd.pieces=(f.pieces&&typeof f.pieces==='object')?JSON.parse(JSON.stringify(f.pieces)):{};
+  _labEd.setup=Array.isArray(f.setup)?f.setup.map(function(p){return {type:p.type,color:p.color,r:+p.r,c:+p.c};}):[];
+  _labEd.sel=null; _labEd.previewMoves=[];
+  if(!LAB_ED_GLYPH[_labEd.brushType]&&!_labEd.pieces[_labEd.brushType]) _labEd.brushType='epeiste';
+}
+function labEdCurrentFormat(){ return {name:_labEd.name,rows:_labEd.rows,cols:_labEd.cols,v2:_labEd.v2,sumo:_labEd.sumo,voids:_labEd.voids.slice(),pieces:_labEd.pieces,setup:_labEd.setup}; }
+function labEdPieceAt(r,c){ for(var i=0;i<_labEd.setup.length;i++){ var p=_labEd.setup[i]; if(p.r===r&&p.c===c) return p; } return null; }
+function labEdIsVoid(r,c){ return _labEd.voids.indexOf(r+','+c)>=0; }
+function labEdEmptyGrid(){ var g=[]; for(var r=0;r<_labEd.rows;r++){ var row=[]; for(var c=0;c<_labEd.cols;c++) row.push(null); g.push(row); } return g; }
+function labEdBuildBoard(){ var b=labEdEmptyGrid(); _labEd.setup.forEach(function(p){ if(p.r<_labEd.rows&&p.c<_labEd.cols) b[p.r][p.c]={type:p.type,color:p.color}; }); return b; }
+function labEdTypeLabel(t){ var g=LAB_ED_GLYPH[t]||(_labEd.pieces[t]&&_labEd.pieces[t].glyph)||''; var n=(t==='epeiste'?'Épéiste':t==='sword'?'Épée':t==='shield'?'Bouclier':(_labEd.pieces[t]&&_labEd.pieces[t].name)||t); return (g?g+' ':'')+n; }
+function labEdSetInfo(msg){ var el=document.getElementById('lab-ed-info'); if(el) el.textContent=msg||''; }
+
+function labEdRender(){ if(!_labEd) return; labEdRenderDims(); labEdRenderToolbar(); labEdRenderBoard(); labEdRenderTypes(); }
+
+function labEdRenderDims(){
+  var el=document.getElementById('lab-ed-dims'); if(!el) return;
+  function step(lbl,which,val){ return '<span style="display:inline-flex;align-items:center;gap:4px">'+lbl+' <button onclick="labEdDim(\''+which+'\',-1)" style="width:22px;height:22px;border-radius:4px;cursor:pointer;border:1px solid rgba(212,160,23,.35);background:rgba(0,0,0,.3);color:var(--parchment)">−</button><b style="min-width:14px;text-align:center;display:inline-block">'+val+'</b><button onclick="labEdDim(\''+which+'\',1)" style="width:22px;height:22px;border-radius:4px;cursor:pointer;border:1px solid rgba(212,160,23,.35);background:rgba(0,0,0,.3);color:var(--parchment)">+</button></span>'; }
+  var html='<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:13px;font-family:\'VT323\',monospace;color:var(--parchment)">';
+  html+=step('Lignes','rows',_labEd.rows)+step('Colonnes','cols',_labEd.cols);
+  html+='<label style="display:inline-flex;align-items:center;gap:4px"><input type="checkbox" '+(_labEd.sumo?'checked':'')+' onchange="labEdFlag(\'sumo\',this.checked)">Sumo (bords éjectants)</label>';
+  html+='<label style="display:inline-flex;align-items:center;gap:4px"><input type="checkbox" '+(_labEd.v2?'checked':'')+' onchange="labEdFlag(\'v2\',this.checked)">V2</label>';
+  html+='</div>';
+  el.innerHTML=html;
+}
+function labEdRenderToolbar(){
+  var el=document.getElementById('lab-ed-toolbar'); if(!el) return;
+  var types=['epeiste','sword','shield'].concat(Object.keys(_labEd.pieces));
+  var typeOpts=types.map(function(t){ return '<option value="'+t+'"'+(t===_labEd.brushType?' selected':'')+'>'+labEdTypeLabel(t)+'</option>'; }).join('');
+  function toolBtn(id,label){ var on=_labEd.tool===id; return '<button onclick="labEdSetTool(\''+id+'\')" style="flex:1;padding:5px;font-size:11px;border-radius:4px;cursor:pointer;border:1px solid rgba(212,160,23,.35);background:'+(on?'var(--gold-bright)':'rgba(0,0,0,.3)')+';color:'+(on?'#1a1206':'var(--parchment)')+'">'+label+'</button>'; }
+  var html='<div style="display:flex;gap:4px;margin-bottom:6px">'+toolBtn('place','Poser')+toolBtn('void','Case morte')+toolBtn('erase','Effacer')+toolBtn('preview','Coups')+'</div>';
+  html+='<div style="display:flex;gap:6px;align-items:center;font-size:12px;font-family:\'VT323\',monospace;color:var(--parchment)">';
+  html+='<span>Pièce</span><select onchange="labEdSetType(this.value)" style="flex:1;padding:4px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:4px">'+typeOpts+'</select>';
+  html+='<button onclick="labEdSetColor(\'white\')" style="padding:4px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(212,160,23,.35);background:'+(_labEd.brushColor==='white'?'#f0e6c8':'rgba(0,0,0,.3)')+';color:'+(_labEd.brushColor==='white'?'#1a1206':'var(--parchment)')+'">Blanc</button>';
+  html+='<button onclick="labEdSetColor(\'black\')" style="padding:4px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(212,160,23,.35);background:'+(_labEd.brushColor==='black'?'#e0706a':'rgba(0,0,0,.3)')+';color:'+(_labEd.brushColor==='black'?'#1a1206':'var(--parchment)')+'">Noir</button>';
+  html+='</div>';
+  el.innerHTML=html;
+}
+function labEdRenderBoard(){
+  var el=document.getElementById('lab-ed-board'); if(!el) return;
+  var R=_labEd.rows, C=_labEd.cols;
+  var pv={}; (_labEd.previewMoves||[]).forEach(function(m){ pv[m.r+','+m.c]=m.isCapture?'cap':(m.isPush?'push':'move'); });
+  var html='<div style="display:grid;grid-template-columns:repeat('+C+',1fr);gap:2px">';
+  for(var r=0;r<R;r++)for(var c=0;c<C;c++){
+    var p=labEdPieceAt(r,c), isv=labEdIsVoid(r,c);
+    var sel=_labEd.sel&&_labEd.sel.r===r&&_labEd.sel.c===c;
+    var mark=pv[r+','+c];
+    var bg=isv?'rgba(0,0,0,.75)':'rgba(255,255,255,.05)';
+    if(mark==='move') bg='rgba(80,180,90,.4)'; else if(mark==='cap') bg='rgba(200,60,60,.5)'; else if(mark==='push') bg='rgba(210,150,30,.5)';
+    var border=sel?'2px solid var(--gold-bright)':'1px solid rgba(212,160,23,.2)';
+    var glyph='', col='';
+    if(p){ glyph=LAB_ED_GLYPH[p.type]||(_labEd.pieces[p.type]&&_labEd.pieces[p.type].glyph)||'?'; col=(p.color==='white')?'#f0e6c8':'#e0706a'; }
+    html+='<div onclick="labEdCellClick('+r+','+c+')" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:3px;background:'+bg+';border:'+border+';font-family:serif;font-size:17px;color:'+col+'">'+(isv?'✕':glyph)+'</div>';
   }
-  if(typeof showToast==='function') showToast('Format personnalisé chargé — prêt à simuler.');
+  html+='</div>';
+  el.innerHTML=html;
+}
+function labEdRenderTypes(){
+  var el=document.getElementById('lab-ed-types'); if(!el) return;
+  var names=Object.keys(_labEd.pieces);
+  var html='<div style="font-family:\'VT323\',monospace;font-size:13px;color:var(--gold-bright);margin-bottom:4px">Types de pièces custom</div>';
+  if(!names.length) html+='<div style="font-size:11px;opacity:.6;margin-bottom:4px;font-family:\'VT323\',monospace;color:var(--parchment)">Aucun — le mode n\'utilise que les pièces natives. Ajoute un type pour inventer un mouvement.</div>';
+  names.forEach(function(n){ var d=_labEd.pieces[n];
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:12px;font-family:\'VT323\',monospace;color:var(--parchment)">'
+      +'<span>'+(d.glyph||'?')+' <b>'+n+'</b> <span style="opacity:.6">'+labEdDescribe(d)+'</span></span>'
+      +'<span style="white-space:nowrap"><button onclick="labEdEditType(\''+n+'\')" style="padding:2px 7px;border-radius:4px;cursor:pointer;border:1px solid rgba(212,160,23,.35);background:rgba(0,0,0,.3);color:var(--parchment)">✎</button> <button onclick="labEdDeleteType(\''+n+'\')" style="padding:2px 7px;border-radius:4px;cursor:pointer;border:1px solid rgba(200,60,60,.4);background:rgba(0,0,0,.3);color:#e0706a">🗑</button></span></div>';
+  });
+  html+='<button class="btn" style="width:100%;padding:6px;margin-top:6px;font-size:12px" onclick="labEdEditType(null)">+ Nouveau type de pièce</button>';
+  el.innerHTML=html;
+}
+function labEdDescribe(d){ var parts=[]; if(d.slide)parts.push('glisse'); if(d.step)parts.push('pas'); if(d.jumps)parts.push('saut'); if(d.captureStep||d.captureSlide||d.captureJumps)parts.push('capt.≠dépl.'); if(d.push)parts.push('pousse'); if(d.pushable)parts.push('poussable'); if(d.king)parts.push('roi'); if(d.capture===false&&!(d.captureStep||d.captureSlide||d.captureJumps))parts.push('pacifique'); return parts.join(' · '); }
+
+function labEdSetTool(t){ _labEd.tool=t; if(t!=='preview'){ _labEd.previewMoves=[]; _labEd.sel=null; } labEdSetInfo(t==='preview'?'Clique une pièce pour voir ses coups.':(t==='void'?'Clique pour (dé)tracer une case morte.':(t==='erase'?'Clique une pièce pour la retirer.':'Clique pour poser la pièce choisie.'))); labEdRender(); }
+function labEdSetColor(c){ _labEd.brushColor=c; labEdRender(); }
+function labEdSetType(t){ _labEd.brushType=t; labEdRender(); }
+function labEdFlag(f,val){ _labEd[f]=val; _labEd.previewMoves=[]; labEdRender(); }
+function labEdDim(which,delta){
+  var v=_labEd[which]+delta; if(v<3)v=3; if(v>9)v=9; _labEd[which]=v;
+  _labEd.setup=_labEd.setup.filter(function(p){ return p.r<_labEd.rows&&p.c<_labEd.cols; });
+  _labEd.voids=_labEd.voids.filter(function(k){ var a=k.split(','); return +a[0]<_labEd.rows&&+a[1]<_labEd.cols; });
+  _labEd.previewMoves=[]; _labEd.sel=null; labEdRender();
+}
+function labEdRemoveAt(r,c){ _labEd.setup=_labEd.setup.filter(function(p){ return !(p.r===r&&p.c===c); }); }
+function labEdCellClick(r,c){
+  var t=_labEd.tool;
+  if(t==='preview'){ labEdPreview(r,c); return; }
+  _labEd.previewMoves=[]; _labEd.sel=null;
+  if(t==='void'){
+    if(labEdPieceAt(r,c)){ labEdSetInfo('Retire la pièce avant d\'en faire une case morte.'); labEdRender(); return; }
+    var k=r+','+c, i=_labEd.voids.indexOf(k);
+    if(i>=0) _labEd.voids.splice(i,1); else _labEd.voids.push(k);
+  } else if(t==='erase'){ labEdRemoveAt(r,c); }
+  else if(t==='place'){
+    if(labEdIsVoid(r,c)){ labEdSetInfo('Impossible de poser sur une case morte.'); labEdRender(); return; }
+    labEdRemoveAt(r,c);
+    _labEd.setup.push({type:_labEd.brushType,color:_labEd.brushColor,r:r,c:c});
+  }
+  labEdRender();
+}
+function labEdPreview(r,c){
+  var p=labEdPieceAt(r,c);
+  _labEd.sel={r:r,c:c}; _labEd.previewMoves=[];
+  if(!p){ labEdSetInfo('Case vide — clique une pièce.'); labEdRender(); return; }
+  try{
+    var eng=labMakePreviewEngine(labEdCurrentFormat());
+    var mvs=eng.legalMoves(p.color, labEdBuildBoard(), labEdEmptyGrid(), {r:r,c:c}, null, null);
+    _labEd.previewMoves=mvs;
+    labEdSetInfo(labEdTypeLabel(p.type)+' '+(p.color==='white'?'(Blanc)':'(Noir)')+' — '+mvs.length+' coup(s). Vert=déplacement, rouge=capture, orange=poussée.');
+  }catch(e){ labEdSetInfo('Aperçu impossible : '+(e.message||e)); }
+  labEdRender();
+}
+
+// — Gestion des types de pièces custom (le « formulaire de paramètres ») —
+function labEdDeleteType(name){
+  if(!_labEd.pieces[name]) return;
+  if(_labEd.setup.some(function(p){ return p.type===name; })){ if(typeof showToast==='function') showToast('Retire d\'abord les pièces « '+name+' » du plateau.', true); return; }
+  delete _labEd.pieces[name];
+  if(_labEd.brushType===name) _labEd.brushType='epeiste';
+  labEdCancelType(); labEdRender();
+}
+// Gabarits « clé en main » — Thomas (Musashi, peu à l'aise avec l'informatique)
+// choisit une pièce familière (Tour, Cavalier, Pion…) et le formulaire se remplit
+// tout seul : aucun vocabulaire à connaître, aucune coquille possible. Il peut
+// ensuite juste taper un nom et enregistrer. C'est LA réponse au « JSON trop raide ».
+var LAB_ED_PRESETS={
+  tour:{label:'Tour (glisse en ligne)', glyph:'車', def:{slide:'ortho',capture:true}},
+  fou:{label:'Fou (glisse en diagonale)', glyph:'角', def:{slide:'diag',capture:true}},
+  dame:{label:'Dame (glisse partout)', glyph:'龍', def:{slide:'all',capture:true}},
+  roi:{label:'Roi (1 case partout)', glyph:'玉', def:{step:'all',capture:true}},
+  cavalier:{label:'Cavalier (saut en L)', glyph:'馬', def:{jumps:[[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]],capture:true}},
+  pion:{label:'Pion (avance, prend en diagonale)', glyph:'歩', def:{step:'forward',captureStep:'fdiag',capture:false}},
+  lancier:{label:'Lancier (glisse vers l\'avant)', glyph:'香', def:{slide:'forward',capture:true}},
+  pousseur:{label:'Pousseur (avance et pousse en chaîne)', glyph:'鬼', def:{step:'ortho',push:{chain:true},capture:true}},
+  rocher:{label:'Rocher (se fait pousser, avance seul)', glyph:'岩', def:{step:'forward',pushable:true,capture:false}}
+};
+// Étiquettes en clair pour les cases à cocher de direction (moins de jargon).
+var LAB_ED_DIRLABEL={ortho:'lignes ↑↓←→',diag:'diagonales ⤡⤢',forward:'avant',back:'arrière',fdiag:'avant-diag',bdiag:'arrière-diag',sideways:'côtés ←→'};
+function labEdEditType(name){
+  var isNew=!name;
+  var d=isNew?{step:['ortho'],capture:true}:JSON.parse(JSON.stringify(_labEd.pieces[name]));
+  _labEd.editingType=isNew?null:name;
+  labEdRenderTypeForm(d, isNew?'':name, isNew);
+}
+// Applique un gabarit : reconstruit le formulaire pré-rempli, en conservant le
+// nom/glyphe/label déjà tapés par l'utilisateur.
+function labEdPreset(key){
+  var t=LAB_ED_PRESETS[key]; if(!t) return;
+  var isNew=!_labEd.editingType;
+  var nm=((document.getElementById('labed-tname')||{}).value||'').trim();
+  var gl=((document.getElementById('labed-tglyph')||{}).value||'').trim();
+  var lb=((document.getElementById('labed-tlabel')||{}).value||'').trim();
+  var d=JSON.parse(JSON.stringify(t.def));
+  d.glyph=gl||t.glyph; if(lb) d.name=lb;
+  labEdRenderTypeForm(d, isNew?nm:_labEd.editingType, isNew);
+}
+function labEdRenderTypeForm(d, nameField, isNew){
+  var el=document.getElementById('lab-ed-typeform'); if(!el) return;
+  var primitive=d.slide?'slide':(d.jumps?'jumps':'step');
+  var moveCur=d.slide||d.step||[], capCur=d.captureSlide||d.captureStep||[];
+  function dchecks(grp,cur){ var set={}; if(typeof cur==='string')set[cur]=1; else if(Array.isArray(cur))cur.forEach(function(k){ if(typeof k==='string')set[k]=1; }); return LAB_ED_DIRSET.map(function(k){ return '<label style="display:inline-flex;align-items:center;gap:2px;margin:0 8px 4px 0;font-size:11px"><input type="checkbox" data-grp="'+grp+'" value="'+k+'" '+(set[k]?'checked':'')+'>'+(LAB_ED_DIRLABEL[k]||k)+'</label>'; }).join(''); }
+  function radio(v,lbl){ return '<label style="margin-right:12px;font-size:12px"><input type="radio" name="labedprim" value="'+v+'" '+(primitive===v?'checked':'')+' onchange="labEdFormPrimitive(this.value)">'+lbl+'</label>'; }
+  var jumpsStr=Array.isArray(d.jumps)?JSON.stringify(d.jumps):'[[2,1],[2,-1],[-2,1],[-2,-1],[1,2],[1,-2],[-1,2],[-1,-2]]';
+  var IN='padding:4px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:4px';
+  var presetOpts='<option value="">— gabarit rapide —</option>'+Object.keys(LAB_ED_PRESETS).map(function(k){ return '<option value="'+k+'">'+LAB_ED_PRESETS[k].glyph+' '+LAB_ED_PRESETS[k].label+'</option>'; }).join('');
+  var html='<div class="menu-divider"></div><div style="font-family:\'VT323\',monospace;font-size:13px;color:var(--gold-bright);margin-bottom:6px">'+(isNew?'Nouveau type de pièce':'Modifier « '+nameField+' »')+'</div>';
+  html+='<div style="font-size:12px;margin-bottom:8px;font-family:\'VT323\',monospace;color:var(--parchment)">🎁 Partir d\'un modèle : <select onchange="labEdPreset(this.value);this.value=\'\'" style="'+IN+'">'+presetOpts+'</select></div>';
+  html+='<div style="display:flex;gap:6px;margin-bottom:6px"><input id="labed-tname" placeholder="nom (ex. lance)" value="'+(nameField||'')+'" '+(isNew?'':'readonly')+' style="flex:1;'+IN+'"><input id="labed-tglyph" placeholder="glyphe" value="'+(d.glyph||'')+'" maxlength="2" style="width:52px;text-align:center;'+IN+'"></div>';
+  html+='<input id="labed-tlabel" placeholder="nom affiché (optionnel)" value="'+(d.name||'')+'" style="width:100%;box-sizing:border-box;margin-bottom:6px;'+IN+'">';
+  html+='<div style="font-size:12px;margin-bottom:4px;font-family:\'VT323\',monospace;color:var(--parchment)">Déplacement : '+radio('slide','glisse')+radio('step','pas')+radio('jumps','saut')+'</div>';
+  html+='<div id="labed-movedirs" style="margin-bottom:6px;'+(primitive==='jumps'?'display:none':'')+'"><div style="font-size:11px;opacity:.7">Directions :</div>'+dchecks('move',moveCur)+'</div>';
+  html+='<div id="labed-jumps" style="margin-bottom:6px;'+(primitive==='jumps'?'':'display:none')+'"><div style="font-size:11px;opacity:.7">Sauts [[dr,dc]…] :</div><input id="labed-jumpsval" value=\''+jumpsStr+'\' style="width:100%;box-sizing:border-box;font-family:monospace;font-size:11px;'+IN+'"></div>';
+  html+='<div style="margin-bottom:6px"><div style="font-size:11px;opacity:.7">Directions de CAPTURE (optionnel → asymétrie type pion) :</div>'+dchecks('cap',capCur)+'</div>';
+  html+='<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin-bottom:8px;font-family:\'VT323\',monospace;color:var(--parchment)">';
+  html+='<label><input type="checkbox" id="labed-capture" '+((d.capture!==false)?'checked':'')+'>capture</label>';
+  html+='<label><input type="checkbox" id="labed-king" '+(d.king?'checked':'')+'>roi</label>';
+  html+='<label><input type="checkbox" id="labed-pushable" '+(d.pushable?'checked':'')+'>poussable</label>';
+  html+='<label><input type="checkbox" id="labed-push" '+(d.push?'checked':'')+'>pousse</label>';
+  html+='<label><input type="checkbox" id="labed-chain" '+((d.push&&typeof d.push==='object'&&d.push.chain)?'checked':'')+'>chaîne</label>';
+  html+='<label>portée <input type="number" id="labed-range" min="1" max="9" value="'+(d.range||'')+'" style="width:44px;'+IN+'"></label>';
+  html+='<label title="Force de la pièce pour l\'éval. Vide = estimée automatiquement d\'après la mobilité.">valeur <input type="number" id="labed-value" min="0" max="99" value="'+((typeof d.value==='number')?d.value:'')+'" placeholder="auto" style="width:56px;'+IN+'"></label>';
+  html+='</div>';
+  html+='<div style="display:flex;gap:6px"><button class="adm-btn" style="flex:1;padding:6px;font-size:12px" onclick="labEdSaveType()">✓ Enregistrer le type</button><button class="btn" style="flex:1;padding:6px;font-size:12px" onclick="labEdCancelType()">Annuler</button></div>';
+  el.innerHTML=html; el.style.display='block';
+}
+function labEdFormPrimitive(v){ var md=document.getElementById('labed-movedirs'), jm=document.getElementById('labed-jumps'); if(md)md.style.display=(v==='jumps')?'none':''; if(jm)jm.style.display=(v==='jumps')?'':'none'; }
+function labEdCancelType(){ var el=document.getElementById('lab-ed-typeform'); if(el){ el.style.display='none'; el.innerHTML=''; } }
+function labEdReadDirs(grp){ var out=[]; var els=document.querySelectorAll('#lab-ed-typeform input[data-grp="'+grp+'"]:checked'); for(var i=0;i<els.length;i++) out.push(els[i].value); return out; }
+function labEdSaveType(){
+  var name=((document.getElementById('labed-tname')||{}).value||'').trim();
+  if(!name){ if(typeof showToast==='function') showToast('Donne un nom au type.', true); return; }
+  var isNew=!_labEd.editingType;
+  if(isNew&&_labEd.pieces[name]){ if(typeof showToast==='function') showToast('Un type « '+name+' » existe déjà.', true); return; }
+  var prim=((document.querySelector('#lab-ed-typeform input[name="labedprim"]:checked')||{}).value)||'step';
+  var def={};
+  var glyph=((document.getElementById('labed-tglyph')||{}).value||'').trim(); if(glyph)def.glyph=glyph;
+  var lbl=((document.getElementById('labed-tlabel')||{}).value||'').trim(); if(lbl)def.name=lbl;
+  if(prim==='jumps'){ try{ def.jumps=JSON.parse((document.getElementById('labed-jumpsval')||{}).value); }catch(e){ if(typeof showToast==='function') showToast('Sauts : JSON invalide.', true); return; } }
+  else { var md=labEdReadDirs('move'); if(md.length) def[prim]=md; }
+  var capdirs=labEdReadDirs('cap');
+  if(capdirs.length&&prim!=='jumps') def[prim==='slide'?'captureSlide':'captureStep']=capdirs;
+  if(!(document.getElementById('labed-capture')||{}).checked) def.capture=false;
+  if((document.getElementById('labed-king')||{}).checked) def.king=true;
+  if((document.getElementById('labed-pushable')||{}).checked) def.pushable=true;
+  if((document.getElementById('labed-push')||{}).checked) def.push=(document.getElementById('labed-chain')||{}).checked?{chain:true}:true;
+  var rng=+((document.getElementById('labed-range')||{}).value); if(rng>=1) def.range=rng;
+  var vraw=((document.getElementById('labed-value')||{}).value); if(vraw!=='' && +vraw>=0) def.value=+vraw;
+  var err=labValidatePieceDef(name,def);
+  if(err){ if(typeof showToast==='function') showToast(err, true); return; }
+  _labEd.pieces[name]=def; _labEd.brushType=name;
+  labEdCancelType(); labEdRender();
+  if(typeof showToast==='function') showToast('Type « '+name+' » enregistré.');
+}
+
+// — Passerelles avec l'éditeur JSON avancé + enregistrement —
+function labEdToJson(){
+  if(!_labEd) labEdInit();
+  var f=labEdCurrentFormat();
+  var dump={name:f.name,rows:f.rows,cols:f.cols,v2:f.v2,sumo:f.sumo,voids:f.voids};
+  if(Object.keys(f.pieces).length) dump.pieces=f.pieces;
+  dump.setup=f.setup;
+  var ta=document.getElementById('lab-custom-json'); if(ta) ta.value=JSON.stringify(dump,null,1);
+  if(typeof showToast==='function') showToast('Format recopié dans l\'éditeur avancé (JSON).');
+}
+function labEdFromJson(){
+  if(!_labEd) labEdInit();
+  var ta=document.getElementById('lab-custom-json'); if(!ta) return;
+  var f; try{ f=JSON.parse(ta.value); }catch(e){ if(typeof showToast==='function') showToast('JSON invalide : '+e.message, true); return; }
+  labEdAdopt(f); labEdCancelType(); labEdRender();
+  if(typeof showToast==='function') showToast('JSON chargé dans l\'éditeur visuel.');
+}
+function labEdApply(){
+  if(!_labEd) labEdInit();
+  labEdToJson();          // synchronise le textarea
+  labLoadCustomFormat();  // valide + enregistre + sélectionne dans le Labo
 }
 
 // Rempli par renderDevOpeningsList/renderDevTacticsList, consommé par

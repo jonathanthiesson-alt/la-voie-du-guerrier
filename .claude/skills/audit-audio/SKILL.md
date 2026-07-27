@@ -9,7 +9,7 @@ description: Audit complet du son de La Voie du Guerrier (musiques, SFX, déclen
 > **chaque bug audio trouvé DOIT devenir une règle ci-dessous**, sinon il
 > reviendra. C'est la même mécanique que les pièges Supabase de `CLAUDE.md`,
 > et c'est ce qui a fini par rendre ces pièges-là inoffensifs.
-> Dernière passe : 2026-07-17.
+> Dernière passe : 2026-07-27.
 
 ## Pourquoi ce skill existe
 
@@ -83,6 +83,26 @@ Sans geste utilisateur direct, la promesse est rejetée en silence (notre
 `.catch()` l'avale). C'est la raison d'être d'`unlockAllAudio()` et du
 réessai au prochain geste dans `attemptPlayMusic()`.
 
+### 7. 🔴 Démarrer une musique/un son doit vérifier l'écran COURANT, pas l'intention passée
+**Vécu (2026-07-27)** : « des fois, une musique de combat se lance en arrivant
+aux menus (après *Se connecter*) ». `startFightMusic()` n'est atteint que par des
+chemins **différés** — `setTimeout` de démarrage, callback du décompte
+« 3,2,1 Combattez », et un **polling "prêt" toutes les 500 ms**
+(`markReadyAndWaitForOpponent`). Si l'écran changeait entre l'armement et le
+déclenchement (match avorté, retour menu, reprise de session au login), l'appel
+différé jouait la musique de combat **par-dessus le menu**. C'est le pendant de
+la règle 2 pour une musique : un son différé doit re-vérifier son **contexte au
+moment où il part**, pas se fier à un drapeau d'intention.
+
+Règle : toute fonction qui **démarre** un son propre à un écran (fight-music =
+écran de jeu) vérifie `document.querySelector('.screen.active').id` au tout
+début et **sort sans rien faire** si on n'est pas sur le bon écran (sortir
+AVANT `stopMenuMusic()`, sinon on coupe la musique du menu où l'on se trouve).
+Le **retry** d'`attemptPlayMusic` refait la même vérification d'écran, pas
+seulement le test `_fightMusicActive` (un drapeau peut être resté vrai).
+Contre-épreuve obligatoire : sur `screen-game`, la musique de combat DOIT
+toujours partir (sinon on a supprimé au lieu de corriger).
+
 ## Matrice de test (navigateur, tabId de la Browser pane)
 
 Espionner `play()` plutôt qu'écouter : on teste le **déclenchement**, sans
@@ -111,6 +131,7 @@ premier test — c'est le second qui prouve qu'on a corrigé au lieu de casser.
 | Décompte de combat | musique de combat (mobile inclus) |
 | Réglage son OFF | rien nulle part |
 | Retour à l'accueil | menu + combat coupés |
+| `startFightMusic()` résolu hors écran de jeu (match avorté, login) | **aucune** musique de combat ; contre-épreuve sur `screen-game` = musique OK |
 
 ## Procédure
 
