@@ -171,3 +171,4 @@ Voir `docs/ROADMAP.md` pour les 6 axes.
 | `docs/ARCHITECTURE.md` | Points d'entrée du code, variables clés, écrans |
 | `docs/GAME_DESIGN.md` | Règles des modes, économie, monnaies |
 | `docs/SQL_MIGRATIONS.md` | Ordre des scripts, lesquels sont passés, diagnostic RLS |
+| `docs/AVATARS_SKINS.md` | Sous-projet cosmétiques : rig, slots, catalogue d'anims, choix d'outil |
