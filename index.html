@@ -2046,16 +2046,17 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
   <!-- Joueurs actuellement en ligne (discret, au-dessus de COMMENCER) -->
   <div id="home-online-count" style="width:100%;text-align:center;font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.55;margin-bottom:4px;min-height:14px;position:relative;z-index:1"></div>
+  <!-- Bouton DEV « proto » (sous-projet avatars → film du bandeau de combat).
+       Placé AU-DESSUS de COMMENCER. Réservé aux comptes admin (Musashi, Wurmz) :
+       caché par défaut, dévoilé par updateDevButtonVisibility() (appelé au
+       chargement du profil ET à chaque affichage de l'accueil). Violet .btn-devtest. -->
+  <div id="home-proto-wrap" style="display:none;width:100%;padding:0 24px 8px;position:relative;z-index:1">
+    <button class="btn-devtest" style="width:100%;padding:9px;border-radius:5px;cursor:pointer" onclick="showScreen('proto')">🎌 proto</button>
+  </div>
+
   <!-- Bouton COMMENCER -->
   <div style="width:100%;padding:0 24px 12px;position:relative;z-index:1">
     <button class="home-btn-primary" style="width:100%;font-size:16px;padding:18px;margin:0;letter-spacing:5px" onclick="enterMainMenu()">COMMENCER</button>
-  </div>
-
-  <!-- Bouton DEV « proto » (sous-projet avatars → film du bandeau de combat).
-       Réservé aux comptes admin (Musashi, Wurmz) : caché par défaut, dévoilé
-       par updateDevButtonVisibility(). Style violet .btn-devtest. -->
-  <div id="home-proto-wrap" style="display:none;width:100%;padding:0 24px 10px;position:relative;z-index:1">
-    <button class="btn-devtest" style="width:100%;padding:9px;border-radius:5px;cursor:pointer" onclick="showScreen('proto')">🎌 proto</button>
   </div>
 
   <!-- Profil strip (grade) -->
@@ -10209,7 +10210,7 @@ function showScreen(id){
   if(id==='matchmaking'){ refreshHubEloDisplay(); refreshAllCurrencyDisplays(); refreshShisoProgress(); }
   if(id==='amis'){ setAmisTab(_amisTab||'msg'); }
   if(id==='devrewards'){ refreshDevRewardsScreen(); }
-  if(id==='menu'||id==='local-hub'){ updateDevButtonVisibility(); }
+  if(id==='menu'||id==='local-hub'||id==='home'){ updateDevButtonVisibility(); }
   if(id==='dev-openings') renderDevOpeningsList();
   if(id==='dev-tactics') renderDevTacticsList();
   if(id==='dev-balance'){ renderDevBalanceList(); renderDevBalanceEstimates(); }
