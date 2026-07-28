@@ -60,11 +60,10 @@
   <div class="stage">
     <svg id="scene" viewBox="0 0 640 470" aria-label="Deux combattants"></svg>
     <div class="clipbar" id="clipbar">
-      <button data-clip="salut">🙇 Salut</button>
-      <button data-clip="idle">🌀 Idle</button>
-      <button data-clip="reflexion">👁 Réflexion</button>
-      <span class="sep"></span>
-      <button data-clip="fatality">⚔️ Fatalité</button>
+      <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px">Mouvement
+        <select id="moveSel" style="background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:13px;max-width:250px"></select>
+      </label>
+      <button id="actorBtn" title="Quel camp exécute le mouvement">Acteur : Blanc</button>
       <button id="pauseBtn" title="Pause / lecture">⏸ Pause</button>
     </div>
     <div class="caption" id="caption"></div>
@@ -81,16 +80,12 @@
       </div>
     </div>
 
-    <div class="row" id="attackerRow" style="display:none">
-      <span style="color:var(--muted);font-size:12px">Attaquant de la fatalité&nbsp;:</span>
-      <button id="attackerBtn">⚔ Blanc</button>
-    </div>
-
     <div class="note">
-      <b>Essaie ça 👉</b> lance <b>⚔️ Fatalité</b> ou <b>🙇 Salut</b>, puis
-      change un <b>casque</b> ou un <b>sabre</b> <span class="key">pendant que ça bouge</span>.
-      La nouvelle pièce suit les os toute seule — c'est la règle d'or, et c'est
-      exactement ce qui permettra de <b>vendre une anim seule</b> plus tard.
+      <b>Essaie ça 👉</b> choisis un <b>Mouvement</b> (ex. une fatalité ou une
+      poussée), puis change un <b>casque</b> ou un <b>sabre</b>
+      <span class="key">pendant que ça bouge</span>. La nouvelle pièce suit les os
+      toute seule — la règle d'or. Le bouton <b>Acteur</b> choisit quel camp exécute
+      le geste (l'autre encaisse / reste au repos selon le mouvement).
     </div>
     <div class="note">
       <b>👁 Réflexion</b> montre la promesse « réal manga »&nbsp;: les yeux se
@@ -363,61 +358,84 @@ function buildFighter(sideRoot, side, loadout){
 const ease=x=>x*x*(3-2*x);
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 
-const CLIPS={
-  idle:(t)=>{
-    const br=Math.sin(t*1.8)*0.02;
-    const blink=((t%3.4)<0.11)?0.12:1;
-    return {anim:{chest:{rot:br},spine:{rot:br*0.3},
-      head:{rot:Math.sin(t*1.8+0.4)*0.02},
-      shoulderR:{rot:Math.sin(t*1.5)*0.03},shoulderL:{rot:Math.sin(t*1.5+1)*0.03},
-      osArme:{rot:Math.sin(t*1.5)*0.02}}, eyeOpen:blink, brow:0};
-  },
-  reflexion:(t)=>{
-    const br=Math.sin(t*1.6)*0.018;
-    const eye=0.4+Math.sin(t*2.4)*0.06;   // yeux plissés qui frémissent
-    return {anim:{chest:{rot:br},neck:{rot:0.03},
-      head:{rot:0.05+Math.sin(t*1.2)*0.02},
-      shoulderR:{rot:Math.sin(t*1.4)*0.02},shoulderL:{rot:Math.sin(t*1.4+1)*0.02}},
-      eyeOpen:eye, brow:1};
-  },
-  salut:(t)=>{
-    const p=(t%3.6)/3.6; let env;
-    if(p<0.35) env=ease(p/0.35);
-    else if(p<0.62) env=1;
-    else if(p<0.85) env=1-ease((p-0.62)/0.23);
-    else env=0;
-    const b=env*0.5;
-    return {anim:{spine:{rot:b*0.85},chest:{rot:b*0.15},neck:{rot:b*0.3},
-      head:{rot:b*0.4},shoulderR:{rot:-b*0.25},shoulderL:{rot:-b*0.25},
-      osArme:{rot:b*0.2}}, eyeOpen:1-env*0.75, brow:0};
-  },
-  fatality:(t,role)=>{
-    const dur=2.6, p=(t%dur)/dur;
-    if(role==='victim'){
-      const f=ease(clamp((p-0.52)/0.32,0,1));   // encaisse après la frappe
-      return {anim:{spine:{rot:-0.9*f},chest:{rot:-0.2*f},neck:{rot:-0.3*f},
-        head:{rot:-0.5*f},root:{tx:-16*f,ty:34*f},
-        hipR:{rot:0.3*f},hipL:{rot:0.3*f},kneeR:{rot:0.5*f},kneeL:{rot:0.5*f},
-        shoulderR:{rot:-0.4*f},shoulderL:{rot:-0.4*f}}, eyeOpen:1-f, brow:0.3};
-    }
-    let sh,el2,sp,tx;
-    if(p<0.42){ const w=ease(p/0.42);            // armé (lève le sabre)
-      sh=-1.5*w; el2=-0.7*w; sp=-0.18*w; tx=-8*w;
-    } else if(p<0.58){ const s=ease((p-0.42)/0.16); // frappe
-      sh=-1.5+2.4*s; el2=-0.7+1.1*s; sp=-0.18+0.4*s; tx=-8+30*s;
-    } else { const r=ease((p-0.58)/0.42);        // retour en garde
-      sh=0.9*(1-r); el2=0.4*(1-r); sp=0.22*(1-r); tx=22*(1-r);
-    }
-    return {anim:{shoulderR:{rot:sh},elbowR:{rot:el2},spine:{rot:sp},
-      root:{tx:tx},osArme:{rot:sh*0.3},shoulderL:{rot:-0.2}}, eyeOpen:1, brow:0.6};
-  },
-};
-const CAPTIONS={
-  salut:'Salut d\'ouverture (rei) — les deux combattants s\'inclinent l\'un vers l\'autre. Les yeux se ferment par respect.',
-  idle:'Idle / respiration — micro-mouvements + clignements. La tenue équipée suit les os.',
-  reflexion:'Réflexion — gros plan « réal manga » : les yeux se plissent, le sourcil se fronce (visage dans le squelette gelé).',
-  fatality:'Fatalité — un seul clip d\'os : l\'attaquant frappe, l\'adversaire s\'effondre. Change l\'équipement pendant que ça joue : la règle d\'or.',
-};
+const PERIOD=2.6;                              // période commune (acteur + réaction synchronisés)
+const phase=t=>(t%PERIOD)/PERIOD;
+const pulse=(p,hi)=>p>hi?0:Math.sin((p/hi)*Math.PI);   // impulsion 0..1..0 sur [0,hi]
+
+/* ── Cérémonie / états : les DEUX camps jouent la même chose (miroir = côté) ── */
+function aIdle(t){const br=Math.sin(t*1.8)*0.02,blink=((t%3.4)<0.11)?0.12:1;
+  return {anim:{chest:{rot:br},spine:{rot:br*0.3},head:{rot:Math.sin(t*1.8+0.4)*0.02},
+    shoulderR:{rot:Math.sin(t*1.5)*0.03},shoulderL:{rot:Math.sin(t*1.5+1)*0.03},osArme:{rot:Math.sin(t*1.5)*0.02}}, eyeOpen:blink, brow:0};}
+function aReflex(t){const br=Math.sin(t*1.6)*0.018,eye=0.4+Math.sin(t*2.4)*0.06;
+  return {anim:{chest:{rot:br},neck:{rot:0.03},head:{rot:0.05+Math.sin(t*1.2)*0.02},
+    shoulderR:{rot:Math.sin(t*1.4)*0.02},shoulderL:{rot:Math.sin(t*1.4+1)*0.02}}, eyeOpen:eye, brow:1};}
+function aBow(t){const p=(t%3.6)/3.6;let env;if(p<0.35)env=ease(p/0.35);else if(p<0.62)env=1;else if(p<0.85)env=1-ease((p-0.62)/0.23);else env=0;const b=env*0.5;
+  return {anim:{spine:{rot:b*0.85},chest:{rot:b*0.15},neck:{rot:b*0.3},head:{rot:b*0.4},shoulderR:{rot:-b*0.25},shoulderL:{rot:-b*0.25},osArme:{rot:b*0.2}}, eyeOpen:1-env*0.75, brow:0};}
+
+/* ── Déplacements (l'acteur avance d'une case, l'adversaire au repos) ── */
+function stepEpeiste(t){const f=pulse(phase(t),0.6);
+  return {anim:{root:{tx:22*f},spine:{rot:0.1*f},shoulderR:{rot:0.4*f},shoulderL:{rot:-0.3*f},hipR:{rot:0.2*f},kneeR:{rot:-0.15*f}}, eyeOpen:1, brow:0.15};}
+function stepPion(t){const f=pulse(phase(t),0.55);
+  return {anim:{shoulderR:{rot:0.7*f},elbowR:{rot:0.55*f},osArme:{rot:0.3*f},root:{tx:12*f},spine:{rot:0.06*f}}, eyeOpen:1, brow:0.2};}
+function stepBouclier(t){const f=pulse(phase(t),0.6);
+  return {anim:{shoulderL:{rot:0.9*f},elbowL:{rot:-0.5*f},root:{tx:9*f},spine:{rot:0.04*f},head:{rot:0.05*f}}, eyeOpen:1, brow:0.1};}
+
+/* ── Poussées coopératives (repositionne SA propre pièce : geste doux, solo) ── */
+function coopBody(t){const f=pulse(phase(t),0.62);
+  return {anim:{shoulderR:{rot:0.5*f},elbowR:{rot:0.35*f},shoulderL:{rot:0.42*f},elbowL:{rot:0.3*f},spine:{rot:0.08*f},root:{tx:9*f}}, eyeOpen:1, brow:0.05};}
+function coopSword(t){const f=pulse(phase(t),0.58);
+  return {anim:{shoulderR:{rot:0.45*f},elbowR:{rot:0.3*f},osArme:{rot:0.15*f},root:{tx:7*f}}, eyeOpen:1, brow:0.05};}
+function coopShield(t){const f=pulse(phase(t),0.58);
+  return {anim:{shoulderL:{rot:0.6*f},elbowL:{rot:-0.3*f},root:{tx:7*f}}, eyeOpen:1, brow:0.05};}
+
+/* ── Poussées combatives (l'adversaire encaisse et recule) ── */
+function shove(t){const f=pulse(phase(t),0.5);
+  return {anim:{shoulderR:{rot:0.9*f},elbowR:{rot:0.5*f},shoulderL:{rot:0.8*f},elbowL:{rot:0.5*f},spine:{rot:0.18*f},root:{tx:22*f},kneeR:{rot:-0.1*f}}, eyeOpen:1, brow:0.6};}
+function swordThrust(t){const f=pulse(phase(t),0.46);
+  return {anim:{shoulderR:{rot:1.0*f},elbowR:{rot:0.8*f},osArme:{rot:0.4*f},root:{tx:22*f},spine:{rot:0.12*f}}, eyeOpen:1, brow:0.6};}
+function shieldBash(t){const f=pulse(phase(t),0.42);
+  return {anim:{shoulderL:{rot:1.1*f},elbowL:{rot:-0.2*f},root:{tx:24*f},spine:{rot:0.14*f},head:{rot:0.06*f}}, eyeOpen:1, brow:0.6};}
+
+/* ── Fatalités (frappe puissante) + victoire ── */
+function strikeOverhead(t){const p=phase(t);let sh,e2,sp,tx;
+  if(p<0.26){const w=ease(p/0.26);sh=-1.5*w;e2=-0.7*w;sp=-0.15*w;tx=-8*w;}
+  else if(p<0.4){const s=ease((p-0.26)/0.14);sh=-1.5+2.4*s;e2=-0.7+1.1*s;sp=-0.15+0.4*s;tx=-8+30*s;}
+  else if(p<0.68){const r=ease((p-0.4)/0.28);sh=0.9*(1-r);e2=0.4*(1-r);sp=0.25*(1-r);tx=22*(1-r);}
+  else{sh=0;e2=0;sp=0;tx=0;}
+  return {anim:{shoulderR:{rot:sh},elbowR:{rot:e2},spine:{rot:sp},root:{tx:tx},osArme:{rot:sh*0.3},shoulderL:{rot:-0.2}}, eyeOpen:1, brow:0.6};}
+function victory(t){const f=ease(clamp(phase(t)/0.4,0,1));
+  return {anim:{shoulderR:{rot:-1.9*f},elbowR:{rot:-0.3*f},spine:{rot:-0.1*f},head:{rot:-0.12*f},osArme:{rot:-0.2*f}}, eyeOpen:1, brow:0};}
+
+/* ── Réactions de l'adversaire ── */
+function rIdle(t){return aIdle(t);}
+function rRecoil(t){const f=pulse(phase(t),0.6);
+  return {anim:{spine:{rot:-0.4*f},head:{rot:-0.3*f},root:{tx:-16*f},shoulderR:{rot:-0.25*f},shoulderL:{rot:-0.25*f}}, eyeOpen:1-0.4*f, brow:0.3};}
+function rChute(t){const f=ease(clamp((phase(t)-0.4)/0.35,0,1));
+  return {anim:{spine:{rot:-0.95*f},chest:{rot:-0.2*f},neck:{rot:-0.3*f},head:{rot:-0.55*f},root:{tx:-18*f,ty:36*f},
+    hipR:{rot:0.3*f},hipL:{rot:0.3*f},kneeR:{rot:0.5*f},kneeL:{rot:0.5*f},shoulderR:{rot:-0.4*f},shoulderL:{rot:-0.4*f}}, eyeOpen:1-f, brow:0.2};}
+
+/* ── Registre : un clip préfait par mouvement de pièce. both = les deux camps
+   jouent pareil (cérémonie) ; sinon l'acteur joue `actor`, l'adversaire `opp`. ── */
+const MOVES=[
+  {k:'salut',        grp:'Cérémonie & états',            label:'Salut d\'ouverture (rei)',      both:aBow,          cap:'Les deux combattants s\'inclinent l\'un vers l\'autre. Yeux fermés par respect.'},
+  {k:'idle',         grp:'Cérémonie & états',            label:'Idle / respiration',            both:aIdle,         cap:'Boucle de repos : micro-mouvements + clignements.'},
+  {k:'reflexion',    grp:'Cérémonie & états',            label:'Réflexion (manga)',             both:aReflex,       cap:'Gros plan « réal manga » : les yeux se plissent, le sourcil se fronce.'},
+  {k:'victoire',     grp:'Cérémonie & états',            label:'Victoire / défaite',            actor:victory,      opp:rChute,  cap:'Le vainqueur lève sa lame ; l\'adversaire s\'effondre.'},
+  {k:'pas-epeiste',  grp:'Déplacements',                 label:'Pas — Épéiste',                 actor:stepEpeiste,  opp:rIdle,   cap:'L\'Épéiste avance d\'une case (le rig se retourne pour les 8 directions).'},
+  {k:'pas-pion',     grp:'Déplacements',                 label:'Pas — Pion Épée',               actor:stepPion,     opp:rIdle,   cap:'Le Pion Épée avance : un coup de sabre porté vers l\'avant.'},
+  {k:'pas-bouclier', grp:'Déplacements',                 label:'Pas — Bouclier',                actor:stepBouclier, opp:rIdle,   cap:'Le Bouclier avance : garde levée en se déplaçant.'},
+  {k:'coop-ep-pion', grp:'Poussées coopératives (allié)',label:'Épéiste pousse Pion allié',     actor:coopBody,     opp:rIdle,   cap:'Coopératif : le combattant repositionne son propre sabre (« pousse-toi, frère »).'},
+  {k:'coop-ep-bou',  grp:'Poussées coopératives (allié)',label:'Épéiste pousse Bouclier allié', actor:coopBody,     opp:rIdle,   cap:'Coopératif : le combattant réaligne sa propre garde.'},
+  {k:'coop-pion-pion',grp:'Poussées coopératives (allié)',label:'Pion pousse Pion allié',       actor:coopSword,    opp:rIdle,   cap:'Coopératif : prépare la push-capture (deux frappes s\'enchaînent).'},
+  {k:'coop-bou-pion',grp:'Poussées coopératives (allié)',label:'Bouclier pousse Pion allié',    actor:coopShield,   opp:rIdle,   cap:'Coopératif : la garde replace une frappe alliée.'},
+  {k:'cbt-ep-ep',    grp:'Poussées combatives (ennemi)', label:'Épéiste pousse Épéiste ennemi', actor:shove,        opp:rRecoil, cap:'Combat : bousculade qui déloge l\'adversaire (jamais de capture).'},
+  {k:'cbt-pion-pion',grp:'Poussées combatives (ennemi)', label:'Pion pousse Pion ennemi',       actor:swordThrust,  opp:rRecoil, cap:'Combat : choc de sabres, l\'ennemi recule.'},
+  {k:'cbt-bou-pion', grp:'Poussées combatives (ennemi)', label:'Bouclier pousse Pion ennemi',   actor:shieldBash,   opp:rRecoil, cap:'Combat : coup de bouclier, l\'ennemi encaisse.'},
+  {k:'cbt-bou-ep',   grp:'Poussées combatives (ennemi)', label:'Bouclier pousse Épéiste ennemi',actor:shieldBash,   opp:rRecoil, cap:'Combat : coup de bouclier qui déloge l\'Épéiste adverse.'},
+  {k:'fat-capture',  grp:'Fatalités',                    label:'Capture directe',               actor:strikeOverhead,opp:rChute,  cap:'Un Pion Épée arrive sur l\'Épéiste adverse : frappe fatale, l\'ennemi s\'effondre.'},
+  {k:'fat-pushcap',  grp:'Fatalités',                    label:'Push-capture',                  actor:swordThrust,  opp:rChute,  cap:'Un Pion Épée poussé sur l\'Épéiste adverse porte le coup fatal.'},
+];
+const MOVE_BY_K={}; MOVES.forEach(m=>{ MOVE_BY_K[m.k]=m; });
 
 /* ------------------------------------------------------------------ *
  *  État + boucle de rendu
@@ -431,8 +449,8 @@ scene.appendChild(el('line',{x1:320,y1:150,x2:320,y2:430,stroke:'#232a3d','strok
 scene.append(rootWhite,rootBlack);
 
 const state={
-  clip:'salut', paused:false, t0:performance.now(), pausedAt:0,
-  attacker:'white',
+  move:'salut', paused:false, t0:performance.now(), pausedAt:0,
+  actor:'white',
   loadout:{
     white:{casque:1,plastron:1,epaules:1,tassettes:1,jambes:1,sabre:0,garde:0},
     black:{casque:2,plastron:2,epaules:1,tassettes:1,jambes:0,sabre:0,garde:1},
@@ -456,10 +474,12 @@ function applyFrame(f, res){
 
 function loop(now){
   const t=(state.paused? state.pausedAt : (now-state.t0))/1000;
-  const wRole = state.clip==='fatality' ? (state.attacker==='white'?'attacker':'victim') : 'x';
-  const bRole = state.clip==='fatality' ? (state.attacker==='black'?'attacker':'victim') : 'x';
-  applyFrame(fig.white, CLIPS[state.clip](t, wRole));
-  applyFrame(fig.black, CLIPS[state.clip](t, bRole));
+  const m=MOVE_BY_K[state.move];
+  if(m.both){ applyFrame(fig.white, m.both(t)); applyFrame(fig.black, m.both(t)); }
+  else {
+    applyFrame(fig.white, (state.actor==='white'? m.actor : m.opp)(t));
+    applyFrame(fig.black, (state.actor==='black'? m.actor : m.opp)(t));
+  }
   requestAnimationFrame(loop);
 }
 
@@ -482,31 +502,42 @@ function buildControls(side){
 }
 
 const caption=document.getElementById('caption');
-function setClip(c){
-  state.clip=c; state.t0=performance.now(); state.paused=false;
-  document.getElementById('pauseBtn').textContent='⏸ Pause';
-  document.querySelectorAll('#clipbar button[data-clip]').forEach(b=>
-    b.classList.toggle('on', b.dataset.clip===c));
-  document.getElementById('attackerRow').style.display = (c==='fatality')?'flex':'none';
-  caption.textContent=CAPTIONS[c]||'';
+// Peuple le sélecteur de mouvements, groupé par catégorie (optgroups).
+function buildMoveSelect(){
+  const sel=document.getElementById('moveSel'), groups={};
+  MOVES.forEach(m=>{ (groups[m.grp]=groups[m.grp]||[]).push(m); });
+  Object.keys(groups).forEach(g=>{
+    const og=document.createElement('optgroup'); og.label=g;
+    groups[g].forEach(m=>{ const o=document.createElement('option'); o.value=m.k; o.textContent=m.label; og.appendChild(o); });
+    sel.appendChild(og);
+  });
+  sel.addEventListener('change',()=>setMove(sel.value));
 }
-document.querySelectorAll('#clipbar button[data-clip]').forEach(b=>
-  b.addEventListener('click',()=>setClip(b.dataset.clip)));
+function setMove(k){
+  state.move=k; state.t0=performance.now(); state.paused=false;
+  document.getElementById('pauseBtn').textContent='⏸ Pause';
+  const m=MOVE_BY_K[k];
+  document.getElementById('moveSel').value=k;
+  // Pas de notion d'acteur pour la cérémonie (les deux jouent pareil).
+  document.getElementById('actorBtn').style.display = m.both ? 'none' : '';
+  caption.textContent = m.label + ' — ' + m.cap;
+}
 document.getElementById('pauseBtn').addEventListener('click',()=>{
   const btn=document.getElementById('pauseBtn');
   if(state.paused){ state.t0=performance.now()-state.pausedAt; state.paused=false; btn.textContent='⏸ Pause'; }
   else { state.pausedAt=performance.now()-state.t0; state.paused=true; btn.textContent='▶ Lecture'; }
 });
-document.getElementById('attackerBtn').addEventListener('click',()=>{
-  state.attacker = state.attacker==='white'?'black':'white';
-  document.getElementById('attackerBtn').textContent = state.attacker==='white'?'⚔ Blanc':'⚔ Noir';
+document.getElementById('actorBtn').addEventListener('click',()=>{
+  state.actor = state.actor==='white'?'black':'white';
+  document.getElementById('actorBtn').textContent = 'Acteur : '+(state.actor==='white'?'Blanc':'Noir');
   state.t0=performance.now();
 });
 
 /* --- démarrage --- */
 buildControls('white'); buildControls('black');
+buildMoveSelect();
 rebuild('white'); rebuild('black');
-setClip('salut');
+setMove('salut');
 requestAnimationFrame(loop);
 </script>
 </body>
