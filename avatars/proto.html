@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Proto d'assembleur — Avatars de combat</title>
+<style>
+  /* Proto autonome : aucune dépendance, aucun asset réel, aucun Supabase.
+     But : prouver le système, pas faire de la belle image. */
+  :root{
+    --bg:#12151c; --panel:#1b2030; --panel2:#232a3d; --ink:#e8ecf5;
+    --muted:#96a0b5; --line:#333c53; --accent:#e5b93f; --red:#e5432f; --blue:#3f7be6;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:system-ui,Segoe UI,Roboto,sans-serif;font-size:14px;line-height:1.4}
+  header{padding:14px 18px;border-bottom:1px solid var(--line);background:#0e1119}
+  header h1{margin:0;font-size:17px;letter-spacing:.3px}
+  header p{margin:4px 0 0;color:var(--muted);font-size:12.5px;max-width:900px}
+  .wrap{display:flex;gap:0;flex-wrap:wrap}
+  .stage{flex:1 1 520px;min-width:320px;display:flex;flex-direction:column;
+    align-items:center;padding:10px}
+  .stage svg{width:100%;height:auto;max-width:680px;
+    background:radial-gradient(120% 90% at 50% 15%,#20263a 0%,#141824 70%,#0e1119 100%);
+    border:1px solid var(--line);border-radius:12px}
+  .clipbar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:10px 0 2px}
+  .clipbar button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+    padding:7px 14px;border-radius:8px;cursor:pointer;font-size:13px}
+  .clipbar button.on{background:var(--accent);color:#1a1206;border-color:var(--accent);font-weight:600}
+  .clipbar .sep{width:1px;background:var(--line);margin:2px 4px}
+  .caption{color:var(--muted);font-size:12px;text-align:center;min-height:16px;margin-top:6px}
+  .panel{flex:0 0 340px;border-left:1px solid var(--line);background:var(--panel);
+    padding:14px;max-height:calc(100vh - 62px);overflow:auto}
+  .panel h2{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);
+    margin:0 0 8px}
+  .cols{display:flex;gap:12px}
+  .col{flex:1;min-width:0}
+  .col h3{margin:0 0 8px;font-size:13px;display:flex;align-items:center;gap:6px}
+  .dot{width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid #0006}
+  .slot{margin-bottom:8px}
+  .slot label{display:block;font-size:11px;color:var(--muted);margin-bottom:2px}
+  .slot select{width:100%;background:var(--panel2);color:var(--ink);
+    border:1px solid var(--line);border-radius:6px;padding:5px 6px;font-size:12.5px}
+  .note{margin-top:14px;padding:10px 12px;background:#0e1119;border:1px solid var(--line);
+    border-radius:8px;color:var(--muted);font-size:12px}
+  .note b{color:var(--ink)}
+  .note .key{color:var(--accent)}
+  .row{display:flex;align-items:center;gap:8px;margin-top:8px}
+  .row button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
+    padding:5px 10px;border-radius:6px;cursor:pointer;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎌 Proto d'assembleur — Avatars de combat</h1>
+  <p>Placeholders <b>dessinés dans le code</b> (zéro art de Thomas, zéro outil, zéro Supabase). Démontre&nbsp;: un <b>squelette 2.5D partagé</b> par les deux combattants, des <b>slots échangeables en direct</b>, la <b>règle d'or</b> (l'animation porte n'importe quel équipement équipé) et une <b>micro-anim des yeux</b>. Un cosmétique = une forme accrochée à un os&nbsp;; une anim = du pur mouvement d'os. <b>Proportions humaines ~7,5 têtes.</b></p>
+</header>
+
+<div class="wrap">
+  <div class="stage">
+    <svg id="scene" viewBox="0 0 640 470" aria-label="Deux combattants"></svg>
+    <div class="clipbar" id="clipbar">
+      <button data-clip="salut">🙇 Salut</button>
+      <button data-clip="idle">🌀 Idle</button>
+      <button data-clip="reflexion">👁 Réflexion</button>
+      <span class="sep"></span>
+      <button data-clip="fatality">⚔️ Fatalité</button>
+      <button id="pauseBtn" title="Pause / lecture">⏸ Pause</button>
+    </div>
+    <div class="caption" id="caption"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Garde-robe (composition live)</h2>
+    <div class="cols">
+      <div class="col" id="col-white">
+        <h3><span class="dot" style="background:#e6e0d1"></span>BLANC · sabre <span style="color:var(--red)">rouge</span></h3>
+      </div>
+      <div class="col" id="col-black">
+        <h3><span class="dot" style="background:#363b45"></span>NOIR · sabre <span style="color:var(--blue)">bleu</span></h3>
+      </div>
+    </div>
+
+    <div class="row" id="attackerRow" style="display:none">
+      <span style="color:var(--muted);font-size:12px">Attaquant de la fatalité&nbsp;:</span>
+      <button id="attackerBtn">⚔ Blanc</button>
+    </div>
+
+    <div class="note">
+      <b>Essaie ça 👉</b> lance <b>⚔️ Fatalité</b> ou <b>🙇 Salut</b>, puis
+      change un <b>casque</b> ou un <b>sabre</b> <span class="key">pendant que ça bouge</span>.
+      La nouvelle pièce suit les os toute seule — c'est la règle d'or, et c'est
+      exactement ce qui permettra de <b>vendre une anim seule</b> plus tard.
+    </div>
+    <div class="note">
+      <b>👁 Réflexion</b> montre la promesse « réal manga »&nbsp;: les yeux se
+      <b>plissent</b> et les sourcils se froncent (le visage est <b>dans le
+      squelette gelé</b>).
+    </div>
+  </div>
+</div>
+
+<script>
+/* ------------------------------------------------------------------ *
+ *  Mini-moteur squelettique 2.5D (le vrai système, en miniature)
+ *  - Un squelette UNIQUE (BONES), partagé par les deux camps.
+ *  - Un cosmétique = de l'art accroché à un os (dessiné en coords
+ *    canoniques ; au repos toutes les transfos = identité).
+ *  - Une anim = un delta de rotation/translation par os, qui se
+ *    propage aux enfants (mouvement d'os pur, aucun art dedans).
+ *  Proportions : canon humain ~7,5 têtes (tête=H≈32 ; bassin ~ au milieu).
+ * ------------------------------------------------------------------ */
+const SVGNS = 'http://www.w3.org/2000/svg';
+
+/* Squelette : [nom, parent, pivotX, pivotY] en coords canoniques
+   (bassin à 0,0 ; le haut = y négatif ; le combattant fait face à +x). */
+const BONES = [
+  ['root',      null,        0,   0],
+  ['spine',     'root',      0,  -4],
+  ['chest',     'spine',     0, -58],
+  ['neck',      'chest',     0, -90],
+  ['head',      'neck',      0, -98],
+  ['shoulderR', 'chest',    18, -84],
+  ['elbowR',    'shoulderR',24, -48],
+  ['handR',     'elbowR',   30, -14],
+  ['osArme',    'handR',    30, -14],
+  ['shoulderL', 'chest',   -20, -82],
+  ['elbowL',    'shoulderL',-26,-48],
+  ['handL',     'elbowL',  -26,-16],
+  ['osBouclier','handL',   -26,-16],
+  ['hipR',      'root',     10,  -2],
+  ['kneeR',     'hipR',     14,  60],
+  ['footR',     'kneeR',    12, 122],
+  ['hipL',      'root',    -10,  -2],
+  ['kneeL',     'hipL',    -16,  60],
+  ['footL',     'kneeL',   -14, 122],
+];
+const PARENT = {}, PIV = {};
+BONES.forEach(([n,p,x,y])=>{ PARENT[n]=p; PIV[n]={x,y}; });
+
+/* Ordre d'empilement (arrière → avant) des groupes SVG. */
+const ZORDER = ['hipL','kneeL','footL','hipR','kneeR','footR','root',
+  'shoulderL','elbowL','handL','osBouclier','spine','chest','neck','head',
+  'shoulderR','elbowR','handR','osArme'];
+
+/* --- algèbre affine 2×3 : point (x,y) -> (a*x+c*y+e, b*x+d*y+f) --- */
+function local(rot,px,py,tx,ty){
+  const c=Math.cos(rot), s=Math.sin(rot);
+  return {a:c,b:s,c:-s,d:c,
+    e:px-(c*px-s*py)+tx, f:py-(s*px+c*py)+ty};
+}
+function mul(A,B){ // A∘B : B appliqué d'abord
+  return {
+    a:A.a*B.a+A.c*B.b, b:A.b*B.a+A.d*B.b,
+    c:A.a*B.c+A.c*B.d, d:A.b*B.c+A.d*B.d,
+    e:A.a*B.e+A.c*B.f+A.e, f:A.b*B.e+A.d*B.f+A.f };
+}
+const str = M => `matrix(${M.a} ${M.b} ${M.c} ${M.d} ${M.e} ${M.f})`;
+
+/* Transfo monde de chaque os à partir d'un dico d'anim. */
+function solve(anim){
+  const T={};
+  for(const [name,parent,px,py] of BONES){
+    const a=anim[name]||{};
+    const L=local(a.rot||0, px, py, a.tx||0, a.ty||0);
+    T[name]= parent ? mul(T[parent],L) : L;
+  }
+  return T;
+}
+
+/* ------------------------------------------------------------------ *
+ *  Palettes (le style vit dans le dessin, pas dans les os)
+ * ------------------------------------------------------------------ */
+const PAL = {
+  white:{gi:'#e6e0d1',giDk:'#cfc7b4',skin:'#f0d9bf',ink:'#2b2620',
+    steel:'#d6dae2',steelLn:'#9aa1ad',saber:'#e5432f',saberHi:'#ffd9cf',
+    hair:'#241f19',obi:'#8f3b2f',collar:'#f6f2e9',lace:'#c34a34',gold:'#dcab45'},
+  black:{gi:'#363b45',giDk:'#272c34',skin:'#e6c6a4',ink:'#0c0d10',
+    steel:'#5e646f',steelLn:'#8a919d',saber:'#3f7be6',saberHi:'#cfe0ff',
+    hair:'#101217',obi:'#2f4d8f',collar:'#c7ccd6',lace:'#3f6bcf',gold:'#c9a24a'},
+};
+
+/* helpers de dessin */
+function el(tag,attrs){ const e=document.createElementNS(SVGNS,tag);
+  for(const k in attrs) e.setAttribute(k,attrs[k]); return e; }
+function poly(pts,fill,stroke,sw){ return el('polygon',
+  {points:pts.map(p=>p.join(',')).join(' '),fill:fill,
+   stroke:stroke||'none','stroke-width':sw||0,'stroke-linejoin':'round'}); }
+/* Membre à volume : quadrilatère de largeur w1→w2 (donne du poids à la silhouette). */
+function taper(x1,y1,x2,y2,w1,w2,fill,stroke){
+  const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy)||1, nx=-dy/L, ny=dx/L;
+  return poly([[x1+nx*w1/2,y1+ny*w1/2],[x2+nx*w2/2,y2+ny*w2/2],
+    [x2-nx*w2/2,y2-ny*w2/2],[x1-nx*w1/2,y1-ny*w1/2]], fill, stroke||fill, 1.2);
+}
+
+/* ------------------------------------------------------------------ *
+ *  Corps de base (toujours dessiné) — chaque forme va dans le groupe
+ *  de l'os concerné. ctx reçoit les réfs du visage (update par frame).
+ * ------------------------------------------------------------------ */
+function buildBase(G,P,ctx){
+  // ---- Jambes en hakama (pantalon ample, 2 segments = articulé) ----
+  G.hipR.appendChild(taper(10,-2,14,60, 19,21, P.gi, P.ink));
+  G.kneeR.appendChild(taper(14,60,12,122, 21,14, P.gi, P.ink));
+  G.footR.appendChild(el('path',{d:'M 2 120 L 24 120 L 26 127 L 0 127 Z',fill:P.ink})); // waraji
+  G.hipL.appendChild(taper(-10,-2,-16,60, 18,20, P.giDk, P.ink));
+  G.kneeL.appendChild(taper(-16,60,-14,122, 20,13, P.giDk, P.ink));
+  G.footL.appendChild(el('path',{d:'M -26 120 L -4 120 L -2 127 L -28 127 Z',fill:'#17181c'}));
+
+  // ---- Bras arrière (gauche) : manche de kimono + main ----
+  G.shoulderL.appendChild(taper(-20,-82,-26,-48, 19,12, P.giDk, P.ink));
+  G.elbowL.appendChild(taper(-26,-48,-26,-16, 12,8, P.giDk, P.ink));
+  G.handL.appendChild(el('circle',{cx:-26,cy:-16,r:5.5,fill:P.skin,stroke:P.ink,'stroke-width':1}));
+
+  // ---- Bassin ----
+  G.root.appendChild(el('rect',{x:-15,y:-8,width:30,height:16,rx:4,fill:P.giDk}));
+
+  // ---- Torse : kimono à col croisé + obi ----
+  G.spine.appendChild(poly([[-21,-84],[21,-84],[15,-40],[11,-2],[-11,-2],[-15,-40]],P.gi,P.ink,2));
+  G.spine.appendChild(poly([[-13,-82],[0,-44],[13,-82]],P.collar,P.ink,1.3)); // col en V
+  G.spine.appendChild(el('line',{x1:0,y1:-44,x2:0,y2:-78,stroke:P.giDk,'stroke-width':1.8}));
+  G.spine.appendChild(el('rect',{x:-16,y:-36,width:32,height:14,rx:2,fill:P.obi,stroke:P.ink,'stroke-width':1.1}));
+  G.spine.appendChild(el('rect',{x:-5,y:-36,width:9,height:14,fill:P.lace})); // nœud d'obi
+
+  // ---- Cou + tête (tête ≈ 1/7,5 de la hauteur) ----
+  G.neck.appendChild(taper(0,-94,0,-82, 11,12, P.skin, P.ink));
+  G.head.appendChild(el('path',{d:'M -17 -108 Q -19 -132 1 -133 Q 21 -132 19 -108 Q 8 -119 1 -119 Q -8 -119 -17 -108 Z',fill:P.hair}));
+  G.head.appendChild(el('rect',{x:-3,y:-141,width:10,height:8,rx:3,fill:P.hair})); // chonmage
+  G.head.appendChild(el('circle',{cx:1,cy:-112,r:16,fill:P.skin,stroke:P.ink,'stroke-width':1.2}));
+  // Yeux (¾ → décalés +x) — ry & pupille pilotés par eyeOpen
+  const mkEye=cx=>{ const e=el('ellipse',{cx,cy:-115,rx:3.4,ry:3.2,fill:'#fff',stroke:P.ink,'stroke-width':0.8});
+    const p=el('circle',{cx,cy:-115,r:1.9,fill:P.ink}); G.head.append(e,p); return {e,p,baseRy:3.2}; };
+  const mkBrow=cx=>{ const b=el('line',{x1:cx-3.6,y1:-121,x2:cx+3.6,y2:-121,
+    stroke:P.ink,'stroke-width':1.7,'stroke-linecap':'round'}); G.head.appendChild(b); return {el:b,cx,cy:-121}; };
+  ctx.eyes=[mkEye(4),mkEye(11)];
+  ctx.brows=[mkBrow(4),mkBrow(11)];
+  ctx.mouth=el('line',{x1:2,y1:-104,x2:9,y2:-104,stroke:P.ink,'stroke-width':1.3,'stroke-linecap':'round'});
+  G.head.appendChild(ctx.mouth);
+
+  // ---- Bras avant (droit, porte le sabre) — dessiné en dernier (dessus) ----
+  G.shoulderR.appendChild(taper(18,-84,24,-48, 20,12, P.gi, P.ink));
+  G.elbowR.appendChild(taper(24,-48,30,-14, 12,8, P.gi, P.ink));
+  G.handR.appendChild(el('circle',{cx:30,cy:-14,r:6,fill:P.skin,stroke:P.ink,'stroke-width':1}));
+}
+
+/* ------------------------------------------------------------------ *
+ *  Cosmétiques : chaque slot a des options. Une option = render(G,pal)
+ *  qui ajoute des formes aux bons os (multi-os possible : ex. sode).
+ * ------------------------------------------------------------------ */
+const SLOTS = [
+  {key:'casque', label:'Casque', options:[
+    {label:'— aucun —', render:null},
+    {label:'Kabuto', render:(G,p)=>kabuto(G,p,false)},
+    {label:'Kabuto à cornes', render:(G,p)=>kabuto(G,p,true)},
+    {label:'Menpō (masque)', render:(G,p)=>{
+      G.head.appendChild(poly([[-13,-108],[15,-108],[13,-99],[1,-95],[-12,-100]],p.steel,p.steelLn,1.2));
+      G.head.appendChild(el('line',{x1:-7,y1:-103,x2:10,y2:-103,stroke:p.steelLn,'stroke-width':1}));
+    }},
+  ]},
+  {key:'plastron', label:'Plastron (dō)', options:[
+    {label:'— aucun —', render:null},
+    {label:'Dō (plaque)', render:(G,p)=>{
+      G.chest.appendChild(poly([[-17,-84],[17,-84],[19,-52],[0,-42],[-19,-52]],p.steel,p.steelLn,1.6));
+    }},
+    {label:'Dō lamellaire', render:(G,p)=>{
+      G.chest.appendChild(poly([[-17,-84],[17,-84],[19,-52],[0,-42],[-19,-52]],p.steel,p.steelLn,1.6));
+      for(let i=0;i<3;i++){const y=-76+i*10;
+        G.chest.appendChild(el('line',{x1:-17,y1:y,x2:17,y2:y,stroke:p.steelLn,'stroke-width':1.2}));}
+      G.chest.appendChild(el('line',{x1:0,y1:-84,x2:0,y2:-44,stroke:p.lace,'stroke-width':1.8}));
+    }},
+  ]},
+  {key:'epaules', label:'Épaules (sode)', options:[
+    {label:'— aucun —', render:null},
+    {label:'Sode (grandes)', render:(G,p)=>{
+      G.shoulderR.appendChild(poly([[4,-90],[26,-85],[29,-60],[6,-64]],p.steel,p.steelLn,1.5));
+      G.shoulderR.appendChild(el('line',{x1:6,y1:-76,x2:28,y2:-72,stroke:p.steelLn,'stroke-width':1.1}));
+      G.shoulderL.appendChild(poly([[-5,-88],[-24,-83],[-27,-60],[-8,-64]],p.giDk,p.steelLn,1.2));
+    }},
+  ]},
+  {key:'tassettes', label:'Tassettes', options:[
+    {label:'— aucun —', render:null},
+    {label:'Kusazuri', render:(G,p)=>{
+      G.root.appendChild(poly([[-17,-2],[17,-2],[21,26],[-21,26]],p.steel,p.steelLn,1.4));
+      for(const x of [-10,0,10]) G.root.appendChild(el('line',{x1:x,y1:-2,x2:x*1.25,y2:26,stroke:p.steelLn,'stroke-width':1.1}));
+      G.root.appendChild(el('line',{x1:-19,y1:11,x2:19,y2:11,stroke:p.steelLn,'stroke-width':1}));
+    }},
+  ]},
+  {key:'jambes', label:'Jambes (suneate)', options:[
+    {label:'— aucun —', render:null},
+    {label:'Suneate', render:(G,p)=>{
+      G.kneeR.appendChild(poly([[9,66],[21,66],[19,116],[11,116]],p.steel,p.steelLn,1.2));
+      G.kneeL.appendChild(poly([[-9,66],[-21,66],[-19,116],[-11,116]],p.giDk,p.steelLn,1));
+    }},
+  ]},
+  {key:'sabre', label:'Sabre', options:[
+    {label:'Katana', render:(G,p)=>sabre(G,p,66,50)},
+    {label:'Ō-dachi (long)', render:(G,p)=>sabre(G,p,92,72)},
+    {label:'Wakizashi (court)', render:(G,p)=>sabre(G,p,42,30)},
+    {label:'— aucun —', render:null},
+  ]},
+  {key:'garde', label:'Garde / bouclier', options:[
+    {label:'Petit tate', render:(G,p)=>{
+      G.osBouclier.appendChild(el('rect',{x:-44,y:-42,width:14,height:48,rx:2,fill:p.giDk,stroke:p.ink,'stroke-width':1.4}));
+      G.osBouclier.appendChild(el('line',{x1:-37,y1:-40,x2:-37,y2:4,stroke:p.steelLn,'stroke-width':1}));}},
+    {label:'Tate rond', render:(G,p)=>{
+      G.osBouclier.appendChild(el('circle',{cx:-38,cy:-18,r:18,fill:p.steel,stroke:p.steelLn,'stroke-width':2}));
+      G.osBouclier.appendChild(el('circle',{cx:-38,cy:-18,r:5,fill:p.steelLn}));}},
+    {label:'— aucun —', render:null},
+  ]},
+];
+
+/* Kabuto : shikoro (nuque, arrière) + bombe posée haut (rebord AU-DESSUS des yeux
+   → visage visible pour le plan Réflexion) + fukigaeshi + maedate / cornes. */
+function kabuto(G,p,cornes){
+  G.head.appendChild(poly([[-14,-120],[-19,-104],[-9,-100],[-3,-116]],p.steel,p.steelLn,1.2)); // shikoro arrière
+  G.head.appendChild(el('path',{d:'M -16 -120 Q -14 -140 1 -141 Q 17 -140 17 -120 Q 1 -117 -16 -120 Z',
+    fill:p.steel,stroke:p.steelLn,'stroke-width':1.5}));                                        // bombe
+  G.head.appendChild(el('path',{d:'M -14 -120 Q 1 -123 16 -120',fill:'none',stroke:p.steelLn,'stroke-width':0.9})); // rebord
+  G.head.appendChild(poly([[-16,-120],[-23,-117],[-19,-110],[-12,-114]],p.gold,p.ink,0.7));    // fukigaeshi G
+  G.head.appendChild(poly([[17,-120],[24,-117],[20,-110],[13,-114]],p.gold,p.ink,0.7));        // fukigaeshi D
+  if(cornes){                                        // kuwagata (grandes cornes en V doré)
+    G.head.appendChild(poly([[-3,-140],[-19,-165],[-12,-163],[-1,-141]],p.gold,p.ink,1));
+    G.head.appendChild(poly([[7,-140],[23,-165],[16,-163],[5,-141]],p.gold,p.ink,1));
+    G.head.appendChild(el('circle',{cx:2,cy:-141,r:3.4,fill:p.gold,stroke:p.ink,'stroke-width':0.7}));
+  } else {                                           // maedate en croissant
+    G.head.appendChild(el('path',{d:'M 2 -141 q -8 -5 -1 -13 q 8 8 1 13',fill:p.gold,stroke:p.ink,'stroke-width':0.7}));
+  }
+}
+
+/* Sabre : lame légèrement courbe + tsuba + poignée, depuis la main droite.
+   len = longueur de lame, off = allonge la pointe. Couleur = camp. */
+function sabre(G,p,len,off){
+  const hx=30, hy=-14, dx=0.80, dy=-0.60;        // main + direction avant-haut
+  const bx=hx+dx*11, by=hy+dy*11;                // base de lame (au-dessus tsuba)
+  const tx=hx+dx*(len+off), ty=hy+dy*(len+off);  // pointe
+  const nx=-dy, ny=dx, w=2.6;                     // normale + épaisseur
+  const mx=(bx+tx)/2+nx*8, my=(by+ty)/2+ny*8;    // courbure (dos de lame)
+  G.osArme.appendChild(el('path',{
+    d:`M ${bx+nx*w} ${by+ny*w} Q ${mx+nx*w} ${my+ny*w} ${tx} ${ty} Q ${mx-nx*w} ${my-ny*w} ${bx-nx*w} ${by-ny*w} Z`,
+    fill:p.saber,stroke:p.saberHi,'stroke-width':1}));
+  G.osArme.appendChild(el('circle',{cx:hx+dx*8,cy:hy+dy*8,r:4.6,fill:p.ink}));      // tsuba
+  G.osArme.appendChild(taper(hx-dx*14,hy-dy*14,hx+dx*6,hy+dy*6,5,5,p.ink,p.ink));   // tsuka
+}
+
+/* ------------------------------------------------------------------ *
+ *  Construction d'un combattant (crée les groupes + peuple).
+ * ------------------------------------------------------------------ */
+function buildFighter(sideRoot, side, loadout){
+  while(sideRoot.firstChild) sideRoot.removeChild(sideRoot.firstChild);
+  const pal=PAL[side], G={}, ctx={};
+  ZORDER.forEach(b=>{ const g=el('g',{'data-bone':b}); G[b]=g; sideRoot.appendChild(g); });
+  buildBase(G,pal,ctx);
+  SLOTS.forEach(s=>{
+    const opt=s.options[loadout[s.key]] || s.options[0];
+    if(opt && opt.render) opt.render(G,pal);
+  });
+  return {G,ctx};
+}
+
+/* ------------------------------------------------------------------ *
+ *  Catalogue d'animations (mouvement d'os pur)
+ *  chaque clip : (t, role) -> {anim:{os:{rot,tx,ty}}, eyeOpen, brow}
+ * ------------------------------------------------------------------ */
+const ease=x=>x*x*(3-2*x);
+const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+
+const CLIPS={
+  idle:(t)=>{
+    const br=Math.sin(t*1.8)*0.02;
+    const blink=((t%3.4)<0.11)?0.12:1;
+    return {anim:{chest:{rot:br},spine:{rot:br*0.3},
+      head:{rot:Math.sin(t*1.8+0.4)*0.02},
+      shoulderR:{rot:Math.sin(t*1.5)*0.03},shoulderL:{rot:Math.sin(t*1.5+1)*0.03},
+      osArme:{rot:Math.sin(t*1.5)*0.02}}, eyeOpen:blink, brow:0};
+  },
+  reflexion:(t)=>{
+    const br=Math.sin(t*1.6)*0.018;
+    const eye=0.4+Math.sin(t*2.4)*0.06;   // yeux plissés qui frémissent
+    return {anim:{chest:{rot:br},neck:{rot:0.03},
+      head:{rot:0.05+Math.sin(t*1.2)*0.02},
+      shoulderR:{rot:Math.sin(t*1.4)*0.02},shoulderL:{rot:Math.sin(t*1.4+1)*0.02}},
+      eyeOpen:eye, brow:1};
+  },
+  salut:(t)=>{
+    const p=(t%3.6)/3.6; let env;
+    if(p<0.35) env=ease(p/0.35);
+    else if(p<0.62) env=1;
+    else if(p<0.85) env=1-ease((p-0.62)/0.23);
+    else env=0;
+    const b=env*0.5;
+    return {anim:{spine:{rot:b*0.85},chest:{rot:b*0.15},neck:{rot:b*0.3},
+      head:{rot:b*0.4},shoulderR:{rot:-b*0.25},shoulderL:{rot:-b*0.25},
+      osArme:{rot:b*0.2}}, eyeOpen:1-env*0.75, brow:0};
+  },
+  fatality:(t,role)=>{
+    const dur=2.6, p=(t%dur)/dur;
+    if(role==='victim'){
+      const f=ease(clamp((p-0.52)/0.32,0,1));   // encaisse après la frappe
+      return {anim:{spine:{rot:-0.9*f},chest:{rot:-0.2*f},neck:{rot:-0.3*f},
+        head:{rot:-0.5*f},root:{tx:-16*f,ty:34*f},
+        hipR:{rot:0.3*f},hipL:{rot:0.3*f},kneeR:{rot:0.5*f},kneeL:{rot:0.5*f},
+        shoulderR:{rot:-0.4*f},shoulderL:{rot:-0.4*f}}, eyeOpen:1-f, brow:0.3};
+    }
+    let sh,el2,sp,tx;
+    if(p<0.42){ const w=ease(p/0.42);            // armé (lève le sabre)
+      sh=-1.5*w; el2=-0.7*w; sp=-0.18*w; tx=-8*w;
+    } else if(p<0.58){ const s=ease((p-0.42)/0.16); // frappe
+      sh=-1.5+2.4*s; el2=-0.7+1.1*s; sp=-0.18+0.4*s; tx=-8+30*s;
+    } else { const r=ease((p-0.58)/0.42);        // retour en garde
+      sh=0.9*(1-r); el2=0.4*(1-r); sp=0.22*(1-r); tx=22*(1-r);
+    }
+    return {anim:{shoulderR:{rot:sh},elbowR:{rot:el2},spine:{rot:sp},
+      root:{tx:tx},osArme:{rot:sh*0.3},shoulderL:{rot:-0.2}}, eyeOpen:1, brow:0.6};
+  },
+};
+const CAPTIONS={
+  salut:'Salut d\'ouverture (rei) — les deux combattants s\'inclinent l\'un vers l\'autre. Les yeux se ferment par respect.',
+  idle:'Idle / respiration — micro-mouvements + clignements. La tenue équipée suit les os.',
+  reflexion:'Réflexion — gros plan « réal manga » : les yeux se plissent, le sourcil se fronce (visage dans le squelette gelé).',
+  fatality:'Fatalité — un seul clip d\'os : l\'attaquant frappe, l\'adversaire s\'effondre. Change l\'équipement pendant que ça joue : la règle d\'or.',
+};
+
+/* ------------------------------------------------------------------ *
+ *  État + boucle de rendu
+ * ------------------------------------------------------------------ */
+const scene=document.getElementById('scene');
+// Deux racines placées + orientées (le NOIR est en miroir → il fait face au BLANC).
+const rootWhite=el('g',{transform:'translate(196,300) scale(1,1)'});
+const rootBlack=el('g',{transform:'translate(444,300) scale(-1,1)'});
+scene.appendChild(el('line',{x1:40,y1:430,x2:600,y2:430,stroke:'#39415a','stroke-width':2}));
+scene.appendChild(el('line',{x1:320,y1:150,x2:320,y2:430,stroke:'#232a3d','stroke-width':2,'stroke-dasharray':'4 6'}));
+scene.append(rootWhite,rootBlack);
+
+const state={
+  clip:'salut', paused:false, t0:performance.now(), pausedAt:0,
+  attacker:'white',
+  loadout:{
+    white:{casque:1,plastron:1,epaules:1,tassettes:1,jambes:1,sabre:0,garde:0},
+    black:{casque:2,plastron:2,epaules:1,tassettes:1,jambes:0,sabre:0,garde:1},
+  },
+};
+let fig={white:null, black:null};
+function rebuild(side){ fig[side]=buildFighter(side==='white'?rootWhite:rootBlack, side, state.loadout[side]); }
+
+/* Applique une frame à un combattant. */
+function applyFrame(f, res){
+  const T=solve(res.anim);
+  for(const b in f.G) f.G[b].setAttribute('transform', str(T[b]||{a:1,b:0,c:0,d:1,e:0,f:0}));
+  const eo=res.eyeOpen;
+  f.ctx.eyes.forEach(e=>{ e.e.setAttribute('ry',Math.max(0.5,e.baseRy*eo).toFixed(2));
+    e.p.setAttribute('r',Math.max(0,Math.min(1.9,2.4*eo-0.3)).toFixed(2)); });
+  f.ctx.brows.forEach(b=>{                          // froncement : baisse + incline vers l'intérieur
+    const inner = b.cx<7 ? 1 : -1;
+    b.el.setAttribute('transform',`translate(0,${(res.brow*2.5).toFixed(1)}) rotate(${(inner*res.brow*14).toFixed(1)} ${b.cx} ${b.cy})`); });
+  f.ctx.mouth.setAttribute('transform',`translate(0,${(res.brow*1.2).toFixed(1)})`);
+}
+
+function loop(now){
+  const t=(state.paused? state.pausedAt : (now-state.t0))/1000;
+  const wRole = state.clip==='fatality' ? (state.attacker==='white'?'attacker':'victim') : 'x';
+  const bRole = state.clip==='fatality' ? (state.attacker==='black'?'attacker':'victim') : 'x';
+  applyFrame(fig.white, CLIPS[state.clip](t, wRole));
+  applyFrame(fig.black, CLIPS[state.clip](t, bRole));
+  requestAnimationFrame(loop);
+}
+
+/* ------------------------------------------------------------------ *
+ *  UI
+ * ------------------------------------------------------------------ */
+function el2div(cls){ const d=document.createElement('div'); d.className=cls; return d; }
+function buildControls(side){
+  const col=document.getElementById('col-'+side);
+  SLOTS.forEach(s=>{
+    const wrap=el2div('slot');
+    const lab=document.createElement('label'); lab.textContent=s.label; wrap.appendChild(lab);
+    const sel=document.createElement('select');
+    s.options.forEach((o,i)=>{ const op=document.createElement('option');
+      op.value=i; op.textContent=o.label; sel.appendChild(op); });
+    sel.value=state.loadout[side][s.key];
+    sel.addEventListener('change',()=>{ state.loadout[side][s.key]=+sel.value; rebuild(side); });
+    wrap.appendChild(sel); col.appendChild(wrap);
+  });
+}
+
+const caption=document.getElementById('caption');
+function setClip(c){
+  state.clip=c; state.t0=performance.now(); state.paused=false;
+  document.getElementById('pauseBtn').textContent='⏸ Pause';
+  document.querySelectorAll('#clipbar button[data-clip]').forEach(b=>
+    b.classList.toggle('on', b.dataset.clip===c));
+  document.getElementById('attackerRow').style.display = (c==='fatality')?'flex':'none';
+  caption.textContent=CAPTIONS[c]||'';
+}
+document.querySelectorAll('#clipbar button[data-clip]').forEach(b=>
+  b.addEventListener('click',()=>setClip(b.dataset.clip)));
+document.getElementById('pauseBtn').addEventListener('click',()=>{
+  const btn=document.getElementById('pauseBtn');
+  if(state.paused){ state.t0=performance.now()-state.pausedAt; state.paused=false; btn.textContent='⏸ Pause'; }
+  else { state.pausedAt=performance.now()-state.t0; state.paused=true; btn.textContent='▶ Lecture'; }
+});
+document.getElementById('attackerBtn').addEventListener('click',()=>{
+  state.attacker = state.attacker==='white'?'black':'white';
+  document.getElementById('attackerBtn').textContent = state.attacker==='white'?'⚔ Blanc':'⚔ Noir';
+  state.t0=performance.now();
+});
+
+/* --- démarrage --- */
+buildControls('white'); buildControls('black');
+rebuild('white'); rebuild('black');
+setClip('salut');
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -64,6 +64,7 @@ diffèrent que par la pose de repos et l'équipement par défaut). Vue de platea
 ```
 root (bassin)
 ├─ spine → chest → neck → head
+│                          └─ visage : paupière.G/D · sourcil.G/D · mâchoire
 ├─ épaule.G → bras.G → avant-bras.G → main.G
 ├─ épaule.D → bras.D → avant-bras.D → main.D
 ├─ cuisse.G → tibia.G → pied.G
@@ -74,6 +75,24 @@ root (bassin)
 ```
 Os de déformation optionnels pour le tissu (jupe de kimono, manches) si l'outil
 le permet (Rive/Spine gèrent le maillage déformable).
+
+> **🔴 Décision squelette gelé (2026-07-28) — le visage est DANS le squelette de
+> base.** Les os de paupières / sourcils / mâchoire sont figés dès le jour 1,
+> avec le reste. Raison : on veut des **micro-anims façon réal manga** (les yeux
+> qui se plissent quand l'adversaire réfléchit, un sourcil qui se lève) — c'est
+> le point fort du maillage déformable de Rive, piloté par machine à états. Si le
+> visage n'est pas dans le squelette gelé, **aucune anim d'expression ne se
+> greffera** sur les skins existants (règle d'or, §2). **Les casques/masques sont
+> des slots posés PAR-DESSUS** ce visage (et peuvent en masquer une partie). Le
+> catalogue d'anims gagne donc, plus tard, des **clips d'expression** (réflexion,
+> tension, sourire) qui restent des cosmétiques signature.
+
+> **Le squelette est agnostique au style.** Le style graphique vit **dans le
+> dessin de Thomas**, pas dans les os : un même squelette porte aussi bien un
+> samouraï peint réaliste qu'un skin **plat façon *Samurai Jack*** (Tartakovsky).
+> Les styles à aplats sont même **plus faciles** (moins de dégradés qui cassent à
+> la déformation) et **plusieurs styles coexistent** comme skins concurrents — un
+> argument de vente, pas une contrainte.
 
 ### Emplacements (« slots ») = points d'accroche des cosmétiques
 Chaque slot est une **couche d'art** liée à un os. C'est l'unité de
@@ -112,10 +131,21 @@ contraint les silhouettes de sabre, soit on autorise un **override d'anim** par
 cosmétique extrême.
 
 ### Caméras / points de vue canoniques
-En 2.5D, ce sont des **angles mis en scène** + parallaxe, pas une orbite libre :
+> **🔴 Décision (2026-07-28) — « points de vue » = des PLANS montés, pas une
+> caméra 3D libre.** La « réal manga » voulue (gros plan sur les yeux,
+> contre-plongée sur la fatality, cadrage diagonal) s'obtient par des **cadrages
+> d'auteur**, montés une fois — exactement comme un jeu 2D façon anime fait ses
+> cinématiques. Ce qu'on n'a **pas**, c'est une caméra qu'on oriente librement en
+> temps réel autour de la scène (ça, c'est la 3D, écartée §2). Chaque plan coûte
+> un peu de montage. Une **fatality signature** vendue en boutique peut embarquer
+> **son propre cadrage** → argument de vente.
+
+Plans canoniques (en 2.5D = angles mis en scène + parallaxe) :
 1. **Plateau** — l'angle par défaut, comment la pièce se tient sur sa case.
 2. **Fatality** — cadrage rapproché et dramatique pour le coup fatal.
 3. **Salut** — les deux Épéistes face à face, ouverture du combat.
+4. **Gros plan / réflexion** — cadrage rapproché sur le visage pendant que
+   l'adversaire réfléchit (support des micro-anims des yeux).
 
 ---
 
@@ -298,8 +328,15 @@ fait la composition pour nous. On ne pré-cuit jamais une combinaison entière.
 - **Phase 0 — Fondation** *(ce doc)* : rig spec + slots + catalogue d'anims +
   choix d'outil. **Puis** : Thomas dessine **1 combattant test** avec 2
   cosmétiques alternatifs par slot (pour valider le pipeline découpe→squelette).
-- **Phase 1 — Assembleur** : prouver l'**assemblage modulaire par slots** en
-  direct dans le navigateur (proto avec placeholders si l'art n'est pas prêt).
+- **Phase 1 — Assembleur** *(en cours)* : prouver l'**assemblage modulaire par
+  slots** en direct dans le navigateur, avec placeholders **dessinés dans le
+  code** (zéro art de Thomas). Cible du proto : **deux samouraïs qui se font
+  face** — **blanc/sabre rouge** vs **noir/sabre bleu** — sur **un squelette
+  2.5D partagé**, slots échangeables en direct (la compo se recompose), sélecteur
+  d'anim (**salut / idle-réflexion / fatalité**) et **micro-anim des yeux**
+  (ils se plissent en réflexion). But : démontrer d'un coup **la règle d'or**
+  (l'anim porte n'importe quel équipement) **et** la promesse manga.
+  Fichier : `avatars/proto.html` (autonome, sans dépendance, sans Supabase).
 - **Phase 2 — Animation** : monter les **~20 gestes** sur le squelette commun.
 - **Phase 3 — Économie & boutique** : modèle de données cosmétiques, obtention
   (monnaies), vitrine, loadout persistant.
@@ -317,6 +354,19 @@ fait la composition pour nous. On ne pré-cuit jamais une combinaison entière.
 4. **Éco des skins** : raretés, prix, sources exactes, saisons de skins.
 5. **Vue de plateau** : angle 3/4 exact, taille des combattants sur la case,
    lisibilité en 5×5 (ne pas encombrer le plateau).
+
+### Tranchées le 2026-07-28 (session « éclaircissements »)
+6. ✅ **Le visage entre dans le squelette gelé** (paupières/sourcils/mâchoire) →
+   micro-anims façon manga. Casques en overlay. Cf. §4.
+7. ✅ **« Points de vue » = plans montés, pas caméra 3D libre.** La réal manga
+   passe par des cadrages d'auteur. Cf. §4.
+8. ✅ **Pipeline de production acté** : Thomas dessine en **vue ¾, en pièces
+   séparées** (calques) → une **passe de rigging humaine dans l'éditeur**
+   (lourde une seule fois pour le squelette de base, légère ensuite : « dessiner
+   la pièce + l'accrocher à l'os »). **Pas d'auto-génération** d'un skin à partir
+   d'un dessin brut (les auto-rig inventent leur propre squelette → cassent la
+   règle d'or). Le *proto* utilise des placeholders dessinés dans le code, donc
+   **zéro art et zéro engagement** avant validation. Cf. §8, Phase 1.
 
 ---
 

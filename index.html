@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.34.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.35.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2051,6 +2051,13 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="home-btn-primary" style="width:100%;font-size:16px;padding:18px;margin:0;letter-spacing:5px" onclick="enterMainMenu()">COMMENCER</button>
   </div>
 
+  <!-- Bouton DEV « proto » (sous-projet avatars → film du bandeau de combat).
+       Réservé aux comptes admin (Musashi, Wurmz) : caché par défaut, dévoilé
+       par updateDevButtonVisibility(). Style violet .btn-devtest. -->
+  <div id="home-proto-wrap" style="display:none;width:100%;padding:0 24px 10px;position:relative;z-index:1">
+    <button class="btn-devtest" style="width:100%;padding:9px;border-radius:5px;cursor:pointer" onclick="showScreen('proto')">🎌 proto</button>
+  </div>
+
   <!-- Profil strip (grade) -->
   <div class="home-profile-mini" id="home-profile-mini" onclick="showScreen('profile');playSound('menu')" style="margin:0 24px 14px;width:auto;position:relative;z-index:1">
     <div id="hpm-avatar" style="background:none;border:none;width:auto;height:auto;border-radius:0;display:flex;align-items:center"></div>
@@ -2113,7 +2120,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.34.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.35.0 &#9820;</div>
   </div>
 </div>
 
@@ -2473,6 +2480,27 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   </div>
 </div>
 
+<!-- ═══════════ PROTO — banc de test avatars / bandeau (dev only) ═══════════
+     Accès par le bouton violet « proto » de l'accueil (admin uniquement).
+     Lance une partie locale (vs IA, hotseat, ou bac à sable sans temps) avec
+     le mini-film d'avatars actif dans le bandeau de combat. Sert à développer
+     et prévisualiser les animations qui remplaceront les images statiques. -->
+<div id="screen-proto" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('home')">↩ ACCUEIL</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+  <div class="panel" style="max-width:380px;width:100%">
+    <div class="menu-title" style="font-size:18px;margin-top:10px">🎌 PROTO — avatars & bandeau</div>
+    <div class="menu-divider"></div>
+    <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.6;text-align:center;margin-bottom:12px">Banc de test dev (Musashi · Wurmz). Le bandeau de combat joue le mini-film d'avatars piloté par les coups joués.</div>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="protoPlay('ai')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">🤖</span>Partie test vs IA</button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="protoPlay('human')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">対</span>Thomas vs moi (même appareil)</button>
+    <button class="btn" style="width:100%;margin-bottom:12px" onclick="protoPlay('sandbox')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">🧪</span>Bac à sable — sans temps</button>
+    <div class="menu-divider"></div>
+    <button class="btn-devtest" style="width:100%;padding:9px;border-radius:5px;cursor:pointer" onclick="showScreen('home')">↩ Quitter le proto</button>
+  </div>
+  </div>
+</div>
+
 <div id="screen-dev-repertoire" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
   <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('dev-hub')">↩ RETOUR</button></div>
   <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
@@ -2806,6 +2834,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
         <div class="opt-btn" id="timer-3" onclick="selectTimer(3)">3s</div>
         <div class="opt-btn selected" id="timer-5" onclick="selectTimer(5)">5s</div>
         <div class="opt-btn" id="timer-10" onclick="selectTimer(10)">10s</div>
+        <div class="opt-btn" id="timer-0" onclick="selectTimer(0)" title="Sans minuteur (bac à sable)">&#8734;</div>
       </div>
     </div>
 
@@ -2958,7 +2987,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div id="combat-banner">
     <div id="win-prob-bar"><div id="win-prob-bg-white"></div><div id="win-prob-bg-black"></div></div>
     <div id="win-prob-separator"></div>
-    <div id="combat-anim-stage"><img id="combat-anim-img" src="" alt="" draggable="false"></div>
+    <div id="combat-anim-stage"><img id="combat-anim-img" src="" alt="" draggable="false"><div id="proto-banner-avatars" style="display:none;position:absolute;inset:0"></div></div>
     <div id="combat-start-banner"><span data-i18n="combat_start">COMBATTEZ</span></div>
     <!-- La bulle de Musashi vit DANS le bandeau de combat, en surimpression
          (comme ses trois voisins ci-dessus, tous en position:absolute).
@@ -3399,8 +3428,18 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.34.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.35.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.35.0 &mdash; 28 juillet 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; PROTO &mdash; AVATARS DE COMBAT DANS LE BANDEAU (DEV)</li>
+        <li>Nouveau bouton <strong>&laquo; proto &raquo;</strong> (violet) sur l'accueil, visible <strong>uniquement des comptes admin</strong> (Musashi, Wurmz). Il ouvre un banc de test : partie <strong>vs IA</strong>, <strong>hotseat</strong> (m&ecirc;me appareil), ou <strong>bac &agrave; sable sans minuteur</strong>, avec un bouton Quitter.</li>
+        <li>Dans ces parties, le <strong>bandeau de combat</strong> joue un <strong>mini-film d'avatars 2.5D skinn&eacute;s</strong> (squelette unique, proportions humaines) pilot&eacute; par les coups : chaque type de coup d&eacute;clenche le clip du camp qui joue. C'est la fondation du futur syst&egrave;me de cosm&eacute;tiques, qui remplacera &agrave; terme les images fixes du bandeau.</li>
+        <li style="list-style:none;margin-left:-14px;color:rgba(200,168,110,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">Outil dev uniquement : les parties normales et leur bandeau restent <strong>inchang&eacute;s</strong> (le film est gat&eacute; admin + lancement depuis le proto).</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -6959,7 +6998,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.34.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.35.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -7173,7 +7212,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.34.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.35.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -7378,7 +7417,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.34.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.35.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -9158,8 +9197,12 @@ function isDevUser(){
 }
 // Affiche/masque le bouton violet du menu selon l'utilisateur.
 function updateDevButtonVisibility(){
+  var dev = isDevUser();
   var bd = document.getElementById('bn-dev');
-  if(bd) bd.style.display = isDevUser() ? 'flex' : 'none';
+  if(bd) bd.style.display = dev ? 'flex' : 'none';
+  // Bouton « proto » de l'accueil (banc de test avatars/bandeau) : même gate.
+  var pw = document.getElementById('home-proto-wrap');
+  if(pw) pw.style.display = dev ? 'block' : 'none';
 }
 var DEV_MODES = [
   { key:'matchmaking', label:'⚡ Matchmaking', currency:'shiso',    icon:'🌿',
@@ -10087,6 +10130,11 @@ function isAnyModalOpen(){
 })();
 
 function showScreen(id){
+  // Le film d'avatars du bandeau (proto, dev) ne vit que dans une partie
+  // lancée depuis l'écran proto : le flux passe par 'local' (config) puis
+  // 'game', tous deux exclus ici. Toute AUTRE navigation le désactive →
+  // aucune fuite vers une partie normale (online, campagne, entraînement).
+  if(id!=='local' && id!=='game') _protoBannerOn=false;
   // Garde-fou : un mode coupé par l'administration reste inaccessible
   // (sauf pour les admins). Permet de désactiver un mode qui bugue sans
   // republier l'application.
@@ -10225,10 +10273,21 @@ function isDevAccount(){
 // Adversaire — il ne reste plus qu'à choisir la cadence (et l'adversaire
 // IA le cas échéant).
 function openLocalMode(mode){
+  _protoBannerOn = false;   // une entrée locale normale n'active PAS le film d'avatars (protoPlay le rallume après)
   showScreen('local');
   selectLocalMode(mode);
   var picker = document.getElementById('local-mode-picker');
   if(picker) picker.style.display = 'none';
+}
+// ── PROTO (dev) : lance une partie locale avec le mini-film d'avatars actif
+// dans le bandeau. 'ai' = vs ordinateur, 'human' = hotseat (Thomas vs moi),
+// 'sandbox' = hotseat sans minuteur (on bouge les deux camps librement). Le
+// drapeau _protoBannerOn est lu par triggerCombatAnim (gaté isDevUser). ──
+var _protoBannerOn = false;
+function protoPlay(mode){
+  if(mode==='ai'){ openLocalMode('ai'); }
+  else { openLocalMode('human'); if(mode==='sandbox') selectTimer(0); }
+  _protoBannerOn = true;
 }
 function selectLocalMode(mode){
   var isAiMode = (mode==='ai'||mode==='ai-notable');
@@ -10264,7 +10323,7 @@ function localNextAuto(){
 
 
 
-function selectTimer(t){settings.timerSeconds=t;[3,5,10].forEach(v=>document.getElementById('timer-'+v).classList.toggle('selected',v===t))}
+function selectTimer(t){settings.timerSeconds=t;[0,3,5,10].forEach(v=>{var b=document.getElementById('timer-'+v);if(b)b.classList.toggle('selected',v===t)})}
 // ── Thème d'interface : Classique (parchemin doré) ou Sumi (Samurai
 // Jack : aplats nuit d'encre / vermillon). Voir le bloc CSS body.ui-sumi.
 // Trois thèmes désormais : 'classic' (aucune classe), 'sumi', 'wurmz'.
@@ -18059,6 +18118,21 @@ function triggerCombatAnim(key, moverColor){
   var stage = document.getElementById('combat-anim-stage');
   var img = document.getElementById('combat-anim-img');
   if(!stage || !img) return;
+  // ── Mode PROTO (dev) : le bandeau joue un mini-film d'avatars skinnés au
+  // lieu de l'image statique. Gaté isDevUser + _protoBannerOn (partie lancée
+  // depuis l'écran proto). ProtoBanner mappe la clé de coup vers un clip. ──
+  if(_protoBannerOn && isDevUser() && window.ProtoBanner){
+    hideCombatStartBanner();
+    img.style.display = 'none';
+    var pb = document.getElementById('proto-banner-avatars');
+    if(pb){ pb.style.display = 'block'; ProtoBanner.mount(pb); }
+    ProtoBanner.play(key, moverColor);
+    stage.classList.add('visible');
+    return;
+  }
+  img.style.display = '';   // mode normal : image statique
+  var pbOff = document.getElementById('proto-banner-avatars');
+  if(pbOff) pbOff.style.display = 'none';
   var _animMap = (moverColor === 'black') ? BLACK_COMBAT_ANIM_IMAGES : WHITE_COMBAT_ANIM_IMAGES;
   if(!_animMap[key]) return;
   hideCombatStartBanner();
@@ -18077,6 +18151,9 @@ function hideCombatAnim(){
 // première animation de combat réelle apparaît (voir triggerCombatAnim).
 function showCombatStartBanner(){
   hideCombatAnim();
+  // Proto : au début d'une nouvelle partie, les avatars du bandeau repartent
+  // au repos (sinon un combattant tombé au coup fatal précédent resterait figé).
+  if(_protoBannerOn && window.ProtoBanner) ProtoBanner.reset();
   var el = document.getElementById('combat-start-banner');
   if(el) el.classList.add('visible');
 }
@@ -23115,5 +23192,145 @@ window.addEventListener('beforeunload', () => {
   <button id="bn-profile"  onclick="navTab('profile')"><span class="bn-icon">侍</span><span class="bn-label" data-i18n="bn_profile">Profil</span></button>
   <button id="bn-dev" style="display:none" onclick="navTab('dev-hub')"><span class="bn-icon">🛠</span><span class="bn-label">DEV</span></button>
 </nav>
+
+<!-- ══════════════════════════════════════════════════════════════════════
+     ProtoBanner — moteur d'avatars 2.5D pour le BANDEAU de combat (dev).
+     Sous-projet « avatars de combat » : à terme, ces clips animés skinnés
+     remplaceront les images statiques du bandeau (WHITE/BLACK_COMBAT_ANIM_
+     IMAGES). Ici : deux combattants (blanc/sabre rouge, noir/sabre bleu) sur
+     UN squelette partagé ; triggerCombatAnim mappe la clé de coup vers un clip.
+     Tout est isolé dans une IIFE (aucune collision avec les globals du jeu) —
+     seul window.ProtoBanner est exposé. Placeholders dessinés dans le code ;
+     proportions humaines ~7,5 têtes (cf. avatars/proto.html). ═══════════════ -->
+<script>
+window.ProtoBanner = (function(){
+  const NS='http://www.w3.org/2000/svg';
+  // Squelette partagé : [nom, parent, pivotX, pivotY] (bassin 0,0 ; haut = -y).
+  const BONES=[
+    ['root',null,0,0],['spine','root',0,-4],['chest','spine',0,-58],
+    ['neck','chest',0,-90],['head','neck',0,-98],
+    ['shoulderR','chest',18,-84],['elbowR','shoulderR',24,-48],['handR','elbowR',30,-14],['osArme','handR',30,-14],
+    ['shoulderL','chest',-20,-82],['elbowL','shoulderL',-26,-48],['handL','elbowL',-26,-16],['osBouclier','handL',-26,-16],
+    ['hipR','root',14,-4],['kneeR','hipR',20,44],['footR','kneeR',18,88],
+    ['hipL','root',-14,-4],['kneeL','hipL',-16,44],['footL','kneeL',-14,88]
+  ];
+  const ZORDER=['hipL','kneeL','footL','hipR','kneeR','footR','root','shoulderL','elbowL','handL','osBouclier','spine','chest','neck','head','shoulderR','elbowR','handR','osArme'];
+  const PAL={
+    white:{gi:'#e6e0d1',giDk:'#cfc7b4',skin:'#f0d9bf',ink:'#2b2620',steel:'#d6dae2',steelLn:'#9aa1ad',saber:'#e5432f',saberHi:'#ffd9cf',hair:'#241f19',obi:'#8f3b2f',collar:'#f6f2e9',lace:'#c34a34',gold:'#dcab45'},
+    black:{gi:'#363b45',giDk:'#272c34',skin:'#e6c6a4',ink:'#0c0d10',steel:'#5e646f',steelLn:'#8a919d',saber:'#3f7be6',saberHi:'#cfe0ff',hair:'#101217',obi:'#2f4d8f',collar:'#c7ccd6',lace:'#3f6bcf',gold:'#c9a24a'}
+  };
+  // ── algèbre affine 2×3 ──
+  function loc(rot,px,py,tx,ty){const c=Math.cos(rot),s=Math.sin(rot);return{a:c,b:s,c:-s,d:c,e:px-(c*px-s*py)+tx,f:py-(s*px+c*py)+ty};}
+  function mul(A,B){return{a:A.a*B.a+A.c*B.b,b:A.b*B.a+A.d*B.b,c:A.a*B.c+A.c*B.d,d:A.b*B.c+A.d*B.d,e:A.a*B.e+A.c*B.f+A.e,f:A.b*B.e+A.d*B.f+A.f};}
+  const str=M=>`matrix(${M.a} ${M.b} ${M.c} ${M.d} ${M.e} ${M.f})`;
+  function solve(anim){const T={};for(const[n,p,px,py]of BONES){const a=anim[n]||{};const L=loc(a.rot||0,px,py,a.tx||0,a.ty||0);T[n]=p?mul(T[p],L):L;}return T;}
+  // ── dessin ──
+  function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+  function poly(pts,f,s,w){return el('polygon',{points:pts.map(p=>p.join(',')).join(' '),fill:f,stroke:s||'none','stroke-width':w||0,'stroke-linejoin':'round'});}
+  function taper(x1,y1,x2,y2,w1,w2,f,s){const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L;return poly([[x1+nx*w1/2,y1+ny*w1/2],[x2+nx*w2/2,y2+ny*w2/2],[x2-nx*w2/2,y2-ny*w2/2],[x1-nx*w1/2,y1-ny*w1/2]],f,s||f,1.2);}
+  function buildBase(G,P,ctx){
+    G.hipR.appendChild(taper(10,-2,14,60,19,21,P.gi,P.ink));G.kneeR.appendChild(taper(14,60,12,122,21,14,P.gi,P.ink));
+    G.footR.appendChild(el('path',{d:'M 2 120 L 24 120 L 26 127 L 0 127 Z',fill:P.ink}));
+    G.hipL.appendChild(taper(-10,-2,-16,60,18,20,P.giDk,P.ink));G.kneeL.appendChild(taper(-16,60,-14,122,20,13,P.giDk,P.ink));
+    G.footL.appendChild(el('path',{d:'M -26 120 L -4 120 L -2 127 L -28 127 Z',fill:'#17181c'}));
+    G.shoulderL.appendChild(taper(-20,-82,-26,-48,19,12,P.giDk,P.ink));G.elbowL.appendChild(taper(-26,-48,-26,-16,12,8,P.giDk,P.ink));
+    G.handL.appendChild(el('circle',{cx:-26,cy:-16,r:5.5,fill:P.skin,stroke:P.ink,'stroke-width':1}));
+    G.root.appendChild(el('rect',{x:-15,y:-8,width:30,height:16,rx:4,fill:P.giDk}));
+    G.spine.appendChild(poly([[-21,-84],[21,-84],[15,-40],[11,-2],[-11,-2],[-15,-40]],P.gi,P.ink,2));
+    G.spine.appendChild(poly([[-13,-82],[0,-44],[13,-82]],P.collar,P.ink,1.3));
+    G.spine.appendChild(el('line',{x1:0,y1:-44,x2:0,y2:-78,stroke:P.giDk,'stroke-width':1.8}));
+    G.spine.appendChild(el('rect',{x:-16,y:-36,width:32,height:14,rx:2,fill:P.obi,stroke:P.ink,'stroke-width':1.1}));
+    G.spine.appendChild(el('rect',{x:-5,y:-36,width:9,height:14,fill:P.lace}));
+    G.neck.appendChild(taper(0,-94,0,-82,11,12,P.skin,P.ink));
+    G.head.appendChild(el('path',{d:'M -17 -108 Q -19 -132 1 -133 Q 21 -132 19 -108 Q 8 -119 1 -119 Q -8 -119 -17 -108 Z',fill:P.hair}));
+    G.head.appendChild(el('rect',{x:-3,y:-141,width:10,height:8,rx:3,fill:P.hair}));
+    G.head.appendChild(el('circle',{cx:1,cy:-112,r:16,fill:P.skin,stroke:P.ink,'stroke-width':1.2}));
+    const mkEye=cx=>{const e=el('ellipse',{cx,cy:-115,rx:3.4,ry:3.2,fill:'#fff',stroke:P.ink,'stroke-width':0.8});const p=el('circle',{cx,cy:-115,r:1.9,fill:P.ink});G.head.append(e,p);return{e,p,baseRy:3.2};};
+    const mkBrow=cx=>{const b=el('line',{x1:cx-3.6,y1:-121,x2:cx+3.6,y2:-121,stroke:P.ink,'stroke-width':1.7,'stroke-linecap':'round'});G.head.appendChild(b);return{el:b,cx,cy:-121};};
+    ctx.eyes=[mkEye(4),mkEye(11)];ctx.brows=[mkBrow(4),mkBrow(11)];
+    ctx.mouth=el('line',{x1:2,y1:-104,x2:9,y2:-104,stroke:P.ink,'stroke-width':1.3,'stroke-linecap':'round'});G.head.appendChild(ctx.mouth);
+    G.shoulderR.appendChild(taper(18,-84,24,-48,20,12,P.gi,P.ink));G.elbowR.appendChild(taper(24,-48,30,-14,12,8,P.gi,P.ink));
+    G.handR.appendChild(el('circle',{cx:30,cy:-14,r:6,fill:P.skin,stroke:P.ink,'stroke-width':1}));
+  }
+  function kabuto(G,p,cornes){
+    G.head.appendChild(poly([[-14,-120],[-19,-104],[-9,-100],[-3,-116]],p.steel,p.steelLn,1.2));
+    G.head.appendChild(el('path',{d:'M -16 -120 Q -14 -140 1 -141 Q 17 -140 17 -120 Q 1 -117 -16 -120 Z',fill:p.steel,stroke:p.steelLn,'stroke-width':1.5}));
+    G.head.appendChild(poly([[-16,-120],[-23,-117],[-19,-110],[-12,-114]],p.gold,p.ink,0.7));
+    G.head.appendChild(poly([[17,-120],[24,-117],[20,-110],[13,-114]],p.gold,p.ink,0.7));
+    if(cornes){G.head.appendChild(poly([[-3,-140],[-19,-165],[-12,-163],[-1,-141]],p.gold,p.ink,1));G.head.appendChild(poly([[7,-140],[23,-165],[16,-163],[5,-141]],p.gold,p.ink,1));G.head.appendChild(el('circle',{cx:2,cy:-141,r:3.4,fill:p.gold,stroke:p.ink,'stroke-width':0.7}));}
+    else{G.head.appendChild(el('path',{d:'M 2 -141 q -8 -5 -1 -13 q 8 8 1 13',fill:p.gold,stroke:p.ink,'stroke-width':0.7}));}
+  }
+  function sabre(G,p,len,off){
+    const hx=30,hy=-14,dx=0.80,dy=-0.60,bx=hx+dx*11,by=hy+dy*11,tx=hx+dx*(len+off),ty=hy+dy*(len+off),nx=-dy,ny=dx,w=2.6,mx=(bx+tx)/2+nx*8,my=(by+ty)/2+ny*8;
+    G.osArme.appendChild(el('path',{d:`M ${bx+nx*w} ${by+ny*w} Q ${mx+nx*w} ${my+ny*w} ${tx} ${ty} Q ${mx-nx*w} ${my-ny*w} ${bx-nx*w} ${by-ny*w} Z`,fill:p.saber,stroke:p.saberHi,'stroke-width':1}));
+    G.osArme.appendChild(el('circle',{cx:hx+dx*8,cy:hy+dy*8,r:4.6,fill:p.ink}));
+    G.osArme.appendChild(taper(hx-dx*14,hy-dy*14,hx+dx*6,hy+dy*6,5,5,p.ink,p.ink));
+  }
+  function doPlastron(G,p,lam){G.chest.appendChild(poly([[-17,-84],[17,-84],[19,-52],[0,-42],[-19,-52]],p.steel,p.steelLn,1.6));if(lam){for(let i=0;i<3;i++){const y=-76+i*10;G.chest.appendChild(el('line',{x1:-17,y1:y,x2:17,y2:y,stroke:p.steelLn,'stroke-width':1.2}));}G.chest.appendChild(el('line',{x1:0,y1:-84,x2:0,y2:-44,stroke:p.lace,'stroke-width':1.8}));}}
+  function doSode(G,p){G.shoulderR.appendChild(poly([[4,-90],[26,-85],[29,-60],[6,-64]],p.steel,p.steelLn,1.5));G.shoulderL.appendChild(poly([[-5,-88],[-24,-83],[-27,-60],[-8,-64]],p.giDk,p.steelLn,1.2));}
+  function doKusazuri(G,p){G.root.appendChild(poly([[-17,-2],[17,-2],[21,26],[-21,26]],p.steel,p.steelLn,1.4));G.root.appendChild(el('line',{x1:-19,y1:11,x2:19,y2:11,stroke:p.steelLn,'stroke-width':1}));}
+  function doSuneate(G,p){G.kneeR.appendChild(poly([[9,66],[21,66],[19,116],[11,116]],p.steel,p.steelLn,1.2));G.kneeL.appendChild(poly([[-9,66],[-21,66],[-19,116],[-11,116]],p.giDk,p.steelLn,1));}
+  // Loadout fixe (placeholder) par camp.
+  function buildFighter(sideRoot,side){
+    while(sideRoot.firstChild)sideRoot.removeChild(sideRoot.firstChild);
+    const P=PAL[side],G={},ctx={};
+    ZORDER.forEach(b=>{const g=el('g',{'data-bone':b});G[b]=g;sideRoot.appendChild(g);});
+    buildBase(G,P,ctx);
+    doPlastron(G,P,side==='black');doSode(G,P);doKusazuri(G,P);if(side==='white')doSuneate(G,P);
+    kabuto(G,P,side==='black');sabre(G,P,66,50);
+    return {G,ctx};
+  }
+  // ── clips ──
+  const ease=x=>x*x*(3-2*x),clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+  function idle(t){const br=Math.sin(t*1.8)*0.02,blink=((t%3.4)<0.11)?0.15:1;return{anim:{chest:{rot:br},head:{rot:Math.sin(t*1.8+0.4)*0.02},shoulderR:{rot:Math.sin(t*1.5)*0.03},shoulderL:{rot:Math.sin(t*1.5+1)*0.03},osArme:{rot:Math.sin(t*1.5)*0.02}},eyeOpen:blink,brow:0};}
+  function strike(t){const dur=1.7,p=clamp(t/dur,0,1);let sh,e2,sp,tx;if(p<0.4){const w=ease(p/0.4);sh=-1.5*w;e2=-0.7*w;sp=-0.15*w;tx=-8*w;}else if(p<0.6){const s=ease((p-0.4)/0.2);sh=-1.5+2.4*s;e2=-0.7+1.1*s;sp=-0.15+0.35*s;tx=-8+30*s;}else{const r=ease((p-0.6)/0.4);sh=0.9*(1-r);e2=0.4*(1-r);sp=0.2*(1-r);tx=22*(1-r);}return{anim:{shoulderR:{rot:sh},elbowR:{rot:e2},spine:{rot:sp},root:{tx},osArme:{rot:sh*0.3},shoulderL:{rot:-0.2}},eyeOpen:1,brow:0.6};}
+  function chute(t){const dur=1.8,f=ease(clamp(t/dur,0,1));return{anim:{spine:{rot:-0.9*f},chest:{rot:-0.2*f},neck:{rot:-0.3*f},head:{rot:-0.5*f},root:{tx:-16*f,ty:34*f},hipR:{rot:0.3*f},hipL:{rot:0.3*f},kneeR:{rot:0.5*f},kneeL:{rot:0.5*f},shoulderR:{rot:-0.4*f},shoulderL:{rot:-0.4*f}},eyeOpen:1-f,brow:0.3};}
+  function recoil(t){const dur=0.95,f=Math.sin(clamp(t/dur,0,1)*Math.PI);return{anim:{spine:{rot:-0.35*f},head:{rot:-0.25*f},root:{tx:-14*f},shoulderR:{rot:-0.2*f},shoulderL:{rot:-0.2*f}},eyeOpen:1,brow:0.3};}
+  function lunge(t){const dur=0.95,f=Math.sin(clamp(t/dur,0,1)*Math.PI);return{anim:{root:{tx:18*f},spine:{rot:0.12*f},shoulderR:{rot:0.5*f},elbowR:{rot:0.3*f},osArme:{rot:0.2*f}},eyeOpen:1,brow:0.2};}
+  const ACT={strike:{fn:strike,dur:1.7,hold:false},chute:{fn:chute,dur:1.8,hold:true},recoil:{fn:recoil,dur:0.95,hold:false},lunge:{fn:lunge,dur:0.95,hold:false}};
+  // ── état + rendu ──
+  let mounted=false,fig={white:null,black:null},action={white:null,black:null},raf=0,t00=performance.now();
+  function applyFrame(f,res){
+    const T=solve(res.anim);
+    for(const b in f.G)f.G[b].setAttribute('transform',str(T[b]||{a:1,b:0,c:0,d:1,e:0,f:0}));
+    const eo=res.eyeOpen;
+    f.ctx.eyes.forEach(e=>{e.e.setAttribute('ry',Math.max(0.5,e.baseRy*eo).toFixed(2));e.p.setAttribute('r',Math.max(0,Math.min(1.9,2.4*eo-0.3)).toFixed(2));});
+    f.ctx.brows.forEach(b=>{const inner=b.cx<7?1:-1;b.el.setAttribute('transform',`translate(0,${(res.brow*2.5).toFixed(1)}) rotate(${(inner*res.brow*14).toFixed(1)} ${b.cx} ${b.cy})`);});
+    f.ctx.mouth.setAttribute('transform',`translate(0,${(res.brow*1.2).toFixed(1)})`);
+  }
+  function frameFor(side,now){
+    const a=action[side];
+    if(a){const t=(now-a.t0)/1000,def=ACT[a.type];
+      if(t>=def.dur&&!def.hold){action[side]=null;}
+      else return def.fn(def.hold?Math.min(t,def.dur):t);
+    }
+    return idle((now-t00)/1000 + (side==='black'?0.7:0));
+  }
+  function loop(){
+    const now=performance.now();
+    if(fig.white)applyFrame(fig.white,frameFor('white',now));
+    if(fig.black)applyFrame(fig.black,frameFor('black',now));
+    raf=requestAnimationFrame(loop);
+  }
+  function mount(container){
+    if(mounted||!container)return;
+    const svg=el('svg',{viewBox:'0 0 720 300',preserveAspectRatio:'xMidYMid meet',width:'100%',height:'100%'});
+    const rW=el('g',{transform:'translate(250,196) scale(0.8,0.8)'});
+    const rB=el('g',{transform:'translate(470,196) scale(-0.8,0.8)'});
+    svg.append(rW,rB);container.appendChild(svg);
+    fig.white=buildFighter(rW,'white');fig.black=buildFighter(rB,'black');
+    mounted=true;loop();
+  }
+  function play(key,moverColor){
+    const mover=(moverColor==='black')?'black':'white',opp=(mover==='white')?'black':'white',now=performance.now();
+    const set=(s,ty)=>{action[s]={type:ty,t0:now};};
+    if(key==='sword-captures-combattant-fatality'||key==='player-loses-slash'){set(mover,'strike');set(opp,'chute');}
+    else if(key==='sword-vs-sword-push'||key==='shield-vs-sword-push'||key==='shield-vs-player-push'||key==='player-vs-player-push'){set(mover,'strike');set(opp,'recoil');}
+    else {set(mover,'lunge');action[opp]=null;}
+  }
+  function reset(){action.white=null;action.black=null;}
+  return {mount,play,reset};
+})();
+</script>
 </body>
 </html>
