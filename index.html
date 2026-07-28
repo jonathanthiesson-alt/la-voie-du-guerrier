@@ -2492,7 +2492,11 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div class="panel" style="max-width:380px;width:100%">
     <div class="menu-title" style="font-size:18px;margin-top:10px">🎌 PROTO — avatars & bandeau</div>
     <div class="menu-divider"></div>
-    <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.6;text-align:center;margin-bottom:12px">Banc de test dev (Musashi · Wurmz). Le bandeau de combat joue le mini-film d'avatars piloté par les coups joués.</div>
+    <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.6;text-align:center;margin-bottom:12px">Banc de test dev (Musashi · Wurmz). Créer des skins, et tester le mini-film d'avatars du bandeau en partie.</div>
+    <div style="font-family:'VT323',monospace;font-size:11px;color:var(--gold-bright);opacity:.7;letter-spacing:1px;margin-bottom:6px">◆ CRÉER</div>
+    <button class="btn" style="width:100%;margin-bottom:12px" onclick="showScreen('proto-rig')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">🎨</span>Éditeur de skins &amp; rigs</button>
+    <div class="menu-divider"></div>
+    <div style="font-family:'VT323',monospace;font-size:11px;color:var(--gold-bright);opacity:.7;letter-spacing:1px;margin-bottom:6px">◆ TESTER EN PARTIE</div>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="protoPlay('ai')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">🤖</span>Partie test vs IA</button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="protoPlay('human')"><span style="font-family:'Noto Serif JP',serif;font-size:16px;vertical-align:middle;margin-right:6px">対</span>Thomas vs moi (même appareil)</button>
     <button class="btn" style="width:100%;margin-bottom:12px" onclick="protoPlay('sandbox')"><span style="font-size:15px;vertical-align:middle;margin-right:6px">🧪</span>Bac à sable — sans temps</button>
@@ -2500,6 +2504,14 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn-devtest" style="width:100%;padding:9px;border-radius:5px;cursor:pointer" onclick="showScreen('home')">↩ Quitter le proto</button>
   </div>
   </div>
+</div>
+
+<!-- PROTO — Éditeur de skins / rigs : charge l'assembleur autonome
+     (avatars/proto.html) dans une iframe. Le src est posé à la volée au premier
+     affichage (voir showScreen) pour ne pas le charger chez les non-devs. -->
+<div id="screen-proto-rig" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('proto')">↩ PROTO</button></div>
+  <iframe id="proto-rig-frame" title="Éditeur de skins & rigs" style="position:absolute;top:48px;left:0;right:0;bottom:0;width:100%;height:calc(100% - 48px);border:0;background:#12151c"></iframe>
 </div>
 
 <div id="screen-dev-repertoire" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
@@ -10211,6 +10223,7 @@ function showScreen(id){
   if(id==='amis'){ setAmisTab(_amisTab||'msg'); }
   if(id==='devrewards'){ refreshDevRewardsScreen(); }
   if(id==='menu'||id==='local-hub'||id==='home'){ updateDevButtonVisibility(); }
+  if(id==='proto-rig'){ var _prf=document.getElementById('proto-rig-frame'); if(_prf && !_prf.getAttribute('src')) _prf.setAttribute('src','avatars/proto.html'); }
   if(id==='dev-openings') renderDevOpeningsList();
   if(id==='dev-tactics') renderDevTacticsList();
   if(id==='dev-balance'){ renderDevBalanceList(); renderDevBalanceEstimates(); }
