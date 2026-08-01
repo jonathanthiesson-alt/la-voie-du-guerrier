@@ -99,6 +99,31 @@ pilotent le bandeau. État actuel du câblage :
 
 ---
 
-*Tous les clips ci-dessus sont **prototypés** (placeholders dessinés dans le code)
-dans `avatars/proto.html` → sélecteur **Mouvement**, avec un bouton **Acteur**
-(Blanc/Noir) pour choisir quel camp exécute le geste. Rédigé le 2026-07-28.*
+## 6. Plans / caméras (mise en scène)
+
+En 2.5D ce sont des **plans montés**, pas une caméra 3D libre (cf.
+`docs/AVATARS_SKINS.md` §4). Catalogue des cadrages :
+
+| Plan | Cadrage | Usage |
+|---|---|---|
+| **Plateau** | vue de profil, les deux combattants côte à côte | défaut hors mise en scène |
+| **Combat « OTS »** (façon Pokémon) | **par-dessus l'épaule** : le combattant **du joueur** de **dos / ¾ arrière** au premier plan, l'adversaire en face | plan d'immersion du duel |
+| **Fatality** | rapproché, dramatique | coup fatal |
+| **Salut** | les deux face à face | ouverture |
+| **Gros plan yeux** | serré sur le visage / les yeux | réflexion du joueur, parades |
+
+> **🔴 Règle de POV — chaque joueur voit depuis SON combattant.** Les plans
+> immersifs (OTS, gros plans) sont cadrés du **point de vue du combattant du
+> joueur qui regarde** (le Blanc voit son guerrier de dos et le Noir en face ;
+> inverse pour le Noir). Même partie, **rendu par joueur**.
+
+> **⚠️ Coût 2.5D.** Une vue de **dos / ¾ arrière** = **un autre dessin** (pas une
+> rotation), sur le même squelette → chaque cosmétique visible en OTS a besoin de
+> sa **silhouette arrière**. À trancher : OTS = cadrage **par défaut** (coûteux)
+> ou **ponctuel** (dramatique). En Rive : un **artboard/skin par plan**.
+
+*Tous les mouvements ci-dessus sont **prototypés** (placeholders dessinés dans le
+code) dans `avatars/proto.html` → sélecteurs **Plan** (Plateau / Combat OTS / Gros
+plan yeux) et **Mouvement**, + bouton **Acteur/POV** (Blanc/Noir). Les vues OTS et
+gros plan sont des **maquettes de cadrage** (les vraies vues arrière/face viennent
+de Rive + l'art de Thomas). Rédigé le 2026-07-28, plans ajoutés le 2026-07-29.*

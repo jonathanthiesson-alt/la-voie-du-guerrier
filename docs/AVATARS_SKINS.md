@@ -142,10 +142,27 @@ cosmétique extrême.
 
 Plans canoniques (en 2.5D = angles mis en scène + parallaxe) :
 1. **Plateau** — l'angle par défaut, comment la pièce se tient sur sa case.
-2. **Fatality** — cadrage rapproché et dramatique pour le coup fatal.
-3. **Salut** — les deux Épéistes face à face, ouverture du combat.
-4. **Gros plan / réflexion** — cadrage rapproché sur le visage pendant que
-   l'adversaire réfléchit (support des micro-anims des yeux).
+2. **Combat « OTS » (façon combat Pokémon)** — vue **par-dessus l'épaule** : le
+   combattant **du joueur** au premier plan, vu de **dos / trois-quarts arrière**,
+   l'adversaire en face qui le regarde. C'est le plan d'immersion du duel.
+3. **Fatality** — cadrage rapproché et dramatique pour le coup fatal.
+4. **Salut** — les deux combattants face à face, ouverture du combat.
+5. **Gros plan / réflexion & parade** — cadrage serré sur le visage / les yeux
+   (réflexion du joueur, parade), support des micro-anims des yeux.
+
+> **🔴 Règle de POV (2026-07-29) — chaque joueur voit depuis SON combattant.**
+> Les plans immersifs (OTS, gros plans) sont cadrés du **point de vue du
+> combattant du joueur qui regarde** : le Blanc voit **son** guerrier de dos et le
+> Noir en face ; le Noir voit l'inverse. Même partie, **rendu par joueur** (comme
+> le loadout estampillé par couleur, §6).
+>
+> **⚠️ Conséquence 2.5D à budgéter.** Une vue de **dos / ¾ arrière** n'est PAS une
+> rotation du rig de profil — c'est **un autre dessin** (le combattant vu de
+> derrière) sur le même squelette. Donc chaque cosmétique qui apparaît dans le
+> plan OTS doit exister aussi en **silhouette arrière**. **À trancher** : l'OTS
+> est-il le **cadrage par défaut du combat** (coûteux — vue arrière pour tous les
+> cosmétiques) ou un **plan ponctuel** (dramatique, vues arrière limitées) ?
+> En Rive, chaque plan = un **artboard/skin dédié** (le back n'est jamais gratuit).
 
 ---
 
