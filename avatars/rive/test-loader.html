@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rive — test de chargement (.riv)</title>
+<!--
+  Page de test AUTONOME (hors jeu) pour valider un export .riv de la Phase 0.
+  But : dès que Thomas exporte un fichier, on vérifie en un clic qu'il se charge,
+  qu'on lit ses artboards / state machines / anims, et qu'il s'affiche.
+  Le runtime Rive (open source, MIT) est chargé depuis le CDN — c'est une page
+  de DEV, pas embarquée dans index.html. L'intégration jeu réutilisera la même
+  lib mais via le point d'accroche existant triggerCombatAnim().
+-->
+<style>
+  :root{ --bg:#14171c; --panel:#1d222a; --line:#333c48; --txt:#e6ebf2; --muted:#8b97a7; --accent:#7c5cff; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:14px/1.5 system-ui,Segoe UI,sans-serif}
+  header{padding:14px 18px;border-bottom:1px solid var(--line)}
+  h1{margin:0;font-size:16px}
+  .sub{color:var(--muted);font-size:12px;margin-top:2px}
+  main{display:grid;grid-template-columns:320px 1fr;gap:0;min-height:calc(100vh - 56px)}
+  .side{border-right:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:14px}
+  .stage{display:flex;align-items:center;justify-content:center;padding:20px}
+  canvas{background:#0c0e12;border:1px solid var(--line);border-radius:8px;max-width:100%}
+  label{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}
+  select,button,input[type=file]{width:100%;background:var(--panel);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:8px}
+  button{cursor:pointer}
+  button.primary{background:var(--accent);border-color:var(--accent);font-weight:600}
+  .field{margin:0}
+  .status{font-size:12px;white-space:pre-wrap;background:#0c0e12;border:1px solid var(--line);border-radius:6px;padding:10px;color:var(--muted);min-height:60px}
+  .ok{color:#5ad19a} .err{color:#ff6b6b}
+  .hint{font-size:11px;color:var(--muted)}
+  .row{display:flex;gap:8px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Rive — test de chargement <code>.riv</code></h1>
+  <div class="sub">Phase 0 · valide un export sans toucher au jeu. Attendu : artboard <code>combattant_profil</code>, state machine <code>combat</code>.</div>
+</header>
+<main>
+  <div class="side">
+    <div class="field">
+      <label>1. Charger un fichier .riv</label>
+      <input type="file" id="file" accept=".riv">
+      <div class="hint">ou dépose <code>combattant_profil.riv</code> dans ce dossier et clique ci-dessous.</div>
+    </div>
+    <button id="loadDefault">Charger ./combattant_profil.riv</button>
+
+    <div class="field">
+      <label>2. Artboard</label>
+      <select id="artboardSel"><option>—</option></select>
+    </div>
+    <div class="field">
+      <label>3. State machine</label>
+      <select id="smSel"><option>—</option></select>
+    </div>
+    <div class="field">
+      <label>4. Anim (lecture simple, hors state machine)</label>
+      <select id="animSel"><option>—</option></select>
+    </div>
+    <button id="applyBtn" class="primary">Afficher</button>
+
+    <div class="field">
+      <label>Inputs de la state machine</label>
+      <div id="inputs" class="hint">—</div>
+    </div>
+
+    <div class="field">
+      <label>Journal</label>
+      <div id="status" class="status">En attente d'un fichier…</div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <canvas id="cv" width="720" height="470"></canvas>
+  </div>
+</main>
+
+<!-- Runtime Rive Web (WASM). Lib officielle, open source MIT. -->
+<script src="https://unpkg.com/@rive-app/canvas@2/rive.js"></script>
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const statusEl = $('status');
+  let riveInstance = null;
+  let lastBuffer = null;
+
+  function log(msg, cls){
+    statusEl.textContent = msg;
+    statusEl.className = 'status' + (cls ? ' ' + cls : '');
+  }
+  function append(msg){ statusEl.textContent += '\n' + msg; }
+
+  if (typeof rive === 'undefined') {
+    log('❌ Runtime Rive non chargé (pas de réseau ?). Cette page de test a besoin\ndu CDN unpkg. Vérifie la connexion, ou télécharge rive.js en local.', 'err');
+    return;
+  }
+
+  // Remplit un <select> avec une liste de chaînes.
+  function fill(sel, arr, empty){
+    sel.innerHTML = '';
+    if(!arr || !arr.length){ sel.innerHTML = '<option>'+(empty||'—')+'</option>'; return; }
+    arr.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
+  }
+
+  // Inspecte le buffer chargé et remplit les sélecteurs. On instancie une 1re fois
+  // sur le 1er artboard pour lire ses machines/anims, puis on laisse l'utilisateur choisir.
+  function inspect(buffer){
+    lastBuffer = buffer;
+    if(riveInstance){ try{ riveInstance.cleanup(); }catch(e){} riveInstance=null; }
+    log('Fichier lu ('+buffer.byteLength+' octets). Analyse…');
+
+    riveInstance = new rive.Rive({
+      buffer: buffer,
+      canvas: $('cv'),
+      autoplay: false,
+      onLoad: ()=>{
+        try{
+          const abNames = riveInstance.contents ? riveInstance.contents.artboards.map(a=>a.name) : [];
+          fill($('artboardSel'), abNames);
+          // Détail du 1er artboard
+          const first = riveInstance.contents && riveInstance.contents.artboards[0];
+          const sms = first ? first.stateMachines.map(s=>s.name) : [];
+          const anims = first ? first.animations : [];
+          fill($('smSel'), sms);
+          fill($('animSel'), anims);
+          const hasProfil = abNames.includes('combattant_profil');
+          const hasCombat = sms.includes('combat');
+          log('✅ Chargé.', 'ok');
+          append('Artboards : ' + (abNames.join(', ')||'aucun'));
+          append('State machines (1er artboard) : ' + (sms.join(', ')||'aucune'));
+          append('Anims (1er artboard) : ' + (anims.join(', ')||'aucune'));
+          append('');
+          append((hasProfil?'✓':'✗') + " artboard 'combattant_profil'");
+          append((hasCombat?'✓':'✗') + " state machine 'combat'");
+        }catch(e){ log('⚠️ Chargé mais lecture du contenu impossible : '+e.message, 'err'); }
+      },
+      onLoadError: (e)=> log('❌ Échec du chargement : ' + (e && e.message ? e.message : e), 'err')
+    });
+  }
+
+  // (Ré)affiche selon les choix : priorité à la state machine, sinon anim simple.
+  function apply(){
+    if(!lastBuffer){ log('Charge d’abord un fichier.', 'err'); return; }
+    const ab = $('artboardSel').value;
+    const sm = $('smSel').value;
+    const anim = $('animSel').value;
+    if(riveInstance){ try{ riveInstance.cleanup(); }catch(e){} }
+
+    const cfg = { buffer:lastBuffer, canvas:$('cv'), autoplay:true, onLoad:onReady, onLoadError:e=>log('❌ '+e,'err') };
+    if(ab && ab!=='—') cfg.artboard = ab;
+    if(sm && sm!=='—'){ cfg.stateMachines = sm; }
+    else if(anim && anim!=='—'){ cfg.animations = anim; }
+    riveInstance = new rive.Rive(cfg);
+
+    function onReady(){
+      riveInstance.resizeDrawingSurfaceToCanvas();
+      log('▶ Lecture : artboard='+(ab||'défaut')+(sm&&sm!=='—'?(' · SM='+sm):'')+(anim&&anim!=='—'&&(!sm||sm==='—')?(' · anim='+anim):''), 'ok');
+      // Liste les inputs de la state machine (utile pour vérifier le trigger 'impact').
+      const box = $('inputs');
+      if(sm && sm!=='—'){
+        try{
+          const inputs = riveInstance.stateMachineInputs(sm) || [];
+          if(!inputs.length){ box.textContent='(aucun input)'; return; }
+          box.innerHTML='';
+          inputs.forEach(inp=>{
+            const b=document.createElement('button');
+            b.style.marginBottom='6px';
+            const kind = inp.type===56?'trigger':(inp.type===59?'bool':'number'); // codes runtime Rive
+            b.textContent = '⚡ '+inp.name+' ('+kind+')';
+            b.onclick = ()=>{ try{ if(inp.type===56){inp.fire();} else if(inp.type===59){inp.value=!inp.value;} append('→ '+inp.name+' déclenché'); }catch(e){append('⚠ '+e.message);} };
+            box.appendChild(b);
+          });
+        }catch(e){ box.textContent='inputs illisibles : '+e.message; }
+      } else { box.textContent='(pas de state machine active)'; }
+    }
+  }
+
+  $('file').addEventListener('change', e=>{
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader();
+    r.onload = ()=> inspect(r.result);
+    r.onerror = ()=> log('❌ Lecture du fichier impossible.', 'err');
+    r.readAsArrayBuffer(f);
+  });
+
+  $('loadDefault').addEventListener('click', ()=>{
+    log('Téléchargement de ./combattant_profil.riv…');
+    fetch('combattant_profil.riv').then(res=>{
+      if(!res.ok) throw new Error('HTTP '+res.status+' (le fichier n’est pas encore dans ce dossier ?)');
+      return res.arrayBuffer();
+    }).then(inspect).catch(e=> log('❌ '+e.message, 'err'));
+  });
+
+  $('applyBtn').addEventListener('click', apply);
+  $('artboardSel').addEventListener('change', ()=>{ /* recharge inspection sur artboard choisi via apply */ });
+})();
+</script>
+</body>
+</html>

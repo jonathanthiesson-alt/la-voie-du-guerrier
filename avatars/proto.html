@@ -12,6 +12,7 @@
     --muted:#96a0b5; --line:#333c53; --accent:#e5b93f; --red:#e5432f; --blue:#3f7be6;
   }
   *{box-sizing:border-box}
+  [hidden]{display:none !important}   /* sinon .wrap{display:flex} écrase l'attribut hidden */
   body{margin:0;background:var(--bg);color:var(--ink);
     font-family:system-ui,Segoe UI,Roboto,sans-serif;font-size:14px;line-height:1.4}
   header{padding:14px 18px;border-bottom:1px solid var(--line);background:#0e1119}
@@ -48,6 +49,22 @@
   .row{display:flex;align-items:center;gap:8px;margin-top:8px}
   .row button{background:var(--panel2);color:var(--ink);border:1px solid var(--line);
     padding:5px 10px;border-radius:6px;cursor:pointer;font-size:12px}
+  /* Barre d'onglets (Assembleur / Éditeur de rig) */
+  .tabbar{display:flex;gap:4px;padding:8px 14px 0;border-bottom:1px solid var(--line);background:#0e1119}
+  .tabbar .tab{background:transparent;color:var(--muted);border:1px solid transparent;
+    border-bottom:none;padding:8px 16px;border-radius:8px 8px 0 0;cursor:pointer;font-size:13px}
+  .tabbar .tab.on{background:var(--panel);color:var(--ink);border-color:var(--line)}
+  /* Éditeur de rig */
+  .rig-views{display:flex;gap:10px;width:100%;justify-content:center;flex-wrap:wrap}
+  .rig-col{flex:1 1 240px;min-width:220px;max-width:340px}
+  .rig-vtitle{font-size:12px;color:var(--muted);text-align:center;margin:2px 0 4px}
+  .rig-vsub{opacity:.7}
+  .rig-svg{width:100%;height:auto;background:radial-gradient(120% 90% at 50% 12%,#20263a 0%,#141824 70%,#0e1119 100%);
+    border:1px solid var(--line);border-radius:10px;touch-action:none}
+  .rig-joint{fill:var(--accent);stroke:#0009;stroke-width:1;cursor:grab}
+  .rig-joint.sel{fill:#fff;stroke:var(--accent);stroke-width:2}
+  .rig-bone{stroke:#8ea0c0;stroke-width:2;stroke-linecap:round}
+  .rig-ghost{fill:#2b3350;stroke:#465579;stroke-width:1;opacity:.85}
 </style>
 </head>
 <body>
@@ -56,7 +73,12 @@
   <p>Placeholders <b>dessinés dans le code</b> (zéro art de Thomas, zéro outil, zéro Supabase). Démontre&nbsp;: un <b>squelette 2.5D partagé</b> par les deux combattants, des <b>slots échangeables en direct</b>, la <b>règle d'or</b> (l'animation porte n'importe quel équipement équipé) et une <b>micro-anim des yeux</b>. Un cosmétique = une forme accrochée à un os&nbsp;; une anim = du pur mouvement d'os. <b>Proportions humaines ~7,5 têtes.</b></p>
 </header>
 
-<div class="wrap">
+<div class="tabbar" id="tabbar">
+  <button class="tab on" data-mode="assembler">🎌 Assembleur</button>
+  <button class="tab" data-mode="rig">🦴 Éditeur de rig</button>
+</div>
+
+<div class="wrap" id="view-assembler">
   <div class="stage">
     <svg id="scene" viewBox="0 0 640 470" aria-label="Deux combattants"></svg>
     <div class="clipbar" id="clipbar">
@@ -98,6 +120,71 @@
       <b>👁 Réflexion</b> montre la promesse « réal manga »&nbsp;: les yeux se
       <b>plissent</b> et les sourcils se froncent (le visage est <b>dans le
       squelette gelé</b>).
+    </div>
+  </div>
+</div>
+
+<div class="wrap" id="view-rig" hidden>
+  <div class="stage">
+    <div class="rig-views">
+      <div class="rig-col">
+        <div class="rig-vtitle">Face</div>
+        <svg id="rigFace" class="rig-svg" viewBox="0 0 300 400" aria-label="Rig — vue de face"></svg>
+      </div>
+      <div class="rig-col">
+        <div class="rig-vtitle">Profil <span class="rig-vsub">(profondeur z)</span></div>
+        <svg id="rigProfil" class="rig-svg" viewBox="0 0 300 400" aria-label="Rig — vue de profil"></svg>
+      </div>
+    </div>
+    <div class="caption" id="rigCaption">Glisse les points d'articulation. Face édite X·Y ; Profil édite Z·Y (la hauteur Y est partagée).</div>
+  </div>
+
+  <div class="panel">
+    <h2>Éditeur de rig (outil DEV)</h2>
+    <div class="note" style="margin-top:0">
+      Pose graphiquement le <b>squelette gelé</b> : glisse les articulations,
+      règle les proportions, sauvegarde des <b>presets</b>, puis <b>exporte</b> la
+      table d'os (pour <code>proto.html</code> et le brief Rive Phase 0). Le corps
+      <b>fantôme</b> est dérivé des os → il suit tes réglages en direct.
+    </div>
+
+    <h2 style="margin-top:14px">Proportions générales</h2>
+    <div class="slot">
+      <label>Échelle verticale · <span id="rigSyVal">1.00</span>×</label>
+      <input type="range" id="rigSy" min="0.6" max="1.5" step="0.01" value="1" style="width:100%">
+    </div>
+    <div class="slot">
+      <label>Échelle horizontale · <span id="rigSxVal">1.00</span>×</label>
+      <input type="range" id="rigSx" min="0.6" max="1.5" step="0.01" value="1" style="width:100%">
+    </div>
+    <div class="row">
+      <button id="rigBake" title="Écrit l'échelle dans les positions d'os et remet les curseurs à 1">Figer l'échelle dans les os</button>
+    </div>
+
+    <h2 style="margin-top:14px">Options</h2>
+    <div class="row" style="margin-top:2px">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><input type="checkbox" id="rigSym" checked> Symétrie G/D</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><input type="checkbox" id="rigGhost" checked> Corps fantôme</label>
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)"><input type="checkbox" id="rigLabels"> Noms d'os</label>
+    </div>
+
+    <div class="note" id="rigReadout" style="margin-top:14px">—</div>
+
+    <h2 style="margin-top:14px">Presets</h2>
+    <div class="slot">
+      <select id="rigPresetSel"><option value="">— rappeler un preset —</option></select>
+    </div>
+    <div class="row">
+      <button id="rigSave">💾 Sauvegarder…</button>
+      <button id="rigDelete">🗑 Supprimer</button>
+      <button id="rigReset" title="Revenir au squelette par défaut du proto">↺ Défaut</button>
+    </div>
+
+    <h2 style="margin-top:14px">Export (table d'os)</h2>
+    <textarea id="rigExport" readonly style="width:100%;height:120px;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;font:11px/1.4 monospace;padding:8px"></textarea>
+    <div class="row">
+      <button id="rigCopy">📋 Copier</button>
+      <button id="rigApply" title="Applique ce rig au squelette de l'onglet Assembleur (session en cours)">➡ Appliquer à l'Assembleur</button>
     </div>
   </div>
 </div>
@@ -673,6 +760,195 @@ rebuild('white'); rebuild('black');
 setMove('salut');
 applyPlan('plateau');
 requestAnimationFrame(loop);
+
+/* ================================================================== *
+ *  ÉDITEUR DE RIG GRAPHIQUE (outil DEV, autonome)
+ *  - Édite les positions ABSOLUES des articulations (celles que
+ *    solve() fait tourner) en vue Face (X·Y) et Profil (Z·Y).
+ *  - Corps « fantôme » dérivé des os → aperçu des proportions.
+ *  - Presets (localStorage), export de la table d'os, application
+ *    au squelette de l'Assembleur (mute BONES → centres de rotation).
+ *  Ne touche PAS le moteur d'anim existant (rendu statique séparé).
+ * ================================================================== */
+const RigEditor = (function(){
+  const NS='http://www.w3.org/2000/svg';
+  const mk=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  const order=BONES.map(b=>b[0]);
+  const parent={}; BONES.forEach(([n,p])=>parent[n]=p);
+  const CENTER=['root','spine','chest','neck','head'];       // os sur l'axe (x=0 si symétrie)
+  const HEAD_UNIT=32;                                          // 1 tête ≈ 32u (canon ~7,5 têtes)
+  const cx=150, cy=250;                                        // origine (bassin) dans le viewBox 300×400
+  const LS='rigEditorPresets';
+
+  let joints, sx=1, sy=1, sel=null, inited=false;
+  const drag={on:false, plane:null, name:null, svg:null};
+
+  function defaults(){ const j={}; BONES.forEach(([n,p,x,y])=>j[n]={x,y,z:0}); return j; }
+  function mirrorOf(n){ if(n.endsWith('R')){const c=n.slice(0,-1)+'L'; if(joints[c])return c;}
+    if(n.endsWith('L')){const c=n.slice(0,-1)+'R'; if(joints[c])return c;} return null; }
+
+  // canonical (h,y) -> viewBox px, avec échelle d'affichage.
+  const px=h=>cx+sx*h, py=y=>cy+sy*y;
+  const pt=(plane,j)=>[px(plane==='face'?j.x:j.z), py(j.y)];
+
+  // Polygone « membre » à volume, sommets calculés en canonique puis mappés.
+  function limb(plane,x1,y1,x2,y2,w1,w2){
+    const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy)||1,nx=-dy/L,ny=dx/L;
+    const C=[[x1+nx*w1/2,y1+ny*w1/2],[x2+nx*w2/2,y2+ny*w2/2],
+             [x2-nx*w2/2,y2-ny*w2/2],[x1-nx*w1/2,y1-ny*w1/2]];
+    return C.map(([a,b])=>px(plane==='face'?a:0)+','+py(b)).join(' ');
+  }
+
+  function ghost(g,plane){
+    const j=joints, add=p=>g.appendChild(mk('polygon',{points:p,class:'rig-ghost'}));
+    // jambes + bras (les deux côtés, pilotés par les vraies articulations)
+    [['hipR','kneeR',9,7],['kneeR','footR',7,4],['hipL','kneeL',9,7],['kneeL','footL',7,4],
+     ['shoulderR','elbowR',7,5],['elbowR','handR',5,3],['shoulderL','elbowL',7,5],['elbowL','handL',5,3]]
+      .forEach(([a,b,w1,w2])=>add(limb(plane,j[a].x,j[a].y,j[b].x,j[b].y,w1,w2)));
+    // torse (épaules -> hanches)
+    const topW=Math.abs(j.shoulderR.x-j.shoulderL.x)*0.8+8;
+    const torso=[[j.chest.x-topW/2,j.chest.y],[j.chest.x+topW/2,j.chest.y],[j.hipR.x+4,j.hipR.y],[j.hipL.x-4,j.hipL.y]];
+    add(torso.map(([a,b])=>px(plane==='face'?a:0)+','+py(b)).join(' '));
+    // tête
+    const hc=pt(plane,j.head);
+    g.appendChild(mk('ellipse',{cx:hc[0],cy:hc[1],rx:14*sx,ry:17*sy,class:'rig-ghost'}));
+  }
+
+  function renderOne(svgId,plane){
+    const svg=document.getElementById(svgId); if(!svg)return;
+    while(svg.firstChild)svg.removeChild(svg.firstChild);
+    // repères : sol + axe vertical
+    const groundY=py(Math.max(joints.footR.y,joints.footL.y)+3);
+    svg.appendChild(mk('line',{x1:20,y1:groundY,x2:280,y2:groundY,stroke:'#556074','stroke-dasharray':'4 4','stroke-width':1,opacity:.4}));
+    svg.appendChild(mk('line',{x1:cx,y1:20,x2:cx,y2:380,stroke:'#445066','stroke-width':1,opacity:.35}));
+    const gGhost=mk('g',{}); svg.appendChild(gGhost);
+    if(document.getElementById('rigGhost').checked) ghost(gGhost,plane);
+    // os (lignes parent->enfant)
+    order.forEach(n=>{ const p=parent[n]; if(!p)return;
+      const a=pt(plane,joints[p]), b=pt(plane,joints[n]);
+      svg.appendChild(mk('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],class:'rig-bone'}));
+    });
+    // articulations (points glissables)
+    const showLab=document.getElementById('rigLabels').checked;
+    order.forEach(n=>{ const c=pt(plane,joints[n]);
+      const dot=mk('circle',{cx:c[0],cy:c[1],r:6,class:'rig-joint'+(sel===n?' sel':''),'data-bone':n});
+      dot.addEventListener('pointerdown',ev=>startDrag(ev,plane,n,svg));
+      svg.appendChild(dot);
+      if(showLab) svg.appendChild(mk('text',{x:c[0]+8,y:c[1]-6,fill:'#9fb0cf','font-size':8},)).textContent=n;
+    });
+  }
+
+  function render(){
+    renderOne('rigFace','face'); renderOne('rigProfil','profil');
+    document.getElementById('rigSxVal').textContent=sx.toFixed(2);
+    document.getElementById('rigSyVal').textContent=sy.toFixed(2);
+    readout(); exportText();
+  }
+
+  function readout(){
+    const topY=joints.head.y-33, botY=Math.max(joints.footR.y,joints.footL.y);
+    const H=(botY-topY), heads=H/HEAD_UNIT;
+    let s='<b>Hauteur</b> ≈ '+Math.round(H*sy)+' u · ≈ <b>'+heads.toFixed(1)+'</b> têtes';
+    if(sel){ const j=joints[sel]; s+='<br><span class="key">'+sel+'</span> — x '+Math.round(j.x)+' · y '+Math.round(j.y)+' · z '+Math.round(j.z); }
+    document.getElementById('rigReadout').innerHTML=s;
+  }
+
+  function exportText(){
+    const w=Math.max(...order.map(n=>n.length));
+    const lines=order.map(n=>{
+      const p=parent[n], j=joints[n];
+      const x=Math.round(j.x*sx), y=Math.round(j.y*sy), z=Math.round(j.z*sx);
+      const pstr=(p?"'"+p+"'":'null');
+      return "  ['"+n+"',"+' '.repeat(w-n.length)+" "+pstr+","+' '.repeat(6-String(x).length)+x+","+' '.repeat(5-String(y).length)+y+"],"+(z?' // z='+z:'');
+    });
+    document.getElementById('rigExport').value='const BONES = [\n'+lines.join('\n')+'\n];';
+  }
+
+  function localPt(svg,ev){ const p=svg.createSVGPoint(); p.x=ev.clientX; p.y=ev.clientY;
+    const m=svg.getScreenCTM(); return m?p.matrixTransform(m.inverse()):{x:0,y:0}; }
+
+  function startDrag(ev,plane,name,svg){ ev.preventDefault();
+    sel=name; drag.on=true; drag.plane=plane; drag.name=name; drag.svg=svg;
+    svg.setPointerCapture&&svg.setPointerCapture(ev.pointerId); moveDrag(ev); }
+  function moveDrag(ev){ if(!drag.on)return;
+    const loc=localPt(drag.svg,ev);
+    const h=(loc.x-cx)/sx, y=(loc.y-cy)/sy, j=joints[drag.name], sym=document.getElementById('rigSym').checked;
+    const isCenter=CENTER.includes(drag.name);
+    if(drag.plane==='face'){ j.x = (sym&&isCenter)?0:h; j.y=y; }
+    else { j.z=h; j.y=y; }
+    if(sym){ const m=mirrorOf(drag.name); if(m){ const jm=joints[m];
+      jm.y=j.y; jm.z=j.z; if(drag.plane==='face') jm.x=-j.x; } }
+    render();
+  }
+  function endDrag(){ drag.on=false; }
+
+  /* ---- presets ---- */
+  function readStore(){ try{return JSON.parse(localStorage.getItem(LS))||{};}catch(e){return {};} }
+  function writeStore(o){ try{localStorage.setItem(LS,JSON.stringify(o));}catch(e){} }
+  function refreshPresetSel(){
+    const sel2=document.getElementById('rigPresetSel'), cur=sel2.value, o=readStore();
+    sel2.innerHTML='<option value="">— rappeler un preset —</option>';
+    Object.keys(o).sort().forEach(k=>{ const op=document.createElement('option'); op.value=k; op.textContent=k; sel2.appendChild(op); });
+    sel2.value=cur;
+  }
+
+  function ensure(){ if(inited){render();return;} inited=true;
+    joints=defaults();
+    document.getElementById('rigSx').addEventListener('input',e=>{sx=+e.target.value;render();});
+    document.getElementById('rigSy').addEventListener('input',e=>{sy=+e.target.value;render();});
+    ['rigSym','rigGhost','rigLabels'].forEach(id=>document.getElementById(id).addEventListener('change',render));
+    document.getElementById('rigBake').addEventListener('click',()=>{
+      order.forEach(n=>{const j=joints[n];j.x*=sx;j.y*=sy;j.z*=sx;});
+      sx=sy=1; document.getElementById('rigSx').value=1; document.getElementById('rigSy').value=1; render();
+    });
+    document.getElementById('rigReset').addEventListener('click',()=>{ joints=defaults(); sx=sy=1;
+      document.getElementById('rigSx').value=1; document.getElementById('rigSy').value=1; sel=null; render(); });
+    document.getElementById('rigSave').addEventListener('click',()=>{
+      const name=prompt('Nom du preset ?'); if(!name)return; const o=readStore();
+      o[name]={joints:JSON.parse(JSON.stringify(joints)),sx,sy}; writeStore(o); refreshPresetSel();
+      document.getElementById('rigPresetSel').value=name;
+    });
+    document.getElementById('rigDelete').addEventListener('click',()=>{
+      const name=document.getElementById('rigPresetSel').value; if(!name)return;
+      if(!confirm('Supprimer le preset « '+name+' » ?'))return;
+      const o=readStore(); delete o[name]; writeStore(o); refreshPresetSel();
+    });
+    document.getElementById('rigPresetSel').addEventListener('change',e=>{
+      const p=readStore()[e.target.value]; if(!p)return;
+      joints=JSON.parse(JSON.stringify(p.joints)); sx=p.sx||1; sy=p.sy||1;
+      document.getElementById('rigSx').value=sx; document.getElementById('rigSy').value=sy; render();
+    });
+    document.getElementById('rigCopy').addEventListener('click',()=>{
+      const ta=document.getElementById('rigExport'); ta.select();
+      try{ navigator.clipboard.writeText(ta.value); }catch(e){ document.execCommand('copy'); }
+      document.getElementById('rigCaption').textContent='Table d\'os copiée dans le presse-papiers.';
+    });
+    document.getElementById('rigApply').addEventListener('click',()=>{
+      // Écrit les positions (échelle figée) dans BONES → centres de rotation de l'Assembleur.
+      const idx={}; BONES.forEach((b,i)=>idx[b[0]]=i);
+      order.forEach(n=>{ const j=joints[n], i=idx[n];
+        BONES[i][2]=Math.round(j.x*sx); BONES[i][3]=Math.round(j.y*sy);
+        PIV[n]={x:BONES[i][2],y:BONES[i][3]}; });
+      rebuild('white'); rebuild('black');
+      document.getElementById('rigCaption').textContent='Rig appliqué à l\'Assembleur (centres de rotation mis à jour pour cette session).';
+    });
+    document.addEventListener('pointermove',moveDrag);
+    document.addEventListener('pointerup',endDrag);
+    document.addEventListener('pointercancel',endDrag);
+    refreshPresetSel();
+    render();
+  }
+  return { ensure };
+})();
+
+/* ---- Onglets Assembleur / Éditeur de rig ---- */
+document.querySelectorAll('#tabbar .tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('#tabbar .tab').forEach(x=>x.classList.toggle('on',x===t));
+  const mode=t.dataset.mode;
+  document.getElementById('view-assembler').hidden = mode!=='assembler';
+  document.getElementById('view-rig').hidden = mode!=='rig';
+  if(mode==='rig') RigEditor.ensure();
+}));
 </script>
 </body>
 </html>
