@@ -13749,7 +13749,9 @@ function renderReview(){
   if(snap.lastMoved && reviewIdx>0 && typeof handleCombatAnimForMove==='function'){
     var _prevSnap=HISTORY[reviewIdx-1];
     var _lm=snap.lastMoved;
-    var _targetType=(_prevSnap&&_prevSnap.board[_lm.toR]&&_prevSnap.board[_lm.toR][_lm.toC])?_prevSnap.board[_lm.toR][_lm.toC].type:null;
+    var _targetCell=(_prevSnap&&_prevSnap.board[_lm.toR]&&_prevSnap.board[_lm.toR][_lm.toC])?_prevSnap.board[_lm.toR][_lm.toC]:null;
+    var _targetType=_targetCell?_targetCell.type:null;
+    var _targetAlly=_targetCell?(_targetCell.color===_lm.color):false;
     var _endedHere=(reviewIdx===HISTORY.length-1 && G.gameOver);
     var _synthMv;
     if(_endedHere){
@@ -13758,7 +13760,7 @@ function renderReview(){
     } else {
       _synthMv={isCapture:false,pushCaptures:false,isPush:!!_targetType,isStack:false};
     }
-    handleCombatAnimForMove(_lm.type,_targetType,_synthMv,_lm.color);
+    handleCombatAnimForMove(_lm.type,_targetType,_synthMv,_lm.color,_targetAlly);
   } else if(typeof hideCombatAnim==='function'){
     hideCombatAnim();
   }
@@ -16760,8 +16762,9 @@ function scheduleAI(){
     if(chosen){
       var _combatMoverType = G.board[chosen.fr][chosen.fc] ? G.board[chosen.fr][chosen.fc].type : null;
       var _combatTargetType = G.board[chosen.tr][chosen.tc] ? G.board[chosen.tr][chosen.tc].type : null;
+      var _combatTargetAlly = G.board[chosen.tr][chosen.tc] ? (G.board[chosen.tr][chosen.tc].color === aiColor) : false;
       const won=execMove(chosen.fr,chosen.fc,chosen.tr,chosen.tc,chosen.action);
-      if(typeof handleCombatAnimForMove==='function') handleCombatAnimForMove(_combatMoverType,_combatTargetType,chosen.action,aiColor);
+      if(typeof handleCombatAnimForMove==='function') handleCombatAnimForMove(_combatMoverType,_combatTargetType,chosen.action,aiColor,_combatTargetAlly);
       if(typeof updateWinProbBar==='function') updateWinProbBar();
       G.aiThinking=false;renderBoard();
       if(typeof animateLastMoveSlide==='function') animateLastMoveSlide();
@@ -18092,7 +18095,7 @@ const BLACK_COMBAT_ANIM_IMAGES = {
 // à partir du type de la pièce qui a bougé, du type de la pièce qui
 // occupait la case de destination AVANT le coup (le cas échéant), et des
 // drapeaux d'action (push / capture / pushCaptures).
-function classifyCombatAnim(moverType, targetType, mv){
+function classifyCombatAnim(moverType, targetType, mv, targetIsAlly){
   if(!mv) return null;
   if(mv.isCapture){
     // Seule l'épée capture directement l'épéiste adverse — fatality.
@@ -18104,6 +18107,20 @@ function classifyCombatAnim(moverType, targetType, mv){
     return 'player-loses-slash';
   }
   if(mv.isPush){
+    // ⚠️ Pousser un ALLIÉ (coopératif) ≠ pousser un ENNEMI (combatif). On ne
+    // repositionne pas une facette de soi comme on bouscule l'adversaire.
+    // Les 4 poussées coopératives (cf. docs/ANIMATIONS_CATALOGUE.md §3a) n'ont
+    // pas encore d'image en jeu normal → on reste SILENCIEUX (intent historique,
+    // cf. commentaire de handleCombatAnimForMove), mais en mode proto le
+    // ProtoBanner joue un geste doux (lunge, adversaire au repos) via ces clés.
+    if(targetIsAlly){
+      if(moverType==='epeiste' && targetType==='sword')  return 'coop-epeiste-sword';
+      if(moverType==='epeiste' && targetType==='shield') return 'coop-epeiste-shield';
+      if(moverType==='sword'   && targetType==='sword')  return 'coop-sword-sword';
+      if(moverType==='shield'  && targetType==='sword')  return 'coop-shield-sword';
+      return null;
+    }
+    // Poussées COMBATIVES — cible ennemie (l'adversaire encaisse et recule).
     if(moverType==='sword' && targetType==='sword') return 'sword-vs-sword-push';
     if(moverType==='shield' && targetType==='sword') return 'shield-vs-sword-push';
     if(moverType==='shield' && targetType==='epeiste') return 'shield-vs-player-push';
@@ -18182,8 +18199,8 @@ function hideCombatStartBanner(){
 // même ambiance de combat en revoyant la partie. Ne fait rien si aucune
 // des 9 catégories ne correspond (ex: poussée épéiste sur pion allié),
 // pour rester silencieux plutôt que d'afficher une animation hors-sujet.
-function handleCombatAnimForMove(moverType, targetType, mv, moverColor){
-  var key = classifyCombatAnim(moverType, targetType, mv);
+function handleCombatAnimForMove(moverType, targetType, mv, moverColor, targetIsAlly){
+  var key = classifyCombatAnim(moverType, targetType, mv, targetIsAlly);
   if(key) triggerCombatAnim(key, moverColor);
 }
 
@@ -19459,6 +19476,8 @@ function executeDrop(r,c){
   // plateau juste après.
   var _combatMoverType = G.board[G.selected.r][G.selected.c] ? G.board[G.selected.r][G.selected.c].type : null;
   var _combatTargetType = G.board[r][c] ? G.board[r][c].type : null;
+  // Allié ou ennemi sur la case de destination (poussée coopérative vs combative).
+  var _combatTargetAlly = G.board[r][c] ? (G.board[r][c].color === G.turn) : false;
   // Bot d'entrainement (Musashi-sensei) : capture le meilleur coup AVANT de
   // jouer, pour pouvoir glisser un conseil bienveillant apres coup si le
   // joueur a choisi autre chose. Jamais bloquant, jamais punitif.
@@ -19472,7 +19491,7 @@ function executeDrop(r,c){
   const won=execMove(G.selected.r,G.selected.c,r,c,mv);
   G.selected=null;G.validMoves=[];
   renderBoard();
-  if(typeof handleCombatAnimForMove==='function') handleCombatAnimForMove(_combatMoverType,_combatTargetType,mv,G.turn);
+  if(typeof handleCombatAnimForMove==='function') handleCombatAnimForMove(_combatMoverType,_combatTargetType,mv,G.turn,_combatTargetAlly);
   if(typeof updateWinProbBar==='function') updateWinProbBar();
   if(nt2Active){
     nt2AnalyzePlayerMove(nt2MovesBefore,{fr:nt2From.r,fc:nt2From.c,tr:r,tc:c,action:mv},G.turn);
@@ -22465,7 +22484,9 @@ function applyRemoteGameState(row){
   if(typeof handleCombatAnimForMove==='function' && row.game_state.lastMoved){
     var _rlm = row.game_state.lastMoved;
     var _moverType = _rlm.type;
-    var _targetType = (_combatPrevBoard && _combatPrevBoard[_rlm.toR] && _combatPrevBoard[_rlm.toR][_rlm.toC]) ? _combatPrevBoard[_rlm.toR][_rlm.toC].type : null;
+    var _targetCell = (_combatPrevBoard && _combatPrevBoard[_rlm.toR] && _combatPrevBoard[_rlm.toR][_rlm.toC]) ? _combatPrevBoard[_rlm.toR][_rlm.toC] : null;
+    var _targetType = _targetCell ? _targetCell.type : null;
+    var _targetAlly = _targetCell ? (_targetCell.color === _rlm.color) : false;
     var _gameEndedHere = (row.status === 'finished' && row.winner === _rlm.color);
     var _syntheticMv;
     if(_gameEndedHere){
@@ -22474,7 +22495,7 @@ function applyRemoteGameState(row){
     } else {
       _syntheticMv = { isCapture:false, pushCaptures:false, isPush:!!_targetType, isStack:false };
     }
-    handleCombatAnimForMove(_moverType, _targetType, _syntheticMv, _rlm.color);
+    handleCombatAnimForMove(_moverType, _targetType, _syntheticMv, _rlm.color, _targetAlly);
   }
   if(typeof updateWinProbBar==='function') updateWinProbBar();
   }catch(_cosmEx){ console.error('applyRemoteGameState (cosmétique):', _cosmEx); }

@@ -81,21 +81,32 @@ pilotent le bandeau. État actuel du câblage :
 |---|---|---|
 | `sword-captures-combattant-fatality` | Pion capture Épéiste | Capture directe |
 | `player-loses-slash` | Push-capture | Push-capture |
-| `sword-vs-sword-push` | Pion pousse Pion | Pion pousse Pion **ennemi** (§8, #6) |
-| `shield-vs-sword-push` | Bouclier pousse Pion | Bouclier pousse Pion **ennemi** (#7) |
-| `shield-vs-player-push` | Bouclier pousse Épéiste | Bouclier pousse Épéiste **ennemi** (#8) |
-| `player-vs-player-push` | Épéiste pousse Épéiste | Épéiste pousse Épéiste **ennemi** (#5) |
+| `sword-vs-sword-push` | Pion pousse Pion **ennemi** | Pion pousse Pion ennemi (§3b #6) |
+| `shield-vs-sword-push` | Bouclier pousse Pion **ennemi** | Bouclier pousse Pion ennemi (#7) |
+| `shield-vs-player-push` | Bouclier pousse Épéiste **ennemi** | Bouclier pousse Épéiste ennemi (#8) |
+| `player-vs-player-push` | Épéiste pousse Épéiste **ennemi** | Épéiste pousse Épéiste ennemi (#5) |
+| `coop-epeiste-sword` | Épéiste pousse Pion **allié** | Épéiste pousse Pion allié (§3a #1) |
+| `coop-epeiste-shield` | Épéiste pousse Bouclier **allié** | Épéiste pousse Bouclier allié (#2) |
+| `coop-sword-sword` | Pion pousse Pion **allié** | Pion pousse Pion allié (#3) |
+| `coop-shield-sword` | Bouclier pousse Pion **allié** | Bouclier pousse Pion allié (#4) |
 | `sword-attack-miss` | Pion se déplace | Pas — Pion Épée |
 | `player-dodge` | Épéiste se déplace | Pas — Épéiste |
 | `shield-parry` | Bouclier se déplace | Pas — Bouclier *(classé mais sans image en jeu normal)* |
 
-### ⚠️ Deux écarts à combler entre le catalogue et le moteur
-1. **Allié vs ennemi non distingué** : `classifyCombatAnim()` classe la poussée
-   par **type de pièce**, en supposant la cible ennemie. Les **4 poussées
-   coopératives** (§3a) ne sont donc pas déclenchées en jeu tant qu'on n'a pas
-   passé un **drapeau allié/ennemi** à cette fonction.
-2. **Pas de clé « pas du Pion »** distincte du déplacement à vide générique — à
-   ajouter si on veut différencier les trois déplacements en jeu.
+### ✅ Écart allié/ennemi COMBLÉ (2026-08-01)
+`classifyCombatAnim(moverType, targetType, mv, targetIsAlly)` reçoit désormais un
+**drapeau allié/ennemi**, calculé à chaque point d'appel (coup local, IA, en
+ligne, analyse) en comparant la **couleur de la pièce cible** à celle du joueur
+qui bouge. Les poussées coopératives renvoient les 4 clés `coop-*` ci-dessus.
+En **jeu normal** elles n'ont pas encore d'image → le bandeau **reste silencieux**
+(conforme à l'intention historique : ne pas afficher un choc combatif pour un
+geste coopératif). En **mode proto (dev)**, le `ProtoBanner` joue pour ces clés un
+**geste doux** (le pousseur avance, l'adversaire **reste au repos**), là où les
+poussées combatives déclenchent **frappe + recul de l'adversaire**.
+
+### ⚠️ Écart restant
+- **Pas de clé « pas du Pion »** distincte du déplacement à vide générique — à
+  ajouter si on veut différencier les trois déplacements en jeu.
 
 ---
 
