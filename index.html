@@ -23,6 +23,10 @@ body.bottomnav-visible #bottom-nav{display:flex}
 #bottom-nav button .bn-label{font-family:'VT323',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase}
 #bottom-nav button.active{opacity:1;color:var(--gold-bright)}
 #bottom-nav button.active .bn-icon{transform:scale(1.18);text-shadow:0 0 8px rgba(212,160,23,.6)}
+/* Flèches du carrousel des modes (écran Jouer) */
+.play-carousel-arrow{flex:0 0 34px;background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.35);border-radius:8px;color:var(--gold-bright);font-family:serif;font-size:22px;line-height:1;cursor:pointer;padding:0;transition:background .15s,transform .1s}
+.play-carousel-arrow:hover{background:rgba(212,160,23,.18)}
+.play-carousel-arrow:active{transform:scale(.94)}
 /* Décale le contenu des écrans pour ne pas passer sous la barre */
 body.bottomnav-visible .screen{padding-bottom:70px}
 /* Généralisé aux panneaux À DÉFILEMENT INTERNE (boutique, ligue, tournoi,
@@ -2149,20 +2153,35 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <div style="font-family:VT323,monospace;font-size:13px;color:var(--gold-bright);display:flex;align-items:center;gap:3px"><span style="font-family:'Noto Serif JP',serif">石</span><span class="koku-balance-display">0</span></div>
     </div>
 
-    <!-- Bouton primaire : partie rapide -->
-    <button class="home-btn-primary" style="width:100%;font-size:15px;padding:15px;margin:0 0 6px;letter-spacing:3px" onclick="quickPlay()">&#9889; PARTIE RAPIDE</button>
-    <div style="display:flex;gap:6px;justify-content:center;margin-bottom:14px">
+    <!-- ── Carrousel des modes en ligne ──────────────────────────────
+         La carte centrale = mode sélectionné (matchmaking par défaut, puis
+         arène, ligue, tournoi, guilde, événements). « Partie rapide » lance
+         CE mode à la cadence choisie juste au-dessus (matchmaking/arène) ;
+         cliquer la carte ouvre le MENU du mode. Position mémorisée
+         (vtl_play_mode_idx). Voir renderPlayModeCarousel & co. -->
+    <div id="play-mode-carousel" style="display:flex;align-items:stretch;gap:6px;margin-bottom:6px">
+      <button class="play-carousel-arrow" onclick="cyclePlayMode(-1)" aria-label="Mode précédent">&#8249;</button>
+      <div id="play-mode-card" onclick="openCentralModeScreen()" style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;background:linear-gradient(135deg,rgba(40,30,12,.55),rgba(18,14,8,.5));border:1px solid rgba(212,160,23,.45);border-radius:10px;padding:12px 8px;cursor:pointer"></div>
+      <button class="play-carousel-arrow" onclick="cyclePlayMode(1)" aria-label="Mode suivant">&#8250;</button>
+    </div>
+    <div id="play-mode-dots" style="display:flex;justify-content:center;align-items:center;gap:6px;margin-bottom:8px"></div>
+
+    <!-- Cadence : ne concerne que les modes « à cadence » (matchmaking, arène) -->
+    <div id="play-cadence-row" style="display:flex;gap:6px;justify-content:center;margin-bottom:8px">
       <div class="opt-btn play-cadence-btn" data-cad="3" onclick="setQuickCadence(3)" style="font-size:12px;padding:4px 12px">3s</div>
       <div class="opt-btn play-cadence-btn" data-cad="5" onclick="setQuickCadence(5)" style="font-size:12px;padding:4px 12px">5s</div>
       <div class="opt-btn play-cadence-btn" data-cad="10" onclick="setQuickCadence(10)" style="font-size:12px;padding:4px 12px">10s</div>
     </div>
 
-    <!-- Cartes secondaires — uniquement du jeu EN LIGNE (le local est dans son onglet) -->
-    <div style="display:flex;gap:8px;margin-bottom:8px">
-      <button class="btn" style="flex:1;padding:12px 4px;font-size:12px" onclick="showScreen('arena')">&#9876;<br>Arène</button>
-      <button class="btn" style="flex:1;padding:12px 4px;font-size:12px" onclick="showScreen('league')">&#127894;<br>Ligue</button>
-      <button class="btn" style="flex:1;padding:12px 4px;font-size:12px" onclick="showScreen('leaderboard')">&#128202;<br>Classements</button>
-    </div>
+    <!-- Bouton primaire : lance le mode central -->
+    <button class="home-btn-primary" id="play-launch-btn" style="width:100%;font-size:15px;padding:15px;margin:0 0 8px;letter-spacing:3px" onclick="launchCentralMode()">&#9889; PARTIE RAPIDE</button>
+    <button class="btn" style="width:100%;font-size:11px;padding:8px;opacity:.75;margin-bottom:14px" onclick="showScreen('leaderboard')">&#128202; Classements</button>
+
+    <!-- Bandeau Sumo remonté ici (au-dessus du Défi du jour, comme convenu) -->
+    <div id="play-ad-banner" style="margin-bottom:10px"></div>
+    <!-- « Le saviez-vous ? » — juste sous le bandeau Sumo. Clic → popup ; à la
+         fermeture on tire une NOUVELLE astuce. Contenu 100 % local. -->
+    <div id="did-you-know-banner" style="margin-bottom:10px"></div>
 
     <!-- Zone "En ce moment" -->
     <div style="font-family:'VT323',monospace;font-size:11px;color:var(--gold);opacity:.6;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">⚡ En ce moment</div>
@@ -2210,22 +2229,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       </div>
     </div>
 
-    <!-- Emplacement publicitaire (bandeau) — pas encore de régie pub
-         branchée, utilisé pour l'instant pour promouvoir l'événement en
-         cours (Sumo). Voir renderPlayAdBanner. -->
-    <div id="play-ad-banner" style="margin-bottom:10px"></div>
-
-    <!-- « Le saviez-tu ? » — astuces sur les fonctionnalités joueur + anecdotes
-         (lore, équilibrage, compteurs romancés). Sous le bandeau pub Sumo.
-         Clic → popup ; à la fermeture on tire une NOUVELLE astuce. Contenu
-         100 % local (DID_YOU_KNOW), aucune dépendance serveur. -->
-    <div id="did-you-know-banner" style="margin-bottom:10px"></div>
-
-    <div style="display:flex;gap:6px;margin-bottom:4px">
-      <button class="btn" style="flex:1;font-size:11px;padding:8px 4px;opacity:.8" onclick="showScreen('tournament')">&#127942; Tournoi</button>
-      <button class="btn" style="flex:1;font-size:11px;padding:8px 4px;opacity:.8" onclick="showScreen('guild')">&#128737; Guilde</button>
-      <button class="btn" style="flex:1;font-size:11px;padding:8px 4px;opacity:.8" onclick="showScreen('events-mode')">🌸 Events</button>
-    </div>
+    <!-- (Bandeau Sumo + « Le saviez-vous ? » remontés au-dessus du Défi du jour ;
+         Tournoi/Guilde/Événements sont désormais dans le carrousel des modes.) -->
 
     <!-- Journal d'activité — fil des événements du serveur (connexions,
          victoires PvP, vainqueurs de tournoi), alimenté par des triggers
@@ -3518,6 +3523,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
         <li>Un nouveau bandeau dans le menu <strong>Jouer en ligne</strong> distille des <strong>astuces</strong> sur les fonctionnalit&eacute;s du jeu et des <strong>anecdotes</strong> sur ses coulisses (dont l'origine du projet et l'&eacute;quilibrage). Un clic ouvre l'astuce ; la refermer en propose une nouvelle.</li>
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; BOUTON OPTIONS</li>
         <li>Les joueurs disposent maintenant d'un bouton <strong>Options</strong> dans la barre du bas (l&agrave; o&ugrave; les admins ont le bouton DEV). Les admins gardent DEV, et retrouvent ces m&ecirc;mes options sous leurs outils.</li>
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; MENU JOUER EN CARROUSEL</li>
+        <li>Le menu <strong>Jouer en ligne</strong> pr&eacute;sente d&eacute;sormais les modes dans un <strong>carrousel</strong> (partie rapide, ar&egrave;ne, ligue, tournoi, guilde, &eacute;v&eacute;nements) que l'on fait d&eacute;filer aux fl&egrave;ches ou au doigt. La carte centrale est le mode <strong>s&eacute;lectionn&eacute;</strong> : &laquo;&nbsp;Partie rapide&nbsp;&raquo; le lance &agrave; la cadence choisie, et toucher la carte ouvre son menu. La <strong>derni&egrave;re position est m&eacute;moris&eacute;e</strong>, et le bandeau <strong>Sumo</strong> remonte au-dessus du D&eacute;fi du jour.</li>
       </ul>
     </div>
 
@@ -8818,6 +8825,86 @@ function setQuickCadence(cad){
   try{ localStorage.setItem('vtl_quick_cadence', cad); }catch(e){}
   document.querySelectorAll('.play-cadence-btn').forEach(function(b){ b.classList.toggle('selected', parseInt(b.dataset.cad,10)===cad); });
 }
+// ── Carrousel des modes en ligne (écran Jouer) ────────────────────
+// L'ordre est fixe : matchmaking d'abord (défaut). cadence:true = mode où la
+// cadence choisie s'applique et où « Partie rapide » lance directement ;
+// screen = menu du mode ouvert au clic sur la carte. Les modes sans cadence
+// (ligue, tournoi, guilde, événements) sont de simples hubs : le bouton
+// primaire les ouvre (label « Ouvrir »).
+var PLAY_MODES = [
+  { key:'matchmaking', icon:'⚡', label:'Partie rapide', sub:'Un adversaire à ton niveau', screen:null,           cadence:true },
+  { key:'arena',       icon:'⚔', label:'Arène',         sub:'Classé · manches rapides',   screen:'arena',        cadence:true },
+  { key:'league',      icon:'🏅', label:'Ligue',         sub:'Divisions · saison',         screen:'league',       cadence:false },
+  { key:'tournament',  icon:'🏆', label:'Tournoi',       sub:'Élimination par rondes',     screen:'tournament',   cadence:false },
+  { key:'guild',       icon:'🛡', label:'Guilde',        sub:'Ryu collectifs · défis',     screen:'guild',        cadence:false },
+  { key:'events',      icon:'🌸', label:'Événements',    sub:'Sumo & saisonniers',         screen:'events-mode',  cadence:false }
+];
+var _playModeIdx = 0;
+function getPlayModeIdx(){ try{ var n=parseInt(localStorage.getItem('vtl_play_mode_idx'),10); return (n>=0&&n<PLAY_MODES.length)?n:0; }catch(e){ return 0; } }
+function setPlayModeIdx(i){ _playModeIdx=i; try{ localStorage.setItem('vtl_play_mode_idx', i); }catch(e){} }
+function cyclePlayMode(dir){ setPlayModeIdx((_playModeIdx+dir+PLAY_MODES.length)%PLAY_MODES.length); renderPlayModeCarousel(); }
+function selectPlayMode(i){ if(i>=0&&i<PLAY_MODES.length){ setPlayModeIdx(i); renderPlayModeCarousel(); } }
+function centralPlayMode(){ return PLAY_MODES[_playModeIdx] || PLAY_MODES[0]; }
+// Lance le mode central : matchmaking → quickPlay ; arène → recherche à la
+// cadence choisie ; hubs → ouverture de l'écran.
+function launchCentralMode(){
+  var m=centralPlayMode();
+  if(m.key==='matchmaking'){ quickPlay(); return; }
+  if(m.key==='arena'){
+    if(!currentUser){ showToast('Connectez-vous pour jouer en ligne.', true); showScreen('online-auth'); return; }
+    showScreen('arena');
+    var cad=getQuickCadence();
+    setTimeout(function(){ if(typeof startArenaMatchmakingSearch==='function') startArenaMatchmakingSearch(cad); }, 80);
+    return;
+  }
+  if(m.screen) showScreen(m.screen);
+}
+// Clic sur la carte = ouvrir le MENU du mode (son écran). Matchmaking n'a pas
+// d'écran-menu dédié → on lance directement.
+function openCentralModeScreen(){
+  var m=centralPlayMode();
+  if(m.screen) showScreen(m.screen); else launchCentralMode();
+}
+function renderPlayModeCarousel(){
+  var card=document.getElementById('play-mode-card');
+  if(!card) return;
+  var m=centralPlayMode();
+  card.innerHTML = '<div style="font-size:34px;line-height:1;margin-bottom:2px">'+m.icon+'</div>'
+    +'<div style="font-family:\'Cinzel\',serif;font-size:16px;color:var(--gold-bright);letter-spacing:1px">'+escapeHtml(m.label)+'</div>'
+    +'<div style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.65;text-align:center">'+escapeHtml(m.sub)+'</div>'
+    +'<div style="font-family:VT323,monospace;font-size:10px;color:var(--gold);opacity:.45;margin-top:3px">Touchez pour ouvrir le menu</div>';
+  var dots=document.getElementById('play-mode-dots');
+  if(dots){
+    dots.innerHTML = PLAY_MODES.map(function(x,i){
+      return '<span onclick="selectPlayMode('+i+')" title="'+escapeHtml(x.label)+'" style="display:inline-block;width:8px;height:8px;border-radius:50%;cursor:pointer;transition:background .15s;background:'+(i===_playModeIdx?'var(--gold-bright)':'rgba(200,168,110,.3)')+'"></span>';
+    }).join('');
+  }
+  var cadRow=document.getElementById('play-cadence-row');
+  if(cadRow) cadRow.style.display = m.cadence ? 'flex' : 'none';
+  var btn=document.getElementById('play-launch-btn');
+  if(btn) btn.innerHTML = m.cadence ? '⚡ PARTIE RAPIDE' : ('▶ '+m.label.toUpperCase());
+}
+// Init à l'entrée sur l'écran Jouer : restaure la position mémorisée, cale la
+// surbrillance de cadence, et branche le swipe tactile (une seule fois).
+var _playCarouselSwipeBound=false;
+function initPlayModeCarousel(){
+  _playModeIdx = getPlayModeIdx();
+  if(typeof setQuickCadence==='function') setQuickCadence(getQuickCadence()); // surbrillance cadence
+  renderPlayModeCarousel();
+  if(!_playCarouselSwipeBound){
+    var car=document.getElementById('play-mode-carousel');
+    if(car){
+      var x0=null;
+      car.addEventListener('touchstart', function(e){ x0=e.changedTouches[0].clientX; }, {passive:true});
+      car.addEventListener('touchend', function(e){
+        if(x0===null) return;
+        var dx=e.changedTouches[0].clientX - x0; x0=null;
+        if(Math.abs(dx)>40) cyclePlayMode(dx<0 ? 1 : -1);
+      }, {passive:true});
+      _playCarouselSwipeBound=true;
+    }
+  }
+}
 function quickPlay(){
   if(!currentUser){ showToast('Connectez-vous pour jouer en ligne.', true); showScreen('online-auth'); return; }
   var cad = getQuickCadence();
@@ -8860,6 +8947,7 @@ async function refreshPlayScreen(){
   applyDailyQuestsPanelState();
   renderPlayAdBanner();
   renderDidYouKnowBanner();
+  initPlayModeCarousel();
 }
 
 // ── Quêtes du jour : volet repliable, état mémorisé par appareil ──
