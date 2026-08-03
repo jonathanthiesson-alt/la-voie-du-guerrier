@@ -108,8 +108,19 @@ function makeMover(format) {
         state:{ board:G.board, stacks:G.stacks, lastMoved:G.lastMoved, lastMovedByColor:G.lastMovedByColor },
         won: !!won, turn: color==='white'?'black':'white'
       });
+    }
+    // Position de départ standard 5×5, IDENTIQUE à setupBoard() d'index.html
+    // (épéiste + 2 sabres en 2e ligne, bouclier devant). board et stacks sont
+    // des tableaux rows×cols de null. Les Blancs commencent (turn géré à part).
+    function startState(){
+      var R=FORMAT.rows||5, C=FORMAT.cols||5;
+      var board=[], stacks=[];
+      for(var r=0;r<R;r++){ board.push(new Array(C).fill(null)); stacks.push(new Array(C).fill(null)); }
+      board[0][2]={type:'epeiste',color:'white'}; board[0][1]={type:'sword',color:'white'}; board[0][3]={type:'sword',color:'white'}; board[1][2]={type:'shield',color:'white'};
+      board[4][2]={type:'epeiste',color:'black'}; board[4][1]={type:'sword',color:'black'}; board[4][3]={type:'sword',color:'black'}; board[3][2]={type:'shield',color:'black'};
+      return { board:board, stacks:stacks, lastMoved:null, lastMovedByColor:{white:null,black:null} };
     }`;
-  const factory = new Function(prelude + "\n\n" + body + "\n\n" + mover + "\n\nreturn { botChooseAndApply: botChooseAndApply };");
+  const factory = new Function(prelude + "\n\n" + body + "\n\n" + mover + "\n\nreturn { botChooseAndApply: botChooseAndApply, startState: startState };");
   return factory();
 }
 
@@ -197,14 +208,10 @@ async function botMatchmakingLoop(bot, mover, timer, isAliveRef, stats) {
   try { await c.from("matchmaking_queue").delete().eq("player_id", bot.uid); } catch (e) {}
 }
 
-// Crée la partie (game_state initial) — plateau standard neuf via le moteur.
+// Crée la partie (game_state initial) — plateau standard neuf via le moteur
+// (startState() reproduit setupBoard() d'index.html).
 async function createGame(client, whiteId, blackId, timer, mover) {
-  // On construit un plateau de départ standard en jouant "aucun coup" : le
-  // moteur d'index.html initialise via initGame() côté client — ici on lit le
-  // plateau de départ depuis le format. ⚠ v1 : à confirmer (peut nécessiter un
-  // helper labSetupState pour un état de départ identique).
-  const start = mover.startState ? mover.startState() : null;
-  const gs = start || { board: null, stacks: {}, lastMoved: null, lastMovedByColor: { white: null, black: null } };
+  const gs = mover.startState();
   await client.from("online_games").insert({
     white_player_id: whiteId, black_player_id: blackId,
     game_state: gs, turn: "white", timer_seconds: timer,
