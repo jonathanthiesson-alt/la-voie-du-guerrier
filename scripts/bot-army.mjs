@@ -133,12 +133,17 @@ async function writeReport(mode, agg) {
     body: JSON.stringify({ mode, ...agg, updated_at: new Date().toISOString() }),
   });
 }
-// Marque un profil comme bot (service_role), avec un pseudo reconnaissable.
+// Crée (ou met à jour) le profil du bot en service_role. 🔴 Les comptes anonymes
+// n'ont PAS de trigger de création de profil (l'app insère la ligne côté client
+// après signup) : un simple PATCH ne toucherait aucune ligne. On UPSERT donc la
+// ligne. Seuls id + pseudo sont obligatoires ; le reste a des valeurs par défaut.
 async function flagBotProfile(userId, n) {
-  await sbAdmin("profiles?id=eq." + userId, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
-    body: JSON.stringify({ is_bot: true, pseudo: "bot_" + String(n).padStart(3, "0") }),
+  await sbAdmin("profiles?on_conflict=id", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" },
+    // Pseudo unique par compte (le pseudo a une contrainte UNIQUE) : suffixe
+    // avec un fragment de l'uid pour ne pas collisionner entre deux runs.
+    body: JSON.stringify({ id: userId, is_bot: true, pseudo: "bot_" + String(n).padStart(3, "0") + "_" + userId.slice(0, 4) }),
   });
 }
 
