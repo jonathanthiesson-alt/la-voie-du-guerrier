@@ -18,9 +18,12 @@
 name: Bot army (test online)
 
 on:
-  schedule:
-    - cron: "*/5 * * * *"      # toutes les 5 min : capte un « déployer »
-  workflow_dispatch:            # + bouton « Run workflow »
+  # ⏸ Cron désactivé pendant la mise au point : il lançait des cohortes de bots
+  # qui se chevauchaient (parties orphelines). On déploie à la main via « Run
+  # workflow » pour n'avoir qu'une seule cohorte à la fois. À réactiver plus tard.
+  # schedule:
+  #   - cron: "*/5 * * * *"
+  workflow_dispatch:            # bouton « Run workflow »
     inputs:
       minutes:
         description: "Durée max du run (minutes, ≤ 330)"

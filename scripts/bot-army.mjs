@@ -190,9 +190,12 @@ async function botMatchmakingLoop(bot, mover, timer, isAliveRef, stats) {
       // 2) s'inscrire dans la queue
       await c.from("matchmaking_queue").delete().eq("player_id", bot.uid);
       await c.from("matchmaking_queue").insert({ player_id: bot.uid, pseudo: "bot_" + bot.n, elo: 1000, timer_seconds: timer });
-      // 3) chercher un adversaire ; le plus petit id crée la partie
+      // 3) chercher un adversaire ; le plus petit id crée la partie.
+      // 🔴 Uniquement des entrées RÉCENTES (< 90 s) : sinon on se matche avec un
+      // bot d'une cohorte morte (worker terminé) → partie orpheline jamais jouée.
+      const fresh = new Date(Date.now() - 90000).toISOString();
       const { data: cands } = await c.from("matchmaking_queue").select("*")
-        .eq("timer_seconds", timer).neq("player_id", bot.uid)
+        .eq("timer_seconds", timer).neq("player_id", bot.uid).gt("joined_at", fresh)
         .order("joined_at", { ascending: true }).limit(5);
       if (cands && cands.length) {
         const opp = cands[0];
