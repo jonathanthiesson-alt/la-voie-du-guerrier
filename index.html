@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.36.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.37.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2121,7 +2121,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.36.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.37.0 &#9820;</div>
   </div>
 </div>
 
@@ -2214,6 +2214,12 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
          branchée, utilisé pour l'instant pour promouvoir l'événement en
          cours (Sumo). Voir renderPlayAdBanner. -->
     <div id="play-ad-banner" style="margin-bottom:10px"></div>
+
+    <!-- « Le saviez-tu ? » — astuces sur les fonctionnalités joueur + anecdotes
+         (lore, équilibrage, compteurs romancés). Sous le bandeau pub Sumo.
+         Clic → popup ; à la fermeture on tire une NOUVELLE astuce. Contenu
+         100 % local (DID_YOU_KNOW), aucune dépendance serveur. -->
+    <div id="did-you-know-banner" style="margin-bottom:10px"></div>
 
     <div style="display:flex;gap:6px;margin-bottom:4px">
       <button class="btn" style="flex:1;font-size:11px;padding:8px 4px;opacity:.8" onclick="showScreen('tournament')">&#127942; Tournoi</button>
@@ -2478,6 +2484,10 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-bots')">🤖 Armée de bots (online)</button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-lab')">🔬 Laboratoire (équilibre · ouvertures · tactiques · modes)</button>
     <button class="btn btn-devtest" style="width:100%;margin-bottom:8px" onclick="showScreen('devlog')">録 DevLog</button>
+    <!-- Les options « joueur » (mêmes réglages que le bouton Options des
+         joueurs) restent accessibles aux admins, sous les outils dev. -->
+    <div class="menu-divider"></div>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('menu')">⚙ Options</button>
   </div>
   </div>
 </div>
@@ -3493,8 +3503,22 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.36.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.37.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.37.0 &mdash; 3 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; FIN DE PARTIE EN LIGNE</li>
+        <li>La victoire et la d&eacute;faite en ligne s'accompagnent d&eacute;sormais d'une <strong>phrase romanc&eacute;e</strong> tir&eacute;e au hasard, qui <strong>nomme l'adversaire</strong> &mdash; et son nom est cliquable pour ouvrir sa fiche.</li>
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; FICHES DE JOUEUR PARTOUT</li>
+        <li>Presque partout o&ugrave; un nom de joueur appara&icirc;t (classements, tournois, guildes, ligue, listes en ligne&hellip; sauf en plein combat), on peut d&eacute;sormais <strong>cliquer le nom</strong> pour ouvrir sa fiche et l'<strong>ajouter en ami</strong>, le <strong>d&eacute;fier</strong> ou lui <strong>&eacute;crire</strong>.</li>
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; &laquo; LE SAVIEZ-VOUS ? &raquo;</li>
+        <li>Un nouveau bandeau dans le menu <strong>Jouer en ligne</strong> distille des <strong>astuces</strong> sur les fonctionnalit&eacute;s du jeu et des <strong>anecdotes</strong> sur ses coulisses (dont l'origine du projet et l'&eacute;quilibrage). Un clic ouvre l'astuce ; la refermer en propose une nouvelle.</li>
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; BOUTON OPTIONS</li>
+        <li>Les joueurs disposent maintenant d'un bouton <strong>Options</strong> dans la barre du bas (l&agrave; o&ugrave; les admins ont le bouton DEV). Les admins gardent DEV, et retrouvent ces m&ecirc;mes options sous leurs outils.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -7075,7 +7099,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.36.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.37.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -7289,7 +7313,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.36.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.37.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -7494,7 +7518,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.36.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.37.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -8772,7 +8796,9 @@ var NAV_TAB_MAP = {
   amis:'bn-social', messaging:'bn-social', 'public-profile':'bn-social',
   profile:'bn-profile', settings:'bn-profile', display:'bn-profile', language:'bn-profile', 'piece-skins':'bn-profile', 'home-logo-cfg':'bn-profile',
   'profile-records':'bn-profile', 'profile-stats':'bn-profile', 'profile-achievements':'bn-profile',
-  // Onglet DEV : réservé aux comptes admin (voir updateDevButtonVisibility).
+  // Onglet DEV (admins) / Options (joueurs) — même emplacement (voir
+  // updateDevButtonVisibility). L'écran 'menu' EST l'écran Options.
+  menu:'bn-dev',
   'dev-hub':'bn-dev', devrewards:'bn-dev', 'dev-repertoire':'bn-dev', 'dev-openings':'bn-dev', 'dev-tactics':'bn-dev', 'dev-balance':'bn-dev', 'dev-lab':'bn-dev'
 };
 function updateBottomNav(id){
@@ -8833,6 +8859,7 @@ async function refreshPlayScreen(){
   subscribeToActivityFeed();
   applyDailyQuestsPanelState();
   renderPlayAdBanner();
+  renderDidYouKnowBanner();
 }
 
 // ── Quêtes du jour : volet repliable, état mémorisé par appareil ──
@@ -8893,6 +8920,102 @@ function renderEndgameAdBanner(){
   var el=document.getElementById('endgame-ad-banner');
   if(!el) return;
   el.innerHTML = _isSubscriber ? '' : renderSumoAdBannerHtml();
+}
+
+// ── « Le saviez-tu ? » ─────────────────────────────────────────────
+// Astuces (fonctionnalités accessibles aux joueurs) + anecdotes (lore,
+// équilibrage, compteurs). Les compteurs sont ROMANCÉS : une base + une
+// dérive temporelle déterministe depuis « l'épopée ». C'est du folklore,
+// pas de la télémétrie — donc aucune requête serveur qui pourrait échouer.
+var _dykEpoch = Date.UTC(2026,0,1); // 1er janvier 2026, début de l'ère online
+function _dykSince(){ return Math.max(0, Date.now()-_dykEpoch); }
+function _dykBots(){ return 48213 + Math.floor(_dykSince()/1000/37); }   // ~1 partie / 37 s
+function _dykPlayers(){ return 12740 + Math.floor(_dykSince()/1000/223); }
+// Le global inclut l'héritage « carton » : toutes les parties menées à la
+// main sur le plateau d'origine, avant même qu'une ligne de code existe.
+function _dykGlobal(){ return _dykBots() + _dykPlayers() + 30412; }
+function _dykFmt(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' '); }
+
+// t: 'astuce' (fonctionnalité joueur) ou 'anecdote' (lore). body peut être une
+// fonction (pour injecter les compteurs à l'affichage).
+var DID_YOU_KNOW = [
+  // ── Astuces : fonctionnalités accessibles aux joueurs ──
+  { t:'astuce', title:'Le Labo', body:'Le Labo se trouve dans le menu <b>Joueur</b> : un atelier où l\'on teste ses idées de modes contre l\'IA en un clic, et où l\'on peut publier ses propres formats de jeu.' },
+  { t:'astuce', title:'Les Options', body:'Pour régler le son, la langue ou l\'apparence, ouvre le menu <b>Options</b> depuis l\'accueil.' },
+  { t:'astuce', title:'Partie rapide', body:'Depuis <b>Jouer en ligne</b>, lance une <b>Partie rapide</b> : le matchmaking te trouve un adversaire de niveau proche.' },
+  { t:'astuce', title:'Les cadences', body:'Chaque partie a une <b>cadence</b> (secondes par coup). Choisis-la avant de lancer : plus c\'est court, plus ça mord.' },
+  { t:'astuce', title:'L\'Arène', body:'L\'<b>Arène</b> est le mode classé rapide : chaque victoire fait grimper ton Elo.' },
+  { t:'astuce', title:'Les Tournois', body:'Crée ou rejoins un <b>Tournoi</b> à élimination par rondes ; le créateur clôture les inscriptions quand il le décide.' },
+  { t:'astuce', title:'Les Guildes', body:'Rejoins une <b>Guilde</b> pour cumuler des Ryu collectifs et défier d\'autres guildes.' },
+  { t:'astuce', title:'La Ligue', body:'La <b>Ligue</b> te classe chaque saison dans une division ; les 3 premiers sont promus.' },
+  { t:'astuce', title:'Défier un joueur', body:'Défie n\'importe qui depuis sa <b>fiche profil</b> : clique son nom, il est cliquable presque partout dans le jeu.' },
+  { t:'astuce', title:'La messagerie', body:'Le bouton 💬 d\'une fiche profil ouvre une conversation privée — même sans être amis.' },
+  { t:'astuce', title:'Les amis', body:'Ajoute un joueur en <b>ami</b> depuis sa fiche pour le retrouver et le défier en un geste.' },
+  { t:'astuce', title:'Le classement', body:'Le <b>Classement</b> liste les meilleurs Elo ; clique un nom pour ouvrir son profil.' },
+  { t:'astuce', title:'Les quêtes du jour', body:'Reviens chaque jour : les <b>quêtes</b> rapportent des récompenses et entretiennent ta série.' },
+  { t:'astuce', title:'La série', body:'Ta <b>série</b> compte les jours consécutifs où tu joues — ne la laisse pas retomber !' },
+  { t:'astuce', title:'La règle d\'anti-retour', body:'Règle d\'or : on ne peut pas défaire immédiatement le dernier coup adverse. Pas de va-et-vient sans fin.' },
+  { t:'astuce', title:'Les poussées', body:'Une pièce peut en <b>pousser</b> une autre. Sur un plateau 5×5, maîtriser les poussées, c\'est maîtriser l\'espace.' },
+  { t:'astuce', title:'Le bouclier', body:'Le <b>bouclier</b> bloque et encaisse : bien placé, c\'est ton rempart mobile.' },
+  { t:'astuce', title:'Skins & avatars', body:'Personnalise ton apparence : des <b>skins</b> et avatars se débloquent au fil du jeu.' },
+  { t:'astuce', title:'Les monnaies', body:'<b>Ryu</b>, <b>Shiitake</b> et 💗 <b>Fame</b> : chacune a son usage ; la Fame est liée à l\'événement Sumo.' },
+  { t:'astuce', title:'L\'événement Sumo', body:'Le <b>Sumo</b> se joue sur un ring sans murs : éjecte l\'Épéiste adverse hors du cercle pour l\'emporter.' },
+  { t:'astuce', title:'Spectateur', body:'Pendant un tournoi, tu peux <b>regarder</b> les autres parties de la ronde en cours.' },
+  // ── Anecdotes : lore, coulisses, compteurs ──
+  { t:'anecdote', title:'Tout est parti d\'un repas', body:'Il nous fallait juste une <b>pendule</b> pour jouer à La Voie du Guerrier. Alors : un plateau en carton peint à la bombe, un rack de capsules de café en guise de pièces, trois pions de dames aux faces différentes — l\'un retourné, son motif en cercles faisant office de <b>bouclier</b> — et deux rois d\'échecs en bois pour combattants. On a commencé une simple app-pendule… et ça a complètement dégénéré en tout ceci. 😄' },
+  { t:'anecdote', title:'Des milliers de duels pour l\'équilibre', body:'Pour équilibrer le jeu, on a fait s\'affronter des <b>milliers</b> de parties de bots. Verdict après correction : autour de <b>52 %</b> de victoires pour les Noirs à profondeur d\'analyse 5 — un déséquilibre assez fin pour être presque parfait.' },
+  { t:'anecdote', title:'Les bots ne dorment jamais', body:function(){ return 'Nos bots ont déjà croisé le fer <b>'+_dykFmt(_dykBots())+'</b> fois rien que pour éprouver le jeu en ligne. Des samouraïs de silicium, increvables.'; } },
+  { t:'anecdote', title:'Les batailles humaines', body:function(){ return 'Vous, joueuses et joueurs de chair, avez livré <b>'+_dykFmt(_dykPlayers())+'</b> batailles en ligne. Chacune compte.'; } },
+  { t:'anecdote', title:'Depuis la toute première partie', body:function(){ return 'Depuis le tout premier duel sur le plateau de carton, ce sont <b>'+_dykFmt(_dykGlobal())+'</b> parties qui ont été menées sur la Voie. La légende grossit à chaque coup.'; } },
+  { t:'anecdote', title:'La Voie du Bousier', body:'En interne, le jeu s\'appelle affectueusement « <b>La Voie du Bousier</b> ». Personne ne se souvient tout à fait pourquoi — et c\'est très bien ainsi.' },
+  { t:'anecdote', title:'Féodal & cyberpunk', body:'Japon des castes et des néons : un thème <b>samouraï féodal teinté de cyberpunk</b>, posé sur un damier de 5×5.' },
+  { t:'anecdote', title:'Entre échecs et shôgi', body:'La Voie du Guerrier cherche la pureté du jeu abstrait, quelque part entre les <b>échecs</b> et le <b>shôgi</b> : peu de pièces, beaucoup de profondeur.' },
+  { t:'anecdote', title:'Le dojo', body:'Derrière la Voie : <b>Wurmz</b> au code, <b>Thomas</b> aux pinceaux, et <b>Musashi</b> qui veille sur le dojo.' },
+  { t:'anecdote', title:'Cinq cases sur cinq', body:'<b>5×5</b> : assez petit pour tenir sur un coin de table, assez vaste pour une vie de parties.' }
+];
+var _dykCurrentIdx = -1;
+function _dykPick(){
+  if(DID_YOU_KNOW.length<=1){ _dykCurrentIdx=0; return; }
+  var n; do { n = Math.floor(Math.random()*DID_YOU_KNOW.length); } while(n===_dykCurrentIdx);
+  _dykCurrentIdx = n;
+}
+function _dykBody(item){ return typeof item.body==='function' ? item.body() : item.body; }
+function renderDidYouKnowBanner(){
+  var el=document.getElementById('did-you-know-banner');
+  if(!el) return;
+  if(_dykCurrentIdx<0) _dykPick();
+  var item=DID_YOU_KNOW[_dykCurrentIdx];
+  el.innerHTML = '<div onclick="openDidYouKnowPopup()" style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(30,40,70,.5),rgba(12,14,22,.45));border:1px solid rgba(120,160,220,.32);border-radius:8px;padding:9px 12px;cursor:pointer">'
+    +'<div style="font-size:22px;flex-shrink:0">💡</div>'
+    +'<div style="flex:1;min-width:0">'
+      +'<div style="font-family:\'Cinzel\',serif;font-size:11px;color:#9fc0f0;letter-spacing:.5px">LE SAVIEZ-VOUS ?</div>'
+      +'<div style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHtml(item.title)+'</div>'
+    +'</div>'
+    +'<div style="font-family:VT323,monospace;font-size:16px;color:#9fc0f0;flex-shrink:0">›</div>'
+  +'</div>';
+}
+function openDidYouKnowPopup(){
+  if(_dykCurrentIdx<0) _dykPick();
+  var item=DID_YOU_KNOW[_dykCurrentIdx];
+  var badge = item.t==='anecdote' ? '📖 Anecdote' : '💡 Astuce';
+  var ov=document.createElement('div');
+  ov.id='did-you-know-overlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:24px';
+  // Fermer en cliquant le fond OU le bouton → tire une nouvelle astuce.
+  ov.onclick=function(e){ if(e.target===ov) closeDidYouKnowPopup(); };
+  ov.innerHTML='<div style="max-width:420px;width:100%;background:linear-gradient(160deg,rgba(24,30,52,.98),rgba(14,16,26,.98));border:1px solid rgba(120,160,220,.4);border-radius:14px;padding:22px 22px 18px;box-shadow:0 18px 60px rgba(0,0,0,.6)">'
+    +'<div style="font-family:\'Cinzel\',serif;font-size:11px;color:#9fc0f0;letter-spacing:1px;margin-bottom:8px">'+badge+'</div>'
+    +'<div style="font-family:\'Cinzel\',serif;font-size:18px;color:var(--gold-bright);margin-bottom:12px">'+escapeHtml(item.title)+'</div>'
+    +'<div style="font-family:VT323,monospace;font-size:16px;line-height:1.5;color:var(--parchment);opacity:.92">'+_dykBody(item)+'</div>'
+    +'<button class="btn" style="width:100%;margin-top:18px;font-size:12px;padding:9px" onclick="closeDidYouKnowPopup()">Suivant ▶</button>'
+  +'</div>';
+  document.body.appendChild(ov);
+}
+function closeDidYouKnowPopup(){
+  var ov=document.getElementById('did-you-know-overlay');
+  if(ov) ov.remove();
+  _dykPick();                 // à la fermeture, on prépare une NOUVELLE astuce
+  renderDidYouKnowBanner();   // et on rafraîchit le bandeau
 }
 
 // ── Journal d'activité (fil connexions/victoires/tournois) ────────
@@ -9276,11 +9399,23 @@ function isDevUser(){
 function updateDevButtonVisibility(){
   var dev = isDevUser();
   var bd = document.getElementById('bn-dev');
-  if(bd) bd.style.display = dev ? 'flex' : 'none';
-  // Bouton « proto » de l'accueil (banc de test avatars/bandeau) : même gate.
+  if(bd){
+    // Toujours visible : les admins voient DEV, les joueurs voient Options
+    // (à la même place dans la barre). Le contenu du hub dev inclut, lui,
+    // un accès Options sous les outils dev (voir screen-dev-hub).
+    bd.style.display = 'flex';
+    var ic = document.getElementById('bn-dev-icon');
+    var lb = document.getElementById('bn-dev-label');
+    if(ic) ic.textContent = dev ? '🛠' : '⚙';
+    if(lb) lb.textContent = dev ? 'DEV' : 'OPTIONS';
+  }
+  // Bouton « proto » de l'accueil (banc de test avatars/bandeau) : gate admin.
   var pw = document.getElementById('home-proto-wrap');
   if(pw) pw.style.display = dev ? 'block' : 'none';
 }
+// Destination du bouton bn-dev selon le profil : hub dev pour les admins,
+// écran Options (menu des réglages) pour les joueurs.
+function onDevNavClick(){ if(isDevUser()) navTab('dev-hub'); else showScreen('menu'); }
 var DEV_MODES = [
   { key:'matchmaking', label:'⚡ Matchmaking', currency:'shiso',    icon:'🌿',
     events:[{k:'win',label:'Victoire'},{k:'loss',label:'Défaite'}] },
@@ -23474,7 +23609,10 @@ window.addEventListener('beforeunload', () => {
   <button id="bn-shop"     onclick="navTab('shop')"><span class="bn-icon">店</span><span class="bn-label" data-i18n="bn_shop">Boutique</span></button>
   <button id="bn-social"   onclick="navTab('amis')"><span class="bn-icon">友</span><span class="bn-label" data-i18n="bn_social">Social</span></button>
   <button id="bn-profile"  onclick="navTab('profile')"><span class="bn-icon">侍</span><span class="bn-label" data-i18n="bn_profile">Profil</span></button>
-  <button id="bn-dev" style="display:none" onclick="navTab('dev-hub')"><span class="bn-icon">🛠</span><span class="bn-label">DEV</span></button>
+  <!-- Ce bouton sert DEUX publics : « DEV » (🛠 → hub dev) pour les admins,
+       « Options » (⚙ → écran menu/réglages) pour les joueurs. Icône, libellé et
+       destination sont pilotés par updateDevButtonVisibility()/onDevNavClick(). -->
+  <button id="bn-dev" style="display:none" onclick="onDevNavClick()"><span class="bn-icon" id="bn-dev-icon">🛠</span><span class="bn-label" id="bn-dev-label">DEV</span></button>
 </nav>
 
 <!-- ══════════════════════════════════════════════════════════════════════
