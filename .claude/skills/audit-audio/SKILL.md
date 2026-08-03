@@ -98,10 +98,21 @@ Règle : toute fonction qui **démarre** un son propre à un écran (fight-music
 écran de jeu) vérifie `document.querySelector('.screen.active').id` au tout
 début et **sort sans rien faire** si on n'est pas sur le bon écran (sortir
 AVANT `stopMenuMusic()`, sinon on coupe la musique du menu où l'on se trouve).
-Le **retry** d'`attemptPlayMusic` refait la même vérification d'écran, pas
-seulement le test `_fightMusicActive` (un drapeau peut être resté vrai).
+**Complément (2026-08-02) — la garde doit être sur la lecture IMMÉDIATE, pas
+seulement le retry.** L'audit a montré que `attemptPlayMusic()` appelait
+`el.play()` **immédiatement sans garde d'écran** ; seule la 2ᵉ tentative
+différée vérifiait l'écran. Or l'**enchaînement sur `ended`** (fin naturelle
+d'un morceau) rappelle `attemptPlayMusic('fight-music')` en ne testant que
+`_fightMusicActive` → un morceau qui se terminait après un retour au menu
+**relançait la musique de combat par-dessus le menu**. Correctif : la
+vérification d'écran (`_fightMusicActive && userPrefs.fightMusic &&
+'.screen.active'.id==='screen-game'`) est désormais **au tout début de
+`attemptPlayMusic`**, donc **centrale** — elle couvre `startFightMusic`, le
+retry, l'enchaînement `ended`, la reprise d'onglet, et tout futur appelant.
 Contre-épreuve obligatoire : sur `screen-game`, la musique de combat DOIT
-toujours partir (sinon on a supprimé au lieu de corriger).
+toujours partir (sinon on a supprimé au lieu de corriger). Test spécifique de
+l'enchaînement : sur le menu, drapeau `_fightMusicActive` laissé à `true`,
+`el.dispatchEvent(new Event('ended'))` → `plays === 0`.
 
 ## Matrice de test (navigateur, tabId de la Browser pane)
 

@@ -13322,6 +13322,16 @@ function stopMenuMusic(){
 // (nom/message) pour pouvoir diagnostiquer via la console à distance si
 // le souci persiste malgré tout.
 function attemptPlayMusic(el, label){
+  // 🔴 GARDE-FOU CENTRAL (bug vécu : « musique de combat aux menus après Se
+  // connecter »). La lecture immédiate n'était pas gardée — seule la 2e
+  // tentative différée l'était. Des chemins comme l'enchaînement sur 'ended'
+  // (qui ne teste que _fightMusicActive) pouvaient donc jouer la musique de
+  // combat PAR-DESSUS le menu. On refuse ici, au niveau le plus bas, toute
+  // lecture de fight-music hors de l'écran de jeu → couvre TOUS les appelants.
+  if(el.id==='fight-music'){
+    var _a=document.querySelector('.screen.active');
+    if(!_fightMusicActive || !userPrefs.fightMusic || !_a || _a.id!=='screen-game') return;
+  }
   var p = el.play();
   if(p && p.catch){
     p.catch(function(err){
