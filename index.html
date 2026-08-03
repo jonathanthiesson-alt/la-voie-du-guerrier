@@ -5510,7 +5510,7 @@ async function maybeShowTournamentRoundIntro(id, tn, standings){
       if(s.abandoned) return;
       rang++;
       var pos = rang<=3 ? ['🥇','🥈','🥉'][rang-1] : '#'+rang;
-      html += '<div style="display:flex;justify-content:space-between;padding:3px 10px;font-family:VT323,monospace;font-size:12px;color:var(--parchment)"><span>'+pos+' '+escapeHtml(s.pseudo||'?')+(s.player_id===currentUser.id?' (vous)':'')+'</span><span style="color:var(--gold-bright)">'+s.score+' pt'+(s.score===1?'':'s')+'</span></div>';
+      html += '<div style="display:flex;justify-content:space-between;padding:3px 10px;font-family:VT323,monospace;font-size:12px;color:var(--parchment)"><span>'+pos+' '+playerNameHtml(s.player_id, s.pseudo)+(s.player_id===currentUser.id?' (vous)':'')+'</span><span style="color:var(--gold-bright)">'+s.score+' pt'+(s.score===1?'':'s')+'</span></div>';
     });
     html += '</div>';
   }
@@ -5592,7 +5592,7 @@ async function renderTournamentDetail(id){
       return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-bottom:1px solid rgba(200,168,110,.1)'
         + (isMe?';background:rgba(212,160,23,.12)':'')
         + (s.abandoned?';opacity:.4':'')+'">'
-        + '<span style="font-family:VT323,monospace;font-size:13px;color:var(--parchment)">'+pos+' '+escapeHtml(s.pseudo||'?')
+        + '<span style="font-family:VT323,monospace;font-size:13px;color:var(--parchment)">'+pos+' '+playerNameHtml(s.player_id, s.pseudo)
           +(isMe?' (vous)':'')+(s.abandoned?' <span style="font-size:10px;color:#f08080">abandon</span>':'')+'</span>'
         + '<span style="font-family:Cinzel,serif;font-size:12px;color:var(--gold-bright)">'+s.score+' pt'+(s.score===1?'':'s')+'</span>'
       + '</div>';
@@ -5998,7 +5998,7 @@ function renderMyGuild(data){
     var isMe = m.player_id===currentUser.id;
     var crown = m.role==='leader' ? '👑 ' : '';
     return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-bottom:1px solid rgba(200,168,110,.1)'+(isMe?';background:rgba(212,160,23,.1)':'')+'">'
-      + '<span style="font-family:VT323,monospace;font-size:13px;color:var(--parchment)">'+crown+escapeHtml(m.pseudo||'?')+(isMe?' (vous)':'')+'</span>'
+      + '<span style="font-family:VT323,monospace;font-size:13px;color:var(--parchment)">'+crown+playerNameHtml(m.player_id, m.pseudo)+(isMe?' (vous)':'')+'</span>'
       + '<span style="font-family:VT323,monospace;font-size:11px;color:var(--gold-bright)">🐉 '+m.contributed_ryu+'</span>'
     + '</div>';
   }).join('');
@@ -11564,7 +11564,7 @@ async function openLeagueScreen(){
       var isMe = m.player_id===currentUser.id;
       var zone = i<3 ? 'border-left:3px solid #6abf40' : (i>=members.length-3 && members.length>=6 ? 'border-left:3px solid #c0505055' : 'border-left:3px solid transparent');
       return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;'+zone+';border-bottom:1px solid rgba(200,168,110,.1)'+(isMe?';background:rgba(212,160,23,.12)':'')+'">'
-        + '<span style="font-family:VT323,monospace;font-size:14px;color:var(--parchment)">'+(i<3?['🥇','🥈','🥉'][i]:'#'+(i+1))+' '+escapeHtml(m.pseudo||'?')+(isMe?' (vous)':'')+'</span>'
+        + '<span style="font-family:VT323,monospace;font-size:14px;color:var(--parchment)">'+(i<3?['🥇','🥈','🥉'][i]:'#'+(i+1))+' '+playerNameHtml(m.player_id, m.pseudo)+(isMe?' (vous)':'')+'</span>'
         + '<span style="font-family:Cinzel,serif;font-size:12px;color:var(--gold-bright)">'+m.points+' pts</span>'
       + '</div>';
     }).join('');
@@ -21529,6 +21529,14 @@ async function viewPlayerProfile(playerId){
 // Point d'entrée unique « voir la fiche d'un joueur » (nom cliquable partout :
 // fin de partie, listes, etc.) — délègue à l'écran profil public existant.
 function openPlayerCard(playerId, playerPseudo){ if(playerId) viewPlayerProfile(playerId); }
+// Rend un nom de joueur cliquable (→ fiche profil) partout où on l'affiche
+// hors combat. Sans id, ou si c'est soi-même, on rend le nom brut (pas de lien).
+function playerNameHtml(playerId, pseudo, extraStyle){
+  var safe = escapeHtml(pseudo||'?');
+  var st = extraStyle||'';
+  if(!playerId || (currentUser && playerId===currentUser.id)) return '<span style="'+st+'">'+safe+'</span>';
+  return '<span style="'+st+';cursor:pointer;text-decoration:underline" onclick="event.stopPropagation();viewPlayerProfile(\''+playerId+'\')">'+safe+'</span>';
+}
 function _pubProfilePseudo(){ var e=document.getElementById('pubprofile-pseudo-txt'); return e?e.textContent:''; }
 function pubProfileChallenge(){ if(_currentPubProfileId && typeof openChallengeConfigPopup==='function') openChallengeConfigPopup(_currentPubProfileId, _pubProfilePseudo()); }
 function pubProfileMessage(){ if(_currentPubProfileId && typeof openDmThread==='function') openDmThread(_currentPubProfileId, _pubProfilePseudo()); }
