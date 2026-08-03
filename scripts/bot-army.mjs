@@ -98,6 +98,10 @@ function makeMover(format) {
       G.board = st.board; G.stacks = st.stacks || {};
       G.lastMoved = st.lastMoved || null;
       G.lastMovedByColor = st.lastMovedByColor || {white:null,black:null};
+      // 🔴 lastPush = mémoire de la dernière poussée : SANS lui, allMoves n'applique
+      // pas la règle anti-contre-poussée immédiate et le bot "triche" (il contre-
+      // pousse là où un humain ne peut pas). Le vrai coup online le sérialise aussi.
+      G.lastPush = st.lastPush || null;
       var moves = allMoves(color, G.board, G.stacks, G.lastMoved, G.lastPush, G.lastMovedByColor);
       if(!moves || !moves.length) return JSON.stringify({ noMove:true });
       var mv = null;
@@ -105,7 +109,7 @@ function makeMover(format) {
       if(!mv) mv = moves[Math.floor(Math.random()*moves.length)];
       var won = execMove(mv.fr, mv.fc, mv.tr, mv.tc, mv.action);
       return JSON.stringify({
-        state:{ board:G.board, stacks:G.stacks, lastMoved:G.lastMoved, lastMovedByColor:G.lastMovedByColor },
+        state:{ board:G.board, stacks:G.stacks, lastMoved:G.lastMoved, lastMovedByColor:G.lastMovedByColor, lastPush:G.lastPush },
         won: !!won, turn: color==='white'?'black':'white'
       });
     }
@@ -118,7 +122,7 @@ function makeMover(format) {
       for(var r=0;r<R;r++){ board.push(new Array(C).fill(null)); stacks.push(new Array(C).fill(null)); }
       board[0][2]={type:'epeiste',color:'white'}; board[0][1]={type:'sword',color:'white'}; board[0][3]={type:'sword',color:'white'}; board[1][2]={type:'shield',color:'white'};
       board[4][2]={type:'epeiste',color:'black'}; board[4][1]={type:'sword',color:'black'}; board[4][3]={type:'sword',color:'black'}; board[3][2]={type:'shield',color:'black'};
-      return { board:board, stacks:stacks, lastMoved:null, lastMovedByColor:{white:null,black:null} };
+      return { board:board, stacks:stacks, lastMoved:null, lastPush:null, lastMovedByColor:{white:null,black:null} };
     }`;
   const factory = new Function(prelude + "\n\n" + body + "\n\n" + mover + "\n\nreturn { botChooseAndApply: botChooseAndApply, startState: startState };");
   return factory();
