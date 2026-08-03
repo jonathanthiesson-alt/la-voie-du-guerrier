@@ -2474,9 +2474,54 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div class="menu-title" style="font-size:18px;margin-top:10px">🛠 DEV</div>
     <div class="menu-divider"></div>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('devrewards')">🛠 Administration</button>
-    <button class="btn" style="width:100%;margin-bottom:8px" onclick="openDevParam()">🤖 Bots</button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="openDevParam()">🤖 Bots (IA locale)</button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-bots')">🤖 Armée de bots (online)</button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-lab')">🔬 Laboratoire (équilibre · ouvertures · tactiques · modes)</button>
     <button class="btn btn-devtest" style="width:100%;margin-bottom:8px" onclick="showScreen('devlog')">録 DevLog</button>
+  </div>
+  </div>
+</div>
+
+<!-- ═══════════ ARMÉE DE BOTS (online) — banc de test dev ═══════════
+     Déploie/arrête des bots (comptes anonymes) via le worker serveur pour
+     tester le online seul. Pilote la table bot_army_control (RPC admin) et lit
+     bot_army_report. Voir docs/BOT_ARMY_PLAN.md. Gaté isDevUser. -->
+<div id="screen-dev-bots" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('dev-hub')">↩ RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+  <div class="panel" style="max-width:400px;width:100%">
+    <div class="menu-title" style="font-size:18px;margin-top:10px">🤖 ARMÉE DE BOTS <span style="font-size:12px;opacity:.6">(online)</span></div>
+    <div class="menu-divider"></div>
+    <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.6;text-align:center;margin-bottom:10px">Déploie des bots (comptes anonymes) via le worker serveur pour tester le online seul. Ils jouent comme de vrais joueurs et sont exclus des classements réels.</div>
+
+    <div id="bot-army-status" style="font-family:'VT323',monospace;font-size:12px;text-align:center;margin-bottom:12px;padding:7px;border-radius:5px;background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.2)">Chargement…</div>
+
+    <div style="display:flex;flex-direction:column;gap:9px;font-family:'VT323',monospace;font-size:13px;color:var(--parchment)">
+      <label style="display:flex;align-items:center;gap:8px"><input id="bot-army-enabled" type="checkbox"> <strong>Déployer</strong> <span style="opacity:.55;font-size:11px">(décoché = arrêt)</span></label>
+      <label style="display:flex;justify-content:space-between;align-items:center;gap:10px">Nombre de bots <span style="opacity:.5;font-size:11px">(max 100)</span>
+        <input id="bot-army-count" type="number" min="0" max="100" value="20" style="width:80px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px">
+      </label>
+      <label style="display:flex;justify-content:space-between;align-items:center;gap:10px">Mode testé
+        <select id="bot-army-mode" style="flex:1;max-width:220px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px">
+          <option value="matchmaking">Matchmaking (ils te matchent)</option>
+          <option value="arena">Arène (rejoignent la tienne)</option>
+          <option value="tournament">Tournoi (s'inscrivent au tien)</option>
+          <option value="free">Joueurs libres (peuplent l'app)</option>
+        </select>
+      </label>
+      <label style="display:flex;justify-content:space-between;align-items:center;gap:10px">Cible <span style="opacity:.5;font-size:11px">(id arène/tournoi)</span>
+        <input id="bot-army-target" type="text" placeholder="facultatif" style="flex:1;max-width:200px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px;font-size:11px">
+      </label>
+    </div>
+
+    <button class="adm-btn" style="width:100%;padding:9px;margin-top:12px" onclick="botArmySave()">✓ Appliquer la directive</button>
+
+    <div class="menu-divider"></div>
+    <div style="font-family:'VT323',monospace;font-size:11px;color:var(--gold-bright);opacity:.7;letter-spacing:1px;margin-bottom:6px">◆ RAPPORT PAR MODE</div>
+    <div id="bot-army-report" style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.85;min-height:24px">—</div>
+
+    <div class="menu-divider"></div>
+    <button class="btn-devtest" style="width:100%;padding:8px;border-radius:5px;cursor:pointer;border-color:rgba(200,80,80,.4);color:#f08080" onclick="botArmyPurge()">🗑 Purger tous les bots</button>
   </div>
   </div>
 </div>
@@ -10240,6 +10285,7 @@ function showScreen(id){
   if(id==='dev-tactics') renderDevTacticsList();
   if(id==='dev-balance'){ renderDevBalanceList(); renderDevBalanceEstimates(); }
   if(id==='dev-lab'){ labOnShowScreen(); }
+  if(id==='dev-bots'){ botArmyLoad(); startBotArmyPoll(); } else if(typeof stopBotArmyPoll==='function'){ stopBotArmyPoll(); }
   if(id==='opponents'){ refreshOpponentsScreen(); }
   if(id==='messaging'||id==='online-menu'){ restoreAmisAdoptedPanels(); }
   if(id==='league') openLeagueScreen();
@@ -15968,6 +16014,78 @@ async function labWorkerLoadConfig(){
     labWorkerRenderStatus(c);
   }catch(e){ if(status) status.textContent='Erreur de lecture : '+(e.message||e); }
 }
+
+// ══ Armée de bots (online) — panneau dev, cf. docs/BOT_ARMY_PLAN.md ══
+// Pilote la table bot_army_control via RPC admin, lit bot_army_report. Le
+// worker serveur fait le vrai travail ; ici on ne fait que poser la directive
+// et afficher le rapport. Gaté isDevUser (les RPC revérifient is_admin côté SQL).
+var _botArmyPoll=null;
+async function botArmyLoad(){
+  var status=document.getElementById('bot-army-status');
+  if(typeof isDevUser==='function' && !isDevUser()){ if(status) status.textContent='Réservé aux comptes dev.'; return; }
+  try{
+    var res=await supa.rpc('bot_army_get_report');
+    if(res.error) throw res.error;
+    var d=res.data||{}, c=d.control||{};
+    var en=document.getElementById('bot-army-enabled'); if(en) en.checked=!!c.enabled;
+    var setV=function(id,v){ var e=document.getElementById(id); if(e && v!=null) e.value=v; };
+    setV('bot-army-count', c.count); setV('bot-army-mode', c.mode||'matchmaking');
+    setV('bot-army-target', c.target_id||'');
+    botArmyRenderStatus(c, d.bot_count||0);
+    botArmyRenderReport(d.report||[]);
+  }catch(e){ if(status) status.textContent='Erreur : '+(e.message||e)+' — dev_bot_army.sql est-il exécuté ?'; }
+}
+function botArmyRenderStatus(c, botCount){
+  var s=document.getElementById('bot-army-status'); if(!s) return;
+  if(!c || !c.enabled){ s.innerHTML='<span style="color:#e0a060">⏸ Arrêtés</span> — '+botCount+' compte(s) bot en base.'; return; }
+  s.innerHTML='<span style="color:#88dd88">● Déployés</span> — jusqu\'à '+(c.count||0)+' bots · mode '+c.mode+' · '+botCount+' compte(s) en base.';
+}
+function botArmyRenderReport(rows){
+  var el=document.getElementById('bot-army-report'); if(!el) return;
+  if(!rows || !rows.length){ el.innerHTML='<span style="opacity:.6">Aucune activité rapportée (le worker écrit ici quand il tourne).</span>'; return; }
+  var h='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="opacity:.6;text-align:left"><th>mode</th><th>actifs</th><th>parties</th><th>V/D</th><th>err</th></tr>';
+  rows.forEach(function(r){
+    h+='<tr><td>'+r.mode+'</td><td>'+(r.bots_active||0)+'</td><td>'+(r.games_played||0)+'</td><td>'+(r.wins||0)+'/'+(r.losses||0)+'</td><td>'+(r.errors||0)+'</td></tr>';
+  });
+  el.innerHTML=h+'</table>';
+}
+async function botArmySave(){
+  if(typeof isDevUser==='function' && !isDevUser()){ if(typeof showToast==='function') showToast('Réservé aux comptes dev.', true); return; }
+  var val=function(id){ var e=document.getElementById(id); return e?e.value:null; };
+  var target=(val('bot-army-target')||'').trim();
+  var params={
+    p_enabled: !!(document.getElementById('bot-army-enabled')||{}).checked,
+    p_count: +val('bot-army-count')||0,
+    p_mode: val('bot-army-mode'),
+    p_target: target || null
+  };
+  try{
+    var res=await supa.rpc('bot_army_set_directive', params);
+    if(res.error) throw res.error;
+    if(typeof showToast==='function') showToast(params.p_enabled ? 'Directive posée — les bots vont se déployer (au prochain tick du worker).' : 'Directive posée — arrêt des bots.');
+    botArmyLoad();
+  }catch(e){ if(typeof showToast==='function') showToast('Erreur : '+(e.message||e), true); }
+}
+async function botArmyPurge(){
+  if(typeof isDevUser==='function' && !isDevUser()){ if(typeof showToast==='function') showToast('Réservé aux comptes dev.', true); return; }
+  if(!confirm('Purger tous les bots ? Arrête la directive et nettoie les artefacts de ligue. (La suppression des comptes se fait côté worker.)')) return;
+  try{
+    var res=await supa.rpc('bot_army_purge');
+    if(res.error) throw res.error;
+    if(typeof showToast==='function') showToast('Purge lancée.');
+    botArmyLoad();
+  }catch(e){ if(typeof showToast==='function') showToast('Erreur : '+(e.message||e), true); }
+}
+function startBotArmyPoll(){
+  stopBotArmyPoll();
+  _botArmyPoll=setInterval(function(){
+    var scr=document.getElementById('screen-dev-bots');
+    if(!scr || !scr.classList.contains('active')){ stopBotArmyPoll(); return; }
+    botArmyLoad();
+  }, 5000);
+}
+function stopBotArmyPoll(){ if(_botArmyPoll){ clearInterval(_botArmyPoll); _botArmyPoll=null; } }
+
 function labWorkerToggleMode(){
   var mode=(document.getElementById('lab-worker-mode')||{}).value||'cycle';
   var fr=document.getElementById('lab-worker-fixed-row');
