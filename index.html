@@ -2175,7 +2175,10 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
     <!-- Bouton primaire : lance le mode central -->
     <button class="home-btn-primary" id="play-launch-btn" style="width:100%;font-size:15px;padding:15px;margin:0 0 8px;letter-spacing:3px" onclick="launchCentralMode()">&#9889; PARTIE RAPIDE</button>
-    <button class="btn" style="width:100%;font-size:11px;padding:8px;opacity:.75;margin-bottom:14px" onclick="showScreen('leaderboard')">&#128202; Classements</button>
+    <div style="display:flex;gap:6px;margin-bottom:14px">
+      <button class="btn" style="flex:1;font-size:11px;padding:8px;opacity:.75" onclick="showScreen('leaderboard')">&#128202; Classements</button>
+      <button class="btn" style="flex:1;font-size:11px;padding:8px;opacity:.75" onclick="showBotGallery()">&#127180; Galerie des ma&icirc;tres</button>
+    </div>
 
     <!-- Bandeau Sumo remonté ici (au-dessus du Défi du jour, comme convenu) -->
     <div id="play-ad-banner" style="margin-bottom:10px"></div>
@@ -2246,6 +2249,22 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" id="af-filter-victoire_tournoi" onchange="saveActivityFeedFilters()"> Vainqueurs de tournoi</label>
     </div>
     <div id="activity-feed-list" class="activity-feed-scroll" style="display:flex;flex-direction:column;gap:2px;max-height:180px;overflow-y:auto;padding:8px 10px;font-size:12px"></div>
+  </div>
+</div>
+
+<!-- ═══════════ GALERIE DES MAÎTRES (l'équipe des 15) ═══════════
+     Les 16 IA-bots nommés. Règles de déblocage (voir docs/EQUIPE_DES_15.md) :
+     1→10 visibles ; 11→15 grisés tant que non rencontrés ; 0 caché jusqu'à la
+     1re rencontre. Clic → fiche avec l'encart « le sens du nom ». Rencontres
+     suivies en localStorage pour l'instant (une table viendra en Phase B). -->
+<div id="screen-bot-gallery" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('play')">&#8617; JOUER</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+    <div class="panel" style="max-width:400px;width:100%">
+      <div class="menu-title" style="font-size:18px;margin-top:6px">&#127180; LA GALERIE DES MA&Icirc;TRES</div>
+      <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.6;text-align:center;margin-bottom:12px">Les seize adversaires de la Voie. Affrontez-les pour d&eacute;voiler les plus grands&hellip;</div>
+      <div id="bot-gallery-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
+    </div>
   </div>
 </div>
 
@@ -3523,6 +3542,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
         <li>Un nouveau bandeau dans le menu <strong>Jouer en ligne</strong> distille des <strong>astuces</strong> sur les fonctionnalit&eacute;s du jeu et des <strong>anecdotes</strong> sur ses coulisses (dont l'origine du projet et l'&eacute;quilibrage). Un clic ouvre l'astuce ; la refermer en propose une nouvelle.</li>
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; BOUTON OPTIONS</li>
         <li>Les joueurs disposent maintenant d'un bouton <strong>Options</strong> dans la barre du bas (l&agrave; o&ugrave; les admins ont le bouton DEV). Les admins gardent DEV, et retrouvent ces m&ecirc;mes options sous leurs outils.</li>
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; LA GALERIE DES MA&Icirc;TRES</li>
+        <li>Une <strong>galerie</strong> pr&eacute;sente les seize adversaires de la Voie (l'&laquo;&nbsp;&eacute;quipe des 15&nbsp;&raquo;), chacun avec un m&eacute;daillon, son Elo et un encart <strong>&laquo;&nbsp;le sens de son nom&nbsp;&raquo;</strong> (le nombre en japonais + son rang de guerrier). Les dix premiers sont visibles d'embl&eacute;e ; les cinq plus forts restent <strong>gris&eacute;s</strong> tant qu'on ne les a pas <strong>rencontr&eacute;s</strong>, et un seizi&egrave;me, cach&eacute;, ne se r&eacute;v&egrave;le qu'&agrave; la premi&egrave;re rencontre&hellip;</li>
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; MENU JOUER EN CARROUSEL</li>
         <li>Le menu <strong>Jouer en ligne</strong> pr&eacute;sente d&eacute;sormais les modes dans un <strong>carrousel</strong> (partie rapide, ar&egrave;ne, ligue, tournoi, guilde, &eacute;v&eacute;nements) que l'on fait d&eacute;filer aux fl&egrave;ches ou au doigt. La carte centrale est le mode <strong>s&eacute;lectionn&eacute;</strong> : &laquo;&nbsp;Partie rapide&nbsp;&raquo; le lance &agrave; la cadence choisie, et toucher la carte ouvre son menu. La <strong>derni&egrave;re position est m&eacute;moris&eacute;e</strong>, et le bandeau <strong>Sumo</strong> remonte au-dessus du D&eacute;fi du jour.</li>
       </ul>
@@ -8805,6 +8826,7 @@ var NAV_TAB_MAP = {
   'profile-records':'bn-profile', 'profile-stats':'bn-profile', 'profile-achievements':'bn-profile',
   // Onglet DEV (admins) / Options (joueurs) — même emplacement (voir
   // updateDevButtonVisibility). L'écran 'menu' EST l'écran Options.
+  'bot-gallery':'bn-play',
   menu:'bn-dev',
   'dev-hub':'bn-dev', devrewards:'bn-dev', 'dev-repertoire':'bn-dev', 'dev-openings':'bn-dev', 'dev-tactics':'bn-dev', 'dev-balance':'bn-dev', 'dev-lab':'bn-dev'
 };
@@ -9105,6 +9127,100 @@ function closeDidYouKnowPopup(){
   _dykPick();                 // à la fermeture, on prépare une NOUVELLE astuce
   renderDidYouKnowBanner();   // et on rafraîchit le bandeau
 }
+
+// ── La galerie des maîtres — « l'équipe des 15 » ──────────────────
+// Roster figé (voir docs/EQUIPE_DES_15.md). Ordre du tableau = ordre de FORCE
+// croissante (1 < … < 15 < 0). tier : 'open' (1-10, toujours accessibles),
+// 'greyed' (11-15, grisés tant que non rencontrés), 'hidden' (0, absent tant
+// que non rencontré). Les rencontres sont suivies en localStorage pour l'instant
+// (une table par joueur viendra avec le online — Phase B). La FORCE réelle
+// (profondeur minimax) et les visuels (avatars Rive) arriveront au build online.
+var BOT_ROSTER = [
+  { key:'ichi',    num:'01', kanji:'一', reading:'ichi',    rank:'Ashigaru',  rankKanji:'足軽',   meaning:'Fantassin, la piétaille',              lore:'Le premier pas sur la Voie. Tout le monde a commencé ici.',                       elo:800,  tier:'open' },
+  { key:'ni',      num:'02', kanji:'二', reading:'ni',      rank:'Genin',     rankKanji:'下忍',   meaning:'L\'apprenti, rang le plus bas',        lore:'Encore dans l\'ombre, mais il apprend vite.',                                     elo:920,  tier:'open' },
+  { key:'san',     num:'03', kanji:'三', reading:'san',     rank:'Dōshin',    rankKanji:'同心',   meaning:'Le garde, petit officier',            lore:'Il tient son poste. On ne passe pas si facilement.',                              elo:1040, tier:'open' },
+  { key:'shi',     num:'04', kanji:'四', reading:'shi',     rank:'Yōjimbo',   rankKanji:'用心棒', meaning:'Le garde du corps',                    lore:'Shi (四) sonne comme « la mort » (死) : un numéro qu\'on évite… lui, non.',        elo:1160, tier:'open' },
+  { key:'go',      num:'05', kanji:'五', reading:'go',      rank:'Musha',     rankKanji:'武者',   meaning:'Le guerrier aguerri',                  lore:'La moitié du chemin. Il a déjà vu des batailles.',                                elo:1280, tier:'open' },
+  { key:'roku',    num:'06', kanji:'六', reading:'roku',    rank:'Kenshi',    rankKanji:'剣士',   meaning:'L\'escrimeur, sabre en main',          lore:'Sa lame parle avant lui.',                                                        elo:1400, tier:'open' },
+  { key:'shichi',  num:'07', kanji:'七', reading:'shichi',  rank:'Bugeisha',  rankKanji:'武芸者', meaning:'Le maître d\'armes',                    lore:'Sept, chiffre de chance : la sienne, il la forge.',                               elo:1520, tier:'open' },
+  { key:'hachi',   num:'08', kanji:'八', reading:'hachi',   rank:'Samurai',   rankKanji:'侍',     meaning:'Le samouraï au service',              lore:'Hachi (八) évoque la prospérité : un serviteur accompli.',                        elo:1640, tier:'open' },
+  { key:'kyu',     num:'09', kanji:'九', reading:'kyū',     rank:'Hatamoto',  rankKanji:'旗本',   meaning:'Le vassal direct du shogun',          lore:'Neuf, tout près du sommet. Il porte la bannière.',                                elo:1760, tier:'open' },
+  { key:'ju',      num:'10', kanji:'十', reading:'jū',      rank:'Karō',      rankKanji:'家老',   meaning:'L\'intendant, plus haut vassal',      lore:'Dix : la main droite du seigneur. Dernier des « accessibles ».',                  elo:1880, tier:'open' },
+  { key:'juichi',  num:'11', kanji:'十一',reading:'jūichi', rank:'Kensei',    rankKanji:'剣聖',   meaning:'Le saint du sabre',                    lore:'On ne le voit qu\'après l\'avoir croisé. Sa maîtrise est un mythe.',               elo:2020, tier:'greyed' },
+  { key:'juni',    num:'12', kanji:'十二',reading:'jūni',   rank:'Daimyō',    rankKanji:'大名',   meaning:'Le grand seigneur féodal',            lore:'Il commande des provinces entières.',                                             elo:2160, tier:'greyed' },
+  { key:'jusan',   num:'13', kanji:'十三',reading:'jūsan',  rank:'Shōgun',    rankKanji:'将軍',   meaning:'Le généralissime',                     lore:'Treize : le chiffre qui fait trembler. Il règne.',                                elo:2300, tier:'greyed' },
+  { key:'juyon',   num:'14', kanji:'十四',reading:'jūyon',  rank:'Kami',      rankKanji:'神',     meaning:'La divinité, l\'esprit tutélaire',    lore:'Plus tout à fait humain. On le vénère autant qu\'on le craint.',                  elo:2440, tier:'greyed' },
+  { key:'jugo',    num:'15', kanji:'十五',reading:'jūgo',   rank:'Bushi',     rankKanji:'武士',   meaning:'Le Guerrier (voie du bushidō)',        lore:'Sommet des numéros : l\'incarnation même de la Voie.',                            elo:2580, tier:'greyed' },
+  { key:'rei',     num:'00', kanji:'零', reading:'rei',     rank:'Rōnin',     rankKanji:'浪人',   meaning:'Le samouraï sans maître',             lore:'Le numéro qui n\'existe pas. Surgi du vide, il ne répond à personne — et il est le plus fort.', elo:2800, tier:'hidden' }
+];
+function _botTierColor(tier){ return tier==='hidden' ? '#c85a7a' : (tier==='greyed' ? '#8aa0c0' : '#d4a017'); }
+function _encounteredBots(){ try{ return JSON.parse(localStorage.getItem('vtl_bots_encountered')||'[]'); }catch(e){ return []; } }
+function hasEncounteredBot(key){ return _encounteredBots().indexOf(key)!==-1; }
+function markBotEncountered(key){
+  var a=_encounteredBots();
+  if(a.indexOf(key)===-1){ a.push(key); try{ localStorage.setItem('vtl_bots_encountered', JSON.stringify(a)); }catch(e){} }
+}
+function botById(key){ for(var i=0;i<BOT_ROSTER.length;i++){ if(BOT_ROSTER[i].key===key) return BOT_ROSTER[i]; } return null; }
+// Un « médaillon » : le kanji du numéro dans un cercle coloré par le rang.
+function _botMedallion(b, size, dim){
+  var col=_botTierColor(b.tier);
+  var s=size||54;
+  return '<div style="width:'+s+'px;height:'+s+'px;border-radius:50%;display:flex;align-items:center;justify-content:center;'
+    +'border:2px solid '+col+';background:radial-gradient(circle at 50% 35%,'+col+'22,rgba(0,0,0,.35));'
+    +'font-family:\'Noto Serif JP\',serif;font-size:'+Math.round(s*0.42)+'px;color:'+col+';'
+    +(dim?'filter:grayscale(1) brightness(.6);opacity:.5;':'')+'">'+b.kanji+'</div>';
+}
+function showBotGallery(){ showScreen('bot-gallery'); renderBotGallery(); }
+function renderBotGallery(){
+  var grid=document.getElementById('bot-gallery-grid');
+  if(!grid) return;
+  var enc=_encounteredBots();
+  var visible=BOT_ROSTER.filter(function(b){ return b.tier!=='hidden' || enc.indexOf(b.key)!==-1; });
+  grid.innerHTML = visible.map(function(b){
+    var unlocked = b.tier==='open' || enc.indexOf(b.key)!==-1;
+    if(!unlocked){
+      // Grisé : médaillon éteint, nom masqué, message au clic.
+      return '<div onclick="showToast(\'Disponible une fois le personnage rencontré.\', false)" '
+        +'style="display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(0,0,0,.28);border:1px dashed rgba(160,170,190,.3);border-radius:10px;padding:10px 6px;cursor:pointer">'
+        +_botMedallion(b,50,true)
+        +'<div style="font-family:VT323,monospace;font-size:12px;color:#8aa0c0;opacity:.7">🔒 №'+b.num+'</div>'
+        +'<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.35">? ? ?</div></div>';
+    }
+    return '<div onclick="openBotProfile(\''+b.key+'\')" '
+      +'style="display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(0,0,0,.3);border:1px solid '+_botTierColor(b.tier)+'55;border-radius:10px;padding:10px 6px;cursor:pointer">'
+      +_botMedallion(b,50,false)
+      +'<div style="font-family:\'Cinzel\',serif;font-size:12px;color:'+_botTierColor(b.tier)+';text-align:center;line-height:1.1">'+escapeHtml(b.rank)+'</div>'
+      +'<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.55">ELO '+b.elo+'</div></div>';
+  }).join('');
+}
+function openBotProfile(key){
+  var b=botById(key);
+  if(!b) return;
+  var col=_botTierColor(b.tier);
+  var ov=document.createElement('div');
+  ov.id='bot-profile-overlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.onclick=function(e){ if(e.target===ov) closeBotProfile(); };
+  ov.innerHTML='<div style="max-width:400px;width:100%;background:linear-gradient(160deg,rgba(24,20,14,.99),rgba(14,12,8,.99));border:1px solid '+col+'66;border-radius:14px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,.6)">'
+    +'<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">'
+      +_botMedallion(b,66,false)
+      +'<div style="flex:1;min-width:0">'
+        +'<div style="font-family:\'Cinzel\',serif;font-size:18px;color:'+col+';letter-spacing:1px">'+b.num+' · '+escapeHtml(b.rank)+'</div>'
+        +'<div style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.6">ELO '+b.elo+' · toujours en ligne</div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="font-family:\'Cinzel\',serif;font-size:11px;color:'+col+';letter-spacing:1px;margin-bottom:6px">◆ LE SENS DU NOM</div>'
+    +'<div style="font-family:VT323,monospace;font-size:15px;line-height:1.5;color:var(--parchment);opacity:.92">'
+      +'<b style="font-family:\'Noto Serif JP\',serif;font-size:18px;color:'+col+'">'+b.kanji+'</b>'
+      +' se lit <b>'+escapeHtml(b.reading)+'</b> — le nombre '+b.num.replace(/^0(?=\d)/,'')+'.<br>'
+      +'<b style="font-family:\'Noto Serif JP\',serif">'+b.rankKanji+'</b> (<i>'+escapeHtml(b.rank)+'</i>) : '+escapeHtml(b.meaning)+'.'
+    +'</div>'
+    +'<div style="font-family:VT323,monospace;font-size:14px;line-height:1.45;color:var(--parchment);opacity:.78;margin-top:10px;border-left:2px solid '+col+'55;padding-left:10px">'+escapeHtml(b.lore)+'</div>'
+    +'<button class="btn" style="width:100%;margin-top:18px;font-size:12px;padding:9px" onclick="closeBotProfile()">Fermer</button>'
+  +'</div>';
+  document.body.appendChild(ov);
+}
+function closeBotProfile(){ var ov=document.getElementById('bot-profile-overlay'); if(ov) ov.remove(); }
 
 // ── Journal d'activité (fil connexions/victoires/tournois) ────────
 var ACTIVITY_FEED_TYPES = ['connexion','victoire_pvp','victoire_tournoi'];
