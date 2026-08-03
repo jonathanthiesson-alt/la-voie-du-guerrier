@@ -13503,6 +13503,47 @@ function playEndgameSfx(immediate){
   function fire(){ try{ sfx.currentTime = 0; sfx.muted = false; sfx.volume = (typeof userPrefs.soundVolume==='number'?userPrefs.soundVolume:1); sfx.play().catch(function(err){ console.warn('endgame-sfx: lecture impossible', err); }); }catch(e){} }
   if(immediate) fire(); else _endgameSfxTimer = setTimeout(function(){ _endgameSfxTimer = null; fire(); }, 1500);
 }
+// Phrases romancées de fin de partie EN LIGNE, affichées en sous-titre sous le
+// grand VICTOIRE/DÉFAITE (zone endgame-verdict), à la place du sec « défaite en
+// ligne ». %NAME% est remplacé par l'adversaire (span cliquable → fiche profil).
+// FR uniquement (saveur) — volontairement hors de LANGS pour ne pas alourdir l'i18n.
+const ENDGAME_LINES = {
+  win: [
+    "Victoire écrasante contre %NAME% — la Voie vous sourit.",
+    "%NAME% s'incline. Votre lame a parlé la première.",
+    "Triomphe face à %NAME%. L'honneur est sauf.",
+    "%NAME% n'a rien pu faire. Domination totale.",
+    "Une victoire nette contre %NAME%.",
+    "Vous avez lu %NAME% comme un parchemin ouvert.",
+    "%NAME% repart méditer sa défaite.",
+    "Maîtrise absolue : %NAME% est tombé.",
+    "La forteresse a tenu. %NAME% s'est brisé dessus.",
+    "%NAME% a sous-estimé votre garde. Erreur fatale.",
+    "Belle passe d'armes — mais %NAME% ne pesait pas assez lourd.",
+    "Victoire ! %NAME% se souviendra de ce duel.",
+    "Vous avez poussé %NAME% jusqu'à la faute.",
+    "%NAME% a plié le genou. La rivière coule dans votre sens.",
+    "Duel remporté contre %NAME%. Impeccable."
+  ],
+  loss: [
+    "Défaite contre %NAME%. La Voie est longue.",
+    "%NAME% vous a dominé. Relevez-vous.",
+    "%NAME% a été plus tranchant aujourd'hui.",
+    "Leçon reçue de %NAME%. On y reviendra.",
+    "%NAME% a percé votre garde. À méditer.",
+    "Cette fois, %NAME% a lu vos intentions.",
+    "Revers face à %NAME%. Le fer s'aiguise dans l'échec.",
+    "%NAME% l'emporte — mais rien n'est joué sur la durée.",
+    "Vous êtes tombé contre %NAME%. La revanche appelle.",
+    "%NAME% vous a poussé à la faute. Ça arrive aux meilleurs.",
+    "Défaite honorable contre %NAME%.",
+    "%NAME% avait un coup d'avance.",
+    "La forteresse a cédé face à %NAME%.",
+    "%NAME% vous renvoie à l'entraînement. Sans rancune.",
+    "Match perdu contre %NAME%. Le guerrier apprend en tombant."
+  ]
+};
+
 function endGame(winner,reason){
   // Garde anti-double-appel centralisée : un appel tardif (écho temps réel
   // du même coup, second déclencheur redondant...) rejouerait toute la
@@ -13657,6 +13698,18 @@ function endGame(winner,reason){
       ;
     var vEl=document.getElementById('endgame-verdict');
     if(vEl){vEl.style.display='none';}
+    // Sous-titre romancé en partie EN LIGNE : une phrase aléatoire nommant
+    // l'adversaire (cliquable → fiche profil, câblée au lot suivant via
+    // openPlayerCard ; le typeof évite toute erreur d'ici là). Les parties IA
+    // gardent la leçon Ninguen-Two ci-dessous (jamais online → pas de conflit).
+    if(isOnlineGame && vEl && typeof ENDGAME_LINES!=='undefined'){
+      var _bank=playerWon?ENDGAME_LINES.win:ENDGAME_LINES.loss;
+      var _oppName=currentOnlineOpponentPseudo||'Adversaire';
+      var _oppId=currentOnlineOpponentId||'';
+      var _nameHtml='<span style="color:var(--gold);cursor:pointer;text-decoration:underline" onclick="if(typeof openPlayerCard===\'function\')openPlayerCard(\''+_oppId+'\',\''+escapeHtml(_oppName)+'\')">'+escapeHtml(_oppName)+'</span>';
+      var _line=_bank[Math.floor(Math.random()*_bank.length)].replace('%NAME%',_nameHtml);
+      vEl.innerHTML=_line; vEl.style.display='block';
+    }
     // Ninguen-Two : mise à jour du profil adaptatif + affichage d'une
     // leçon ciblée sur la faiblesse dominante du joueur, si identifiée.
     if(vsAI && advId===9){
@@ -20307,6 +20360,7 @@ let myColorOnline = null;     // 'white' ou 'black' dans la partie en ligne en c
 // pièces. Ce verrou, lui, survit au remplacement de G.
 let pieceInputLocked = false;
 let currentOnlineOpponentId = null; // id Supabase de l'adversaire de la partie en ligne en cours (pour le calcul ELO en fin de partie)
+let currentOnlineOpponentPseudo = null; // pseudo de l'adversaire (phrase de fin de partie romancée + fiche profil)
 
 // Notification non-bloquante : remplace alert() partout dans le flux
 // en ligne. CRITIQUE : un alert() suspend tout le thread JS jusqu'à
@@ -22478,6 +22532,7 @@ async function enterOnlineGame(gameId, whitePlayerId, gameState, turn, timerSeco
     }
   }
   currentOnlineOpponentId = oppId;
+  currentOnlineOpponentPseudo = opponentPseudo;
 
   var botLabel='<span class="player-color-dot bot"></span>'+buildPlayerNameLabel(currentUser.pseudo, myGradeIdx, myElo);
   var topLabel='<span class="player-color-dot top"></span>'+buildPlayerNameLabel(opponentPseudo, oppGradeIdx, oppElo);
