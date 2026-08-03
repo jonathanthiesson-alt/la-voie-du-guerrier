@@ -23,10 +23,10 @@ body.bottomnav-visible #bottom-nav{display:flex}
 #bottom-nav button .bn-label{font-family:'VT323',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase}
 #bottom-nav button.active{opacity:1;color:var(--gold-bright)}
 #bottom-nav button.active .bn-icon{transform:scale(1.18);text-shadow:0 0 8px rgba(212,160,23,.6)}
-/* Flèches du carrousel des modes (écran Jouer) */
-.play-carousel-arrow{flex:0 0 34px;background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.35);border-radius:8px;color:var(--gold-bright);font-family:serif;font-size:22px;line-height:1;cursor:pointer;padding:0;transition:background .15s,transform .1s}
-.play-carousel-arrow:hover{background:rgba(212,160,23,.18)}
-.play-carousel-arrow:active{transform:scale(.94)}
+/* Aperçus latéraux (peeks) du carrousel des modes (écran Jouer) */
+.play-mode-peek{flex:0 0 38px;min-height:74px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(0,0,0,.28);border:1px solid rgba(212,160,23,.22);border-radius:8px;cursor:pointer;transition:background .15s,transform .1s}
+.play-mode-peek:hover{background:rgba(212,160,23,.14)}
+.play-mode-peek:active{transform:scale(.94)}
 /* Décale le contenu des écrans pour ne pas passer sous la barre */
 body.bottomnav-visible .screen{padding-bottom:70px}
 /* Généralisé aux panneaux À DÉFILEMENT INTERNE (boutique, ligue, tournoi,
@@ -2159,11 +2159,9 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
          CE mode à la cadence choisie juste au-dessus (matchmaking/arène) ;
          cliquer la carte ouvre le MENU du mode. Position mémorisée
          (vtl_play_mode_idx). Voir renderPlayModeCarousel & co. -->
-    <div id="play-mode-carousel" style="display:flex;align-items:stretch;gap:6px;margin-bottom:6px">
-      <button class="play-carousel-arrow" onclick="cyclePlayMode(-1)" aria-label="Mode précédent">&#8249;</button>
-      <div id="play-mode-card" onclick="openCentralModeScreen()" style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;background:linear-gradient(135deg,rgba(40,30,12,.55),rgba(18,14,8,.5));border:1px solid rgba(212,160,23,.45);border-radius:10px;padding:12px 8px;cursor:pointer"></div>
-      <button class="play-carousel-arrow" onclick="cyclePlayMode(1)" aria-label="Mode suivant">&#8250;</button>
-    </div>
+    <!-- Rempli par renderPlayModeCarousel : aperçu gauche · carte centrale ·
+         aperçu droite. Les aperçus (peeks) laissent deviner les modes voisins. -->
+    <div id="play-mode-carousel" style="display:flex;align-items:center;gap:6px;margin-bottom:6px"></div>
     <div id="play-mode-dots" style="display:flex;justify-content:center;align-items:center;gap:6px;margin-bottom:8px"></div>
 
     <!-- Cadence : ne concerne que les modes « à cadence » (matchmaking, arène) -->
@@ -3552,7 +3550,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; LA GALERIE DES MA&Icirc;TRES</li>
         <li>Une <strong>galerie</strong> pr&eacute;sente les seize adversaires de la Voie (l'&laquo;&nbsp;&eacute;quipe des 15&nbsp;&raquo;), chacun avec un m&eacute;daillon, son Elo et un encart <strong>&laquo;&nbsp;le sens de son nom&nbsp;&raquo;</strong> (le nombre en japonais + son rang de guerrier). Les dix premiers sont visibles d'embl&eacute;e ; les cinq plus forts restent <strong>gris&eacute;s</strong> tant qu'on ne les a pas <strong>rencontr&eacute;s</strong>, et un seizi&egrave;me, cach&eacute;, ne se r&eacute;v&egrave;le qu'&agrave; la premi&egrave;re rencontre&hellip;</li>
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; MENU JOUER EN CARROUSEL</li>
-        <li>Le menu <strong>Jouer en ligne</strong> pr&eacute;sente d&eacute;sormais les modes dans un <strong>carrousel</strong> (partie rapide, ar&egrave;ne, ligue, tournoi, guilde, &eacute;v&eacute;nements) que l'on fait d&eacute;filer aux fl&egrave;ches ou au doigt. La carte centrale est le mode <strong>s&eacute;lectionn&eacute;</strong> : &laquo;&nbsp;Partie rapide&nbsp;&raquo; le lance &agrave; la cadence choisie, et toucher la carte ouvre son menu. La <strong>derni&egrave;re position est m&eacute;moris&eacute;e</strong>, et le bandeau <strong>Sumo</strong> remonte au-dessus du D&eacute;fi du jour.</li>
+        <li>Le menu <strong>Jouer en ligne</strong> pr&eacute;sente d&eacute;sormais les modes dans un <strong>carrousel</strong> (partie rapide, ar&egrave;ne, ligue, tournoi, guilde, &eacute;v&eacute;nements) que l'on fait d&eacute;filer aux <strong>aper&ccedil;us lat&eacute;raux</strong> (on devine les modes voisins) ou au doigt. La carte centrale est le mode <strong>s&eacute;lectionn&eacute;</strong> : &laquo;&nbsp;Partie rapide&nbsp;&raquo; le lance &agrave; la cadence choisie, et toucher la carte ouvre son menu. La <strong>derni&egrave;re position est m&eacute;moris&eacute;e</strong>, et le bandeau <strong>Sumo</strong> remonte au-dessus du D&eacute;fi du jour.</li>
       </ul>
     </div>
 
@@ -8895,14 +8893,27 @@ function openCentralModeScreen(){
   var m=centralPlayMode();
   if(m.screen) showScreen(m.screen); else launchCentralMode();
 }
+function _playModePeek(idx, dir){
+  var m=PLAY_MODES[idx];
+  var chev = dir<0 ? '&#8249;' : '&#8250;';
+  return '<div class="play-mode-peek" onclick="cyclePlayMode('+dir+')" title="'+escapeHtml(m.label)+'">'
+    +'<div style="font-size:20px;line-height:1;opacity:.5">'+m.icon+'</div>'
+    +'<div style="font-size:15px;color:var(--gold-bright);opacity:.6;margin-top:2px">'+chev+'</div></div>';
+}
 function renderPlayModeCarousel(){
-  var card=document.getElementById('play-mode-card');
-  if(!card) return;
+  var car=document.getElementById('play-mode-carousel');
+  if(!car) return;
+  var n=PLAY_MODES.length;
   var m=centralPlayMode();
-  card.innerHTML = '<div style="font-size:34px;line-height:1;margin-bottom:2px">'+m.icon+'</div>'
-    +'<div style="font-family:\'Cinzel\',serif;font-size:16px;color:var(--gold-bright);letter-spacing:1px">'+escapeHtml(m.label)+'</div>'
-    +'<div style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.65;text-align:center">'+escapeHtml(m.sub)+'</div>'
-    +'<div style="font-family:VT323,monospace;font-size:10px;color:var(--gold);opacity:.45;margin-top:3px">Touchez pour ouvrir le menu</div>';
+  var prev=(_playModeIdx-1+n)%n, next=(_playModeIdx+1)%n;
+  car.innerHTML = _playModePeek(prev,-1)
+    +'<div id="play-mode-card" onclick="openCentralModeScreen()" style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;background:linear-gradient(135deg,rgba(40,30,12,.6),rgba(18,14,8,.5));border:1px solid rgba(212,160,23,.5);border-radius:10px;padding:12px 8px;cursor:pointer">'
+      +'<div style="font-size:34px;line-height:1;margin-bottom:2px">'+m.icon+'</div>'
+      +'<div style="font-family:\'Cinzel\',serif;font-size:16px;color:var(--gold-bright);letter-spacing:1px">'+escapeHtml(m.label)+'</div>'
+      +'<div style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.65;text-align:center">'+escapeHtml(m.sub)+'</div>'
+      +'<div style="font-family:VT323,monospace;font-size:10px;color:var(--gold);opacity:.45;margin-top:3px">Touchez pour ouvrir le menu</div>'
+    +'</div>'
+    +_playModePeek(next,1);
   var dots=document.getElementById('play-mode-dots');
   if(dots){
     dots.innerHTML = PLAY_MODES.map(function(x,i){
