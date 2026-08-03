@@ -771,8 +771,7 @@ requestAnimationFrame(loop);
  *  Ne touche PAS le moteur d'anim existant (rendu statique séparé).
  * ================================================================== */
 const RigEditor = (function(){
-  const NS='http://www.w3.org/2000/svg';
-  const mk=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+  // Réutilise le helper global el() (création d'élément SVG + attributs).
   const order=BONES.map(b=>b[0]);
   const parent={}; BONES.forEach(([n,p])=>parent[n]=p);
   const CENTER=['root','spine','chest','neck','head'];       // os sur l'axe (x=0 si symétrie)
@@ -800,7 +799,7 @@ const RigEditor = (function(){
   }
 
   function ghost(g,plane){
-    const j=joints, add=p=>g.appendChild(mk('polygon',{points:p,class:'rig-ghost'}));
+    const j=joints, add=p=>g.appendChild(el('polygon',{points:p,class:'rig-ghost'}));
     // jambes + bras (les deux côtés, pilotés par les vraies articulations)
     [['hipR','kneeR',9,7],['kneeR','footR',7,4],['hipL','kneeL',9,7],['kneeL','footL',7,4],
      ['shoulderR','elbowR',7,5],['elbowR','handR',5,3],['shoulderL','elbowL',7,5],['elbowL','handL',5,3]]
@@ -811,7 +810,7 @@ const RigEditor = (function(){
     add(torso.map(([a,b])=>px(plane==='face'?a:0)+','+py(b)).join(' '));
     // tête
     const hc=pt(plane,j.head);
-    g.appendChild(mk('ellipse',{cx:hc[0],cy:hc[1],rx:14*sx,ry:17*sy,class:'rig-ghost'}));
+    g.appendChild(el('ellipse',{cx:hc[0],cy:hc[1],rx:14*sx,ry:17*sy,class:'rig-ghost'}));
   }
 
   function renderOne(svgId,plane){
@@ -819,22 +818,22 @@ const RigEditor = (function(){
     while(svg.firstChild)svg.removeChild(svg.firstChild);
     // repères : sol + axe vertical
     const groundY=py(Math.max(joints.footR.y,joints.footL.y)+3);
-    svg.appendChild(mk('line',{x1:20,y1:groundY,x2:280,y2:groundY,stroke:'#556074','stroke-dasharray':'4 4','stroke-width':1,opacity:.4}));
-    svg.appendChild(mk('line',{x1:cx,y1:20,x2:cx,y2:380,stroke:'#445066','stroke-width':1,opacity:.35}));
-    const gGhost=mk('g',{}); svg.appendChild(gGhost);
+    svg.appendChild(el('line',{x1:20,y1:groundY,x2:280,y2:groundY,stroke:'#556074','stroke-dasharray':'4 4','stroke-width':1,opacity:.4}));
+    svg.appendChild(el('line',{x1:cx,y1:20,x2:cx,y2:380,stroke:'#445066','stroke-width':1,opacity:.35}));
+    const gGhost=el('g',{}); svg.appendChild(gGhost);
     if(document.getElementById('rigGhost').checked) ghost(gGhost,plane);
     // os (lignes parent->enfant)
     order.forEach(n=>{ const p=parent[n]; if(!p)return;
       const a=pt(plane,joints[p]), b=pt(plane,joints[n]);
-      svg.appendChild(mk('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],class:'rig-bone'}));
+      svg.appendChild(el('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],class:'rig-bone'}));
     });
     // articulations (points glissables)
     const showLab=document.getElementById('rigLabels').checked;
     order.forEach(n=>{ const c=pt(plane,joints[n]);
-      const dot=mk('circle',{cx:c[0],cy:c[1],r:6,class:'rig-joint'+(sel===n?' sel':''),'data-bone':n});
+      const dot=el('circle',{cx:c[0],cy:c[1],r:6,class:'rig-joint'+(sel===n?' sel':''),'data-bone':n});
       dot.addEventListener('pointerdown',ev=>startDrag(ev,plane,n,svg));
       svg.appendChild(dot);
-      if(showLab) svg.appendChild(mk('text',{x:c[0]+8,y:c[1]-6,fill:'#9fb0cf','font-size':8},)).textContent=n;
+      if(showLab) svg.appendChild(el('text',{x:c[0]+8,y:c[1]-6,fill:'#9fb0cf','font-size':8},)).textContent=n;
     });
   }
 
