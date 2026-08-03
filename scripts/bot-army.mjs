@@ -226,6 +226,12 @@ async function playGame(bot, mover, game, stats) {
   const c = bot.client;
   const myColor = game.white_player_id === bot.uid ? "white" : "black";
   let gameId = game.id;
+  // 🔴 Handshake de présence : le client adverse masque le plateau ("En attente
+  // de l'adversaire…") tant que les DEUX colonnes ready_white/ready_black ne sont
+  // pas à true (voir markReadyAndWaitForOpponent dans index.html). Le bot pose la
+  // sienne, sinon un joueur humain reste bloqué sur un plateau non chargé.
+  const myReadyCol = myColor === "white" ? "ready_white" : "ready_black";
+  try { await c.from("online_games").update({ [myReadyCol]: true }).eq("id", gameId); } catch (e) {}
   for (let guard = 0; guard < 200; guard++) {
     const { data: rows } = await c.from("online_games").select("*").eq("id", gameId).limit(1);
     const g = rows && rows[0];
