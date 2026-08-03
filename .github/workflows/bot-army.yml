@@ -1,0 +1,49 @@
+# ════════════════════════════════════════════════════════════════════════
+# Worker « armée de bots » — déploie des bots (comptes ANONYMES) qui jouent en
+# ligne comme de vrais joueurs, pour tester le online solo. Piloté depuis le
+# menu dev (table bot_army_control) ; rapport dans bot_army_report.
+# Voir docs/BOT_ARMY_PLAN.md.
+#
+# ⚠ PRÉ-REQUIS (une fois, par Jonathan) :
+#   • Activer l'AUTH ANONYME dans Supabase (Auth → Providers → Anonymous).
+#   • Exécuter sql_a_executer/dev_bot_army.sql.
+#   • Le secret repo SUPABASE_SERVICE_ROLE_KEY est DÉJÀ configuré (worker
+#     d'équilibre) — rien à ajouter. La clé anon (publique) est lue dans
+#     index.html par le worker au runtime.
+#
+# Le job est LONG (jusqu'à timeout-minutes) : une fois « enabled », il maintient
+# les bots vivants et réactifs jusqu'à ce que la directive repasse à false
+# (bouton Arrêter) ou que le temps du job expire. Le cron court capte un « start ».
+# ════════════════════════════════════════════════════════════════════════
+name: Bot army (test online)
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"      # toutes les 5 min : capte un « déployer »
+  workflow_dispatch:            # + bouton « Run workflow »
+    inputs:
+      minutes:
+        description: "Durée max du run (minutes, ≤ 330)"
+        default: "50"
+
+concurrency:
+  group: bot-army
+  cancel-in-progress: false
+
+jobs:
+  bots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install deps
+        run: npm install --no-audit --no-fund
+      - name: Run bot army
+        run: node scripts/bot-army.mjs
+        env:
+          SUPABASE_URL: "https://ikssbshpvpqlcgrbjldz.supabase.co"
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BOT_ARMY_MINUTES: ${{ github.event.inputs.minutes }}

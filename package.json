@@ -1,0 +1,9 @@
+{
+  "name": "voie-du-guerrier-workers",
+  "private": true,
+  "type": "module",
+  "description": "Dépendances des workers serveur (GitHub Actions). Le jeu (index.html) n'en dépend pas.",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0"
+  }
+}
