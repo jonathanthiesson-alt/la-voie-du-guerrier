@@ -3146,6 +3146,10 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 <div id="screen-profile" class="screen">
   <div class="profile-header">
     <div class="profile-name-txt" id="profile-name-txt">Joueur</div>
+    <!-- Devise du joueur : phrase libre, modérée (voir moderateDevise). Clic =
+         édition. Vide = invite à en écrire une. Colonne profiles.devise
+         (sql_a_executer/add_devise.sql). -->
+    <div id="profile-devise" onclick="editDevise()" title="Modifier ma devise" style="font-family:'VT323',monospace;font-size:13px;color:var(--gold-bright);opacity:.85;text-align:center;margin:4px auto 2px;max-width:280px;cursor:pointer;font-style:italic"></div>
     <div class="profile-grade-row-wrap" id="profile-grade-row-wrap" style="justify-content:center;cursor:pointer" onclick="openGradesModal()"></div>
     <div id="profile-skin-preview" style="display:flex;justify-content:center;margin-top:12px;cursor:pointer" onclick="showScreen('piece-skins')"></div>
     <div style="text-align:center;font-family:'Cinzel',serif;font-size:12px;color:var(--gold-bright);opacity:.85;letter-spacing:.5px;margin-top:6px;margin-bottom:6px;cursor:pointer" onclick="showScreen('piece-skins')" data-i18n="profile_customize"><span style="font-family:Noto Serif JP,serif">観</span> Personnaliser l'apparence &#8250;</div>
@@ -3297,6 +3301,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('online-menu')" data-i18n="btn_back">&#8617; RETOUR</button></div>
   <div class="profile-header">
     <div class="profile-name-txt" id="pubprofile-pseudo-txt">Joueur</div>
+    <div id="pubprofile-devise" style="font-family:'VT323',monospace;font-size:13px;color:var(--gold-bright);opacity:.85;text-align:center;margin:4px auto 2px;max-width:280px;font-style:italic"></div>
     <div class="profile-grade-row-wrap" id="pubprofile-grade-row-wrap" style="justify-content:center"></div>
     <div id="pubprofile-skin-preview" style="display:flex;justify-content:center;margin-top:10px"></div>
     <div class="profile-xp-row" style="cursor:default;margin-top:10px">
@@ -3542,6 +3547,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
         <li>Un nouveau bandeau dans le menu <strong>Jouer en ligne</strong> distille des <strong>astuces</strong> sur les fonctionnalit&eacute;s du jeu et des <strong>anecdotes</strong> sur ses coulisses (dont l'origine du projet et l'&eacute;quilibrage). Un clic ouvre l'astuce ; la refermer en propose une nouvelle.</li>
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; BOUTON OPTIONS</li>
         <li>Les joueurs disposent maintenant d'un bouton <strong>Options</strong> dans la barre du bas (l&agrave; o&ugrave; les admins ont le bouton DEV). Les admins gardent DEV, et retrouvent ces m&ecirc;mes options sous leurs outils.</li>
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; DEVISE DE PROFIL</li>
+        <li>Chacun peut se choisir une <strong>devise</strong> &mdash; une phrase affich&eacute;e sur son profil (et sur sa fiche publique). Une <strong>mod&eacute;ration</strong> refuse racisme, discriminations et insultes, c&ocirc;t&eacute; app <em>et</em> c&ocirc;t&eacute; serveur.</li>
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; LA GALERIE DES MA&Icirc;TRES</li>
         <li>Une <strong>galerie</strong> pr&eacute;sente les seize adversaires de la Voie (l'&laquo;&nbsp;&eacute;quipe des 15&nbsp;&raquo;), chacun avec un m&eacute;daillon, son Elo et un encart <strong>&laquo;&nbsp;le sens de son nom&nbsp;&raquo;</strong> (le nombre en japonais + son rang de guerrier). Les dix premiers sont visibles d'embl&eacute;e ; les cinq plus forts restent <strong>gris&eacute;s</strong> tant qu'on ne les a pas <strong>rencontr&eacute;s</strong>, et un seizi&egrave;me, cach&eacute;, ne se r&eacute;v&egrave;le qu'&agrave; la premi&egrave;re rencontre&hellip;</li>
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; MENU JOUER EN CARROUSEL</li>
@@ -6726,6 +6733,7 @@ function renderProfile(){
   var grade = GRADES[curIdx]; // la barre XP suit toujours le grade RÉEL, pas le grade affiché
   var nt = document.getElementById('profile-name-txt');
   if(nt) nt.textContent = (typeof currentUser!=='undefined' && currentUser) ? currentUser.pseudo : (PP.name||'Joueur');
+  renderMyDevise();
   var grWrap = document.getElementById('profile-grade-row-wrap');
   if(grWrap) grWrap.innerHTML = renderGradeRow(dispIdx, 24);
   var inp = document.getElementById('custom-msg-input');
@@ -9221,6 +9229,101 @@ function openBotProfile(key){
   document.body.appendChild(ov);
 }
 function closeBotProfile(){ var ov=document.getElementById('bot-profile-overlay'); if(ov) ov.remove(); }
+
+// ── Devise du joueur (phrase libre modérée) ───────────────────────
+// Persistée dans profiles.devise (sql_a_executer/add_devise.sql). La modération
+// ci-dessous est un FILTRE CLIENT de première ligne (racisme, discriminations,
+// insultes). Elle n'est pas la garantie finale : une modération SERVEUR (RPC
+// SECURITY DEFINER refaisant ce test à l'écriture) devra la doubler — un client
+// est contournable. La liste est volontairement compacte et extensible.
+var DEVISE_MAX = 60;
+// Termes bannis (après normalisation anti-contournement). Slurs racistes/
+// homophobes + insultes crues. Comparés en sous-chaîne sur la forme « collée ».
+var DEVISE_BANNED = [
+  // slurs racistes / discriminatoires (fr + en)
+  'negre','nègre','niger','nigger','nigga','bougnoule','bicot','chinetoque',
+  'youpin','feuj','raton','melon','pd','tapette','tarlouze','pede','pedale',
+  'faggot','tranny','retard','mongol','mongolien','gogol','handicape',
+  // insultes crues (fr + en)
+  'connard','conard','connasse','salope','pute','putain','encule','enfoire','batard',
+  'ntm','fdp','filsdepute','bastard','bitch','whore','asshole','cunt','motherfucker'
+];
+// Normalise pour déjouer les contournements : minuscules, sans accents, leet
+// (0→o, 1→i, 3→e, 4→a, 5→s, 7→t, @→a, $→s), puis on ne garde que a-z0-9.
+function _normDevise(s){
+  s = (s||'').toLowerCase();
+  try{ s = s.normalize('NFD').replace(/[̀-ͯ]/g,''); }catch(e){}
+  s = s.replace(/0/g,'o').replace(/1/g,'i').replace(/3/g,'e').replace(/4/g,'a')
+       .replace(/5/g,'s').replace(/7/g,'t').replace(/@/g,'a').replace(/\$/g,'s');
+  return s.replace(/[^a-z0-9]/g,'');
+}
+// → { ok:bool, reason:string, clean:string }. clean='' efface la devise.
+function moderateDevise(raw){
+  var clean = (raw||'').replace(/\s+/g,' ').trim();
+  if(clean===''){ return { ok:true, reason:'', clean:'' }; }
+  if(clean.length>DEVISE_MAX){ return { ok:false, reason:'Trop longue ('+DEVISE_MAX+' caractères max).', clean:clean }; }
+  // Charset raisonnable : lettres (accents ok), chiffres, espaces, ponctuation douce.
+  if(/[^\p{L}\p{N}\s'’«».,!?;:()\-…&]/u.test(clean)){
+    return { ok:false, reason:'Caractères non autorisés.', clean:clean };
+  }
+  var collapsed = _normDevise(clean);
+  for(var i=0;i<DEVISE_BANNED.length;i++){
+    if(collapsed.indexOf(_normDevise(DEVISE_BANNED[i]))!==-1){
+      return { ok:false, reason:'Cette devise enfreint les règles (racisme, discriminations ou insultes bannis).', clean:clean };
+    }
+  }
+  return { ok:true, reason:'', clean:clean };
+}
+function myDevise(){ return (typeof currentUser!=='undefined' && currentUser && currentUser.devise) ? currentUser.devise : ''; }
+function renderMyDevise(){
+  var el=document.getElementById('profile-devise');
+  if(!el) return;
+  var d=myDevise();
+  el.innerHTML = d
+    ? '« '+escapeHtml(d)+' » <span style="opacity:.4;font-style:normal">✎</span>'
+    : '<span style="opacity:.5">✎ Ajouter une devise…</span>';
+}
+function editDevise(){
+  var ov=document.createElement('div');
+  ov.id='devise-editor-overlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.onclick=function(e){ if(e.target===ov) closeDeviseEditor(); };
+  var cur=myDevise();
+  ov.innerHTML='<div style="max-width:400px;width:100%;background:linear-gradient(160deg,rgba(24,20,14,.99),rgba(14,12,8,.99));border:1px solid rgba(212,160,23,.5);border-radius:14px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,.6)">'
+    +'<div style="font-family:\'Cinzel\',serif;font-size:16px;color:var(--gold-bright);letter-spacing:1px;margin-bottom:4px">Ma devise</div>'
+    +'<div style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.6;margin-bottom:12px">Une phrase qui te représente, affichée sur ton profil. Racisme, discriminations et insultes bannis.</div>'
+    +'<input id="devise-input" type="text" maxlength="'+DEVISE_MAX+'" value="'+escapeHtml(cur)+'" placeholder="Ex : La lame suit la volonté." '
+      +'style="width:100%;box-sizing:border-box;padding:10px;background:rgba(0,0,0,.4);color:var(--parchment);border:1px solid rgba(212,160,23,.4);border-radius:7px;font-family:VT323,monospace;font-size:16px">'
+    +'<div id="devise-error" style="font-family:VT323,monospace;font-size:12px;color:#f08080;min-height:16px;margin-top:6px"></div>'
+    +'<div style="display:flex;gap:8px;margin-top:10px">'
+      +'<button class="btn" style="flex:1;font-size:12px;padding:9px" onclick="closeDeviseEditor()">Annuler</button>'
+      +'<button class="btn" style="flex:1;font-size:12px;padding:9px;border-color:rgba(212,160,23,.6)" onclick="saveDevise()">Enregistrer</button>'
+    +'</div>'
+  +'</div>';
+  document.body.appendChild(ov);
+  setTimeout(function(){ var i=document.getElementById('devise-input'); if(i) i.focus(); }, 50);
+}
+function closeDeviseEditor(){ var ov=document.getElementById('devise-editor-overlay'); if(ov) ov.remove(); }
+async function saveDevise(){
+  var inp=document.getElementById('devise-input');
+  var errEl=document.getElementById('devise-error');
+  if(!inp) return;
+  var res=moderateDevise(inp.value);
+  if(!res.ok){ if(errEl) errEl.textContent=res.reason; return; }
+  if(!currentUser){ showToast('Connecte-toi pour définir ta devise.', true); return; }
+  try{
+    const { error } = await supa.from('profiles').update({ devise: res.clean }).eq('id', currentUser.id);
+    if(error) throw error;
+    currentUser.devise = res.clean;
+    renderMyDevise();
+    closeDeviseEditor();
+    showToast(res.clean ? 'Devise enregistrée.' : 'Devise effacée.', false);
+  }catch(e){
+    // Colonne pas encore créée ? On le dit franchement plutôt que d'échouer en silence.
+    if(errEl) errEl.textContent = 'Enregistrement impossible (la colonne « devise » existe-t-elle ? Voir add_devise.sql).';
+    console.warn('[devise] update échouée', e);
+  }
+}
 
 // ── Journal d'activité (fil connexions/victoires/tournois) ────────
 var ACTIVITY_FEED_TYPES = ['connexion','victoire_pvp','victoire_tournoi'];
@@ -21817,6 +21920,7 @@ async function viewPlayerProfile(playerId){
 
   var dispIdx = getDisplayedGradeIdx(p.displayed_grade, p.xp||0);
   var pt=document.getElementById('pubprofile-pseudo-txt'); if(pt) pt.textContent=p.pseudo;
+  var pdv=document.getElementById('pubprofile-devise'); if(pdv) pdv.innerHTML = p.devise ? '« '+escapeHtml(p.devise)+' »' : '';
   var grWrap=document.getElementById('pubprofile-grade-row-wrap'); if(grWrap) grWrap.innerHTML=renderGradeRow(dispIdx, 24);
   var bar=document.getElementById('pubprofile-xp-bar'); if(bar) bar.style.width=xpPct(p.xp||0)+'%';
   var lbl=document.getElementById('pubprofile-xp-label'); if(lbl) lbl.textContent=(p.xp||0)+' XP';
