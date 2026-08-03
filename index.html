@@ -3270,6 +3270,13 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <div class="profile-xp-bar-wrap"><div class="profile-xp-bar" id="pubprofile-xp-bar" style="width:0%"></div></div>
       <div class="profile-xp-label" id="pubprofile-xp-label">0</div>
     </div>
+    <!-- Actions sur le profil consulté (masquées sur son propre profil et sur
+         les profils de bots, qui ne répondent ni aux demandes ni aux messages). -->
+    <div id="pubprofile-actions" style="display:none;gap:8px;justify-content:center;margin-top:12px">
+      <button class="btn btn-small" onclick="pubProfileAddFriend()">&#10133; Ami</button>
+      <button class="btn btn-small" onclick="pubProfileChallenge()">&#9876; D&#233;fier</button>
+      <button class="btn btn-small" onclick="pubProfileMessage()">&#128172; Message</button>
+    </div>
   </div>
   <div class="profile-body">
     <div class="profile-section">
@@ -21513,7 +21520,46 @@ async function viewPlayerProfile(playerId){
     if(achHdr) achHdr.textContent = built.progressText;
     achEl.innerHTML = built.html;
   }
+  // Boutons ami/défier/message : seulement sur le profil d'un AUTRE joueur réel.
+  var actEl=document.getElementById('pubprofile-actions');
+  if(actEl) actEl.style.display = (p.is_bot || (currentUser && playerId===currentUser.id)) ? 'none' : 'flex';
   showScreen('public-profile');
+}
+
+// Point d'entrée unique « voir la fiche d'un joueur » (nom cliquable partout :
+// fin de partie, listes, etc.) — délègue à l'écran profil public existant.
+function openPlayerCard(playerId, playerPseudo){ if(playerId) viewPlayerProfile(playerId); }
+function _pubProfilePseudo(){ var e=document.getElementById('pubprofile-pseudo-txt'); return e?e.textContent:''; }
+function pubProfileChallenge(){ if(_currentPubProfileId && typeof openChallengeConfigPopup==='function') openChallengeConfigPopup(_currentPubProfileId, _pubProfilePseudo()); }
+function pubProfileMessage(){ if(_currentPubProfileId && typeof openDmThread==='function') openDmThread(_currentPubProfileId, _pubProfilePseudo()); }
+async function pubProfileAddFriend(){ if(_currentPubProfileId) await sendFriendRequestToId(_currentPubProfileId, _pubProfilePseudo()); }
+// Ajout d'ami PAR ID (le bouton de la fiche profil) — même logique anti-doublon
+// que sendFriendRequestByPseudo, mais sans passer par le champ de recherche.
+async function sendFriendRequestToId(targetId, targetPseudo){
+  if(!currentUser || !targetId) return;
+  if(targetId===currentUser.id){ showToast('Impossible de s\'ajouter soi-même.', true); return; }
+  var who = targetPseudo || 'ce joueur';
+  try{
+    const { data: existing } = await supa.from('friendships').select('*')
+      .or('and(requester_id.eq.'+currentUser.id+',addressee_id.eq.'+targetId+'),and(requester_id.eq.'+targetId+',addressee_id.eq.'+currentUser.id+')')
+      .limit(1);
+    if(existing && existing.length){
+      var row=existing[0];
+      if(row.status==='accepted'){ showToast('Vous êtes déjà ami avec '+who+' !'); return; }
+      if(row.requester_id===targetId){
+        await supa.from('friendships').update({status:'accepted'}).eq('id', row.id);
+        showToast(who+' vous avait déjà invité — ami ajouté !');
+        if(typeof refreshFriendsList==='function') refreshFriendsList();
+        return;
+      }
+      showToast('Demande déjà envoyée à '+who+'.', true);
+      return;
+    }
+    const { error } = await supa.from('friendships').insert({ requester_id: currentUser.id, addressee_id: targetId, status:'pending' });
+    if(error){ showToast('Demande déjà envoyée ou erreur.', true); return; }
+    showToast('Demande envoyée !');
+    if(typeof refreshFriendsList==='function') refreshFriendsList();
+  }catch(e){ showToast('Erreur.', true); }
 }
 
 // Met en forme une date ISO en "il y a combien de temps", pour les
@@ -21580,7 +21626,7 @@ function _lbRow(idx, p, value, unit){
   var medal = rank===1?'&#129351;':rank===2?'&#129352;':rank===3?'&#129353;':('#'+rank);
   return '<div class="online-player-row" style="'+(isMe?'border-color:var(--gold-bright);background:rgba(212,160,23,.08)':'')+'">'
     +'<div style="font-family:Cinzel,serif;font-size:14px;color:var(--gold);width:30px;flex-shrink:0;text-align:center">'+medal+'</div>'
-    +'<div class="online-player-info"><div class="online-player-pseudo">'+escapeHtml(p.pseudo||'?')+(isMe?' <span style="opacity:.5;font-size:11px">(moi)</span>':'')+'</div></div>'
+    +'<div class="online-player-info"><div class="online-player-pseudo" style="cursor:pointer;text-decoration:underline;text-decoration-color:rgba(200,168,110,.3);text-underline-offset:3px" onclick="viewPlayerProfile(\''+p.id+'\')">'+escapeHtml(p.pseudo||'?')+(isMe?' <span style="opacity:.5;font-size:11px">(moi)</span>':'')+'</div></div>'
     +'<div style="font-family:VT323,monospace;font-size:17px;color:var(--gold-bright);flex-shrink:0">'+unit+' '+value+'</div>'
   +'</div>';
 }
