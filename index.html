@@ -3537,6 +3537,9 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div class="devlog-entry">
       <div class="devlog-version">ONLINE alpha V0.37.0 &mdash; 3 ao&ucirc;t 2026</div>
       <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; L'&Eacute;QUIPE DES 15 &mdash; PREMIERS PAS EN LIGNE</li>
+        <li>Si vous patientez dans le matchmaking, un <strong>ma&icirc;tre IA d'Elo proche</strong> peut venir vous tenir t&ecirc;te (option &agrave; cocher, d&eacute;lai r&eacute;glable). Affronter ces ma&icirc;tres <strong>d&eacute;bloque leur fiche</strong> dans la Galerie &mdash; y compris les plus forts, cach&eacute;s jusqu'&agrave; la premi&egrave;re rencontre. Chaque ma&icirc;tre a son profil, avec sa <strong>devise</strong> qui explique son nom.</li>
+        <li style="list-style:none;margin-left:-14px;color:rgba(200,168,110,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">Les bots n'apparaissent jamais dans les classements ni la liste des joueurs en ligne.</li>
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; FIN DE PARTIE EN LIGNE</li>
         <li>La victoire et la d&eacute;faite en ligne s'accompagnent d&eacute;sormais d'une <strong>phrase romanc&eacute;e</strong> tir&eacute;e au hasard, qui <strong>nomme l'adversaire</strong> &mdash; et son nom est cliquable pour ouvrir sa fiche.</li>
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; FICHES DE JOUEUR PARTOUT</li>
@@ -9172,14 +9175,41 @@ var BOT_ROSTER = [
   { key:'jugo',    num:'15', kanji:'十五',reading:'jūgo',   rank:'Bushi',     rankKanji:'武士',   meaning:'Le Guerrier (voie du bushidō)',        lore:'Sommet des numéros : l\'incarnation même de la Voie.',                            elo:2580, tier:'greyed' },
   { key:'rei',     num:'00', kanji:'零', reading:'rei',     rank:'Rōnin',     rankKanji:'浪人',   meaning:'Le samouraï sans maître',             lore:'Le numéro qui n\'existe pas. Surgi du vide, il ne répond à personne — et il est le plus fort.', elo:2800, tier:'hidden' }
 ];
+// Roster affiché : la DB (bot_roster) fait autorité quand elle répond, sinon on
+// retombe sur BOT_ROSTER en dur. Rencontres : la DB (get_my_bot_encounters) si
+// dispo, sinon localStorage (avant que le online ne les track).
+var _botRoster = BOT_ROSTER;
+var _botEnc = null; // array de clés depuis la DB ; null = pas encore chargé → localStorage
 function _botTierColor(tier){ return tier==='hidden' ? '#c85a7a' : (tier==='greyed' ? '#8aa0c0' : '#d4a017'); }
-function _encounteredBots(){ try{ return JSON.parse(localStorage.getItem('vtl_bots_encountered')||'[]'); }catch(e){ return []; } }
+function _encounteredBots(){
+  if(Array.isArray(_botEnc)) return _botEnc;
+  try{ return JSON.parse(localStorage.getItem('vtl_bots_encountered')||'[]'); }catch(e){ return []; }
+}
 function hasEncounteredBot(key){ return _encounteredBots().indexOf(key)!==-1; }
 function markBotEncountered(key){
   var a=_encounteredBots();
   if(a.indexOf(key)===-1){ a.push(key); try{ localStorage.setItem('vtl_bots_encountered', JSON.stringify(a)); }catch(e){} }
 }
-function botById(key){ for(var i=0;i<BOT_ROSTER.length;i++){ if(BOT_ROSTER[i].key===key) return BOT_ROSTER[i]; } return null; }
+function botById(key){ for(var i=0;i<_botRoster.length;i++){ if(_botRoster[i].key===key) return _botRoster[i]; } return null; }
+// Charge le roster + les rencontres depuis Supabase (mappe vers la forme client).
+async function loadBotRosterFromDB(){
+  if(typeof supa==='undefined' || !supa) return;
+  try{
+    const { data } = await supa.from('bot_roster').select('*').order('sort');
+    if(data && data.length){
+      _botRoster = data.map(function(r){ return {
+        key:r.key, num:r.num, kanji:r.kanji, reading:r.reading, rank:r.rank,
+        rankKanji:r.rank_kanji, meaning:r.meaning, lore:r.lore, elo:r.base_elo, tier:r.tier
+      }; });
+    }
+  }catch(e){}
+  try{
+    if(currentUser){
+      const { data: enc } = await supa.rpc('get_my_bot_encounters');
+      if(Array.isArray(enc)) _botEnc = enc;
+    }
+  }catch(e){}
+}
 // Un « médaillon » : le kanji du numéro dans un cercle coloré par le rang.
 function _botMedallion(b, size, dim){
   var col=_botTierColor(b.tier);
@@ -9189,12 +9219,17 @@ function _botMedallion(b, size, dim){
     +'font-family:\'Noto Serif JP\',serif;font-size:'+Math.round(s*0.42)+'px;color:'+col+';'
     +(dim?'filter:grayscale(1) brightness(.6);opacity:.5;':'')+'">'+b.kanji+'</div>';
 }
-function showBotGallery(){ showScreen('bot-gallery'); renderBotGallery(); }
+async function showBotGallery(){
+  showScreen('bot-gallery');
+  renderBotGallery();          // rendu immédiat (données en dur / cache) pour éviter l'écran vide
+  await loadBotRosterFromDB(); // puis on rafraîchit avec la DB (roster + rencontres)
+  renderBotGallery();
+}
 function renderBotGallery(){
   var grid=document.getElementById('bot-gallery-grid');
   if(!grid) return;
   var enc=_encounteredBots();
-  var visible=BOT_ROSTER.filter(function(b){ return b.tier!=='hidden' || enc.indexOf(b.key)!==-1; });
+  var visible=_botRoster.filter(function(b){ return b.tier!=='hidden' || enc.indexOf(b.key)!==-1; });
   grid.innerHTML = visible.map(function(b){
     var unlocked = b.tier==='open' || enc.indexOf(b.key)!==-1;
     if(!unlocked){
@@ -10736,7 +10771,7 @@ function showScreen(id){
   if(id==='tournament'){ refreshTournamentScreen(); }
   if(id==='guild'){      _guildView='auto'; refreshGuildScreen(); }
   if(id==='events-mode'){ refreshAllCurrencyDisplays(); refreshEventsProgress(); }
-  if(id==='matchmaking'){ refreshHubEloDisplay(); refreshAllCurrencyDisplays(); refreshShisoProgress(); }
+  if(id==='matchmaking'){ refreshHubEloDisplay(); refreshAllCurrencyDisplays(); refreshShisoProgress(); applyBackfillPrefUI(); }
   if(id==='amis'){ setAmisTab(_amisTab||'msg'); }
   if(id==='devrewards'){ refreshDevRewardsScreen(); }
   if(id==='menu'||id==='local-hub'||id==='home'){ updateDevButtonVisibility(); }
@@ -11016,6 +11051,31 @@ function goToSumoFromBanner(){
 let _mmPollInterval = null;
 let _mmSearching = false;
 
+// ── Préférence de backfill (compagnon IA) — locale par appareil ───
+function getBackfillPref(){
+  try{ return {
+    enabled: localStorage.getItem('vtl_backfill_on')==='1',
+    delay: Math.min(60, Math.max(10, parseInt(localStorage.getItem('vtl_backfill_delay'),10)||20))
+  }; }catch(e){ return { enabled:false, delay:20 }; }
+}
+function onBackfillToggle(){
+  var cb=document.getElementById('mm-backfill-toggle');
+  try{ localStorage.setItem('vtl_backfill_on', cb && cb.checked ? '1':'0'); }catch(e){}
+  var row=document.getElementById('mm-backfill-delay-row');
+  if(row) row.style.display = (cb && cb.checked) ? 'flex' : 'none';
+}
+function onBackfillDelayInput(){
+  var s=document.getElementById('mm-backfill-delay');
+  var v=document.getElementById('mm-backfill-delay-val');
+  if(s){ if(v) v.textContent=s.value; try{ localStorage.setItem('vtl_backfill_delay', s.value); }catch(e){} }
+}
+function applyBackfillPrefUI(){
+  var p=getBackfillPref();
+  var cb=document.getElementById('mm-backfill-toggle'); if(cb) cb.checked=p.enabled;
+  var s=document.getElementById('mm-backfill-delay'); if(s) s.value=p.delay;
+  var v=document.getElementById('mm-backfill-delay-val'); if(v) v.textContent=p.delay;
+  var row=document.getElementById('mm-backfill-delay-row'); if(row) row.style.display = p.enabled ? 'flex':'none';
+}
 async function startMatchmakingSearch(timerSeconds){
   if(!currentUser){ showToast('Connectez-vous pour utiliser le matchmaking.', true); return; }
   stopMatchmakingSearch(false);
@@ -11042,8 +11102,10 @@ async function startMatchmakingSearch(timerSeconds){
     if(me && me[eloCol]!=null) myElo = me[eloCol];
   }catch(e){}
   try{ await supa.from('matchmaking_queue').delete().eq('player_id', currentUser.id); }catch(e){}
+  var _bf = getBackfillPref();
   const { error } = await supa.from('matchmaking_queue').insert({
-    player_id: currentUser.id, pseudo: currentUser.pseudo, elo: myElo, timer_seconds: timerSeconds
+    player_id: currentUser.id, pseudo: currentUser.pseudo, elo: myElo, timer_seconds: timerSeconds,
+    want_backfill: _bf.enabled, backfill_after: _bf.delay
   });
   if(error){
     if(statusEl) statusEl.textContent = '';
@@ -14169,6 +14231,20 @@ function endGame(winner,reason){
       var _nameHtml='<span style="color:var(--gold);cursor:pointer;text-decoration:underline" onclick="if(typeof openPlayerCard===\'function\')openPlayerCard(\''+_oppId+'\',\''+escapeHtml(_oppName)+'\')">'+escapeHtml(_oppName)+'</span>';
       var _line=_bank[Math.floor(Math.random()*_bank.length)].replace('%NAME%',_nameHtml);
       vEl.innerHTML=_line; vEl.style.display='block';
+      // Si l'adversaire est un bot de l'équipe des 15 : marque la RENCONTRE
+      // (débloque son profil dans la galerie, y compris le 0 caché). Local +
+      // serveur. Requête légère au tout dernier moment (fin de partie).
+      if(_oppId && typeof supa!=='undefined' && supa){
+        (async function(){
+          try{
+            const { data } = await supa.from('bot_roster').select('key').eq('profile_id', _oppId).maybeSingle();
+            if(data && data.key){
+              markBotEncountered(data.key);
+              try{ await supa.rpc('mark_bot_encounter', { p_bot_key: data.key }); }catch(e){}
+            }
+          }catch(e){}
+        })();
+      }
     }
     // Ninguen-Two : mise à jour du profil adaptatif + affichage d'une
     // leçon ciblée sur la faiblesse dominante du joueur, si identifiée.
@@ -22100,6 +22176,7 @@ async function loadLeaderboard(timerKey){
   var col = ELO_TIMER_COLUMN[timerKey] || 'elo_5s';
   const { data, error } = await supa.from('profiles')
     .select('id,pseudo,total_online_games,'+col)
+    .eq('is_bot', false)   // 🤖 jamais de bot (équipe des 15 / armée de test) au classement
     .order(col, { ascending: false })
     .limit(50);
   if(error){ listEl.innerHTML = '<div style="text-align:center;opacity:.5">Erreur de chargement.</div>'; return; }
@@ -22155,6 +22232,7 @@ async function refreshOnlinePlayersList(){
   }
   const { data, error } = await supa.from('profiles')
     .select('id,pseudo,xp,wins,losses,is_online,last_seen')
+    .eq('is_bot', false)   // 🤖 les bots (équipe des 15) ne s'affichent jamais dans la liste (le 0 caché ne doit pas fuiter)
     .neq('id', currentUser.id);
   if(error){ listEl.innerHTML = '<div style="text-align:center;opacity:.5">Erreur de chargement.</div>'; return; }
   if(!data.length){ listEl.innerHTML = '<div style="text-align:center;opacity:.5;padding:12px">Aucun autre joueur pour le moment.</div>'; return; }
@@ -23465,6 +23543,18 @@ window.addEventListener('beforeunload', () => {
         <div class="opt-btn mm-timer-btn" onclick="startMatchmakingSearch(10)">10s</div>
         <span style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.6">ELO <span id="mm-elo-10s">—</span></span>
       </div>
+    </div>
+    <!-- Backfill « équipe des 15 » : si le joueur attend trop, un maître IA
+         d'Elo proche le rejoint (partie amicale). Préférence locale par appareil,
+         posée sur la file (want_backfill/backfill_after) à la recherche. -->
+    <div class="menu-divider"></div>
+    <label style="display:flex;align-items:center;gap:8px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);cursor:pointer;margin-bottom:6px">
+      <input type="checkbox" id="mm-backfill-toggle" onchange="onBackfillToggle()"> 🤖 Un maître IA me rejoint si j'attends
+    </label>
+    <div id="mm-backfill-delay-row" style="display:none;align-items:center;gap:8px;font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.8;margin-bottom:4px">
+      <span style="flex-shrink:0">Après</span>
+      <input type="range" id="mm-backfill-delay" min="10" max="60" step="5" value="20" oninput="onBackfillDelayInput()" style="flex:1">
+      <span style="flex-shrink:0"><span id="mm-backfill-delay-val">20</span> s</span>
     </div>
     <div id="mm-status" style="text-align:center;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright);margin:16px 0;min-height:20px"></div>
     <button class="btn" id="mm-cancel-btn" style="display:none;border-color:rgba(200,80,80,.4);color:#f08080" onclick="stopMatchmakingSearch()" data-i18n="mm_cancel">&#10005; Annuler</button>
