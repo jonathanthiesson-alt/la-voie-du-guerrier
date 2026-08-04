@@ -268,6 +268,190 @@ async function botFreeLoop(bot, isAliveRef) {
   }
 }
 
+// ══════════════════════════════════════════════════════════════════════
+// MODE backfill — « l'équipe des 15 » (Phase B)
+// Provisionne les 16 bots NOMMÉS (comptes persistants + profils is_bot + Elo
+// fixe + devise=sens du nom), puis apparie les joueurs qui poireautent dans la
+// file (want_backfill) avec le bot d'Elo le plus proche et pilote ses coups.
+// Tout en service_role (les 16 sont des identités serveur, pas de session).
+// ══════════════════════════════════════════════════════════════════════
+
+// Admin Auth API (création de comptes) — endpoint /auth/v1, pas /rest/v1.
+async function sbAuthAdmin(path, init) {
+  const res = await fetch(SUPABASE_URL + "/auth/v1/" + path, {
+    ...init,
+    headers: { apikey: SERVICE_KEY, Authorization: "Bearer " + SERVICE_KEY, "Content-Type": "application/json", ...(init && init.headers) },
+  });
+  return res;
+}
+const randPass = () => "Bot!" + Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2).toUpperCase();
+
+async function fetchRoster() {
+  return await (await sbAdmin("bot_roster?select=*&order=sort")).json();
+}
+async function findProfileIdByPseudo(pseudo) {
+  const rows = await (await sbAdmin("profiles?pseudo=eq." + encodeURIComponent(pseudo) + "&select=id")).json();
+  return rows[0] ? rows[0].id : null;
+}
+async function adminFindUserIdByEmail(email) {
+  for (let page = 1; page <= 20; page++) {
+    const res = await sbAuthAdmin("admin/users?page=" + page + "&per_page=200", { method: "GET" });
+    if (!res.ok) break;
+    const data = await res.json();
+    const users = data.users || data || [];
+    const hit = users.find((u) => (u.email || "").toLowerCase() === email.toLowerCase());
+    if (hit) return hit.id;
+    if (!users.length || users.length < 200) break;
+  }
+  return null;
+}
+async function adminCreateUser(email) {
+  const res = await sbAuthAdmin("admin/users", {
+    method: "POST",
+    body: JSON.stringify({ email, password: randPass(), email_confirm: true, user_metadata: { team15_bot: true } }),
+  });
+  if (res.ok) { const u = await res.json(); return u.id || (u.user && u.user.id) || null; }
+  // Déjà créé (422) ou autre : on tentera la récupération par email en aval.
+  return null;
+}
+// UPSERT du profil du bot (id = auth user). Devise = explication du nom (le
+// trigger enforce_devise la valide ; nos devises sont propres, ≤60).
+async function upsertBotProfile(b, pid) {
+  await sbAdmin("profiles?on_conflict=id", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Prefer: "resolution=merge-duplicates,return=minimal" },
+    body: JSON.stringify({
+      id: pid, pseudo: b.pseudo, is_bot: true, is_online: true,
+      elo_3s: b.base_elo, elo_5s: b.base_elo, elo_10s: b.base_elo, devise: b.devise,
+    }),
+  });
+}
+async function setRosterProfileId(key, pid) {
+  await sbAdmin("bot_roster?key=eq." + encodeURIComponent(key), {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+    body: JSON.stringify({ profile_id: pid }),
+  });
+}
+// Idempotent : réutilise profile_id si déjà lié, sinon adopte un profil de même
+// pseudo, sinon crée le compte auth. Renseigne bot_roster.profile_id.
+async function provisionRosterBots() {
+  const roster = await fetchRoster();
+  for (const b of roster) {
+    try {
+      let pid = b.profile_id || (await findProfileIdByPseudo(b.pseudo));
+      if (!pid) {
+        const email = "bot-" + b.key + "@team15.bots";
+        pid = (await adminCreateUser(email)) || (await adminFindUserIdByEmail(email));
+      }
+      if (!pid) { console.warn("provision roster : pas d'id pour", b.key); continue; }
+      await upsertBotProfile(b, pid);
+      if (b.profile_id !== pid) await setRosterProfileId(b.key, pid);
+      b.profile_id = pid;
+    } catch (e) { console.warn("provision roster", b.key, e.message); }
+    await sleep(150);
+  }
+  const ok = roster.filter((b) => b.profile_id);
+  console.log("✓ Roster provisionné : " + ok.length + "/16 bots nommés.");
+  return ok;
+}
+// Force minimax ∝ Elo (plus le bot est fort, plus il regarde loin).
+function botDepth(elo) { return elo < 1150 ? 1 : elo < 1800 ? 2 : elo < 2400 ? 3 : 4; }
+const inList = (col, ids) => col + "=in.(" + ids.join(",") + ")";
+
+// Un tour de backfill : apparie les humains qui attendent avec un bot libre.
+async function backfillTick(mover, roster, busyPids, stats) {
+  const waiting = await (await sbAdmin("matchmaking_queue?want_backfill=eq.true&select=*")).json();
+  const assigned = new Set();
+  for (const q of waiting) {
+    try {
+      const ageS = (Date.now() - new Date(q.joined_at).getTime()) / 1000;
+      if (ageS < (q.backfill_after || 20)) continue;                    // pas encore assez patienté
+      // déjà en partie ? (le poll du joueur l'aura ramassée)
+      const g0 = await (await sbAdmin("online_games?or=(white_player_id.eq." + q.player_id + ",black_player_id.eq." + q.player_id + ")&status=eq.active&select=id&limit=1")).json();
+      if (g0.length) continue;
+      // bot le plus proche en Elo, libre (pas déjà en partie, pas déjà assigné ce tour)
+      const free = roster.filter((b) => !busyPids.has(b.profile_id) && !assigned.has(b.profile_id));
+      if (!free.length) break;
+      free.sort((a, b) => Math.abs(a.base_elo - q.elo) - Math.abs(b.base_elo - q.elo));
+      const bot = free[0];
+      // crée la partie humain↔bot (amicale : ranked=false), bot déjà « prêt »
+      const iAmWhite = Math.random() < 0.5;
+      const gs = mover.startState();
+      await sbAdmin("online_games", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({
+          white_player_id: iAmWhite ? bot.profile_id : q.player_id,
+          black_player_id: iAmWhite ? q.player_id : bot.profile_id,
+          game_state: gs, turn: "white", timer_seconds: q.timer_seconds, ranked: false,
+          ready_white: iAmWhite ? true : false, ready_black: iAmWhite ? false : true,
+        }),
+      });
+      await sbAdmin("matchmaking_queue?player_id=eq." + q.player_id, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      assigned.add(bot.profile_id);
+      busyPids.add(bot.profile_id);
+      console.log("🤝 backfill : " + bot.pseudo + " (Elo " + bot.base_elo + ") rejoint un joueur (Elo " + q.elo + ").");
+    } catch (e) { stats.errors++; console.warn("backfillTick", e.message); }
+  }
+}
+
+// Pilote les coups des bots du roster dans leurs parties actives (service_role).
+async function driveRosterGames(mover, byPid, stats) {
+  const pids = [...byPid.keys()];
+  if (!pids.length) return new Set();
+  const busy = new Set();
+  const games = await (await sbAdmin("online_games?status=eq.active&select=*&or=(" + inList("white_player_id", pids) + "," + inList("black_player_id", pids) + ")")).json();
+  for (const g of games) {
+    try {
+      const botPid = byPid.has(g.white_player_id) ? g.white_player_id : g.black_player_id;
+      const bot = byPid.get(botPid);
+      const myColor = g.white_player_id === botPid ? "white" : "black";
+      busy.add(botPid);
+      const readyCol = myColor === "white" ? "ready_white" : "ready_black";
+      if (!g[readyCol]) await sbAdmin("online_games?id=eq." + g.id, { method: "PATCH", headers: { "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ [readyCol]: true }) });
+      if (g.turn !== myColor) continue;
+      let out;
+      try { out = JSON.parse(mover.botChooseAndApply(JSON.stringify(g.game_state), myColor, botDepth(bot.base_elo))); }
+      catch (e) { stats.errors++; continue; }
+      const upd = out.noMove
+        ? { status: "finished", winner: otherColor(myColor) }
+        : { game_state: out.state, turn: out.turn, ...(out.won ? { status: "finished", winner: myColor } : {}) };
+      await sbAdmin("online_games?id=eq." + g.id, { method: "PATCH", headers: { "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify(upd) });
+      if (out.won) { stats.wins++; stats.gamesPlayed++; }
+      else if (out.noMove) { stats.losses++; stats.gamesPlayed++; }
+    } catch (e) { stats.errors++; console.warn("driveRosterGames", e.message); }
+  }
+  return busy;
+}
+
+async function runBackfill(mover, t0) {
+  const roster = await provisionRosterBots();
+  if (!roster.length) { console.log("✗ Aucun bot du roster provisionné — abandon."); return; }
+  const byPid = new Map(roster.map((b) => [b.profile_id, b]));
+  const stats = { gamesPlayed: 0, wins: 0, losses: 0, errors: 0 };
+  const budgetMs = RUN_MINUTES * 60 * 1000;
+  let ticks = 0;
+  while (Date.now() - t0 < budgetMs) {
+    try {
+      const ctrl = await readControl();
+      if (!ctrl || !ctrl.enabled) { console.log("■ Directive coupée → arrêt backfill."); break; }
+      // 1) piloter les parties en cours (et savoir quels bots sont occupés)
+      const busy = await driveRosterGames(mover, byPid, stats);
+      // 2) apparier les joueurs en attente avec un bot libre
+      await backfillTick(mover, roster, busy, stats);
+      // 3) garder les bots « en ligne » (le pg_cron le fait aussi, ceinture+bretelles)
+      if (++ticks % 30 === 0) {
+        await sbAdmin("profiles?" + inList("id", [...byPid.keys()]), { method: "PATCH", headers: { "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ is_online: true, last_seen: new Date().toISOString() }) });
+      }
+      await writeReport("backfill", { bots_active: roster.length, games_played: stats.gamesPlayed, wins: stats.wins, losses: stats.losses, errors: stats.errors });
+    } catch (e) { console.warn("backfill boucle", e.message); }
+    await sleep(2000);
+  }
+  await writeReport("backfill", { bots_active: 0, games_played: stats.gamesPlayed, wins: stats.wins, losses: stats.losses, errors: stats.errors, note: "run terminé" });
+  console.log("✔ Backfill terminé : " + stats.wins + "V/" + stats.losses + "D, " + stats.errors + " err.");
+}
+
 async function main() {
   const t0 = Date.now();
   if (!SUPABASE_URL || !SERVICE_KEY) { console.log("⏸ Secret SUPABASE_SERVICE_ROLE_KEY absent → veille."); return; }
@@ -277,9 +461,19 @@ async function main() {
   if (!ctrl0) { console.log("⚠ bot_army_control introuvable — dev_bot_army.sql exécuté ?"); return; }
   if (!ctrl0.enabled) { console.log("⏸ Directive désactivée (enabled=false) — rien à faire."); return; }
 
-  const mode = ctrl0.mode || "matchmaking";
+  // BOT_ARMY_MODE (input du workflow) peut surcharger la directive : permet de
+  // lancer le backfill sans changer la directive (dont le RPC ne connaît pas
+  // encore 'backfill' — ce sera câblé au lot 3, menu dev).
+  const mode = process.env.BOT_ARMY_MODE || ctrl0.mode || "matchmaking";
   const count = Math.min(Math.max(ctrl0.count || 0, 0), 100);
   console.log(`▶ Armée de bots : mode=${mode}, count=${count}, durée max=${RUN_MINUTES}min`);
+
+  // Mode « équipe des 15 » : bots nommés persistants + backfill des joueurs.
+  if (mode === "backfill") {
+    const moverBf = makeMover(getFormat(html, "standard"));
+    await runBackfill(moverBf, t0);
+    return;
+  }
 
   if (mode === "arena" || mode === "tournament") {
     // TODO v2 : cartographier les RPC de jointure (arena_*/tournament_register)

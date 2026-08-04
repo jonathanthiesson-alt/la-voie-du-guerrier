@@ -28,6 +28,9 @@ on:
       minutes:
         description: "Durée max du run (minutes, ≤ 330)"
         default: "50"
+      mode:
+        description: "Mode (vide = directive ; 'backfill' = équipe des 15)"
+        default: ""
 
 concurrency:
   group: bot-army
@@ -50,3 +53,4 @@ jobs:
           SUPABASE_URL: "https://ikssbshpvpqlcgrbjldz.supabase.co"
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           BOT_ARMY_MINUTES: ${{ github.event.inputs.minutes }}
+          BOT_ARMY_MODE: ${{ github.event.inputs.mode }}
