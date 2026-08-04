@@ -119,8 +119,9 @@ injustement exécuté — la figure la plus terrifiante du folklore médiéval.
 
 **Récompense cachée liée** : battre 0-Rōnin débloque le succès secret
 **« Mon nom est Taira no Masakado »** (`ba_ronin`, icône 怨). En le nommant enfin,
-le joueur brise le tabou — et reçoit son dû. *(Récompense en cours d'arbitrage :
-voir la règle du Koku, décision structurante n°1.)*
+le joueur brise le tabou — et reçoit son dû. *(Récompense = un **cosmétique
+exclusif** — skin ou animation, à produire ; pas de Koku, la règle premium
+n°1 est préservée. En attendant : XP. Voir TODO cosmétiques.)*
 
 Sur les fiches de bots, un **bouton « Lore »** (à côté de la devise) racontera
 cette part sombre ; la **devise** reste la voix courte et charismatique du bot.

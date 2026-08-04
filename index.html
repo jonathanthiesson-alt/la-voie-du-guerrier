@@ -22221,6 +22221,43 @@ async function reportCurrentPlayer(){
     showToast('Signalement transmis aux modérateurs. Merci.', false);
   }catch(e){ showToast('Erreur lors du signalement.', true); }
 }
+// Glitch « zalgo » léger : surimpose des barres/ratures sur chaque caractère.
+// Sert au profil CORROMPU de 0-Rōnin (il est « plusieurs », ses données sont
+// instables). Purement visuel.
+function _roninGlitch(s){
+  s = String(s||''); var marks=['̶','̵','̷','҉']; var out='';
+  for(var i=0;i<s.length;i++){ out += s.charAt(i) + marks[i % marks.length]; }
+  return out;
+}
+// Overlay Lore générique (fiche d'un bot). Fermeture au clic hors carte ou sur ✕.
+function _showLoreOverlay(title, html){
+  var ov=document.getElementById('_lore-overlay'); if(ov) ov.remove();
+  ov=document.createElement('div'); ov.id='_lore-overlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.onclick=function(e){ if(e.target===ov) ov.remove(); };
+  ov.innerHTML='<div style="max-width:420px;width:100%;max-height:80vh;overflow-y:auto;background:linear-gradient(160deg,#1a1410,#0f0b08);border:1px solid rgba(212,160,23,.4);border-radius:12px;padding:18px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    +'<div style="font-family:\'Cinzel\',serif;font-size:16px;color:var(--gold-bright)">'+title+'</div>'
+    +'<button class="btn" style="width:auto;padding:4px 10px;font-size:12px" onclick="var o=document.getElementById(\'_lore-overlay\');if(o)o.remove()">✕</button></div>'
+    + html + '</div>';
+  document.body.appendChild(ov);
+}
+// Popup Lore d'un bot (bouton « 巻 Lore » de sa fiche) : le mythe des Seize,
+// son lore propre, et pour 0-Rōnin la part Onryō / Taira no Masakado.
+async function openBotLorePopup(num){
+  var lore='';
+  try{ const { data } = await supa.from('bot_roster').select('lore').eq('num', num).single(); if(data) lore=data.lore||''; }catch(e){}
+  var isRonin = (num==='00');
+  var myth = "Les Seize ne sont qu'une seule âme. Un maître, formé par des dieux peu recommandables, voulut l'immortalité — et se brisa en quinze fragments. L'originel, dépossédé et à demi fou, est 0-Rōnin : il erre pour reprendre les morceaux perdus de son âme.";
+  var onryo = "0-Rōnin est un Onryō (怨霊) : l'esprit vengeur d'un guerrier mort dans une colère noire, invincible pour un mortel. Prononcer son nom attire son attention — c'est pourquoi nul ne le nomme. Le plus redouté fut Taira no Masakado, dont la tête coupée aurait volé à travers le Japon.";
+  var html = '<div style="font-family:VT323,monospace;font-size:14px;color:var(--parchment);line-height:1.55">'
+    + (lore?('<div style="margin-bottom:10px;font-style:italic;opacity:.9">'+escapeHtml(lore)+'</div>'):'')
+    + '<div style="margin-bottom:'+(isRonin?'10px':'0')+'">'+myth+'</div>'
+    + (isRonin?('<div style="color:#c85a7a;border-top:1px solid rgba(200,90,122,.3);padding-top:8px">'+onryo+'</div>'):'')
+    + '</div>';
+  _showLoreOverlay(isRonin?'怨 0-Rōnin':'巻 Lore', html);
+}
+
 async function viewPlayerProfile(playerId){
   _viewedPlayerId = playerId;
   _currentPubProfileId = playerId;
@@ -22228,9 +22265,18 @@ async function viewPlayerProfile(playerId){
     .select('*').eq('id', playerId).single();
   if(error || !p){ showToast('Profil introuvable.', true); return; }
 
+  var botNum = p.is_bot ? String(p.pseudo||'').slice(0,2) : null;
+  var isRonin = (botNum==='00'); // 0-Rōnin : profil corrompu (« il est plusieurs »)
   var dispIdx = getDisplayedGradeIdx(p.displayed_grade, p.xp||0);
-  var pt=document.getElementById('pubprofile-pseudo-txt'); if(pt) pt.textContent=p.pseudo;
-  var pdv=document.getElementById('pubprofile-devise'); if(pdv) pdv.innerHTML = p.devise ? '« '+escapeHtml(p.devise)+' »' : '';
+  var pt=document.getElementById('pubprofile-pseudo-txt');
+  if(pt){ pt.textContent = isRonin ? _roninGlitch(p.pseudo||'0̸0̸-̸R̸ō̸n̸i̸n̸') : p.pseudo; if(isRonin) pt.style.color='#c85a7a'; else pt.style.color=''; }
+  var pdv=document.getElementById('pubprofile-devise');
+  if(pdv){
+    var dv = p.devise ? '« '+escapeHtml(p.devise)+' »' : '';
+    if(isRonin) dv = '<span style="color:#c85a7a;letter-spacing:1px">'+_roninGlitch('...il est plusieurs...')+'</span>';
+    if(botNum) dv += '<div style="margin-top:6px"><button class="btn" style="width:auto;font-size:11px;padding:5px 12px" onclick="openBotLorePopup(\''+botNum+'\')">巻 Lore</button></div>';
+    pdv.innerHTML = dv;
+  }
   var grWrap=document.getElementById('pubprofile-grade-row-wrap'); if(grWrap) grWrap.innerHTML=renderGradeRow(dispIdx, 24);
   var bar=document.getElementById('pubprofile-xp-bar'); if(bar) bar.style.width=xpPct(p.xp||0)+'%';
   var lbl=document.getElementById('pubprofile-xp-label'); if(lbl) lbl.textContent=(p.xp||0)+' XP';
@@ -22250,7 +22296,13 @@ async function viewPlayerProfile(playerId){
   var winRate = totalGames>0 ? Math.round((p.wins||0)/totalGames*100) : 0;
   var statsEl=document.getElementById('pubprofile-stats');
   if(statsEl){
-    var stats=[
+    // 0-Rōnin : chiffres aberrants/corrompus, défaites masquées (il « est plusieurs »).
+    var stats = isRonin ? [
+      {val:'&#8734;', lbl:t('stat_games')},
+      {val:_roninGlitch('999'), lbl:t('stat_wins')},
+      {val:'—', lbl:t('stat_losses')},
+      {val:_roninGlitch('N a N')+'%', lbl:t('stat_winrate')}
+    ] : [
       {val:totalGames, lbl:t('stat_games')},
       {val:p.wins||0, lbl:t('stat_wins')},
       {val:p.losses||0, lbl:t('stat_losses')},
@@ -22273,9 +22325,11 @@ async function viewPlayerProfile(playerId){
     if(achHdr) achHdr.textContent = built.progressText;
     achEl.innerHTML = built.html;
   }
-  // Boutons ami/défier/message : seulement sur le profil d'un AUTRE joueur réel.
+  // Boutons ami/défier/message : masqués seulement sur MON profil. Sur les bots
+  // on les montre — c'est ainsi qu'on lie amitié (les 15 acceptent, le Rōnin
+  // jamais) puis qu'on peut leur écrire (→ haïku). Voir bot_friend_autoaccept.sql.
   var actEl=document.getElementById('pubprofile-actions');
-  if(actEl) actEl.style.display = (p.is_bot || (currentUser && playerId===currentUser.id)) ? 'none' : 'flex';
+  if(actEl) actEl.style.display = (currentUser && playerId===currentUser.id) ? 'none' : 'flex';
   showScreen('public-profile');
 }
 
@@ -22461,10 +22515,21 @@ async function refreshOnlinePlayersList(){
     listEl.innerHTML = '<div style="text-align:center;opacity:.5;padding:12px">Chargement…</div>';
   }
   const { data, error } = await supa.from('profiles')
-    .select('id,pseudo,xp,wins,losses,is_online,last_seen')
-    .eq('is_bot', false)   // 🤖 les bots (équipe des 15) ne s'affichent jamais dans la liste (le 0 caché ne doit pas fuiter)
+    .select('id,pseudo,xp,wins,losses,is_online,last_seen,is_bot')
+    .eq('is_bot', false)   // les vrais joueurs d'abord
     .neq('id', currentUser.id);
   if(error){ listEl.innerHTML = '<div style="text-align:center;opacity:.5">Erreur de chargement.</div>'; return; }
+  // 🥚 Easter egg : on AJOUTE les bots de la Bot-Army DÉBLOQUÉS (num déduit du
+  // pseudo « NN-… »). Seul moyen de leur envoyer une demande d'ami → messagerie
+  // → haïku. Le Rōnin (00) n'apparaît qu'une fois les 15 vaincus (botArmyUnlocked).
+  try{
+    const { data: bots } = await supa.from('profiles')
+      .select('id,pseudo,xp,wins,losses,is_online,last_seen,is_bot').eq('is_bot', true);
+    (bots||[]).forEach(function(bp){
+      var num = String(bp.pseudo||'').slice(0,2);
+      if(typeof botArmyUnlocked==='function' && botArmyUnlocked({num:num})) data.push(bp);
+    });
+  }catch(e){}
   if(!data.length){ listEl.innerHTML = '<div style="text-align:center;opacity:.5;padding:12px">Aucun autre joueur pour le moment.</div>'; return; }
 
   const { data: activeGames } = await supa.from('online_games')
@@ -22517,7 +22582,9 @@ async function refreshOnlinePlayersList(){
     // terminer la partie) : si le joueur est par ailleurs réellement
     // porté disparu, on ne l'affiche pas comme éternellement en combat.
     const inCombat = !!combatMap[p.id] && presence !== 'offline';
-    return { p: p, tier: inCombat ? 'combat' : presence };
+    // Les bots de la Bot-Army sont « toujours là » — affichés en ligne.
+    const tier = p.is_bot ? 'online' : (inCombat ? 'combat' : presence);
+    return { p: p, tier: tier };
   });
   if(_onlineSortMode === 'alpha'){
     rows.sort((a,b) => a.p.pseudo.localeCompare(b.p.pseudo));
