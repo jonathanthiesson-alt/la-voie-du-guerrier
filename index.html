@@ -3539,7 +3539,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <div class="devlog-version">ONLINE alpha V0.37.0 &mdash; 3 ao&ucirc;t 2026</div>
       <ul class="devlog-list">
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; L'&Eacute;QUIPE DES 15 &mdash; PREMIERS PAS EN LIGNE</li>
-        <li>Si vous patientez dans le matchmaking, un <strong>ma&icirc;tre IA d'Elo proche</strong> peut venir vous tenir t&ecirc;te (option &agrave; cocher, d&eacute;lai r&eacute;glable). Affronter ces ma&icirc;tres <strong>d&eacute;bloque leur fiche</strong> dans la Galerie &mdash; y compris les plus forts, cach&eacute;s jusqu'&agrave; la premi&egrave;re rencontre. Chaque ma&icirc;tre a son profil, avec sa <strong>devise</strong> qui explique son nom.</li>
+        <li>Si vous patientez dans le matchmaking, un <strong>bot online d'Elo proche</strong> peut venir vous tenir t&ecirc;te (option &agrave; cocher, d&eacute;lai r&eacute;glable). Affronter ces bots <strong>d&eacute;bloque leur fiche</strong> dans la Galerie &mdash; y compris les plus forts, cach&eacute;s jusqu'&agrave; la premi&egrave;re rencontre. Chaque bot a son profil, avec sa <strong>devise</strong> qui explique son nom.</li>
         <li style="list-style:none;margin-left:-14px;color:rgba(200,168,110,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">Les bots n'apparaissent jamais dans les classements ni la liste des joueurs en ligne.</li>
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; FIN DE PARTIE EN LIGNE</li>
         <li>La victoire et la d&eacute;faite en ligne s'accompagnent d&eacute;sormais d'une <strong>phrase romanc&eacute;e</strong> tir&eacute;e au hasard, qui <strong>nomme l'adversaire</strong> &mdash; et son nom est cliquable pour ouvrir sa fiche.</li>
@@ -23545,12 +23545,12 @@ window.addEventListener('beforeunload', () => {
         <span style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.6">ELO <span id="mm-elo-10s">—</span></span>
       </div>
     </div>
-    <!-- Backfill « équipe des 15 » : si le joueur attend trop, un maître IA
+    <!-- Backfill « équipe des 15 » : si le joueur attend trop, un bot online
          d'Elo proche le rejoint (partie amicale). Préférence locale par appareil,
          posée sur la file (want_backfill/backfill_after) à la recherche. -->
     <div class="menu-divider"></div>
     <label style="display:flex;align-items:center;gap:8px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);cursor:pointer;margin-bottom:6px">
-      <input type="checkbox" id="mm-backfill-toggle" onchange="onBackfillToggle()"> 🤖 Un maître IA me rejoint si j'attends
+      <input type="checkbox" id="mm-backfill-toggle" onchange="onBackfillToggle()"> 🤖 Un bot online me rejoint si j'attends
     </label>
     <div id="mm-backfill-delay-row" style="display:none;align-items:center;gap:8px;font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.8;margin-bottom:4px">
       <span style="flex-shrink:0">Après</span>
