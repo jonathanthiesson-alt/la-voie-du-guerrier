@@ -8861,7 +8861,7 @@ function playStartSfx(){
 var NAV_HIDDEN_SCREENS = ['home','game','coinflip','campaign-intro','online-auth','msg-composer','shinai','devparam','devparam-v2','identite'];
 // Rattachement écran → onglet (pour l'état actif de la barre).
 var NAV_TAB_MAP = {
-  play:'bn-play', menu:'bn-play', 'online-hub':'bn-play', matchmaking:'bn-play', arena:'bn-play',
+  play:'bn-play', menu:'bn-play', matchmaking:'bn-play', arena:'bn-play',
   tournament:'bn-play', guild:'bn-play', league:'bn-play', leaderboard:'bn-play',
   'online-menu':'bn-play', devlog:'bn-play', 'events-mode':'bn-play', sumo:'bn-play',
   // Onglet « Local » : tout le jeu hors-ligne.
@@ -10917,7 +10917,6 @@ function showScreen(id){
   if(id==='home-logo-cfg'){ renderHomeLogoCfg(); }
   if(id==='arena'){ refreshKokuDisplays(); refreshArenaKokuProgress(); refreshAllCurrencyDisplays(); }
   if(id==='sumo'){ refreshAllCurrencyDisplays(); }
-  if(id==='online-hub'){ refreshKokuDisplays(); refreshAllCurrencyDisplays(); }
   if(id==='tournament'){ refreshTournamentScreen(); }
   if(id==='guild'){      _guildView='auto'; refreshGuildScreen(); }
   if(id==='events-mode'){ refreshAllCurrencyDisplays(); refreshEventsProgress(); }
@@ -10970,7 +10969,8 @@ function localNext(){
 }
 
 function goOnline(){
-  if(currentUser){ showScreen('online-hub'); }
+  // L'ancien hub 'online-hub' a été retiré : le carrousel 'play' est le hub en ligne.
+  if(currentUser){ showScreen('play'); }
   else { showScreen('online-auth'); }
 }
 function showInDevelopment(){
@@ -23648,37 +23648,10 @@ window.addEventListener('beforeunload', () => {
 </div>
 
 <!-- ═══════════ ÉCRAN JOUER EN LIGNE ═══════════ -->
-<!-- ═══════════ HUB EN LIGNE (nouveau menu intermédiaire) ═══════════ -->
-<div id="screen-online-hub" class="screen">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('menu')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
-  <div class="panel" style="max-width:300px">
-    <div class="menu-title" style="font-size:18px" data-i18n="online_hub_title">&#127760; EN LIGNE</div>
-    <!-- Monnaies de mode (sauf Koku affiché dans le header du menu principal) — clic = bulle explicative -->
-    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:4px 0 10px">
-      <span onclick="showCurrencyTooltip('shiso')"    style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);background:rgba(0,0,0,.25);border-radius:8px;padding:2px 7px;cursor:pointer">🍃 <span class="shiso-display">0</span></span>
-      <span onclick="showCurrencyTooltip('tamashii')" style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);background:rgba(0,0,0,.25);border-radius:8px;padding:2px 7px;cursor:pointer">⚔ <span class="tamashii-display">0</span></span>
-      <span onclick="showCurrencyTooltip('mon')"      style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);background:rgba(0,0,0,.25);border-radius:8px;padding:2px 7px;cursor:pointer">🏮 <span class="mon-display">0</span></span>
-      <span onclick="showCurrencyTooltip('ryu')"      style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);background:rgba(0,0,0,.25);border-radius:8px;padding:2px 7px;cursor:pointer">🐉 <span class="ryu-display">0</span></span>
-    </div>
-    <!-- Koku général -->
-    <div class="shop-koku-badge" style="margin:0 auto 8px;width:fit-content"><span class="koku-ideogram">石</span> <span class="koku-balance-display">0</span></div>
-    <div class="menu-divider"></div>
-
-    <!-- Matchmaking -->
-    <button class="btn" style="margin-bottom:8px" onclick="showScreen('matchmaking')"><span style="margin-right:4px">&#9889;</span><span data-i18n="online_hub_matchmaking">Matchmaking</span></button>
-
-    <!-- Arène + Tamashii -->
-    <button class="btn" style="margin-bottom:8px" onclick="showScreen('arena')"><span style="margin-right:4px">&#9876;</span><span data-i18n="online_hub_arena">Arène</span></button>
-
-    <!-- Amis (messagerie + amis + joueurs) -->
-    <button class="btn" onclick="showScreen('amis')"><span style="margin-right:4px">&#128101;</span><span data-i18n="online_hub_friends">Amis</span></button>
-
-    <button class="btn" onclick="showScreen('tournament')"><span style="margin-right:4px">&#127942;</span><span data-i18n="online_hub_tournament">Tournoi</span></button>
-    <button class="btn" onclick="showScreen('league')"><span style="margin-right:4px">&#127941;</span><span data-i18n="online_hub_league">Ligue</span></button>
-    <button class="btn" onclick="showScreen('guild')"><span style="margin-right:4px">&#128737;</span><span data-i18n="online_hub_guild">Guilde</span></button>
-    <button class="btn" onclick="showScreen('leaderboard')"><span style="margin-right:4px">&#127942;</span><span data-i18n="online_hub_leaderboard">Classement</span></button>
-  </div>
-</div>
+<!-- L'ancien hub intermédiaire « EN LIGNE » (liste de boutons matchmaking/arène/
+     tournoi/…) a été RETIRÉ : le carrousel de modes de screen-play l'a rendu
+     redondant. Les écrans de mode reviennent désormais directement au carrousel
+     ('play'). goOnline() pointe aussi sur 'play'. -->
 
 <!-- ═══════════ AMIS — écran unifié (Messagerie / Amis / Joueurs) ═══════════ -->
 <div id="screen-amis" class="screen" style="justify-content:flex-start">
@@ -23696,7 +23669,7 @@ window.addEventListener('beforeunload', () => {
 
 <!-- ═══════════ MATCHMAKING (ELO ±100) ═══════════ -->
 <div id="screen-matchmaking" class="screen">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="stopMatchmakingSearch();showScreen('online-hub')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="stopMatchmakingSearch();showScreen('play')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
   <div class="panel" style="max-width:300px">
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px" data-i18n="online_hub_matchmaking">&#9889; MATCHMAKING</div><button onclick="showModeInfo('matchmaking')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
     <!-- Soldes monnaies du mode -->
@@ -23734,7 +23707,7 @@ window.addEventListener('beforeunload', () => {
 
 <!-- ═══════════ ARÈNE (matchs en 3 manches, 石 Koku) ═══════════ -->
 <div id="screen-arena" class="screen">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="stopArenaMatchmakingSearch();showScreen('online-hub')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="stopArenaMatchmakingSearch();showScreen('play')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
   <div class="panel" style="max-width:300px">
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px">&#9876; ARÈNE</div><button onclick="showModeInfo('arena')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px">
@@ -23913,7 +23886,7 @@ window.addEventListener('beforeunload', () => {
 
 <!-- ═══════════ LIGUE (aperçu — pools/saisons à venir) ═══════════ -->
 <div id="screen-league" class="screen" style="justify-content:flex-start;padding-top:54px">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('online-hub')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('play')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
   <div class="panel" style="max-width:320px;max-height:calc(100vh - 70px);display:flex;flex-direction:column;overflow:hidden">
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px;flex-shrink:0" data-i18n="online_hub_league">&#127942; LIGUE</div><button onclick="showModeInfo('league')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
     <div id="league-tier-banner" style="text-align:center;margin-bottom:4px;flex-shrink:0"></div>
@@ -24043,7 +24016,7 @@ window.addEventListener('beforeunload', () => {
 </div>
 
 <div id="screen-online-menu" class="screen" style="justify-content:flex-start;padding-top:54px">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('online-hub')">&#8617; MENU</button></div>
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('play')">&#8617; MENU</button></div>
   <div class="panel" style="max-width:340px;max-height:calc(100vh - 70px);display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch">
     <div class="menu-title" style="flex-shrink:0">&#9670; JOUER EN LIGNE &#9670;</div>
     <div style="text-align:center;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright);margin-bottom:6px;flex-shrink:0" id="online-my-pseudo"></div>
@@ -24073,7 +24046,7 @@ window.addEventListener('beforeunload', () => {
 
 <!-- ═══════════ ÉCRAN CLASSEMENT (ELO, parties en ligne) ═══════════ -->
 <div id="screen-leaderboard" class="screen">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('online-hub')">&#8617; RETOUR</button></div>
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('play')">&#8617; RETOUR</button></div>
   <div class="panel" style="max-width:340px">
     <div class="menu-title">&#127942; CLASSEMENT &#127942;</div>
     <!-- Onglets de catégorie -->
