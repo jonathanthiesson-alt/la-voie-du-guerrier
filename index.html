@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.37.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.38.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2125,7 +2125,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.37.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.38.0 &#9820;</div>
   </div>
 </div>
 
@@ -2175,7 +2175,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="home-btn-primary" id="play-launch-btn" style="width:100%;font-size:15px;padding:15px;margin:0 0 8px;letter-spacing:3px" onclick="launchCentralMode()">&#9889; PARTIE RAPIDE</button>
     <div style="display:flex;gap:6px;margin-bottom:14px">
       <button class="btn" style="flex:1;font-size:11px;padding:8px;opacity:.75" onclick="showScreen('leaderboard')">&#128202; Classements</button>
-      <button class="btn" style="flex:1;font-size:11px;padding:8px;opacity:.75" onclick="showBotGallery()">&#127180; Galerie des ma&icirc;tres</button>
+      <button class="btn" style="flex:1;font-size:11px;padding:8px;opacity:.75" onclick="showBotGallery()">&#129302; Bot-Army</button>
     </div>
 
     <!-- Bandeau Sumo remonté ici (au-dessus du Défi du jour, comme convenu) -->
@@ -2259,9 +2259,26 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('play')">&#8617; JOUER</button></div>
   <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
     <div class="panel" style="max-width:400px;width:100%">
-      <div class="menu-title" style="font-size:18px;margin-top:6px">&#127180; LA GALERIE DES MA&Icirc;TRES</div>
-      <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.6;text-align:center;margin-bottom:12px">Les seize adversaires de la Voie. Affrontez-les pour d&eacute;voiler les plus grands&hellip;</div>
+      <div class="menu-title" style="font-size:18px;margin-top:6px">&#129302; BOT-ARMY</div>
+      <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.6;text-align:center;margin-bottom:10px">Les seize adversaires de la Voie. Affrontez-les pour d&eacute;voiler les plus grands&hellip;</div>
+      <!-- Réglages de l'armée de bots (compagnon de jeu) — déplacés du matchmaking
+           ici, en tête du menu Bot-Army : un bot online d'Elo proche rejoint le
+           joueur qui poireaute en file. Préférence locale (want_backfill/backfill_after). -->
+      <label style="display:flex;align-items:flex-start;gap:8px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);cursor:pointer;margin-bottom:6px;line-height:1.35">
+        <input type="checkbox" id="mm-backfill-toggle" onchange="onBackfillToggle()" style="margin-top:2px">
+        <span>&#129302; Un bot de la Bot-Army me rejoint en <strong>Partie rapide</strong> ou <strong>Ar&egrave;ne</strong> si aucun adversaire n'est trouv&eacute; apr&egrave;s :</span>
+      </label>
+      <div id="mm-backfill-delay-row" style="display:none;align-items:center;gap:8px;font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.8;margin:0 0 8px 24px">
+        <input type="range" id="mm-backfill-delay" min="5" max="60" step="5" value="20" oninput="onBackfillDelayInput()" style="flex:1">
+        <span style="flex-shrink:0"><span id="mm-backfill-delay-val">20</span> s</span>
+      </div>
+      <label id="mm-backfill-random-row" style="display:none;align-items:flex-start;gap:8px;font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.85;cursor:pointer;margin:0 0 10px 24px;line-height:1.35">
+        <input type="checkbox" id="mm-backfill-random" onchange="onBackfillRandomInput()" style="margin-top:2px">
+        <span>&#127922; <strong>Al&eacute;atoire</strong> &mdash; un bot au hasard plut&ocirc;t que le plus proche de mon Elo</span>
+      </label>
+      <div class="menu-divider"></div>
       <div id="bot-gallery-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
+      <div id="bot-gallery-ronin" style="margin-top:8px"></div>
     </div>
   </div>
 </div>
@@ -3531,8 +3548,19 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.37.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.38.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.38.0 &mdash; 4 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; BOT-ARMY &mdash; D&Eacute;FIS ET D&Eacute;BLOCAGE EN CHA&Icirc;NE</li>
+        <li>La &laquo; Galerie des ma&icirc;tres &raquo; devient <strong>Bot-Army</strong>. On y r&egrave;gle en t&ecirc;te de menu le <strong>compagnon de jeu</strong> (un bot online vous rejoint si vous patientez).</li>
+        <li>Depuis la fiche d'un bot, on peut le <strong>D&eacute;fier</strong> en <strong>combat amical</strong> (partie locale &agrave; la force du bot) &mdash; <strong>aucun gain</strong> : ni XP, ni monnaie, ni ELO. Juste pour le plaisir.</li>
+        <li>Les bots se <strong>d&eacute;bloquent en cha&icirc;ne</strong> : au d&eacute;part seul le premier est jouable ; le <strong>vaincre</strong> (en d&eacute;fi ou en ligne) d&eacute;bloque le suivant, jusqu'au myst&eacute;rieux <strong>№ ?</strong> tout en bas&hellip;</li>
+        <li style="list-style:none;margin-left:-14px;color:rgba(200,168,110,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">De nouveaux succ&egrave;s r&eacute;compensent les Dix Premiers, chacun des cinq suivants, et l'&Eacute;quipe des 15 enti&egrave;re. Un dernier reste &agrave; d&eacute;couvrir.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -6686,8 +6714,17 @@ const ACH=[
   {id:'lose_5',name:'Acier Trempé',desc:"5 défaites — l’échec forge les grands",icon:'🔧',xp:15},
   {id:'fifty_games',name:'La Longue Route',desc:'50 parties jouées',icon:'🛤️',xp:50},
   {id:'hundred_games',name:'Investi',desc:'100 parties jouées',icon:'🧭',xp:100},
+  // ── Bot-Army : l'équipe des 15 (défis amicaux depuis la galerie) ──
+  {id:'ba_first10',name:'Les Dix Premiers',desc:'Vaincre les bots 01 à 10 de la Bot-Army',icon:'拾',xp:120},
+  {id:'ba_11',name:'Kensei Terrassé',desc:'Vaincre le Kensei (№11) de la Bot-Army',icon:'剣',xp:60},
+  {id:'ba_12',name:'Daimyō Terrassé',desc:'Vaincre le Daimyō (№12) de la Bot-Army',icon:'大',xp:70},
+  {id:'ba_13',name:'Shōgun Terrassé',desc:'Vaincre le Shōgun (№13) de la Bot-Army',icon:'将',xp:80},
+  {id:'ba_14',name:'Kami Terrassé',desc:'Vaincre le Kami (№14) de la Bot-Army',icon:'神',xp:90},
+  {id:'ba_15',name:'Bushi Terrassé',desc:'Vaincre le Bushi (№15) de la Bot-Army',icon:'武',xp:100},
+  {id:'ba_team15',name:'L’Équipe des 15',desc:'Vaincre les quinze guerriers. Le Rōnin qui n’existe pas est sûrement quelque part…',icon:'士',xp:250},
   // secret:true => invisible tant qu'il n'est pas débloqué (pas même dans la
   // liste des verrouillés : le trouver EST le succès). Voir buildAchievementsHtml.
+  {id:'ba_ronin',name:'0 n’existe pas',desc:'Vaincre le Rōnin surgi du vide',icon:'零',xp:400,secret:true},
   {id:'find_wurmz',name:'Trouver Wurmz',desc:'Attraper le bousier qui rôde sur l’accueil',icon:'🪲',xp:100,secret:true},
 ];
 
@@ -7137,7 +7174,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.37.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.38.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -7351,7 +7388,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.37.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.38.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -7556,7 +7593,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.37.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.38.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -9222,31 +9259,60 @@ function _botMedallion(b, size, dim){
 }
 async function showBotGallery(){
   showScreen('bot-gallery');
+  applyBackfillPrefUI();       // réglages de la bot army déplacés en tête de ce menu
   renderBotGallery();          // rendu immédiat (données en dur / cache) pour éviter l'écran vide
   await loadBotRosterFromDB(); // puis on rafraîchit avec la DB (roster + rencontres)
   renderBotGallery();
 }
+// Vignette « débloquée » réutilisée par la grille ET le slot Rōnin : médaillon,
+// rang, Elo, et une pastille ✔ si le bot a déjà été vaincu (défi amical).
+function _botCardHtml(b){
+  var beaten = hasDefeatedBot(b.num);
+  return '<div onclick="openBotProfile(\''+b.key+'\')" '
+    +'style="position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(0,0,0,.3);border:1px solid '+_botTierColor(b.tier)+'55;border-radius:10px;padding:10px 6px;cursor:pointer">'
+    +(beaten?'<div style="position:absolute;top:5px;right:6px;font-size:12px;color:#90e090">&#10004;</div>':'')
+    +_botMedallion(b,50,false)
+    +'<div style="font-family:\'Cinzel\',serif;font-size:12px;color:'+_botTierColor(b.tier)+';text-align:center;line-height:1.1">'+escapeHtml(b.rank)+'</div>'
+    +'<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.55">ELO '+b.elo+'</div></div>';
+}
 function renderBotGallery(){
   var grid=document.getElementById('bot-gallery-grid');
   if(!grid) return;
-  var enc=_encounteredBots();
-  var visible=_botRoster.filter(function(b){ return b.tier!=='hidden' || enc.indexOf(b.key)!==-1; });
+  // La grille 3 colonnes ne montre QUE les numéros 01→15 ; le Rōnin (00, tier
+  // hidden) a son propre emplacement centré en dessous (voir plus bas).
+  var visible=_botRoster.filter(function(b){ return b.tier!=='hidden'; });
   grid.innerHTML = visible.map(function(b){
-    var unlocked = b.tier==='open' || enc.indexOf(b.key)!==-1;
-    if(!unlocked){
-      // Grisé : médaillon éteint, nom masqué, message au clic.
-      return '<div onclick="showToast(\'Disponible une fois le personnage rencontré.\', false)" '
+    if(!botArmyUnlocked(b)){
+      // Grisé : médaillon éteint, nom masqué, message au clic (déblocage en chaîne).
+      return '<div onclick="showToast(\'Bats le bot précédent pour le débloquer.\', false)" '
         +'style="display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(0,0,0,.28);border:1px dashed rgba(160,170,190,.3);border-radius:10px;padding:10px 6px;cursor:pointer">'
         +_botMedallion(b,50,true)
         +'<div style="font-family:VT323,monospace;font-size:12px;color:#8aa0c0;opacity:.7">🔒 №'+b.num+'</div>'
         +'<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.35">? ? ?</div></div>';
     }
-    return '<div onclick="openBotProfile(\''+b.key+'\')" '
-      +'style="display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(0,0,0,.3);border:1px solid '+_botTierColor(b.tier)+'55;border-radius:10px;padding:10px 6px;cursor:pointer">'
-      +_botMedallion(b,50,false)
-      +'<div style="font-family:\'Cinzel\',serif;font-size:12px;color:'+_botTierColor(b.tier)+';text-align:center;line-height:1.1">'+escapeHtml(b.rank)+'</div>'
-      +'<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.55">ELO '+b.elo+'</div></div>';
+    return _botCardHtml(b);
   }).join('');
+  // Emplacement Rōnin (00) : bouton mystère « ? » centré sur la colonne du
+  // milieu, sous les 5 à débloquer. Tant qu'il n'est pas rencontré, il n'a NI
+  // nom NI kanji — juste un point d'interrogation. Une fois révélé (avoir
+  // vaincu les 15 le fait apparaître), il devient sa vraie vignette, défiable.
+  var roninWrap=document.getElementById('bot-gallery-ronin');
+  if(roninWrap){
+    var rei=_botRoster.filter(function(b){ return b.tier==='hidden'; })[0];
+    var revealed = botArmyUnlocked(rei); // = 15 vaincu
+    var inner;
+    if(revealed){
+      inner=_botCardHtml(rei);
+    }else{
+      inner='<div onclick="showToast(\'Un adversaire qui n’existe pas… reste à le rencontrer.\', false)" '
+        +'style="display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(0,0,0,.28);border:1px dashed rgba(200,90,122,.4);border-radius:10px;padding:10px 6px;cursor:pointer">'
+        +'<div style="width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid rgba(200,90,122,.5);background:radial-gradient(circle at 50% 35%,rgba(200,90,122,.12),rgba(0,0,0,.4));font-family:\'Noto Serif JP\',serif;font-size:26px;color:#c85a7a;opacity:.8">?</div>'
+        +'<div style="font-family:VT323,monospace;font-size:12px;color:#c85a7a;opacity:.75">№ ? ?</div>'
+        +'<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.35">? ? ?</div></div>';
+    }
+    // Centré sur la colonne du milieu : même gabarit 3 colonnes, cellule médiane.
+    roninWrap.innerHTML='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div></div>'+inner+'<div></div></div>';
+  }
 }
 function openBotProfile(key){
   var b=botById(key);
@@ -9261,7 +9327,7 @@ function openBotProfile(key){
       +_botMedallion(b,66,false)
       +'<div style="flex:1;min-width:0">'
         +'<div style="font-family:\'Cinzel\',serif;font-size:18px;color:'+col+';letter-spacing:1px">'+b.num+' · '+escapeHtml(b.rank)+'</div>'
-        +'<div style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.6">ELO '+b.elo+' · toujours en ligne</div>'
+        +'<div style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.6">ELO '+b.elo+' · toujours en ligne'+(hasDefeatedBot(b.num)?' · <span style="color:#90e090">&#10004; vaincu</span>':'')+'</div>'
       +'</div>'
     +'</div>'
     +'<div style="font-family:\'Cinzel\',serif;font-size:11px;color:'+col+';letter-spacing:1px;margin-bottom:6px">◆ LE SENS DU NOM</div>'
@@ -9271,11 +9337,94 @@ function openBotProfile(key){
       +'<b style="font-family:\'Noto Serif JP\',serif">'+b.rankKanji+'</b> (<i>'+escapeHtml(b.rank)+'</i>) : '+escapeHtml(b.meaning)+'.'
     +'</div>'
     +'<div style="font-family:VT323,monospace;font-size:14px;line-height:1.45;color:var(--parchment);opacity:.78;margin-top:10px;border-left:2px solid '+col+'55;padding-left:10px">'+escapeHtml(b.lore)+'</div>'
-    +'<button class="btn" style="width:100%;margin-top:18px;font-size:12px;padding:9px" onclick="closeBotProfile()">Fermer</button>'
+    +'<button class="btn" style="width:100%;margin-top:18px;font-size:13px;padding:11px;border-color:'+col+'88;color:'+col+'" onclick="challengeBot(\''+b.key+'\')">&#9876; D&eacute;fier '+escapeHtml(b.rank)+'</button>'
+    +'<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.45;text-align:center;margin-top:5px">Combat amical &middot; aucun gain (ni XP, ni monnaie)</div>'
+    +'<button class="btn" style="width:100%;margin-top:8px;font-size:12px;padding:9px" onclick="closeBotProfile()">Fermer</button>'
   +'</div>';
   document.body.appendChild(ov);
 }
 function closeBotProfile(){ var ov=document.getElementById('bot-profile-overlay'); if(ov) ov.remove(); }
+
+// ── Défi amical contre un bot de l'équipe des 15 ──────────────────────
+// « Juste pour le plaisir » : partie LOCALE vs IA (aucune dépendance au worker
+// GitHub), profondeur minimax ∝ Elo du bot, AUCUN gain (ni XP, ni monnaie, ni
+// ELO — voir G._friendlyBotArmy dans endGame). La seule récompense possible est
+// un SUCCÈS dédié (checkBotArmyAchievements). Vaincus suivis en localStorage.
+var _botArmyChallenge = null; // {key,num,elo,depth,rank,kanji} pendant la partie
+// Elo (800→2800) → profondeur (1→5). Répartit les 16 bots sur 5 crans.
+function _botArmyDepth(elo){ return Math.max(1, Math.min(5, Math.round((elo-650)/380))); }
+// Coup du bot défié : minimax + evalTrainer à la profondeur du cran, avec une
+// pincée de hasard pour les plus faibles (rester battable au bas de l'échelle).
+function botArmyPlay(moves, board, stacks, lm, lp){
+  if(!moves || !moves.length) return null;
+  var d = (_botArmyChallenge && _botArmyChallenge.depth) || 2;
+  var luck = d<=1 ? 0.20 : (d===2 ? 0.08 : 0);
+  if(luck && Math.random()<luck) return moves[Math.floor(Math.random()*moves.length)];
+  return minimaxPlay(moves, board, stacks, lm, lp, d, evalTrainer, G.topColor);
+}
+function challengeBot(key){
+  var b=botById(key);
+  if(!b){ showToast('Adversaire introuvable.', true); return; }
+  closeBotProfile();
+  _botArmyChallenge = { key:b.key, num:b.num, elo:b.elo, depth:_botArmyDepth(b.elo), rank:b.rank, kanji:b.kanji };
+  // Slot temporaire 99 (même mécanisme que les bots V2) — isBotArmy le distingue
+  // pour qu'endGame sache que la partie est amicale et route les bons succès.
+  ADVERSARIES[99] = { id:99, icon:b.kanji, isBotArmy:true, fullName:b.rank,
+    play:function(moves,board,stacks,lm,lp){ return botArmyPlay(moves,board,stacks,lm,lp); } };
+  settings.advId = 99; selectedAdvId = 99; settings.vsAI = true;
+  settings.gameMode = 'rempart-v2';
+  settings.timerSeconds = settings.timerSeconds || 10;
+  _pendingBotIdx = null; // pas la galerie Adversaires classique (pas de sceau/récompense)
+  showToast('⚔ Défi amical : №'+b.num+' · '+b.rank, false);
+  confirmLaunch();
+}
+// Fin d'un défi amical (appelé depuis endGame quand G._friendlyBotArmy est posé).
+function handleBotArmyEnd(bc, playerWon){
+  var b = botById(bc.key) || bc;
+  if(playerWon){
+    markBotDefeated(bc.num); // vaincu + rencontré + vérif succès
+    setTimeout(function(){ showToast('⚔ №'+bc.num+' · '+b.rank+' vaincu !', false); }, 1000);
+  }else{
+    setTimeout(function(){ showToast('« '+b.rank+' garde l\'avantage… reviens plus fort. »', false); }, 1000);
+  }
+}
+// ── Bots vaincus (défis amicaux) — suivi local + succès dédiés ─────────
+function _defeatedBots(){ try{ return JSON.parse(localStorage.getItem('vtl_bots_defeated')||'[]'); }catch(e){ return []; } }
+function hasDefeatedBot(num){ return _defeatedBots().indexOf(num)!==-1; }
+function markBotDefeated(num){
+  var d=_defeatedBots();
+  if(d.indexOf(num)===-1){ d.push(num); try{ localStorage.setItem('vtl_bots_defeated', JSON.stringify(d)); }catch(e){} }
+  // Vaincre implique avoir rencontré : débloque aussi sa fiche dans la galerie.
+  var b=botById2ByNum(num); if(b) markBotEncountered(b.key);
+  checkBotArmyAchievements();
+}
+function botById2ByNum(num){ for(var i=0;i<_botRoster.length;i++){ if(_botRoster[i].num===num) return _botRoster[i]; } return null; }
+// Déblocage EN CHAÎNE : au départ seul le 01 est jouable ; vaincre un bot (en
+// défi amical OU en partie en ligne) débloque le numéro suivant, jusqu'au Rōnin
+// (00), qui n'apparaît qu'une fois le 15 vaincu. Tout le reste reste grisé.
+function botArmyUnlocked(b){
+  if(!b) return false;
+  if(b.num==='01') return true;
+  if(b.num==='00') return hasDefeatedBot('15');
+  var prev=('0'+(parseInt(b.num,10)-1)).slice(-2); // 02→01, 10→09, 15→14
+  return hasDefeatedBot(prev);
+}
+function checkBotArmyAchievements(){
+  var d=_defeatedBots();
+  function beat(num){ return d.indexOf(num)!==-1; }
+  var TEN=['01','02','03','04','05','06','07','08','09','10'];
+  if(TEN.every(beat)) unlockAch('ba_first10');
+  ['11','12','13','14','15'].forEach(function(n){ if(beat(n)) unlockAch('ba_'+n); });
+  var FIFTEEN=TEN.concat(['11','12','13','14','15']);
+  var all15=FIFTEEN.every(beat);
+  if(all15){
+    unlockAch('ba_team15');
+    // Récompense du sommet : le Rōnin (00) surgit du vide dans la galerie —
+    // il devient visible et défiable (l'indice du succès prend alors son sens).
+    var rei=botById2ByNum('00'); if(rei) markBotEncountered(rei.key);
+  }
+  if(all15 && beat('00')) unlockAch('ba_ronin');
+}
 
 // ── Devise du joueur (phrase libre modérée) ───────────────────────
 // Persistée dans profiles.devise (sql_a_executer/add_devise.sql). La modération
@@ -11056,26 +11205,34 @@ let _mmSearching = false;
 function getBackfillPref(){
   try{ return {
     enabled: localStorage.getItem('vtl_backfill_on')==='1',
-    delay: Math.min(60, Math.max(10, parseInt(localStorage.getItem('vtl_backfill_delay'),10)||20))
-  }; }catch(e){ return { enabled:false, delay:20 }; }
+    delay: Math.min(60, Math.max(5, parseInt(localStorage.getItem('vtl_backfill_delay'),10)||20)),
+    random: localStorage.getItem('vtl_backfill_random')==='1'
+  }; }catch(e){ return { enabled:false, delay:20, random:false }; }
 }
 function onBackfillToggle(){
   var cb=document.getElementById('mm-backfill-toggle');
   try{ localStorage.setItem('vtl_backfill_on', cb && cb.checked ? '1':'0'); }catch(e){}
-  var row=document.getElementById('mm-backfill-delay-row');
-  if(row) row.style.display = (cb && cb.checked) ? 'flex' : 'none';
+  var on = !!(cb && cb.checked);
+  var row=document.getElementById('mm-backfill-delay-row'); if(row) row.style.display = on ? 'flex' : 'none';
+  var rnd=document.getElementById('mm-backfill-random-row'); if(rnd) rnd.style.display = on ? 'flex' : 'none';
 }
 function onBackfillDelayInput(){
   var s=document.getElementById('mm-backfill-delay');
   var v=document.getElementById('mm-backfill-delay-val');
   if(s){ if(v) v.textContent=s.value; try{ localStorage.setItem('vtl_backfill_delay', s.value); }catch(e){} }
 }
+function onBackfillRandomInput(){
+  var cb=document.getElementById('mm-backfill-random');
+  try{ localStorage.setItem('vtl_backfill_random', cb && cb.checked ? '1':'0'); }catch(e){}
+}
 function applyBackfillPrefUI(){
   var p=getBackfillPref();
   var cb=document.getElementById('mm-backfill-toggle'); if(cb) cb.checked=p.enabled;
   var s=document.getElementById('mm-backfill-delay'); if(s) s.value=p.delay;
   var v=document.getElementById('mm-backfill-delay-val'); if(v) v.textContent=p.delay;
+  var rc=document.getElementById('mm-backfill-random'); if(rc) rc.checked=p.random;
   var row=document.getElementById('mm-backfill-delay-row'); if(row) row.style.display = p.enabled ? 'flex':'none';
+  var rnd=document.getElementById('mm-backfill-random-row'); if(rnd) rnd.style.display = p.enabled ? 'flex':'none';
 }
 async function startMatchmakingSearch(timerSeconds){
   if(!currentUser){ showToast('Connectez-vous pour utiliser le matchmaking.', true); return; }
@@ -11104,10 +11261,25 @@ async function startMatchmakingSearch(timerSeconds){
   }catch(e){}
   try{ await supa.from('matchmaking_queue').delete().eq('player_id', currentUser.id); }catch(e){}
   var _bf = getBackfillPref();
-  const { error } = await supa.from('matchmaking_queue').insert({
+  // Plafond de déblocage : Elo du plus haut bot débloqué sur CET appareil (état
+  // local). Le déblocage étant croissant en Elo, le worker n'affrontera que les
+  // bots base_elo <= ce plafond → exactement mes bots débloqués. 0 = pas de filtre.
+  var _maxUnlockedElo = 0;
+  try{ _botRoster.forEach(function(b){ if(botArmyUnlocked(b) && b.elo>_maxUnlockedElo) _maxUnlockedElo=b.elo; }); }catch(e){}
+  var _mmPayload = {
     player_id: currentUser.id, pseudo: currentUser.pseudo, elo: myElo, timer_seconds: timerSeconds,
-    want_backfill: _bf.enabled, backfill_after: _bf.delay
-  });
+    want_backfill: _bf.enabled, backfill_after: _bf.delay,
+    backfill_random: _bf.random, backfill_max_elo: _maxUnlockedElo
+  };
+  let { error } = await supa.from('matchmaking_queue').insert(_mmPayload);
+  // Résilience : backfill_random/backfill_max_elo sont des colonnes récentes
+  // (add_backfill_random.sql). Tant qu'elles ne sont pas migrées, on retire ces
+  // champs et on réinsère — le matchmaking ne doit JAMAIS casser pour une
+  // préférence (cf. CLAUDE.md, chemin critique).
+  if(error && /backfill_(random|max_elo)/.test((error.message||'')+(error.details||''))){
+    delete _mmPayload.backfill_random; delete _mmPayload.backfill_max_elo;
+    ({ error } = await supa.from('matchmaking_queue').insert(_mmPayload));
+  }
   if(error){
     if(statusEl) statusEl.textContent = '';
     // On affiche l'erreur EXACTE (RLS, colonne manquante, table absente…)
@@ -13598,6 +13770,10 @@ function initGame(){
     messageLog:[],
     _chapterId:savedChId,_chapterXp:savedChXp
   };
+  // Défi amical « équipe des 15 » : la partie ne rapporte RIEN (ni XP, ni
+  // monnaie, ni ELO) et route ses propres succès. Marqueur fiable = le slot 99
+  // porte isBotArmy (posé par challengeBot ; un bot V2 réutilise 99 sans ce flag).
+  G._friendlyBotArmy = (_botArmyChallenge && G.advId===99 && ADVERSARIES[99] && ADVERSARIES[99].isBotArmy) ? _botArmyChallenge : null;
   // Format custom → le moteur data-driven (Lots a–d) prend le relais : voidSet
   // pour isValid/isVoid, pieceDefs pour les pièces inventées, sumoMode pour les
   // bords éjectants. Absents en partie standard → moteur natif inchangé.
@@ -14192,7 +14368,10 @@ function endGame(winner,reason){
   G._chapterId=null;G._chapterXp=null;
 
   var res={winner:winner,pushCount:pushCount,durationMs:durationMs,vsAI:vsAI,advId:advId,captureCount:captureCount,gameMode:G.gameMode||'standard',pushCapWin:(G._pushCapWin||false)};G._pushCapWin=false;
-  checkAchievements(res);
+  // Défi amical bot-army : PAS les succès génériques (ils donnent de l'XP, ce qui
+  // trahirait le « rien à gagner ») — seulement les succès dédiés à l'équipe des 15.
+  if(G._friendlyBotArmy){ handleBotArmyEnd(G._friendlyBotArmy, playerWon); }
+  else checkAchievements(res);
 
   var oc=document.getElementById('overlay-crown');
   if(oc){
@@ -14238,9 +14417,12 @@ function endGame(winner,reason){
       if(_oppId && typeof supa!=='undefined' && supa){
         (async function(){
           try{
-            const { data } = await supa.from('bot_roster').select('key').eq('profile_id', _oppId).maybeSingle();
+            const { data } = await supa.from('bot_roster').select('key,num').eq('profile_id', _oppId).maybeSingle();
             if(data && data.key){
-              markBotEncountered(data.key);
+              // Le VAINCRE en ligne débloque le suivant (comme le défi amical) ;
+              // une simple rencontre (défaite/nul) ne fait que révéler sa fiche.
+              if(playerWon && data.num) markBotDefeated(data.num);
+              else markBotEncountered(data.key);
               try{ await supa.rpc('mark_bot_encounter', { p_bot_key: data.key }); }catch(e){}
             }
           }catch(e){}
@@ -14256,7 +14438,7 @@ function endGame(winner,reason){
         if(nt2Html){ vEl.innerHTML=nt2Html; vEl.style.display='block'; }
       }
     }
-    if(typeof displayXpGainWithEventBonus==='function') displayXpGainWithEventBonus(isRanked?xpGain:0);
+    if(typeof displayXpGainWithEventBonus==='function') displayXpGainWithEventBonus((isRanked && !G._friendlyBotArmy)?xpGain:0);
     else { var xr2f=document.getElementById('xp-gain-row'); if(xr2f) xr2f.style.display='none'; }
     // ELO / monnaies / points de Ligue — uniquement en partie en ligne
     // CLASSÉE (jamais IA, local, Arène, ni un défi "pour le fun").
@@ -23544,18 +23726,6 @@ window.addEventListener('beforeunload', () => {
         <div class="opt-btn mm-timer-btn" onclick="startMatchmakingSearch(10)">10s</div>
         <span style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.6">ELO <span id="mm-elo-10s">—</span></span>
       </div>
-    </div>
-    <!-- Backfill « équipe des 15 » : si le joueur attend trop, un bot online
-         d'Elo proche le rejoint (partie amicale). Préférence locale par appareil,
-         posée sur la file (want_backfill/backfill_after) à la recherche. -->
-    <div class="menu-divider"></div>
-    <label style="display:flex;align-items:center;gap:8px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);cursor:pointer;margin-bottom:6px">
-      <input type="checkbox" id="mm-backfill-toggle" onchange="onBackfillToggle()"> 🤖 Un bot online me rejoint si j'attends
-    </label>
-    <div id="mm-backfill-delay-row" style="display:none;align-items:center;gap:8px;font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.8;margin-bottom:4px">
-      <span style="flex-shrink:0">Après</span>
-      <input type="range" id="mm-backfill-delay" min="10" max="60" step="5" value="20" oninput="onBackfillDelayInput()" style="flex:1">
-      <span style="flex-shrink:0"><span id="mm-backfill-delay-val">20</span> s</span>
     </div>
     <div id="mm-status" style="text-align:center;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright);margin:16px 0;min-height:20px"></div>
     <button class="btn" id="mm-cancel-btn" style="display:none;border-color:rgba(200,80,80,.4);color:#f08080" onclick="stopMatchmakingSearch()" data-i18n="mm_cancel">&#10005; Annuler</button>

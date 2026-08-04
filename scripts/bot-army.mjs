@@ -371,10 +371,25 @@ async function backfillTick(mover, roster, busyPids, stats) {
       const g0 = await (await sbAdmin("online_games?or=(white_player_id.eq." + q.player_id + ",black_player_id.eq." + q.player_id + ")&status=eq.active&select=id&limit=1")).json();
       if (g0.length) continue;
       // bot le plus proche en Elo, libre (pas déjà en partie, pas déjà assigné ce tour)
-      const free = roster.filter((b) => !busyPids.has(b.profile_id) && !assigned.has(b.profile_id));
+      let free = roster.filter((b) => !busyPids.has(b.profile_id) && !assigned.has(b.profile_id));
+      // Plafond de déblocage : le joueur n'affronte que les bots qu'il a
+      // débloqués (base_elo <= backfill_max_elo). 0/absent = pas de filtre.
+      // Repli si le filtre ne laisse rien (ex. tous ses bots occupés) : on garde
+      // la liste complète plutôt que de le laisser sans compagnon.
+      if (q.backfill_max_elo && q.backfill_max_elo > 0) {
+        const capped = free.filter((b) => b.base_elo <= q.backfill_max_elo);
+        if (capped.length) free = capped;
+      }
       if (!free.length) break;
-      free.sort((a, b) => Math.abs(a.base_elo - q.elo) - Math.abs(b.base_elo - q.elo));
-      const bot = free[0];
+      // Choix du bot : au HASARD si le joueur a coché « aléatoire »
+      // (backfill_random), sinon le plus proche de son Elo (défaut).
+      let bot;
+      if (q.backfill_random) {
+        bot = free[Math.floor(Math.random() * free.length)];
+      } else {
+        free.sort((a, b) => Math.abs(a.base_elo - q.elo) - Math.abs(b.base_elo - q.elo));
+        bot = free[0];
+      }
       // crée la partie humain↔bot (amicale : ranked=false), bot déjà « prêt »
       const iAmWhite = Math.random() < 0.5;
       const gs = mover.startState();
