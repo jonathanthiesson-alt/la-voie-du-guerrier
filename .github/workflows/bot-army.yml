@@ -18,11 +18,23 @@
 name: Bot army (test online)
 
 on:
-  # ⏸ Cron désactivé pendant la mise au point : il lançait des cohortes de bots
-  # qui se chevauchaient (parties orphelines). On déploie à la main via « Run
-  # workflow » pour n'avoir qu'une seule cohorte à la fois. À réactiver plus tard.
-  # schedule:
-  #   - cron: "*/5 * * * *"
+  # ⏱ Cron réactivé pour un « compagnon dispo » best-effort (backfill équipe des
+  # 15) : toutes les 10 min, le worker se réveille et JOUE LA DIRECTIVE COURANTE.
+  # La concurrency (groupe unique, cancel-in-progress=false) garantit UN SEUL
+  # worker à la fois — plus de cohortes qui se chevauchent.
+  #
+  # 💸 COÛT GitHub Actions — le vrai garde-fou est la directive `enabled` :
+  #   • enabled=FALSE (défaut) → chaque réveil vérifie la table et SORT en ~30 s
+  #     (checkout + install + exit). Overhead léger, pas de partie jouée.
+  #   • enabled=TRUE (bouton « Déployer » du menu dev) → le worker tourne jusqu'à
+  #     BOT_ARMY_MINUTES (15 min en planifié) puis le réveil suivant reprend :
+  #     coverage quasi-continue tant que la directive reste active.
+  #   Donc : on ne paie « plein pot » que pendant qu'on a volontairement déployé.
+  #   Pour couper net : décocher « Déployer », ou commenter le bloc `schedule`,
+  #   ou désactiver ce workflow dans l'onglet Actions. Sur repo PUBLIC, minutes
+  #   gratuites ; sur PRIVÉ, ça consomme le quota — ajuster la cadence au besoin.
+  schedule:
+    - cron: "*/10 * * * *"
   workflow_dispatch:            # bouton « Run workflow »
     inputs:
       minutes:
@@ -52,5 +64,6 @@ jobs:
         env:
           SUPABASE_URL: "https://ikssbshpvpqlcgrbjldz.supabase.co"
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          BOT_ARMY_MINUTES: ${{ github.event.inputs.minutes }}
+          # Planifié (pas d'input) → 15 min par réveil ; dispatch manuel → l'input.
+          BOT_ARMY_MINUTES: ${{ github.event.inputs.minutes || '15' }}
           BOT_ARMY_MODE: ${{ github.event.inputs.mode }}
