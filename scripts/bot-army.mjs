@@ -362,7 +362,6 @@ const inList = (col, ids) => col + "=in.(" + ids.join(",") + ")";
 // Un tour de backfill : apparie les humains qui attendent avec un bot libre.
 async function backfillTick(mover, roster, busyPids, stats) {
   const waiting = await (await sbAdmin("matchmaking_queue?want_backfill=eq.true&select=*")).json();
-  const assigned = new Set();
   for (const q of waiting) {
     try {
       const ageS = (Date.now() - new Date(q.joined_at).getTime()) / 1000;
@@ -370,8 +369,13 @@ async function backfillTick(mover, roster, busyPids, stats) {
       // déjà en partie ? (le poll du joueur l'aura ramassée)
       const g0 = await (await sbAdmin("online_games?or=(white_player_id.eq." + q.player_id + ",black_player_id.eq." + q.player_id + ")&status=eq.active&select=id&limit=1")).json();
       if (g0.length) continue;
-      // bot le plus proche en Elo, libre (pas déjà en partie, pas déjà assigné ce tour)
-      let free = roster.filter((b) => !busyPids.has(b.profile_id) && !assigned.has(b.profile_id));
+      // Bots partagés : un même bot peut affronter PLUSIEURS joueurs à la fois,
+      // sur toutes les cadences ET tous les modes (partie rapide, arène…). On
+      // n'exclut donc plus les bots « occupés » — deux joueurs d'Elo voisin, un
+      // en 3s l'autre en 5s, tombent volontiers sur le même bot (celui de leur
+      // niveau). driveRosterGames pilote en parallèle toutes les parties d'un
+      // bot, donc la concurrence est déjà gérée côté pilotage.
+      let free = roster.slice();
       // Plafond de déblocage : le joueur n'affronte que les bots qu'il a
       // débloqués (base_elo <= backfill_max_elo). 0/absent = pas de filtre.
       // Repli si le filtre ne laisse rien (ex. tous ses bots occupés) : on garde
@@ -404,8 +408,6 @@ async function backfillTick(mover, roster, busyPids, stats) {
         }),
       });
       await sbAdmin("matchmaking_queue?player_id=eq." + q.player_id, { method: "DELETE", headers: { Prefer: "return=minimal" } });
-      assigned.add(bot.profile_id);
-      busyPids.add(bot.profile_id);
       console.log("🤝 backfill : " + bot.pseudo + " (Elo " + bot.base_elo + ") rejoint un joueur (Elo " + q.elo + ").");
     } catch (e) { stats.errors++; console.warn("backfillTick", e.message); }
   }
@@ -419,13 +421,22 @@ async function driveRosterGames(mover, byPid, stats) {
   const games = await (await sbAdmin("online_games?status=eq.active&select=*&or=(" + inList("white_player_id", pids) + "," + inList("black_player_id", pids) + ")")).json();
   for (const g of games) {
     try {
-      const botPid = byPid.has(g.white_player_id) ? g.white_player_id : g.black_player_id;
-      const bot = byPid.get(botPid);
-      const myColor = g.white_player_id === botPid ? "white" : "black";
-      busy.add(botPid);
-      const readyCol = myColor === "white" ? "ready_white" : "ready_black";
-      if (!g[readyCol]) await sbAdmin("online_games?id=eq." + g.id, { method: "PATCH", headers: { "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ [readyCol]: true }) });
-      if (g.turn !== myColor) continue;
+      // Marque « prêt » TOUT bot présent (blanc et/ou noir) — sinon le plateau
+      // adverse reste masqué. Gère aussi le cas bot-vs-bot (les deux côtés).
+      for (const col of ["white", "black"]) {
+        const pid = col === "white" ? g.white_player_id : g.black_player_id;
+        const readyCol = col === "white" ? "ready_white" : "ready_black";
+        if (byPid.has(pid) && !g[readyCol]) {
+          await sbAdmin("online_games?id=eq." + g.id, { method: "PATCH", headers: { "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ [readyCol]: true }) });
+        }
+      }
+      // On pilote le camp AU TRAIT s'il est un bot (essentiel en bot-vs-bot de
+      // tournoi : sinon seul le blanc jouait et le noir restait bloqué).
+      const turnPid = g.turn === "white" ? g.white_player_id : g.black_player_id;
+      if (!byPid.has(turnPid)) continue; // au tour d'un humain
+      const bot = byPid.get(turnPid);
+      const myColor = g.turn;
+      busy.add(turnPid);
       let out;
       try { out = JSON.parse(mover.botChooseAndApply(JSON.stringify(g.game_state), myColor, botDepth(bot.base_elo))); }
       catch (e) { stats.errors++; continue; }
@@ -440,6 +451,115 @@ async function driveRosterGames(mover, byPid, stats) {
   return busy;
 }
 
+// Un tour de backfill ARÈNE : un joueur d'arène qui poireaute (want_backfill)
+// est rejoint par un bot d'Elo voisin, en match AMICAL (arena_matches ranked=
+// false) + sa manche 1. Le client humain gère ensuite la progression du BO3
+// (il détecte l'adversaire bot). Comme le backfill classique : bots partagés
+// (un bot peut servir plusieurs joueurs, toutes cadences/modes confondus).
+async function arenaBackfillTick(mover, roster, stats) {
+  const waiting = await (await sbAdmin("arena_matchmaking_queue?want_backfill=eq.true&select=*")).json();
+  for (const q of waiting) {
+    try {
+      if ((q.mode || "arena") !== "arena") continue; // pas le SUMO (événement)
+      const ageS = (Date.now() - new Date(q.joined_at).getTime()) / 1000;
+      if (ageS < (q.backfill_after || 20)) continue;
+      // déjà dans un match d'arène actif ? (son poll l'aura rejoint)
+      const m0 = await (await sbAdmin("arena_matches?status=eq.active&or=(white_player_id.eq." + q.player_id + ",black_player_id.eq." + q.player_id + ")&select=id&limit=1")).json();
+      if (m0.length) continue;
+      // bot d'Elo voisin (mêmes règles que le backfill classique)
+      let free = roster.slice();
+      if (q.backfill_max_elo && q.backfill_max_elo > 0) {
+        const capped = free.filter((b) => b.base_elo <= q.backfill_max_elo);
+        if (capped.length) free = capped;
+      }
+      if (!free.length) break;
+      const myElo = q.elo || 1200;
+      let bot;
+      if (q.backfill_random) bot = free[Math.floor(Math.random() * free.length)];
+      else { free.sort((a, b) => Math.abs(a.base_elo - myElo) - Math.abs(b.base_elo - myElo)); bot = free[0]; }
+      // Match d'arène AMICAL (ranked=false) + manche 1. Couleurs = slots du match
+      // (createArenaRound côté client fait pareil en manche impaire).
+      const iAmWhite = Math.random() < 0.5;
+      const whiteId = iAmWhite ? bot.profile_id : q.player_id;
+      const blackId = iAmWhite ? q.player_id : bot.profile_id;
+      const created = await (await sbAdmin("arena_matches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Prefer: "return=representation" },
+        body: JSON.stringify({ white_player_id: whiteId, black_player_id: blackId, timer_seconds: q.timer_seconds, mode: "arena", ranked: false }),
+      })).json();
+      const match = created && created[0];
+      if (!match) { stats.errors++; continue; }
+      const gs = mover.startState();
+      await sbAdmin("online_games", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({
+          white_player_id: whiteId, black_player_id: blackId,
+          game_state: gs, turn: "white", timer_seconds: q.timer_seconds, ranked: false,
+          arena_match_id: match.id, arena_round_number: 1,
+          ready_white: whiteId === bot.profile_id, ready_black: blackId === bot.profile_id,
+        }),
+      });
+      await sbAdmin("arena_matchmaking_queue?player_id=eq." + q.player_id, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      console.log("🥊 arène backfill : " + bot.pseudo + " (Elo " + bot.base_elo + ") rejoint un joueur (Elo " + myElo + ").");
+    } catch (e) { stats.errors++; console.warn("arenaBackfillTick", e.message); }
+  }
+}
+
+// Tournoi : les bots jouent réellement leurs rondes. Pour chaque tournoi en
+// cours ('running'), on traite les paires NON soldées de la ronde courante qui
+// contiennent au moins un bot :
+//  • bot vs bot : on crée la partie (online_games) si absente et on l'attache au
+//    pairing (service_role). driveRosterGames pilote les DEUX camps ; à la fin
+//    on reporte via tournament_report_from_game (idempotent, sans garde auth).
+//  • bot vs humain : l'humain crée et joue la partie ; on se contente de
+//    reporter le résultat si sa partie est finie mais pas encore soldée.
+// La progression des rondes (appariements, deadlines, forfaits) reste 100 %
+// serveur (pg_cron tournament_cleanup) — rien à faire ici.
+async function tournamentTick(mover, roster, byPid, stats) {
+  const running = await (await sbAdmin("tournaments?status=eq.running&select=id,current_round,timer_seconds")).json();
+  for (const t of running) {
+    try {
+      const pairs = await (await sbAdmin("tournament_pairings?tournament_id=eq." + t.id + "&round=eq." + t.current_round + "&result=is.null&select=*")).json();
+      for (const pr of pairs) {
+        if (!pr.white_id || !pr.black_id) continue; // bye : géré serveur
+        const whiteBot = byPid.has(pr.white_id), blackBot = byPid.has(pr.black_id);
+        if (!whiteBot && !blackBot) continue;        // paire 100 % humaine
+        if (!pr.online_game_id) {
+          // Seul le cas bot-vs-bot exige qu'on crée la partie : sinon on laisse
+          // l'humain la créer (chemin client normal).
+          if (whiteBot && blackBot) {
+            const gs = mover.startState();
+            const g = await (await sbAdmin("online_games", {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Prefer: "return=representation" },
+              body: JSON.stringify({
+                white_player_id: pr.white_id, black_player_id: pr.black_id,
+                game_state: gs, turn: "white", timer_seconds: t.timer_seconds, ranked: false,
+                ready_white: true, ready_black: true,
+              }),
+            })).json();
+            const gid = g && g[0] && g[0].id;
+            if (gid) await sbAdmin("tournament_pairings?id=eq." + pr.id, { method: "PATCH", headers: { "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ online_game_id: gid }) });
+          }
+          continue;
+        }
+        // Partie attachée : finie ? On reporte (idempotent).
+        const gr = await (await sbAdmin("online_games?id=eq." + pr.online_game_id + "&select=status,winner&limit=1")).json();
+        const g = gr && gr[0];
+        if (g && g.status === "finished" && g.winner) {
+          await sbAdmin("rpc/tournament_report_from_game", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ p_game_id: pr.online_game_id, p_winner: g.winner }),
+          });
+          stats.gamesPlayed++;
+        }
+      }
+    } catch (e) { stats.errors++; console.warn("tournamentTick", e.message); }
+  }
+}
+
 async function runBackfill(mover, t0) {
   const roster = await provisionRosterBots();
   if (!roster.length) { console.log("✗ Aucun bot du roster provisionné — abandon."); return; }
@@ -451,11 +571,15 @@ async function runBackfill(mover, t0) {
     try {
       const ctrl = await readControl();
       if (!ctrl || !ctrl.enabled) { console.log("■ Directive coupée → arrêt backfill."); break; }
-      // 1) piloter les parties en cours (et savoir quels bots sont occupés)
+      // 1) piloter TOUTES les parties en cours des bots (partie rapide, arène,
+      //    tournoi — driveRosterGames balaie tout online_games contenant un bot)
       const busy = await driveRosterGames(mover, byPid, stats);
-      // 2) apparier les joueurs en attente avec un bot libre
+      // 2) apparier les joueurs en attente avec un bot (partie rapide + arène)
       await backfillTick(mover, roster, busy, stats);
-      // 3) garder les bots « en ligne » (le pg_cron le fait aussi, ceinture+bretelles)
+      await arenaBackfillTick(mover, roster, stats);
+      // 3) tournoi : créer/reporter les parties des paires contenant un bot
+      await tournamentTick(mover, roster, byPid, stats);
+      // 4) garder les bots « en ligne » (le pg_cron le fait aussi, ceinture+bretelles)
       if (++ticks % 30 === 0) {
         await sbAdmin("profiles?" + inList("id", [...byPid.keys()]), { method: "PATCH", headers: { "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ is_online: true, last_seen: new Date().toISOString() }) });
       }
@@ -486,18 +610,13 @@ async function main() {
   const count = Math.min(Math.max(ctrl0.count || 0, 0), 100);
   console.log(`▶ Armée de bots : mode=${mode}, count=${count}, durée max=${RUN_MINUTES}min`);
 
-  // Mode « équipe des 15 » : bots nommés persistants + backfill des joueurs.
-  if (mode === "backfill") {
+  // Mode « équipe des 15 » : bots nommés persistants qui servent TOUT le live
+  // (partie rapide + arène en backfill, tournois joués réellement). Les anciens
+  // libellés 'arena'/'tournament' pointent vers la même boucle unifiée : plus
+  // besoin de worker dédié par mode.
+  if (mode === "backfill" || mode === "arena" || mode === "tournament") {
     const moverBf = makeMover(getFormat(html, "standard"));
     await runBackfill(moverBf, t0);
-    return;
-  }
-
-  if (mode === "arena" || mode === "tournament") {
-    // TODO v2 : cartographier les RPC de jointure (arena_*/tournament_register)
-    // et faire rejoindre les bots à l'événement ciblé (ctrl0.target_id).
-    console.log(`⚠ Mode « ${mode} » pas encore implémenté (v1). Utilise matchmaking ou free pour l'instant.`);
-    await writeReport(mode, { bots_active: 0, games_played: 0, wins: 0, losses: 0, errors: 0, note: "non implémenté (v1)" });
     return;
   }
 

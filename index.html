@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.38.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.39.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2125,7 +2125,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.38.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.39.0 &#9820;</div>
   </div>
 </div>
 
@@ -3557,12 +3557,12 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.38.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.39.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
     </div>
 
     <div class="devlog-entry">
-      <div class="devlog-version">ONLINE alpha V0.38.0 &mdash; 4 ao&ucirc;t 2026</div>
+      <div class="devlog-version">ONLINE alpha V0.39.0 &mdash; 4 ao&ucirc;t 2026</div>
       <ul class="devlog-list">
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; BOT-ARMY &mdash; D&Eacute;FIS ET D&Eacute;BLOCAGE EN CHA&Icirc;NE</li>
         <li>La &laquo; Galerie des ma&icirc;tres &raquo; devient <strong>Bot-Army</strong>. On y r&egrave;gle en t&ecirc;te de menu le <strong>compagnon de jeu</strong> (un bot online vous rejoint si vous patientez).</li>
@@ -5655,6 +5655,13 @@ async function renderTournamentDetail(id){
         ? '<div style="text-align:center;padding:8px;font-family:VT323,monospace;font-size:12px;color:#f08080">🔒 Tournoi complet ('+tn.max_players+' joueurs)</div>'
         : '<button class="btn" style="width:100%;font-size:12px;padding:9px;margin-bottom:6px" onclick="registerTournament('+id+')">✍ S\'inscrire</button>';
     }
+    // Le créateur peut COMPLÉTER les slots vides avec l'armée des bots (les 15
+    // fragments, pas le Rōnin) : ils joueront réellement leurs rondes, pilotés
+    // par le worker. Dispo tant que les inscriptions sont ouvertes et qu'il
+    // reste de la place.
+    if(tn.status==='open' && tn.created_by===currentUser.id && tn.players < tn.max_players){
+      html += '<button class="btn" style="width:100%;font-size:12px;padding:9px;margin-bottom:6px" onclick="fillTournamentWithBots('+id+')">🤖 Compléter avec l\'armée des bots</button>';
+    }
     // La ronde 1 (clôture des inscriptions) est déclenchée par le
     // créateur uniquement ; les rondes suivantes s'enchaînent seules,
     // côté serveur (pg_cron), sans action d'aucun joueur.
@@ -5937,6 +5944,20 @@ async function closeTournamentRegistration(id){
     else showToast('Impossible de démarrer le tournoi.', true);
     renderTournamentDetail(id);
   }catch(e){ showToast('Erreur.', true); }
+}
+// Complète les slots vides du tournoi avec l'armée des bots (les 15 fragments) —
+// réservé au créateur (revérifié serveur dans tournament_fill_with_bots). Les
+// bots joueront réellement leurs rondes, pilotés par le worker (bot-army.mjs).
+async function fillTournamentWithBots(id){
+  try{
+    const { data } = await supa.rpc('tournament_fill_with_bots', { p_tournament_id: id });
+    if(data && data.ok && data.added>0){ showToast('🤖 '+data.added+' bot'+(data.added>1?'s':'')+' ajouté'+(data.added>1?'s':'')+' au tournoi.', false); }
+    else if(data && data.ok){ showToast('Aucun slot libre à compléter.', true); }
+    else if(data && data.reason==='forbidden'){ showToast('Seul le créateur peut compléter ce tournoi.', true); }
+    else if(data && data.reason==='already_started'){ showToast('Le tournoi a déjà commencé.', true); }
+    else showToast('Impossible de compléter le tournoi.', true);
+    renderTournamentDetail(id);
+  }catch(e){ showToast('Erreur (script SQL bots_arena_tournament.sql exécuté ?).', true); }
 }
 // Liste des matchs de la ronde en cours : en cours / en attente / terminés.
 async function renderRoundMatches(tournamentId, round){
@@ -7186,7 +7207,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.38.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.39.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -7400,7 +7421,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.38.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.39.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -7605,7 +7626,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.38.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.39.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -11398,9 +11419,27 @@ async function startArenaMatchmakingSearch(timerSeconds){
   var statusEl = document.getElementById('arena-mm-status');
   if(statusEl) statusEl.textContent = t('mm_searching');
   try{ await supa.from('arena_matchmaking_queue').delete().eq('player_id', currentUser.id); }catch(e){}
-  const { error } = await supa.from('arena_matchmaking_queue').insert({
-    player_id: currentUser.id, pseudo: currentUser.pseudo, timer_seconds: timerSeconds
-  });
+  // Backfill Arène : mêmes préférences que la Partie rapide. Si activé, un bot
+  // d'Elo voisin rejoint le joueur après le délai (match AMICAL). On passe l'Elo
+  // d'arène du joueur (colonne elo_Xs) + le plafond des bots débloqués.
+  const _aeloCol = 'elo_'+timerSeconds+'s';
+  let _aMyElo = 1200;
+  try{ const { data: me } = await supa.from('profiles').select(_aeloCol).eq('id', currentUser.id).single(); if(me && me[_aeloCol]!=null) _aMyElo = me[_aeloCol]; }catch(e){}
+  var _abf = (typeof getBackfillPref==='function') ? getBackfillPref() : {enabled:false,delay:20,random:false};
+  var _aMaxElo = 0;
+  try{ _botRoster.forEach(function(b){ if(botArmyUnlocked(b) && b.elo>_aMaxElo) _aMaxElo=b.elo; }); }catch(e){}
+  var _aPayload = {
+    player_id: currentUser.id, pseudo: currentUser.pseudo, timer_seconds: timerSeconds, elo: _aMyElo,
+    want_backfill: _abf.enabled, backfill_after: _abf.delay, backfill_random: _abf.random, backfill_max_elo: _aMaxElo
+  };
+  let { error } = await supa.from('arena_matchmaking_queue').insert(_aPayload);
+  // Résilience (chemin critique) : les colonnes de backfill sont récentes
+  // (bots_arena_tournament.sql). Tant qu'elles ne sont pas migrées, on les
+  // retire et on réinsère — l'Arène ne doit JAMAIS casser pour une préférence.
+  if(error && /want_backfill|backfill_(after|random|max_elo)/.test((error.message||'')+(error.details||''))){
+    delete _aPayload.want_backfill; delete _aPayload.backfill_after; delete _aPayload.backfill_random; delete _aPayload.backfill_max_elo;
+    ({ error } = await supa.from('arena_matchmaking_queue').insert(_aPayload));
+  }
   if(error){
     if(statusEl) statusEl.textContent = '';
     showToast('Arène indisponible (script SQL exécuté ?).', true);
@@ -11622,6 +11661,18 @@ async function enterArenaMatch(match, gameRow){
   G.arenaMatchId = match.id;
   G.arenaRoundNumber = gameRow.arena_round_number;
   G.arenaMatch = match;
+  // Adversaire = bot de l'armée ? Alors le client HUMAIN pilote TOUTE la
+  // progression du BO3 : le bot (piloté par le worker) joue ses coups mais
+  // n'exécute aucune logique de fin de manche. Sans ça, dès que le bot gagne
+  // une manche le score n'avancerait jamais, et si le bot a le plus petit UUID
+  // la manche suivante ne serait jamais créée. On requête is_bot à chaque
+  // entrée (G est reconstruit par enterOnlineGame juste au-dessus).
+  G._arenaOppIsBot = false;
+  try{
+    var _arOppId = (match.white_player_id===currentUser.id) ? match.black_player_id : match.white_player_id;
+    const { data: _arOp } = await supa.from('profiles').select('is_bot').eq('id', _arOppId).single();
+    G._arenaOppIsBot = !!(_arOp && _arOp.is_bot);
+  }catch(e){}
   // En Arène, on ne peut quitter qu'à l'issue de la série (2 manches
   // gagnées) via les boutons de l'écran de fin de MATCH — pas en pleine
   // manche. Le bandeau bleu "Quitter" standard des parties en ligne
@@ -11715,6 +11766,15 @@ async function resolveArenaRoundEnd(winnerColor){
     // le résultat de la manche (score avancé) et récupère le round_number
     // mis à jour, ESSENTIEL pour créer la bonne manche suivante si c'est
     // moi le "créateur" (UUID le plus petit) côté minuteur de 15s.
+    // EXCEPTION bot : le gagnant est un bot piloté par le worker → il n'appelle
+    // jamais le RPC. Je le fais À SA PLACE (couleur de SLOT du bot), sinon le
+    // score n'avancerait jamais. Match amical (ranked=false) → aucun gain versé.
+    if(G._arenaOppIsBot && match.mode!=='sumo'){
+      try{
+        var _botMatchColor = (match.white_player_id===currentUser.id) ? 'black' : 'white';
+        await supa.rpc('record_arena_round_win', { p_arena_match_id: match.id, p_winner_color: _botMatchColor, p_timer_seconds: match.timer_seconds });
+      }catch(e){}
+    }
     var prevTotal = match.wins_white + match.wins_black;
     for(var i=0;i<12 && !result;i++){
       await new Promise(function(res){ setTimeout(res, 500); });
@@ -11793,7 +11853,8 @@ function showArenaRoundEndOverlay(result, match){
   var _m = G.arenaMatch || match;
   if(_m && currentUser){
     var allIds2 = [_m.white_player_id, _m.black_player_id].sort();
-    var iAmCreator2 = (currentUser.id === allIds2[0]);
+    // Face à un bot, l'humain est TOUJOURS le créateur (le bot ne crée rien).
+    var iAmCreator2 = G._arenaOppIsBot ? true : (currentUser.id === allIds2[0]);
     if(!iAmCreator2) startArenaRoundFallbackPoll(_m.id, _m.round_number);
   }
   var remaining = 15;
@@ -11819,7 +11880,8 @@ function triggerArenaNextRoundIfCreator(match){
   var m = G.arenaMatch || match;
   if(!m || !currentUser) return;
   var allIds = [m.white_player_id, m.black_player_id].sort();
-  var iAmCreator = (currentUser.id === allIds[0]);
+  // Face à un bot, l'humain crée TOUJOURS la manche suivante (le bot ne le fait pas).
+  var iAmCreator = G._arenaOppIsBot ? true : (currentUser.id === allIds[0]);
   if(iAmCreator) createArenaRound(m, m.round_number);
 }
 async function setArenaReady(){
@@ -11828,6 +11890,9 @@ async function setArenaReady(){
   if(btn){ btn.disabled = true; btn.textContent = 'Pr\u00eat !'; }
   var col = (myColorOnline==='white') ? 'ready_white' : 'ready_black';
   var upd = {}; upd[col] = true;
+  // Face à un bot : il ne cliquera jamais « Prêt » → on marque aussi son côté
+  // pour enchaîner la manche suivante tout de suite (sinon on attend les 15s).
+  if(G._arenaOppIsBot){ upd[(myColorOnline==='white')?'ready_black':'ready_white'] = true; }
   try{
     const { data } = await supa.from('arena_matches').update(upd).eq('id', G.arenaMatch.id).select().single();
     if(data){ G.arenaMatch = data; maybeAdvanceArenaRound(data); }

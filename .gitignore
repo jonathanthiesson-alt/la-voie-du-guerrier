@@ -11,4 +11,7 @@ skills-lock.json
 
 # Config locale de l'éditeur / de l'agent
 .claude/settings.local.json
+.claude/launch.json
 combined_check.js
+combined_tmp.js
+combined_tmp.cjs
