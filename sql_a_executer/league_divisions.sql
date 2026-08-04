@@ -64,11 +64,15 @@ drop function if exists league_current_season();
 create or replace function league_current_season()
 returns table(id uuid, ends_at date)
 language plpgsql security definer set search_path=public as $$
+-- ⚠ La table de retour déclare une colonne OUT `ends_at` : dans le corps, tout
+-- `ends_at` non qualifié est AMBIGU (variable PL/pgSQL vs colonne table) et lève
+-- 42702 dès que ce SELECT s'exécute → « Ligue indisponible ». On qualifie donc
+-- explicitement toutes les colonnes par leur table (alias `ls` / `league_seasons`).
 declare s record; today date := current_date;
 begin
-  select * into s from league_seasons
-    where starts_at <= today and ends_at >= today
-    order by starts_at desc limit 1;
+  select ls.id, ls.ends_at into s from league_seasons ls
+    where ls.starts_at <= today and ls.ends_at >= today
+    order by ls.starts_at desc limit 1;
   if s is null then
     perform league_resolve_pending_weeks();
     insert into league_seasons(starts_at, ends_at)
@@ -76,7 +80,7 @@ begin
       date_trunc('week', today)::date,
       (date_trunc('week', today) + interval '6 days')::date
     )
-    returning * into s;
+    returning league_seasons.id, league_seasons.ends_at into s;
   end if;
   return query select s.id, s.ends_at;
 end $$;
