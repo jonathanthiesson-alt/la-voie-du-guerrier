@@ -464,7 +464,10 @@ async function main() {
   // BOT_ARMY_MODE (input du workflow) peut surcharger la directive : permet de
   // lancer le backfill sans changer la directive (dont le RPC ne connaît pas
   // encore 'backfill' — ce sera câblé au lot 3, menu dev).
-  const mode = process.env.BOT_ARMY_MODE || ctrl0.mode || "matchmaking";
+  // .toLowerCase() : l'input du workflow peut arriver capitalisé ('Backfill')
+  // — sans ça, le test mode==='backfill' échouait et on retombait sur le mode
+  // anonyme par défaut (bug vécu : rapport « Backfill », 0 bot du roster créé).
+  const mode = (process.env.BOT_ARMY_MODE || ctrl0.mode || "matchmaking").toLowerCase();
   const count = Math.min(Math.max(ctrl0.count || 0, 0), 100);
   console.log(`▶ Armée de bots : mode=${mode}, count=${count}, durée max=${RUN_MINUTES}min`);
 
