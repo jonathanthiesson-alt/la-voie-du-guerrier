@@ -99,6 +99,34 @@ Détail des étymologies : `docs/EQUIPE_DES_15.md`. Haïkus stockés en base
 
 ---
 
+## 4bis. 0-Rōnin, l'Onryō — « celui qu'on n'ose nommer »
+
+Ce que le Rōnin est *vraiment*, sous le samouraï sans maître : un **Onryō**
+(怨霊), l'esprit vengeur d'un humain mort dans une colère noire, trahi ou
+injustement exécuté — la figure la plus terrifiante du folklore médiéval.
+
+- **Lien avec le combat** : beaucoup d'Onryō célèbres étaient des samouraïs ou
+  seigneurs de guerre de l'ère Sengoku. Même morts, ils gardent armure, sabre et
+  maîtrise martiale, décuplée par une rage surnaturelle qui les rend
+  **virtuellement invincibles** pour un mortel. (D'où : 0 reste le plus fort.)
+- **Le tabou** : prononcer le nom d'un Onryō puissant, c'est **attirer son
+  attention**. On craignait tant sa colère — épidémies, foudre, catastrophes —
+  qu'on **évitait de le nommer**, et qu'on lui bâtissait des sanctuaires pour
+  l'apaiser.
+- **Le plus célèbre : Taira no Masakado** — un samouraï dont la tête coupée
+  aurait volé à travers le Japon. Considéré comme l'un des **trois plus puissants
+  Onryō** du pays ; l'évoquer à Tokyo est encore réputé porter malheur.
+
+**Récompense cachée liée** : battre 0-Rōnin débloque le succès secret
+**« Mon nom est Taira no Masakado »** (`ba_ronin`, icône 怨). En le nommant enfin,
+le joueur brise le tabou — et reçoit son dû. *(Récompense en cours d'arbitrage :
+voir la règle du Koku, décision structurante n°1.)*
+
+Sur les fiches de bots, un **bouton « Lore »** (à côté de la devise) racontera
+cette part sombre ; la **devise** reste la voix courte et charismatique du bot.
+
+---
+
 ## 5. Règles d'or du lore
 
 1. **Les 16 bots = une seule âme.** Ne jamais les traiter comme 16 personnes

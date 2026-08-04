@@ -6733,7 +6733,7 @@ const ACH=[
   {id:'ba_team15',name:'L’Équipe des 15',desc:'Vaincre les quinze guerriers. Le Rōnin qui n’existe pas est sûrement quelque part…',icon:'士',xp:250},
   // secret:true => invisible tant qu'il n'est pas débloqué (pas même dans la
   // liste des verrouillés : le trouver EST le succès). Voir buildAchievementsHtml.
-  {id:'ba_ronin',name:'0 n’existe pas',desc:'Vaincre le Rōnin surgi du vide',icon:'零',xp:400,secret:true},
+  {id:'ba_ronin',name:'Mon nom est Taira no Masakado',desc:'Vaincre 0-Rōnin — l’Onryō sans nom, celui qu’on n’ose nommer',icon:'怨',xp:400,secret:true},
   {id:'find_wurmz',name:'Trouver Wurmz',desc:'Attraper le bousier qui rôde sur l’accueil',icon:'🪲',xp:100,secret:true},
 ];
 
@@ -6883,17 +6883,21 @@ function buildStreakGridHtml(d){
 function buildAchievementsHtml(achievementsObj, idPrefix){
   achievementsObj = achievementsObj||{};
   var unlockedList = ACH.filter(function(a){ return !!achievementsObj[a.id]; });
-  // Un succès SECRET non débloqué n'apparaît nulle part — pas même en
-  // "verrouillé" : en annoncer l'existence suffirait à vendre la mèche.
-  // Une fois obtenu, il s'affiche comme les autres.
-  var lockedList = ACH.filter(function(a){ return !achievementsObj[a.id] && !a.secret; });
+  // Les succès SECRETS non débloqués apparaissent désormais en verrouillé,
+  // mais MASQUÉS (« Succès caché », objectif tenu secret) : on annonce leur
+  // existence sans vendre la mèche. Une fois obtenus, ils s'affichent en clair.
+  var lockedList = ACH.filter(function(a){ return !achievementsObj[a.id]; });
   function achCard(a, unlocked){
-    var icon = unlocked ? a.icon : '\ud83d\udd12';
+    var masked = (a.secret && !unlocked); // secret pas encore trouv\u00e9 => carte myst\u00e8re
+    var icon = unlocked ? a.icon : (masked ? '\u2753' : '\ud83d\udd12');
+    var name = masked ? 'Succ\u00e8s cach\u00e9' : a.name;
+    var reward = a.koku ? ('+'+a.koku+' \u77f3') : ('+'+a.xp+' XP'); // \u77f3 Koku sinon XP
+    var sub = masked ? 'Objectif tenu secret' : (a.desc+' &middot; '+reward);
     return '<div class="ach-card2 '+(unlocked?'unlocked':'locked')+'">'
       +'<div class="ach-card2-icon">'+icon+'</div>'
       +'<div class="ach-card2-body">'
-        +'<div style="font-family:Cinzel,serif;font-size:13px;color:var(--gold-bright)">'+a.name+'</div>'
-        +'<div style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.6">'+a.desc+' &middot; +'+a.xp+' XP</div>'
+        +'<div style="font-family:Cinzel,serif;font-size:13px;color:var(--gold-bright)">'+name+'</div>'
+        +'<div style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.6">'+sub+'</div>'
       +'</div>'
     +'</div>';
   }
@@ -6905,9 +6909,8 @@ function buildAchievementsHtml(achievementsObj, idPrefix){
     html += '<button class="ach-toggle-btn" id="'+idPrefix+'-ach-toggle-btn" data-locked-count="'+lockedList.length+'" onclick="toggleLockedAch(\''+idPrefix+'\')">Voir les '+lockedList.length+' succ\u00e8s verrouill\u00e9s &#9662;</button>';
     html += '<div id="'+idPrefix+'-ach-locked-list" class="ach-list" style="display:none">'+lockedList.map(function(a){ return achCard(a,false); }).join('')+'</div>';
   }
-  // Le total exclut les secrets non trouv\u00e9s, sinon l'\u00e9cart entre le compteur
-  // et le nombre de cartes affich\u00e9es trahirait leur existence.
-  var total = ACH.filter(function(a){ return !a.secret || !!achievementsObj[a.id]; }).length;
+  // Les secrets sont d\u00e9sormais compt\u00e9s (ils apparaissent masqu\u00e9s en verrouill\u00e9).
+  var total = ACH.length;
   return {progressText: unlockedList.length+' / '+total+' d\u00e9bloqu\u00e9s', html: html};
 }
 
