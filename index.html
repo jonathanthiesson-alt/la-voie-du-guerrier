@@ -20785,13 +20785,6 @@ function loadBoardLayout() {
 }
 loadBoardLayout();
 
-function loadBoardLayout() {
-  var layout = 'circles';
-  try { layout = localStorage.getItem('boardLayout') || 'circles'; } catch(e) {}
-  setBoardLayout(layout);
-}
-loadBoardLayout();
-
 
 // ════════════════════════════════════════════════════════════════
 // SYSTÈME EN LIGNE — Comptes, profils, défis, parties en temps réel
