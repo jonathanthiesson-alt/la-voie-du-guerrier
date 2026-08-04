@@ -19,8 +19,8 @@ returns text language sql immutable as $$
   select regexp_replace(
     translate(
       lower(coalesce(txt,'')),
-      'àáâãäåçèéêëìíîïñòóôõöùúûüýÿ0134577@$',
-      'aaaaaaceeeeiiiinooooouuuuyyoieasst' || 'a' || 's'
+      'àáâãäåçèéêëìíîïñòóôõöùúûüýÿ013457@$',
+      'aaaaaaceeeeiiiinooooouuuuyy' || 'oieast' || 'as'
     ),
     '[^a-z0-9]', '', 'g'
   );
