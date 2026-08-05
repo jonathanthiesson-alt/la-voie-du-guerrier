@@ -2820,6 +2820,22 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       </div>
       <button class="adm-btn" style="width:100%;padding:9px;margin-top:6px" onclick="labEdApply()">✓ Charger ce mode (→ Jouer / Analyser)</button>
       <button class="btn" style="width:100%;padding:9px;margin-top:6px" onclick="labPlayCurrentModeVsAI()">▶ Tester ce mode vs IA (local)</button>
+
+      <!-- Presets : enregistrer / rappeler un mode SANS quitter l'éditeur.
+           Sous le capot = le même registre partagé (dev_published_formats) que
+           l'onglet Partager, mais présenté ici comme une sauvegarde de travail,
+           là où on construit. Construire un mode est long : on ne veut pas le
+           perdre ni chercher où le ranger. -->
+      <div class="menu-divider"></div>
+      <div class="devp-label" style="margin-top:4px">💾 Mes modes enregistrés</div>
+      <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.6;margin:2px 0 6px">Sauvegarde ton travail et retrouve-le d'un clic (synchronisé sur tes appareils et partagé avec les autres admins).</div>
+      <div style="display:flex;gap:6px;align-items:stretch">
+        <select id="lab-ed-preset-sel" style="flex:1;min-width:0;padding:6px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px;font-size:12px">
+          <option value="">— rappeler un mode enregistré —</option>
+        </select>
+        <button class="btn" style="flex:0 0 auto;padding:6px 12px;font-size:12px" onclick="labEdLoadPreset()">📂 Charger</button>
+      </div>
+      <button class="adm-btn" style="width:100%;padding:8px;margin-top:6px" onclick="labPublishCurrentMode()">💾 Enregistrer le mode courant…</button>
     </div><!-- ═══ fin CRÉER (éditeur) ═══ -->
 
     <!-- ═══ PARTAGER : publier un mode (partagé avec Thomas) ═══ -->
@@ -16857,7 +16873,7 @@ function labShowTab(name){
   }
   TABS.forEach(function(t){ var b=document.getElementById('lab-tabbtn-'+t); if(b) b.classList.toggle('active', t===name); });
   try{ localStorage.setItem('vdg_lab_tab', name); }catch(e){}
-  if(name==='creer'){ if(typeof labEdInit==='function') labEdInit(); }
+  if(name==='creer'){ if(typeof labEdInit==='function') labEdInit(); if(typeof labEdFillPresetSelect==='function') labEdFillPresetSelect(); }
   else if(name==='jouer'){ labFillPlaySelect(); }
   else if(name==='analyser'){ if(typeof labLoadAccumStats==='function') labLoadAccumStats(); }
   else if(name==='partager'){ if(typeof labLoadPublishedList==='function') labLoadPublishedList(); if(typeof labWorkerLoadConfig==='function') labWorkerLoadConfig(); }
@@ -17502,9 +17518,39 @@ async function labPublishCurrentMode(){
   try{
     var res=await supa.rpc('dev_publish_format',{p_name:name, p_format:fmt});
     if(res.error) throw res.error;
-    if(typeof showToast==='function') showToast('Mode « '+name+' » publié (partagé avec les admins).');
-    labLoadPublishedList();
-  }catch(e){ if(typeof showToast==='function') showToast('Erreur de publication : '+(e.message||e), true); }
+    if(typeof showToast==='function') showToast('Mode « '+name+' » enregistré (synchronisé · partagé avec les admins).');
+    _labPublishedCache=null;             // invalide : un mode vient d'être ajouté
+    labLoadPublishedList();              // liste de l'onglet Partager
+    labEdFillPresetSelect();             // menu déroulant de l'onglet Créer
+  }catch(e){ if(typeof showToast==='function') showToast('Erreur d\'enregistrement : '+(e.message||e), true); }
+}
+// Barre de presets de l'onglet Créer : même registre serveur, présenté comme
+// une sauvegarde de travail. Remplit le menu déroulant depuis le cache (ou le
+// serveur si le cache est vide) et recharge le mode choisi sans quitter l'éditeur.
+async function labEdFillPresetSelect(){
+  var sel=document.getElementById('lab-ed-preset-sel'); if(!sel) return;
+  if(typeof isDevUser==='function' && !isDevUser()) return;
+  try{
+    if(!_labPublishedCache){
+      var res=await supa.from('dev_published_formats').select('*').order('updated_at',{ascending:false});
+      if(res.error) throw res.error;
+      _labPublishedCache=res.data||[];
+    }
+    var esc=(typeof escapeHtml==='function')?escapeHtml:function(s){return String(s);};
+    var cur=sel.value;
+    var html='<option value="">— rappeler un mode enregistré —</option>';
+    _labPublishedCache.forEach(function(r){
+      var f=r.format||{}; var meta=(f.rows||'?')+'×'+(f.cols||'?');
+      html+='<option value="'+esc(r.id)+'">'+esc(r.name)+' ('+meta+')</option>';
+    });
+    sel.innerHTML=html;
+    if(cur) sel.value=cur;
+  }catch(e){ /* silencieux : la barre de presets est un confort, pas un bloquant */ }
+}
+function labEdLoadPreset(){
+  var sel=document.getElementById('lab-ed-preset-sel'); var id=sel?sel.value:'';
+  if(!id){ if(typeof showToast==='function') showToast('Choisis un mode enregistré dans la liste.', true); return; }
+  labLoadPublishedMode(id);   // → charge dans l'éditeur + sélecteurs
 }
 async function labLoadPublishedList(){
   var el=document.getElementById('lab-published-list'); if(!el) return;
@@ -17545,7 +17591,9 @@ async function labDeletePublishedMode(id){
     var res=await supa.rpc('dev_delete_published_format',{p_id:id});
     if(res.error) throw res.error;
     if(typeof showToast==='function') showToast('Mode publié supprimé.');
+    _labPublishedCache=null;
     labLoadPublishedList();
+    labEdFillPresetSelect();
   }catch(e){ if(typeof showToast==='function') showToast('Erreur : '+(e.message||e), true); }
 }
 
