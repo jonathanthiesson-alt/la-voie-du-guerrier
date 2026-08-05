@@ -2173,8 +2173,12 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
     <!-- Bouton primaire : lance le mode central -->
     <button class="home-btn-primary" id="play-launch-btn" style="width:100%;font-size:15px;padding:15px;margin:0 0 8px;letter-spacing:3px" onclick="launchCentralMode()">&#9889; PARTIE RAPIDE</button>
+    <!-- Ligue, Classement, Bot-Army : ce ne sont PAS des modes de jeu (pas de
+         cadence, pas de « partie rapide »), donc hors du carrousel — une simple
+         rangée de raccourcis vers leurs écrans. -->
     <div style="display:flex;gap:6px;margin-bottom:14px">
-      <button class="btn" style="flex:1;font-size:11px;padding:8px;opacity:.75" onclick="showScreen('leaderboard')">&#128202; Classements</button>
+      <button class="btn" style="flex:1;font-size:11px;padding:8px;opacity:.75" onclick="showScreen('league')">&#127941; Ligue</button>
+      <button class="btn" style="flex:1;font-size:11px;padding:8px;opacity:.75" onclick="showScreen('leaderboard')">&#128202; Classement</button>
       <button class="btn" style="flex:1;font-size:11px;padding:8px;opacity:.75" onclick="showBotGallery()">&#129302; Bot-Army</button>
     </div>
 
@@ -9004,7 +9008,8 @@ function setQuickCadence(cad){
 var PLAY_MODES = [
   { key:'matchmaking', icon:'⚡', label:'Partie rapide', sub:'Un adversaire à ton niveau', screen:null,           cadence:true },
   { key:'arena',       icon:'⚔', label:'Arène',         sub:'Classé · manches rapides',   screen:'arena',        cadence:true },
-  { key:'league',      icon:'🏅', label:'Ligue',         sub:'Divisions · saison',         screen:'league',       cadence:false },
+  // Ligue retirée du carrousel : ce n'est pas un mode de jeu (pas de cadence,
+  // pas de « partie rapide »). Accès via la rangée de boutons sous le carrousel.
   { key:'tournament',  icon:'🏆', label:'Tournoi',       sub:'Élimination par rondes',     screen:'tournament',   cadence:false },
   { key:'guild',       icon:'🛡', label:'Guilde',        sub:'Ryu collectifs · défis',     screen:'guild',        cadence:false },
   { key:'events',      icon:'🌸', label:'Événements',    sub:'Sumo & saisonniers',         screen:'events-mode',  cadence:false }

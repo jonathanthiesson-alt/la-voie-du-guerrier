@@ -51,7 +51,11 @@ concurrency:
 jobs:
   bots:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    # Run LONG (jusqu'à ~5h30, plafond GitHub = 6h) : sur repo PUBLIC les minutes
+    # sont gratuites, donc on couvre le maximum d'un seul run. Le cron */10 arme
+    # un run EN ATTENTE (concurrency cancel-in-progress=false) qui démarre pile à
+    # la fin du run courant → couverture quasi-continue, relance automatique.
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -64,6 +68,9 @@ jobs:
         env:
           SUPABASE_URL: "https://ikssbshpvpqlcgrbjldz.supabase.co"
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          # Planifié (pas d'input) → 15 min par réveil ; dispatch manuel → l'input.
-          BOT_ARMY_MINUTES: ${{ github.event.inputs.minutes || '15' }}
-          BOT_ARMY_MODE: ${{ github.event.inputs.mode }}
+          # Planifié (pas d'input) → run LONG de 330 min ; dispatch manuel → l'input.
+          BOT_ARMY_MINUTES: ${{ github.event.inputs.minutes || '330' }}
+          # Planifié → backfill par défaut : l'« équipe des 15 » sert TOUJOURS les
+          # joueurs (partie rapide + arène + tournois), même sans humain en ligne.
+          # C'est l'intérêt premier : qu'un joueur seul trouve toujours un adversaire.
+          BOT_ARMY_MODE: ${{ github.event.inputs.mode || 'backfill' }}
