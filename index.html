@@ -2683,7 +2683,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div class="menu-title" style="font-size:18px;margin-top:10px">⚖ ÉQUILIBRE BLANC/NOIR</div>
     <div class="menu-divider"></div>
     <div style="font-family:'VT323',monospace;font-size:12px;color:var(--parchment);opacity:.75;text-align:center;margin-bottom:8px">
-      Parties miroir (même profondeur des deux côtés), 4 premiers demi-coups variés. Un écart significatif = ≥3 écarts-types (σ) au-dessus de 50%, comme les tests SPRT entre moteurs d'échecs.
+      Parties miroir (même profondeur des deux côtés), 8 premiers demi-coups variés. Un écart significatif = ≥3 écarts-types (σ) au-dessus de 50%, comme les tests SPRT entre moteurs d'échecs.
     </div>
     <button id="dev-balance-runall-btn" class="dev-balance-btn adm-btn" style="width:100%;padding:9px;margin-bottom:4px;font-weight:bold" onclick="devBalanceRunAll()">▶▶ Lancer les 4 tests d'affilée (profondeur 5)<br><span id="dev-balance-runall-est" style="font-weight:normal;font-size:11px;opacity:.8"></span></button>
     <div style="font-family:'VT323',monospace;font-size:10px;color:var(--parchment);opacity:.55;text-align:center;margin-bottom:10px">Une seule profondeur (5) pour les 4 formules — comparer à profondeur fixe suffit pour trancher, pas besoin de balayer plusieurs profondeurs à chaque fois.</div>
@@ -2765,7 +2765,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <label style="display:flex;justify-content:space-between;align-items:center;gap:10px">Formule d'éval
         <select id="lab-eval" style="flex:1;max-width:230px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px"></select>
       </label>
-      <label style="display:flex;align-items:center;gap:8px;font-size:13px"><input id="lab-opening" type="checkbox" checked> Varier les 4 premiers demi-coups (diversité d'ouvertures)</label>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px"><input id="lab-opening" type="checkbox" checked> Varier les 8 premiers demi-coups (diversité d'ouvertures)</label>
     </div>
     <button id="lab-start-btn" class="adm-btn" style="width:100%;padding:11px;margin-top:12px;font-weight:bold" onclick="labStartRun()">▶ Lancer la simulation</button>
     <button id="lab-stop-btn" class="btn" style="width:100%;padding:8px;margin-top:6px;display:none;opacity:.85" onclick="labStopRun()">■ Arrêter</button>
@@ -16042,9 +16042,12 @@ function devTacticMotifKey(t){
 
 // Joue une partie complète bot vs bot. Force IDENTIQUE et IMBATTUE des
 // deux côtés (DEV_SIM_DEPTH, aucun coup chance) sur tout le déroulé réel
-// de la partie — seuls les 4 premiers demi-coups (2 par camp) piochent
+// de la partie — seuls les 8 premiers demi-coups (4 par camp) piochent
 // parmi des options solides pour varier les ouvertures explorées (voir
-// devSimTopMoves). Au-delà, chaque camp joue le meilleur coup que le
+// devSimTopMoves). 8 et non 4 : la clé d'ouverture retient 4 coups d'UN camp,
+// donc pour qu'une même clé couvre des parties variées il faut que l'ADVERSAIRE
+// varie aussi ses 4 coups — sinon chaque clé rejoue la même ligne et son taux
+// de victoire dégénère en 0 %/100 %. Au-delà, chaque camp joue le meilleur coup que le
 // moteur sait trouver : c'est ce qui rend les stats de tactiques et
 // d'ouvertures exploitables comme une vraie analyse, pas une moyenne de
 // parties de force inégale.
@@ -16067,8 +16070,8 @@ function devSimOneGame(){
     var moves=allMoves(color,board,stacks,lm,lp,lmbc);
     if(!moves.length){ winner=(color==='white'?'black':'white'); break; }
     var chosen;
-    if(i<4){
-      var pool=devSimTopMoves(moves,board,stacks,lm,lp,color,2,4);
+    if(i<8){
+      var pool=devSimTopMoves(moves,board,stacks,lm,lp,color,2,5);
       chosen=pool[Math.floor(Math.random()*pool.length)];
     } else {
       chosen=minimaxPlay(moves,board,stacks,lm,lp,DEV_SIM_DEPTH,evalTrainer,color)||moves[0];
@@ -16645,7 +16648,7 @@ function labWorkerDriver(){
       if(!moves.length){ winner=labOpp(color); plies=i+1; break; }
       var chosen;
       if(i<openingN){
-        var pool=devSimTopMoves(moves,board,stacks,lm,lp,color,2,4);
+        var pool=devSimTopMoves(moves,board,stacks,lm,lp,color,2,5);
         chosen=pool[Math.floor(Math.random()*pool.length)];
       }else{
         chosen=minimaxPlay(moves,board,stacks,lm,lp,depth,evalFn,color)||moves[0];
@@ -16728,7 +16731,12 @@ function labStartRun(){
   var depthB=+((document.getElementById('lab-depth-b')||{}).value||5);
   var n=+((document.getElementById('lab-games')||{}).value||200);
   var evalKey=(document.getElementById('lab-eval')||{}).value||'current';
-  var openingN=(document.getElementById('lab-opening')||{}).checked?4:0;
+  // 8 demi-coups aléatoires (au lieu de 4) : pour une même CLÉ d'ouverture (4
+  // coups d'un camp), l'adversaire varie désormais 4 fois → chaque clé couvre
+  // de vraies parties différentes, au lieu d'une poignée de lignes rejouées.
+  // C'est ce qui rend les taux de victoire crédibles (fini les 0 %/100 %
+  // artificiels dus au moteur déterministe après l'ouverture).
+  var openingN=(document.getElementById('lab-opening')||{}).checked?8:0;
   if(!n||n<1){ if(typeof showToast==='function') showToast('Nombre de parties invalide.', true); return; }
   if(!LAB_FORMATS[formatKey]){ if(typeof showToast==='function') showToast('Format inconnu.', true); return; }
   _labRun={running:true,done:0,target:n,w:0,b:0,draw:0,plies:0,under15:0,startMs:performance.now(),cfg:{formatKey:formatKey,depthW:depthW,depthB:depthB,evalKey:evalKey,openingN:openingN}};
