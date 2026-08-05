@@ -5485,6 +5485,13 @@ var _currentTournamentRound = 0;
 // Écran à retrouver en quittant le mode spectateur, quand on y est
 // entré depuis l'écran d'attente d'un tournoi (au lieu du hub En ligne).
 var _spectateReturnScreen = null;
+// Échéance (ISO) de la ronde du tournoi en cours d'affichage, mémorisée pour
+// que le mode spectateur d'un combat de tournoi sache quand la ronde se
+// termine (les bots, eux, continuent de jouer leur partie sans s'arrêter).
+var _currentTournamentDeadline = null;
+// Échéance de ronde à surveiller PENDANT qu'on spectate un combat de tournoi ;
+// null quand on regarde une partie hors tournoi.
+var _spectateTournamentDeadline = null;
 // Ronde déjà présentée par l'écran d'appariement (par tournoi) : évite
 // de le rejouer à chaque rafraîchissement automatique (5s).
 var _tournamentIntroShownRound = {};
@@ -5498,7 +5505,13 @@ async function refreshTournamentScreen(){
   var body = document.getElementById('tournament-body');
   if(!body) return;
   if(!currentUser){ body.innerHTML='<div style="text-align:center;padding:20px;font-family:VT323,monospace;color:var(--parchment);opacity:.6">Connectez-vous pour jouer en tournoi.</div>'; return; }
-  if(_currentTournamentId){ return renderTournamentDetail(_currentTournamentId); }
+  // On repasse par openTournament (et pas un simple renderTournamentDetail) :
+  // il RELANCE le tick de rafraîchissement. Sinon, en revenant sur l'écran
+  // tournoi après avoir joué sa partie (le tick s'était auto-annulé quand
+  // l'écran est devenu inactif), le compte à rebours se figeait, la page ne
+  // se rafraîchissait plus et l'intro de la ronde suivante ne se déclenchait
+  // jamais. Idempotent : openTournament purge l'ancien interval d'abord.
+  if(_currentTournamentId){ return openTournament(_currentTournamentId); }
   body.innerHTML='<div style="text-align:center;padding:14px;opacity:.5;font-family:VT323,monospace">Chargement…</div>';
   try{
     // Ce RPC lance aussi le NETTOYAGE : rondes expirées soldées, rondes
@@ -5636,6 +5649,7 @@ async function renderTournamentDetail(id){
     const { data } = await supa.rpc('tournament_standings', { p_tournament_id: id });
     var tn = data.tournament, standings = data.standings||[];
     _currentTournamentRound = tn.current_round || 0;
+    _currentTournamentDeadline = (tn.status==='running') ? tn.round_deadline : null;
     if(await maybeShowTournamentRoundIntro(id, tn, standings)) return;
     var amIn = standings.some(function(s){ return s.player_id===currentUser.id; });
     var html = '<button class="btn" style="width:100%;font-size:11px;padding:6px;opacity:.7;margin-bottom:8px" onclick="_currentTournamentId=null;refreshTournamentScreen()">↩ Liste des tournois</button>';
@@ -6057,6 +6071,7 @@ function spectateTournamentCurrent(){
   var gid = _tournamentSpectateList[_tournamentSpectateIdx];
   if(!gid){ showToast('Aucun combat à suivre.', true); return; }
   _spectateReturnScreen = 'tournament';
+  _spectateTournamentDeadline = _currentTournamentDeadline;
   spectateGame(gid);
 }
 // Réclame la victoire quand l'adversaire ne s'est pas présenté (délai écoulé).
@@ -20199,6 +20214,29 @@ function startOnlineCountdown(onDone){
   runCombatCountdown(onDone);
 }
 
+// Voile plein écran « façon décompte » affiché au premier joueur arrivé,
+// pendant qu'il attend que l'adversaire rejoigne le combat. Sans lui, on
+// voyait un plateau masqué (voile gris) avec juste « En attente… » dans la
+// barre de statut — peu lisible. On réutilise EXACTEMENT le même overlay
+// (#game-overlay + .modal-box) et la même typo dorée que runCombatCountdown :
+// quand l'adversaire est prêt, beginOnlineMatchStart → runCombatCountdown
+// réécrit simplement le contenu de la boîte avec le « 5 », sans transition
+// visible.
+function showWaitingForOpponentOverlay(){
+  var ov = document.getElementById('game-overlay');
+  if(!ov) return;
+  var box = ov.querySelector('.modal-box');
+  box.style.transition = 'opacity .5s ease';
+  box.style.opacity = '1';
+  box.innerHTML =
+    '<div style="display:flex;flex-direction:column;align-items:center;gap:14px;padding:10px 18px">'
+    + '<div style="font-family:Cinzel Decorative,serif;font-size:40px;line-height:1;filter:drop-shadow(0 0 8px rgba(212,160,23,.4))">&#9876;</div>'
+    + '<div style="font-family:Cinzel Decorative,serif;font-size:20px;font-weight:900;text-align:center;line-height:1.35;background:linear-gradient(180deg,#f0c040,#d4a017);-webkit-background-clip:text;-webkit-text-fill-color:transparent">Votre adversaire<br>se prépare au combat</div>'
+    + '<div class="wait-dots" style="font-family:VT323,monospace;font-size:22px;color:var(--gold-bright);letter-spacing:4px;opacity:.7">&#9679;&#9679;&#9679;</div>'
+    + '</div>';
+  ov.classList.add('active');
+}
+
 // ── Démarrage synchronisé d'une partie en ligne ──────────────────
 // Empêche qu'un joueur (chargement plus rapide, meilleure connexion)
 // commence à jouer alors que l'adversaire n'a même pas encore fini de
@@ -20216,6 +20254,7 @@ async function markReadyAndWaitForOpponent(gameId){
   const { data: row } = await supa.from('online_games').update(upd).eq('id', gameId).select(oppColumn).single();
   if(row && row[oppColumn]){ beginOnlineMatchStart(); return; }
   document.getElementById('status-bar').textContent = 'En attente de l\'adversaire…';
+  showWaitingForOpponentOverlay();
   if(_readyWaitInterval) clearInterval(_readyWaitInterval);
   _readyWaitInterval = setInterval(async function(){
     if(currentOnlineGameId !== gameId){ clearInterval(_readyWaitInterval); _readyWaitInterval=null; return; }
@@ -22908,6 +22947,15 @@ function startSpectatorPolling(gameId, whitePseudo, blackPseudo){
   stopSpectatorPolling();
   spectatorPollInterval = setInterval(async function(){
     if(!isSpectating){ stopSpectatorPolling(); return; }
+    // Combat de tournoi : la ronde a-t-elle atteint son échéance ? Les bots
+    // continuent de jouer leur partie sans s'arrêter — mais côté tournoi la
+    // ronde est finie. On prévient le spectateur et on le ramène au menu du
+    // tournoi (où le résolveur soldera les parties non terminées).
+    if(_spectateTournamentDeadline && new Date(_spectateTournamentDeadline) <= Date.now()){
+      showToast('⌛ La ronde est terminée — retour au menu du tournoi.', false);
+      exitSpectateMode();
+      return;
+    }
     const { data: row, error } = await supa.from('online_games').select('*').eq('id', gameId).single();
     if(!error && row) applySpectatorState(row, whitePseudo, blackPseudo);
   }, 1500);
@@ -22973,6 +23021,7 @@ function showSpectatorEndScreen(row, whitePseudo, blackPseudo){
 // garde-fou si une vraie partie démarre alors qu'on regardait encore.
 function stopSpectating(){
   isSpectating = false;
+  _spectateTournamentDeadline = null;
   if(spectatorChannel){ supa.removeChannel(spectatorChannel); spectatorChannel=null; }
   stopSpectatorPolling();
   var spBar = document.getElementById('spectator-bar');
