@@ -23597,6 +23597,12 @@ async function enterOnlineGame(gameId, whitePlayerId, gameState, turn, timerSeco
 
   showScreen('game');
   document.getElementById('screen-game').classList.add('board-hidden');
+  // Voile noir posé TOUT DE SUITE, avant le moindre await : markReady…
+  // ci-dessous fait un aller-retour réseau (update ready_*), et pendant cet
+  // await le navigateur peignait le plateau masqué → bref flash « aperçu du
+  // plateau » avant l'écran noir. On l'affiche donc dans la même frame que
+  // showScreen, avant tout rendu intermédiaire.
+  showWaitingForOpponentOverlay();
   renderBoard(); updateTimerUI();
   document.getElementById('status-bar').textContent = 'En attente de l\'adversaire…';
   pushHistory();
