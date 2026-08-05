@@ -5999,7 +5999,13 @@ async function renderTournamentSpectateButton(tournamentId, round){
   try{
     const { data } = await supa.rpc('tournament_round_matches', { p_tournament_id: tournamentId, p_round: round });
     var matches = (data && data.matches) || [];
-    var ongoing = matches.filter(function(m){ return m.state==='ongoing' && m.online_game_id; });
+    // On ne propose QUE les autres matchs : jamais le sien (sinon on se
+    // spectate soi-même et on ne peut plus jouer ses coups — voir spectateGame).
+    var myPseudo = currentUser && currentUser.pseudo;
+    var ongoing = matches.filter(function(m){
+      return m.state==='ongoing' && m.online_game_id
+        && m.white_pseudo!==myPseudo && m.black_pseudo!==myPseudo;
+    });
     if(!ongoing.length) return '';
     var pick = ongoing[Math.floor(Math.random()*ongoing.length)];
     return '<button class="btn" style="width:100%;font-size:11px;padding:7px;margin-bottom:6px;opacity:.85" onclick="_spectateReturnScreen=\'tournament\';spectateGame('+pick.online_game_id+')">👁 Suivre un combat en cours — '
@@ -22750,6 +22756,15 @@ async function spectateGame(gameId){
   if(error || !game){
     showToast('Cette partie est déjà terminée.', true);
     refreshOnlinePlayersList();
+    return;
+  }
+  // 🔴 Garde-fou : on ne SPECTATE JAMAIS sa propre partie. En spectateur,
+  // onlineGameId est forcé à null (on ne peut plus jouer ses coups) → le joueur
+  // se retrouvait coincé sur SA partie qu'il ne pouvait plus jouer, sans pouvoir
+  // en sortir proprement (bug tournoi vécu). On le renvoie vers sa vraie partie.
+  if(currentUser && (game.white_player_id===currentUser.id || game.black_player_id===currentUser.id)){
+    showToast('C\'est ta propre partie — rejoins-la pour jouer, pas en spectateur.', true);
+    if(typeof _spectateReturnScreen!=='undefined') _spectateReturnScreen=null;
     return;
   }
   // Côté IA (partie solo diffusée) : pas de profil à charger, on affiche
