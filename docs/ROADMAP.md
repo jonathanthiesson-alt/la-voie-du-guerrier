@@ -12,7 +12,7 @@ comptes, avant d'ajouter quoi que ce soit.
 | État | Sujet |
 |---|---|
 | ✅ | **Guildes — adhésion + approbation** — validées par Jonathan (2026-08-05) |
-| ☐ | **Guildes — défis inter-guildes** (`guild_tournaments`, +1/victoire, résolution +30 ryu à 48 h) — reste à valider ; envisagé via les bots (cf. note ci-dessous) |
+| ✅ | **Guildes — défis inter-guildes** (`guild_tournaments`, +1/victoire, résolution +30 ryu à 48 h) — **validé via les bots** (2026-08-05) : scoring, ryu, idempotence, résolution vainqueur. RPC serveur `guild_report_win_server` + driver `guildWarTick` (dormant hors défi actif). |
 | ✅ | Ligue (points, divisions, promo/relégation) — reconstruite le 2026-07-21, **validée par Jonathan** (2026-08-05) |
 | ✅ | Défis entre amis (profil, Arène/rapide, compétitif/amical) — codé le 2026-07-14, **validé par Jonathan** (2026-08-05) |
 | ☐ | Paliers de monnaie cliquables |
