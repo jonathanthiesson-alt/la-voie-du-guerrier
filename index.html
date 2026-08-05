@@ -2834,7 +2834,9 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
           <option value="">— rappeler un mode enregistré —</option>
         </select>
         <button class="btn" style="flex:0 0 auto;padding:6px 12px;font-size:12px" onclick="labEdLoadPreset()">📂 Charger</button>
+        <button class="btn" style="flex:0 0 auto;padding:6px 10px;font-size:12px;border-color:rgba(200,60,60,.4);color:#e0706a" onclick="labEdDeletePreset()" title="Supprimer le mode sélectionné">🗑</button>
       </div>
+      <div style="font-family:'VT323',monospace;font-size:10px;color:var(--parchment);opacity:.5;margin-top:4px">« Charger » ouvre le mode dans l'éditeur pour le <b>modifier</b> ; réenregistre-le ensuite pour garder les changements.</div>
       <button class="adm-btn" style="width:100%;padding:8px;margin-top:6px" onclick="labPublishCurrentMode()">💾 Enregistrer le mode courant…</button>
     </div><!-- ═══ fin CRÉER (éditeur) ═══ -->
 
@@ -2860,10 +2862,11 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <button class="adm-btn" style="width:100%;padding:8px;margin-top:6px" onclick="labLoadCustomFormat()">✓ Charger ce format personnalisé</button>
     </details>
 
-    <!-- Worker automatique = second volet de l'onglet Partager (simulation serveur
-         continue). Replié par défaut : Thomas voit d'abord les Modes publiés ;
-         le pilotage du worker (surtout pour Jonathan) est un accordéon à déplier. -->
-    <details class="lab-tab-panel" data-tab="partager" style="margin-top:4px;display:none">
+    <!-- Worker automatique = accordéon de l'onglet ANALYSER (et non plus Partager) :
+         le worker alimente les STATS d'analyse (label srv:…), c'est donc là qu'on
+         le pilote. Partager ne sert qu'à diffuser des modes / créer un événement.
+         Replié par défaut ; le summary fait office de bouton d'accès. -->
+    <details class="lab-tab-panel" data-tab="analyser" style="margin-top:4px;display:none">
       <summary style="cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright)">🤖 Worker automatique (serveur)</summary>
       <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.7;margin:8px 0">
         Fait tourner des parties <strong>toutes les heures sur GitHub</strong> (sans ton appareil allumé), cumulées dans les stats ci-dessus (label <code>srv:…</code>), <strong>sans doublons</strong>. Configure ici : ça s'applique au prochain passage horaire.
@@ -16875,8 +16878,8 @@ function labShowTab(name){
   try{ localStorage.setItem('vdg_lab_tab', name); }catch(e){}
   if(name==='creer'){ if(typeof labEdInit==='function') labEdInit(); if(typeof labEdFillPresetSelect==='function') labEdFillPresetSelect(); }
   else if(name==='jouer'){ labFillPlaySelect(); }
-  else if(name==='analyser'){ if(typeof labLoadAccumStats==='function') labLoadAccumStats(); }
-  else if(name==='partager'){ if(typeof labLoadPublishedList==='function') labLoadPublishedList(); if(typeof labWorkerLoadConfig==='function') labWorkerLoadConfig(); }
+  else if(name==='analyser'){ if(typeof labLoadAccumStats==='function') labLoadAccumStats(); if(typeof labWorkerLoadConfig==='function') labWorkerLoadConfig(); }
+  else if(name==='partager'){ if(typeof labLoadPublishedList==='function') labLoadPublishedList(); }
 }
 // Remplit le sélecteur « Mode » de l'onglet Jouer (mêmes formats que le reste,
 // mode personnalisé restauré compris). Conserve la sélection courante.
@@ -17551,6 +17554,14 @@ function labEdLoadPreset(){
   var sel=document.getElementById('lab-ed-preset-sel'); var id=sel?sel.value:'';
   if(!id){ if(typeof showToast==='function') showToast('Choisis un mode enregistré dans la liste.', true); return; }
   labLoadPublishedMode(id);   // → charge dans l'éditeur + sélecteurs
+}
+// Supprime le mode sélectionné dans la barre de presets. Réutilise
+// labDeletePublishedMode (confirmation + RPC + rafraîchissement du menu), pour
+// ne pas dupliquer le chemin de suppression déjà éprouvé de l'onglet Partager.
+function labEdDeletePreset(){
+  var sel=document.getElementById('lab-ed-preset-sel'); var id=sel?sel.value:'';
+  if(!id){ if(typeof showToast==='function') showToast('Choisis d\'abord un mode enregistré à supprimer.', true); return; }
+  labDeletePublishedMode(id);
 }
 async function labLoadPublishedList(){
   var el=document.getElementById('lab-published-list'); if(!el) return;
