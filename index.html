@@ -5623,7 +5623,15 @@ async function maybeShowTournamentRoundIntro(id, tn, standings){
 async function renderTournamentDetail(id){
   var body = document.getElementById('tournament-body');
   if(!body) return;
-  body.innerHTML='<div style="text-align:center;padding:14px;opacity:.5;font-family:VT323,monospace">Chargement…</div>';
+  // Cet écran est re-rendu toutes les 5 s (tick d'openTournament). On évite
+  // donc de FLASHER « Chargement… » (placeholder au 1er affichage seulement)
+  // et on MÉMORISE la position de défilement pour la restaurer après le
+  // remplacement du HTML — sinon la page clignote et remonte en haut à chaque
+  // rafraîchissement, impossible de lire le bas (matchs de la ronde).
+  var _savedScroll = body.scrollTop;
+  if(!body.children.length){
+    body.innerHTML='<div style="text-align:center;padding:14px;opacity:.5;font-family:VT323,monospace">Chargement…</div>';
+  }
   try{
     const { data } = await supa.rpc('tournament_standings', { p_tournament_id: id });
     var tn = data.tournament, standings = data.standings||[];
@@ -5703,6 +5711,7 @@ async function renderTournamentDetail(id){
       + '</div>';
     }).join('');
     body.innerHTML = html;
+    body.scrollTop = _savedScroll;   // restaure la position (voir en-tête)
   }catch(e){
     body.innerHTML='<div style="text-align:center;padding:16px;font-family:VT323,monospace;color:var(--parchment);opacity:.6">Erreur de chargement.</div>';
   }
@@ -5995,6 +6004,13 @@ async function renderRoundMatches(tournamentId, round){
 // plateau d'un combat au hasard parmi ceux encore en cours dans la
 // ronde — réutilise le mode spectateur existant (spectateGame), en
 // mémorisant l'écran d'où on vient pour y revenir en quittant.
+// CARROUSEL « Suivre un combat » : on fait défiler (◀ ▶) les parties EN COURS
+// des autres joueurs de la ronde ; un clic sur la carte spectate le combat.
+// L'index vit dans un global (survit au re-render 5 s) ; la liste des uuid est
+// stockée à part → l'uuid passe par une VARIABLE, jamais inliné dans l'onclick
+// (un uuid non quoté était du JS invalide : le clic ne faisait rien).
+var _tournamentSpectateIdx = 0;
+var _tournamentSpectateList = [];
 async function renderTournamentSpectateButton(tournamentId, round){
   try{
     const { data } = await supa.rpc('tournament_round_matches', { p_tournament_id: tournamentId, p_round: round });
@@ -6006,11 +6022,42 @@ async function renderTournamentSpectateButton(tournamentId, round){
       return m.state==='ongoing' && m.online_game_id
         && m.white_pseudo!==myPseudo && m.black_pseudo!==myPseudo;
     });
-    if(!ongoing.length) return '';
-    var pick = ongoing[Math.floor(Math.random()*ongoing.length)];
-    return '<button class="btn" style="width:100%;font-size:11px;padding:7px;margin-bottom:6px;opacity:.85" onclick="_spectateReturnScreen=\'tournament\';spectateGame('+pick.online_game_id+')">👁 Suivre un combat en cours — '
-      + escapeHtml(pick.white_pseudo||'?')+' vs '+escapeHtml(pick.black_pseudo||'?')+'</button>';
+    if(!ongoing.length){ _tournamentSpectateList = []; return ''; }
+    _tournamentSpectateList = ongoing.map(function(m){ return m.online_game_id; });
+    if(_tournamentSpectateIdx >= ongoing.length) _tournamentSpectateIdx = 0;
+    if(_tournamentSpectateIdx < 0) _tournamentSpectateIdx = ongoing.length - 1;
+    var cur = ongoing[_tournamentSpectateIdx];
+    var label = escapeHtml(cur.white_pseudo||'?')+' vs '+escapeHtml(cur.black_pseudo||'?');
+    var multi = ongoing.length > 1;
+    var dots = ongoing.map(function(_, i){
+      return '<span style="width:6px;height:6px;border-radius:50%;background:'+(i===_tournamentSpectateIdx?'var(--gold-bright)':'rgba(255,200,120,.3)')+'"></span>';
+    }).join('');
+    var arrow = function(dir, sym){
+      return '<button onclick="cycleTournamentSpectate('+dir+')" style="flex-shrink:0;font-family:VT323,monospace;font-size:16px;padding:6px 10px;border-radius:4px;cursor:pointer;border:1px solid rgba(255,152,0,.5);background:rgba(255,140,0,.15);color:#ffc080"'+(multi?'':' disabled')+'>'+sym+'</button>';
+    };
+    var html = '<div style="margin-bottom:6px;border:1px solid rgba(255,152,0,.35);border-radius:6px;padding:6px;background:rgba(255,140,0,.08)">';
+    html += '<div style="display:flex;align-items:stretch;gap:6px">';
+    if(multi) html += arrow(-1,'◀');
+    html += '<button class="btn" style="flex:1;font-size:11px;padding:8px;opacity:.95" onclick="spectateTournamentCurrent()">👁 Suivre un combat — '+label+'</button>';
+    if(multi) html += arrow(1,'▶');
+    html += '</div>';
+    if(multi) html += '<div style="display:flex;justify-content:center;gap:4px;margin-top:5px;align-items:center">'+dots+'<span style="font-family:VT323,monospace;font-size:10px;color:#ffb066;margin-left:6px;opacity:.8">'+(_tournamentSpectateIdx+1)+'/'+ongoing.length+'</span></div>';
+    html += '</div>';
+    return html;
   }catch(e){ return ''; }
+}
+// ◀ ▶ du carrousel : décale l'index (bouclé) et re-render l'écran tournoi.
+function cycleTournamentSpectate(dir){
+  var n = _tournamentSpectateList.length; if(!n) return;
+  _tournamentSpectateIdx = ((_tournamentSpectateIdx + dir) % n + n) % n;
+  if(_currentTournamentId) renderTournamentDetail(_currentTournamentId);
+}
+// Clic sur la carte : spectate le combat courant (uuid passé par variable).
+function spectateTournamentCurrent(){
+  var gid = _tournamentSpectateList[_tournamentSpectateIdx];
+  if(!gid){ showToast('Aucun combat à suivre.', true); return; }
+  _spectateReturnScreen = 'tournament';
+  spectateGame(gid);
 }
 // Réclame la victoire quand l'adversaire ne s'est pas présenté (délai écoulé).
 // L'absent est déclaré abandonniste et exclu des rondes suivantes ; le
