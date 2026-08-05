@@ -2731,14 +2731,15 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <button class="lab-tab-btn" id="lab-tabbtn-partager" onclick="labShowTab('partager')">📤<br>Partager</button>
     </div>
 
-    <!-- ═══ JOUER : essayer un mode contre l'IA (l'onglet le plus direct) ═══ -->
+    <!-- ═══ JOUER : hub UNIQUE de gestion des modes (lister / jouer / éditer /
+         supprimer). Réunit les modes INTÉGRÉS (LAB_FORMATS, non supprimables) et
+         tes modes ENREGISTRÉS (dev_published_formats, éditables/supprimables) en
+         une seule liste — plus besoin de courir entre Créer, Jouer et Partager
+         pour retrouver un mode. Rendu par labRenderModesManager. ═══ -->
     <div class="lab-tab-panel" data-tab="jouer" style="display:none">
-      <div class="lab-note">Choisis un mode et joue tout de suite contre l'IA. Parfait pour expérimenter une idée en deux clics.</div>
-      <label style="display:flex;justify-content:space-between;align-items:center;gap:10px;font-family:'VT323',monospace;font-size:14px;color:var(--parchment)">Mode
-        <select id="lab-play-format" style="flex:1;max-width:230px;padding:5px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px"></select>
-      </label>
-      <button class="adm-btn" style="width:100%;padding:12px;margin-top:12px;font-weight:bold" onclick="labPlaySelectedModeVsAI()">▶ Jouer contre l'IA</button>
-      <div class="lab-help">Le mode que tu es en train de <b>construire</b> a son propre bouton ▶ dans l'onglet <b>Créer</b>. Les modes <b>publiés</b> (partagés avec Thomas) se jouent depuis l'onglet <b>Partager</b>.</div>
+      <div class="lab-note">Tous tes modes au même endroit : ceux <b>intégrés</b> au Labo et ceux que tu as <b>enregistrés</b>. Chaque ligne : ▶ jouer contre l'IA, ✎ éditer (ouvre dans Créer), 🗑 supprimer.</div>
+      <div id="lab-modes-manager" style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment)">…</div>
+      <div class="lab-help">▶ <b>Jouer</b> lance une partie locale contre l'IA. ✎ <b>Éditer</b> charge le mode dans l'onglet <b>Créer</b> pour le modifier (réenregistre-le ensuite pour garder tes changements). Les modes intégrés ne se suppriment pas ; tu peux les éditer puis les enregistrer sous un nouveau nom.</div>
     </div>
 
     <!-- ═══ ANALYSER : mesurer l'équilibre (deux IA s'affrontent) ═══ -->
@@ -16885,23 +16886,63 @@ function labShowTab(name){
   TABS.forEach(function(t){ var b=document.getElementById('lab-tabbtn-'+t); if(b) b.classList.toggle('active', t===name); });
   try{ localStorage.setItem('vdg_lab_tab', name); }catch(e){}
   if(name==='creer'){ if(typeof labEdInit==='function') labEdInit(); if(typeof labEdFillPresetSelect==='function') labEdFillPresetSelect(); }
-  else if(name==='jouer'){ labFillPlaySelect(); }
+  else if(name==='jouer'){ if(typeof labRenderModesManager==='function') labRenderModesManager(); }
   else if(name==='analyser'){ if(typeof labLoadAccumStats==='function') labLoadAccumStats(); if(typeof labWorkerLoadConfig==='function') labWorkerLoadConfig(); }
   else if(name==='partager'){ if(typeof labLoadPublishedList==='function') labLoadPublishedList(); }
 }
-// Remplit le sélecteur « Mode » de l'onglet Jouer (mêmes formats que le reste,
-// mode personnalisé restauré compris). Conserve la sélection courante.
-function labFillPlaySelect(){
-  var s=document.getElementById('lab-play-format'); if(!s||typeof LAB_FORMATS==='undefined') return;
-  var cur=s.value; s.innerHTML='';
-  Object.keys(LAB_FORMATS).forEach(function(k){ var o=document.createElement('option'); o.value=k; o.textContent=LAB_FORMATS[k].name; s.appendChild(o); });
-  if(cur){ s.value=cur; }
+// Hub de gestion des modes (onglet Jouer) : une seule liste = modes INTÉGRÉS
+// (LAB_FORMATS, non supprimables) + modes ENREGISTRÉS (dev_published_formats).
+// Chaque ligne : jouer vs IA / éditer dans Créer / supprimer (enregistrés seuls).
+// Réutilise labPlayModeVsAI, labEditBuiltinMode/labEditSavedMode, labDelete…
+async function labRenderModesManager(){
+  var el=document.getElementById('lab-modes-manager'); if(!el) return;
+  if(typeof isDevUser==='function' && !isDevUser()){ el.innerHTML='<div style="opacity:.6">Réservé aux comptes dev.</div>'; return; }
+  var esc=(typeof escapeHtml==='function')?escapeHtml:function(s){return String(s);};
+  function meta(f){ f=f||{}; return (f.rows||'?')+'×'+(f.cols||'?')+(f.sumo?', sumo':'')+(f.pieces?', '+Object.keys(f.pieces).length+' pièce(s)':''); }
+  function row(name,sub,play,edit,del){
+    return '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.08)">'
+      +'<span style="min-width:0"><b>'+esc(name)+'</b> <span style="opacity:.55">'+esc(sub)+'</span></span>'
+      +'<span style="white-space:nowrap">'
+      +'<button onclick="'+play+'" title="Jouer contre l\'IA" style="padding:2px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(212,160,23,.5);background:var(--gold-bright);color:#1a1206">▶</button> '
+      +'<button onclick="'+edit+'" title="Éditer dans Créer" style="padding:2px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(212,160,23,.35);background:rgba(0,0,0,.3);color:var(--parchment)">✎</button>'
+      +(del?' <button onclick="'+del+'" title="Supprimer" style="padding:2px 7px;border-radius:4px;cursor:pointer;border:1px solid rgba(200,60,60,.4);background:rgba(0,0,0,.3);color:#e0706a">🗑</button>':'')
+      +'</span></div>';
+  }
+  var html='<div style="color:var(--gold-bright);margin:6px 0 2px">◆ Modes intégrés</div>';
+  Object.keys(LAB_FORMATS).forEach(function(k){
+    if(k==='custom') return;            // le mode en cours d'édition n'est pas un mode "rangé"
+    var f=LAB_FORMATS[k];
+    html+=row(f.name, meta(f), "labPlayModeVsAI(LAB_FORMATS['"+k+"'])", "labEditBuiltinMode('"+k+"')", null);
+  });
+  html+='<div style="color:var(--gold-bright);margin:12px 0 2px">◆ Mes modes enregistrés</div>';
+  var saved='';
+  try{
+    if(!_labPublishedCache){
+      var res=await supa.from('dev_published_formats').select('*').order('updated_at',{ascending:false});
+      if(res.error) throw res.error;
+      _labPublishedCache=res.data||[];
+    }
+    if(!_labPublishedCache.length){ saved='<div style="opacity:.6">Aucun mode enregistré. Construis-en un dans <b>Créer</b> puis « Enregistrer le mode courant ».</div>'; }
+    else _labPublishedCache.forEach(function(r){
+      saved+=row(r.name, meta(r.format)+(r.author?' · '+r.author:''), "labPlayPublishedMode('"+r.id+"')", "labEditSavedMode('"+r.id+"')", "labDeletePublishedMode('"+r.id+"')");
+    });
+  }catch(e){ saved='<div style="opacity:.6">Erreur de chargement des modes enregistrés.</div>'; }
+  el.innerHTML=html+saved;
 }
-function labPlaySelectedModeVsAI(){
-  var s=document.getElementById('lab-play-format'); var k=s?s.value:null;
-  var fmt=(k&&typeof LAB_FORMATS!=='undefined')?LAB_FORMATS[k]:null;
-  if(!fmt){ if(typeof showToast==='function') showToast('Choisis un mode.', true); return; }
-  labPlayModeVsAI(fmt);
+// Éditer = ouvrir dans l'éditeur visuel (onglet Créer). On bascule d'ABORD sur
+// Créer (ce qui initialise l'éditeur via labEdInit) puis on adopte le format,
+// sinon l'éditeur fraîchement créé écraserait le format chargé par son défaut.
+function labEditSavedMode(id){
+  if(typeof labShowTab==='function') labShowTab('creer');
+  labLoadPublishedMode(id);           // registre custom + adopte dans l'éditeur + sélecteurs
+}
+function labEditBuiltinMode(key){
+  var f=(typeof LAB_FORMATS!=='undefined')?LAB_FORMATS[key]:null;
+  if(!f){ if(typeof showToast==='function') showToast('Mode inconnu.', true); return; }
+  if(typeof labShowTab==='function') labShowTab('creer');
+  if(typeof labEdAdopt==='function') labEdAdopt(f);
+  if(typeof labEdRender==='function') labEdRender();
+  if(typeof showToast==='function') showToast('« '+f.name+' » ouvert dans l\'éditeur — modifie puis enregistre-le sous un nouveau nom.');
 }
 
 function labOnShowScreen(){
@@ -16922,7 +16963,7 @@ function labOnShowScreen(){
   // Restaure le dernier mode personnalisé (localStorage) → il réapparaît dans les
   // sélecteurs après un rechargement. APRÈS le peuplement des formats natifs
   // (sinon la garde « sélecteur vide » sauterait les formats standard) et AVANT
-  // d'ouvrir un onglet (pour que labFillPlaySelect voie le mode restauré).
+  // d'ouvrir un onglet (pour que le hub de modes voie le mode restauré).
   if(typeof labRestoreCustomFormat==='function') labRestoreCustomFormat();
   // On atterrit sur le dernier onglet ouvert (Créer par défaut, pour que l'outil
   // se présente d'abord comme un atelier de création). Chaque onglet déclenche
@@ -17533,6 +17574,7 @@ async function labPublishCurrentMode(){
     _labPublishedCache=null;             // invalide : un mode vient d'être ajouté
     labLoadPublishedList();              // liste de l'onglet Partager
     labEdFillPresetSelect();             // menu déroulant de l'onglet Créer
+    if(typeof labRenderModesManager==='function') labRenderModesManager(); // hub de l'onglet Jouer
   }catch(e){ if(typeof showToast==='function') showToast('Erreur d\'enregistrement : '+(e.message||e), true); }
 }
 // Barre de presets de l'onglet Créer : même registre serveur, présenté comme
@@ -17613,6 +17655,7 @@ async function labDeletePublishedMode(id){
     _labPublishedCache=null;
     labLoadPublishedList();
     labEdFillPresetSelect();
+    if(typeof labRenderModesManager==='function') labRenderModesManager();
   }catch(e){ if(typeof showToast==='function') showToast('Erreur : '+(e.message||e), true); }
 }
 
