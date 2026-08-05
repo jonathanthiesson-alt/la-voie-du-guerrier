@@ -359,6 +359,16 @@ async function provisionRosterBots() {
 function botDepth(elo) { return elo < 1150 ? 1 : elo < 1800 ? 2 : elo < 2400 ? 3 : 4; }
 const inList = (col, ids) => col + "=in.(" + ids.join(",") + ")";
 
+// Le joueur a-t-il une partie active RÉCENTE (< 5 min) ? Sert à ne PAS backfill
+// un joueur déjà en partie, tout en IGNORANT les parties 'active' orphelines
+// (jamais soldées) qui, sinon, le bloqueraient à vie.
+const FRESH_GAME_MS = 5 * 60 * 1000;
+async function hasFreshActiveGame(playerId) {
+  const rows = await (await sbAdmin("online_games?or=(white_player_id.eq." + playerId + ",black_player_id.eq." + playerId + ")&status=eq.active&select=created_at,updated_at&order=created_at.desc&limit=3")).json();
+  if (!Array.isArray(rows)) return false;
+  return rows.some((g) => (Date.now() - new Date(g.updated_at || g.created_at).getTime()) < FRESH_GAME_MS);
+}
+
 // Un tour de backfill : apparie les humains qui attendent avec un bot libre.
 async function backfillTick(mover, roster, busyPids, stats) {
   const _waiting = await (await sbAdmin("matchmaking_queue?want_backfill=eq.true&select=*")).json();
@@ -367,9 +377,12 @@ async function backfillTick(mover, roster, busyPids, stats) {
     try {
       const ageS = (Date.now() - new Date(q.joined_at).getTime()) / 1000;
       if (ageS < (q.backfill_after || 20)) continue;                    // pas encore assez patienté
-      // déjà en partie ? (le poll du joueur l'aura ramassée)
-      const g0 = await (await sbAdmin("online_games?or=(white_player_id.eq." + q.player_id + ",black_player_id.eq." + q.player_id + ")&status=eq.active&select=id&limit=1")).json();
-      if (g0.length) continue;
+      // Déjà en partie RÉCENTE ? (le poll du joueur l'aura ramassée) On ignore
+      // les parties « active » PÉRIMÉES : un online_games orphelin (onglet fermé
+      // en pleine partie, jamais soldé) restait 'active' à vie et bloquait le
+      // backfill du joueur POUR TOUJOURS (bug vécu : une partie fantôme de 44 h
+      // empêchait tout bot de rejoindre). Seuil 5 min ≫ timer par coup (3/5/10s).
+      if (await hasFreshActiveGame(q.player_id)) continue;
       // Bots partagés : un même bot peut affronter PLUSIEURS joueurs à la fois,
       // sur toutes les cadences ET tous les modes (partie rapide, arène…). On
       // n'exclut donc plus les bots « occupés » — deux joueurs d'Elo voisin, un
@@ -471,9 +484,10 @@ async function arenaBackfillTick(mover, roster, stats) {
       if ((q.mode || "arena") !== "arena") continue; // pas le SUMO (événement)
       const ageS = (Date.now() - new Date(q.joined_at).getTime()) / 1000;
       if (ageS < (q.backfill_after || 20)) continue;
-      // déjà dans un match d'arène actif ? (son poll l'aura rejoint)
-      const m0 = await (await sbAdmin("arena_matches?status=eq.active&or=(white_player_id.eq." + q.player_id + ",black_player_id.eq." + q.player_id + ")&select=id&limit=1")).json();
-      if (m0.length) continue;
+      // déjà dans un match d'arène actif RÉCENT ? (son poll l'aura rejoint) On
+      // ignore les matchs orphelins : seuil 15 min (un BO3 dure quelques min).
+      const _m0 = await (await sbAdmin("arena_matches?status=eq.active&or=(white_player_id.eq." + q.player_id + ",black_player_id.eq." + q.player_id + ")&select=created_at&order=created_at.desc&limit=3")).json();
+      if (Array.isArray(_m0) && _m0.some((m) => (Date.now() - new Date(m.created_at).getTime()) < 15 * 60 * 1000)) continue;
       // bot d'Elo voisin (mêmes règles que le backfill classique)
       let free = roster.slice();
       if (q.backfill_max_elo && q.backfill_max_elo > 0) {
