@@ -30,8 +30,16 @@
   .clipbar button.on{background:var(--accent);color:#1a1206;border-color:var(--accent);font-weight:600}
   .clipbar .sep{width:1px;background:var(--line);margin:2px 4px}
   .caption{color:var(--muted);font-size:12px;text-align:center;min-height:16px;margin-top:6px}
+  /* Défilement interne du panneau. Deux pièges corrigés ici :
+     - 100dvh (pas 100vh) : sur mobile, 100vh compte les pixels CACHÉS derrière
+       la barre d'adresse du navigateur → le bas du panneau (les boutons Export)
+       passait sous le chrome, inatteignable. 100dvh suit la hauteur RÉELLEMENT
+       visible.
+     - l'offset soustrait doit couvrir header + tabbar (~108px), pas seulement
+       le header ; et un padding-bottom garantit que les derniers boutons ne
+       collent jamais au bord coupé, même si l'offset est un peu approximatif. */
   .panel{flex:0 0 340px;border-left:1px solid var(--line);background:var(--panel);
-    padding:14px;max-height:calc(100vh - 62px);overflow:auto}
+    padding:14px 14px 40px;max-height:calc(100dvh - 108px);overflow:auto}
   .panel h2{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);
     margin:0 0 8px}
   .cols{display:flex;gap:12px}

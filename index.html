@@ -31,13 +31,16 @@ body.bottomnav-visible #bottom-nav{display:flex}
 body.bottomnav-visible .screen{padding-bottom:70px}
 /* Généralisé aux panneaux À DÉFILEMENT INTERNE (boutique, ligue, tournoi,
    guilde, entraînement... reconnaissables à leur overflow:hidden inline) :
-   leurs max-height inline (100vh - 70/80/90px), combinés au padding-top de
+   leurs max-height inline (100dvh - 70/80/90px), combinés au padding-top de
    l'écran, faisaient descendre leur bord bas sous la barre de navigation.
+   NB : tous ces plafonds sont en 100dvh (pas 100vh) — sur mobile, 100vh
+   compte les pixels cachés derrière la barre d'adresse, ce qui rendait le
+   bas des panneaux (leurs boutons) inatteignable. #app est déjà en 100dvh.
    ⚠ Ne PAS l'appliquer aux panneaux sans scroll interne (menu Jouer,
    campagnes...) : plafonner leur hauteur fait déborder le contenu sous la
    limite sans aucun moyen de l'atteindre — c'est l'écran entier qui
    défile pour eux, déjà protégé par le padding-bottom:70px ci-dessus. */
-body.bottomnav-visible .screen .panel[style*="overflow:hidden"]{max-height:calc(100vh - 132px)!important}
+body.bottomnav-visible .screen .panel[style*="overflow:hidden"]{max-height:calc(100dvh - 132px)!important}
 /* Les écrans à en-tête fixe + corps défilant (padding:0 sur .screen, donc
    non couverts par la règle padding-bottom:70px ci-dessus) gèrent leur
    propre scroll interne : il faut leur donner la même marge pour que leur
@@ -4578,7 +4581,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 <!-- BOARD LAYOUT SCREEN -->
 <div id="screen-shinai" class="screen">
   <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="closeShinAIScreen()">&#8617; RETOUR</button></div>
-  <div style="width:100%;max-width:400px;overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100vh - 60px);padding:10px 4px 20px">
+  <div style="width:100%;max-width:400px;overflow-y:auto;-webkit-overflow-scrolling:touch;max-height:calc(100dvh - 60px);padding:10px 4px 20px">
     <div class="menu-title" style="font-size:18px;margin-bottom:4px">&#33410;AI &#9472; <span style="font-size:14px;font-family:'Noto Serif JP',serif;color:rgba(200,168,110,.8)">芯AI</span></div>
     <div style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment);opacity:.5;text-align:center;margin-bottom:12px">Intelligence Artificielle Paramétrable</div>
 
@@ -23956,7 +23959,7 @@ window.addEventListener('beforeunload', () => {
 
 <!-- ═══════════ AMIS — écran unifié (Messagerie / Amis / Joueurs) ═══════════ -->
 <div id="screen-amis" class="screen" style="justify-content:flex-start">
-  <div class="panel" style="max-width:340px;width:100%;max-height:calc(100vh - 70px);display:flex;flex-direction:column;overflow:hidden;padding:10px">
+  <div class="panel" style="max-width:340px;width:100%;max-height:calc(100dvh - 70px);display:flex;flex-direction:column;overflow:hidden;padding:10px">
     <!-- Onglets -->
     <div style="display:flex;gap:0;border-bottom:1px solid rgba(200,168,110,.2);flex-shrink:0;margin-bottom:8px">
       <button id="amis-tab-msg-btn"     onclick="setAmisTab('msg')"     style="flex:1;background:none;border:none;border-bottom:2px solid var(--gold);padding:8px 4px;font-family:VT323,monospace;font-size:14px;color:var(--gold-bright);cursor:pointer">&#128172; Messages</button>
@@ -24077,7 +24080,7 @@ window.addEventListener('beforeunload', () => {
 <!-- ═══════════ ADMIN — PANNEAU D'ADMINISTRATION (Wurmz / Musashi) ═══════════ -->
 <div id="screen-devrewards" class="screen" style="justify-content:flex-start;padding-top:14px">
   <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('dev-hub')">&#8617; DEV</button></div>
-  <div class="panel" style="max-width:380px;width:100%;max-height:calc(100vh - 80px);display:flex;flex-direction:column;overflow:hidden;border-color:rgba(160,90,220,.4)">
+  <div class="panel" style="max-width:380px;width:100%;max-height:calc(100dvh - 80px);display:flex;flex-direction:column;overflow:hidden;border-color:rgba(160,90,220,.4)">
     <div class="menu-title" style="font-size:16px;color:#c58aff;flex-shrink:0">&#128736; ADMINISTRATION</div>
     <div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.5;text-align:center;margin-bottom:8px;flex-shrink:0">Réservé à Wurmz &amp; Musashi</div>
     <!-- Sections principales -->
@@ -24097,7 +24100,7 @@ window.addEventListener('beforeunload', () => {
 
 <!-- ═══════════ ADVERSAIRES (galerie IA à personnalités) ═══════════ -->
 <div id="screen-opponents" class="screen" style="justify-content:flex-start;padding-top:14px">
-  <div class="panel" style="max-width:340px;width:100%;max-height:calc(100vh - 90px);display:flex;flex-direction:column;overflow:hidden">
+  <div class="panel" style="max-width:340px;width:100%;max-height:calc(100dvh - 90px);display:flex;flex-direction:column;overflow:hidden">
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px;flex-shrink:0">&#9876; <span data-i18n="opponents_title">ADVERSAIRES</span></div><button onclick="showModeInfo('opponents')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
     <div style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.55;text-align:center;margin-bottom:10px;flex-shrink:0" data-i18n="opponents_sub">Vaincs chaque maître pour gagner son sceau &#128737;</div>
     <div id="opponents-grid" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:8px"></div>
@@ -24107,7 +24110,7 @@ window.addEventListener('beforeunload', () => {
 <!-- ═══════════ TOURNOI ═══════════ -->
 <div id="screen-tournament" class="screen" style="justify-content:flex-start;padding-top:54px">
   <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('menu')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
-  <div class="panel" style="max-width:330px;width:100%;max-height:calc(100vh - 110px);display:flex;flex-direction:column;overflow:hidden">
+  <div class="panel" style="max-width:330px;width:100%;max-height:calc(100dvh - 110px);display:flex;flex-direction:column;overflow:hidden">
     <!-- Ciel Sumi : torii sous la lune (compétition) -->
     <div class="sumi-sky"><svg viewBox="0 0 300 92" preserveAspectRatio="none" aria-hidden="true">
       <rect width="300" height="92" fill="var(--sumi-sky,#b23a52)"/>
@@ -24139,7 +24142,7 @@ window.addEventListener('beforeunload', () => {
 <!-- ═══════════ GUILDE ═══════════ -->
 <div id="screen-guild" class="screen" style="justify-content:flex-start;padding-top:54px">
   <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('menu')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
-  <div class="panel" style="max-width:330px;width:100%;max-height:calc(100vh - 110px);display:flex;flex-direction:column;overflow:hidden">
+  <div class="panel" style="max-width:330px;width:100%;max-height:calc(100dvh - 110px);display:flex;flex-direction:column;overflow:hidden">
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px;flex-shrink:0">&#128737; GUILDE</div><button onclick="showModeInfo('guild')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 8px;flex-shrink:0">
       <div style="font-family:VT323,monospace;font-size:14px;color:var(--gold-bright)">🐉 <span class="ryu-display">0</span> <span style="font-size:10px;opacity:.6">Ryu</span></div>
@@ -24188,7 +24191,7 @@ window.addEventListener('beforeunload', () => {
 <!-- ═══════════ LIGUE (aperçu — pools/saisons à venir) ═══════════ -->
 <div id="screen-league" class="screen" style="justify-content:flex-start;padding-top:54px">
   <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('play')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
-  <div class="panel" style="max-width:320px;max-height:calc(100vh - 70px);display:flex;flex-direction:column;overflow:hidden">
+  <div class="panel" style="max-width:320px;max-height:calc(100dvh - 70px);display:flex;flex-direction:column;overflow:hidden">
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px;flex-shrink:0" data-i18n="online_hub_league">&#127942; LIGUE</div><button onclick="showModeInfo('league')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
     <div id="league-tier-banner" style="text-align:center;margin-bottom:4px;flex-shrink:0"></div>
     <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.5;text-align:center;margin-bottom:6px;flex-shrink:0" data-i18n="league_week_label">Classement de la semaine · reset dimanche</div>
@@ -24200,7 +24203,7 @@ window.addEventListener('beforeunload', () => {
 <!-- ═══════════ MESSAGERIE (Amis / Ligue / Guilde) ═══════════ -->
 <div id="screen-messaging" class="screen" style="justify-content:flex-start;padding-top:54px">
   <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('menu')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
-  <div class="panel" style="max-width:340px;max-height:calc(100vh - 70px);display:flex;flex-direction:column;overflow:hidden">
+  <div class="panel" style="max-width:340px;max-height:calc(100dvh - 70px);display:flex;flex-direction:column;overflow:hidden">
     <!-- Ciel Sumi : bambouseraie à l'aube (social) -->
     <div class="sumi-sky"><svg viewBox="0 0 300 92" preserveAspectRatio="none" aria-hidden="true">
       <rect width="300" height="92" fill="var(--sumi-sky,#7a9b6d)"/>
@@ -24251,7 +24254,7 @@ window.addEventListener('beforeunload', () => {
 
 <!-- ═══════════ BOUTIQUE ═══════════ -->
 <div id="screen-shop" class="screen" style="justify-content:flex-start">
-  <div class="panel" style="max-width:340px;max-height:calc(100vh - 70px);display:flex;flex-direction:column;overflow:hidden">
+  <div class="panel" style="max-width:340px;max-height:calc(100dvh - 70px);display:flex;flex-direction:column;overflow:hidden">
     <!-- Ciel Sumi : lanterne de pierre au couchant (marché) -->
     <div class="sumi-sky"><svg viewBox="0 0 300 92" preserveAspectRatio="none" aria-hidden="true">
       <rect width="300" height="92" fill="var(--sumi-sky,#c96a2e)"/>
@@ -24302,7 +24305,7 @@ window.addEventListener('beforeunload', () => {
 <!-- ═══════════ ÉVÉNEMENTS (annonces de l'équipe — lecture seule) ═══════════ -->
 <div id="screen-events" class="screen" style="justify-content:flex-start;padding-top:54px">
   <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('menu')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
-  <div class="panel" style="max-width:340px;max-height:calc(100vh - 70px);display:flex;flex-direction:column;overflow:hidden">
+  <div class="panel" style="max-width:340px;max-height:calc(100dvh - 70px);display:flex;flex-direction:column;overflow:hidden">
     <div class="menu-title" style="font-size:18px;flex-shrink:0">&#128197; &#201;V&#201;NEMENTS</div>
     <div class="menu-divider" style="flex-shrink:0"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-shrink:0">
@@ -24318,7 +24321,7 @@ window.addEventListener('beforeunload', () => {
 
 <div id="screen-online-menu" class="screen" style="justify-content:flex-start;padding-top:54px">
   <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('play')">&#8617; MENU</button></div>
-  <div class="panel" style="max-width:340px;max-height:calc(100vh - 70px);display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch">
+  <div class="panel" style="max-width:340px;max-height:calc(100dvh - 70px);display:flex;flex-direction:column;overflow-y:auto;-webkit-overflow-scrolling:touch">
     <div class="menu-title" style="flex-shrink:0">&#9670; JOUER EN LIGNE &#9670;</div>
     <div style="text-align:center;font-family:'VT323',monospace;font-size:14px;color:var(--gold-bright);margin-bottom:6px;flex-shrink:0" id="online-my-pseudo"></div>
     <div class="menu-divider" style="flex-shrink:0"></div>
