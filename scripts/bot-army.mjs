@@ -361,7 +361,8 @@ const inList = (col, ids) => col + "=in.(" + ids.join(",") + ")";
 
 // Un tour de backfill : apparie les humains qui attendent avec un bot libre.
 async function backfillTick(mover, roster, busyPids, stats) {
-  const waiting = await (await sbAdmin("matchmaking_queue?want_backfill=eq.true&select=*")).json();
+  const _waiting = await (await sbAdmin("matchmaking_queue?want_backfill=eq.true&select=*")).json();
+  const waiting = Array.isArray(_waiting) ? _waiting : [];
   for (const q of waiting) {
     try {
       const ageS = (Date.now() - new Date(q.joined_at).getTime()) / 1000;
@@ -418,7 +419,13 @@ async function driveRosterGames(mover, byPid, stats) {
   const pids = [...byPid.keys()];
   if (!pids.length) return new Set();
   const busy = new Set();
-  const games = await (await sbAdmin("online_games?status=eq.active&select=*&or=(" + inList("white_player_id", pids) + "," + inList("black_player_id", pids) + ")")).json();
+  // ⚠ PostgREST : dans un or=(...), la syntaxe est POINTÉE (col.in.(…)), pas
+  // col=in.(…) comme un filtre de premier niveau (cf. inList). Utiliser inList
+  // ici donnait un 400 (PGRST100) → games devenait un objet d'erreur, le for…of
+  // levait une exception et le backfill n'écrivait jamais son rapport.
+  const idCsv = pids.join(",");
+  const _games = await (await sbAdmin("online_games?status=eq.active&select=*&or=(white_player_id.in.(" + idCsv + "),black_player_id.in.(" + idCsv + "))")).json();
+  const games = Array.isArray(_games) ? _games : [];
   for (const g of games) {
     try {
       // Marque « prêt » TOUT bot présent (blanc et/ou noir) — sinon le plateau
@@ -457,7 +464,8 @@ async function driveRosterGames(mover, byPid, stats) {
 // (il détecte l'adversaire bot). Comme le backfill classique : bots partagés
 // (un bot peut servir plusieurs joueurs, toutes cadences/modes confondus).
 async function arenaBackfillTick(mover, roster, stats) {
-  const waiting = await (await sbAdmin("arena_matchmaking_queue?want_backfill=eq.true&select=*")).json();
+  const _awaiting = await (await sbAdmin("arena_matchmaking_queue?want_backfill=eq.true&select=*")).json();
+  const waiting = Array.isArray(_awaiting) ? _awaiting : [];
   for (const q of waiting) {
     try {
       if ((q.mode || "arena") !== "arena") continue; // pas le SUMO (événement)
@@ -517,10 +525,12 @@ async function arenaBackfillTick(mover, roster, stats) {
 // La progression des rondes (appariements, deadlines, forfaits) reste 100 %
 // serveur (pg_cron tournament_cleanup) — rien à faire ici.
 async function tournamentTick(mover, roster, byPid, stats) {
-  const running = await (await sbAdmin("tournaments?status=eq.running&select=id,current_round,timer_seconds")).json();
+  const _running = await (await sbAdmin("tournaments?status=eq.running&select=id,current_round,timer_seconds")).json();
+  const running = Array.isArray(_running) ? _running : [];
   for (const t of running) {
     try {
-      const pairs = await (await sbAdmin("tournament_pairings?tournament_id=eq." + t.id + "&round=eq." + t.current_round + "&result=is.null&select=*")).json();
+      const _pairs = await (await sbAdmin("tournament_pairings?tournament_id=eq." + t.id + "&round=eq." + t.current_round + "&result=is.null&select=*")).json();
+      const pairs = Array.isArray(_pairs) ? _pairs : [];
       for (const pr of pairs) {
         if (!pr.white_id || !pr.black_id) continue; // bye : géré serveur
         const whiteBot = byPid.has(pr.white_id), blackBot = byPid.has(pr.black_id);
