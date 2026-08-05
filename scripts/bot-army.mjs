@@ -584,6 +584,56 @@ async function tournamentTick(mover, roster, byPid, stats) {
   }
 }
 
+// Guerre de guilde : dès qu'un défi inter-guildes est ACTIF, on fait s'affronter
+// en parties CLASSÉES les bots des deux guildes, puis on score chaque partie finie
+// via guild_report_win_server (RPC serveur — guild_report_win exige auth.uid(),
+// inappelable en service_role, exactement comme tournament_report_from_game).
+// Dormant s'il n'y a aucun défi actif, ou si les guildes n'ont pas de bots du
+// roster (défi 100 % humain : rien à piloter ici → aucun effet de bord).
+async function guildWarTick(mover, byPid, stats) {
+  const _wars = await (await sbAdmin("guild_tournaments?status=eq.active&select=id,guild_a,guild_b,deadline")).json();
+  const wars = Array.isArray(_wars) ? _wars : [];
+  for (const w of wars) {
+    try {
+      const mems = await (await sbAdmin("guild_members?select=player_id,guild_id&guild_id=in.(" + w.guild_a + "," + w.guild_b + ")")).json();
+      if (!Array.isArray(mems)) continue;
+      const botsA = mems.filter((m) => m.guild_id === w.guild_a && byPid.has(m.player_id)).map((m) => m.player_id);
+      const botsB = mems.filter((m) => m.guild_id === w.guild_b && byPid.has(m.player_id)).map((m) => m.player_id);
+      if (!botsA.length || !botsB.length) continue;   // il faut au moins un bot de chaque côté
+      const allBots = botsA.concat(botsB);
+      const idCsv = allBots.join(",");
+      // 1) SCORER les parties classées finies non comptées de ces bots.
+      const _fin = await (await sbAdmin("online_games?status=eq.finished&guild_counted=eq.false&ranked=eq.true&select=id&limit=50&or=(white_player_id.in.(" + idCsv + "),black_player_id.in.(" + idCsv + "))")).json();
+      const fin = Array.isArray(_fin) ? _fin : [];
+      for (const g of fin) {
+        await sbAdmin("rpc/guild_report_win_server", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ p_game_id: g.id }) });
+      }
+      // 2) ENTRETENIR l'affrontement : s'il n'y a pas déjà une partie active
+      //    croisée A↔B, en créer une (classée, les deux bots « prêts »).
+      const _act = await (await sbAdmin("online_games?status=eq.active&select=white_player_id,black_player_id&or=(white_player_id.in.(" + idCsv + "),black_player_id.in.(" + idCsv + "))")).json();
+      const act = Array.isArray(_act) ? _act : [];
+      const cross = (a, b) => (botsA.includes(a) && botsB.includes(b)) || (botsB.includes(a) && botsA.includes(b));
+      const hasCross = act.some((g) => cross(g.white_player_id, g.black_player_id));
+      if (!hasCross) {
+        const a = botsA[Math.floor(Math.random() * botsA.length)];
+        const b = botsB[Math.floor(Math.random() * botsB.length)];
+        const aWhite = Math.random() < 0.5;
+        const gs = mover.startState();
+        await sbAdmin("online_games", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+          body: JSON.stringify({
+            white_player_id: aWhite ? a : b, black_player_id: aWhite ? b : a,
+            game_state: gs, turn: "white", timer_seconds: 5, ranked: true,
+            ready_white: true, ready_black: true,
+          }),
+        });
+        console.log("⚔ guerre de guilde " + w.guild_a + " vs " + w.guild_b + " : nouvelle passe classée.");
+      }
+    } catch (e) { stats.errors++; console.warn("guildWarTick", e.message); }
+  }
+}
+
 async function runBackfill(mover, t0) {
   const roster = await provisionRosterBots();
   if (!roster.length) { console.log("✗ Aucun bot du roster provisionné — abandon."); return; }
@@ -603,6 +653,9 @@ async function runBackfill(mover, t0) {
       await arenaBackfillTick(mover, roster, stats);
       // 3) tournoi : créer/reporter les parties des paires contenant un bot
       await tournamentTick(mover, roster, byPid, stats);
+      // 3bis) guerre de guilde : si un défi inter-guildes est actif, faire jouer
+      //       et scorer les bots des deux guildes (dormant sinon)
+      await guildWarTick(mover, byPid, stats);
       // 4) garder les bots « en ligne » (le pg_cron le fait aussi, ceinture+bretelles)
       if (++ticks % 30 === 0) {
         await sbAdmin("profiles?" + inList("id", [...byPid.keys()]), { method: "PATCH", headers: { "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ is_online: true, last_seen: new Date().toISOString() }) });

@@ -11,9 +11,10 @@ comptes, avant d'ajouter quoi que ce soit.
 
 | État | Sujet |
 |---|---|
-| ☐ | **Guildes** (adhésion, approbation, défis inter-guildes) ← prochain |
-| ☐ | Ligue (points, classement de groupe, divisions, promotion/relégation) — était **totalement cassée** (RPC manquantes en base, jamais commitées) puis reconstruite avec le vrai modèle hebdomadaire/divisions le 2026-07-21, à tester à 2 comptes. |
-| ☐ | Défis entre amis (profil, Arène/rapide, compétitif/amical) — codé le 2026-07-14, à valider à 2 comptes |
+| ✅ | **Guildes — adhésion + approbation** — validées par Jonathan (2026-08-05) |
+| ☐ | **Guildes — défis inter-guildes** (`guild_tournaments`, +1/victoire, résolution +30 ryu à 48 h) — reste à valider ; envisagé via les bots (cf. note ci-dessous) |
+| ✅ | Ligue (points, divisions, promo/relégation) — reconstruite le 2026-07-21, **validée par Jonathan** (2026-08-05) |
+| ✅ | Défis entre amis (profil, Arène/rapide, compétitif/amical) — codé le 2026-07-14, **validé par Jonathan** (2026-08-05) |
 | ☐ | Paliers de monnaie cliquables |
 | ☐ | Boucle quotidienne (défi du jour, quêtes, streak, Rush) |
 | ☐ | Partage de partie |
