@@ -9,7 +9,7 @@ description: Audit complet du son de La Voie du Guerrier (musiques, SFX, déclen
 > **chaque bug audio trouvé DOIT devenir une règle ci-dessous**, sinon il
 > reviendra. C'est la même mécanique que les pièges Supabase de `CLAUDE.md`,
 > et c'est ce qui a fini par rendre ces pièges-là inoffensifs.
-> Dernière passe : 2026-07-27.
+> Dernière passe : 2026-08-05.
 
 ## Pourquoi ce skill existe
 
@@ -114,6 +114,23 @@ toujours partir (sinon on a supprimé au lieu de corriger). Test spécifique de
 l'enchaînement : sur le menu, drapeau `_fightMusicActive` laissé à `true`,
 `el.dispatchEvent(new Event('ended'))` → `plays === 0`.
 
+### 8. 🔴 La musique de MENU aussi doit être gardée sur l'écran de jeu (symétrique de la 7)
+**Vécu (2026-08-05)** : « une musique de combat se lance après *Commencer*, EN
+PLUS de la musique du menu ». Le vrai fautif n'était pas la musique de combat
+mais la musique de **menu** : `startMenuMusic()` (et `attemptPlayMusic` pour
+`menu-music`) n'avait **aucune garde d'écran**. Un appel parasite pendant le
+combat (reprise de session, chemin non gardé) jouait la musique de menu
+**par-dessus** la musique de combat → les deux ensemble.
+
+La règle 7 gardait `fight-music` hors des menus ; il manquait la **réciproque**.
+Correctif : garde-fou central dans `attemptPlayMusic`, symétrique à celui de
+fight-music — `menu-music` ne joue jamais si `.screen.active.id==='screen-game'`.
+Central (pas seulement dans `startMenuMusic`) pour couvrir aussi le **retry
+différé** et tout futur appelant.
+Contre-épreuve obligatoire : sur `screen-menu`, la musique de menu DOIT toujours
+partir (sinon on a supprimé au lieu de corriger) ; sur `screen-game`, un
+`startMenuMusic()` parasite ne doit RIEN jouer alors que `fight-music` continue.
+
 ## Matrice de test (navigateur, tabId de la Browser pane)
 
 Espionner `play()` plutôt qu'écouter : on teste le **déclenchement**, sans
@@ -143,6 +160,7 @@ premier test — c'est le second qui prouve qu'on a corrigé au lieu de casser.
 | Réglage son OFF | rien nulle part |
 | Retour à l'accueil | menu + combat coupés |
 | `startFightMusic()` résolu hors écran de jeu (match avorté, login) | **aucune** musique de combat ; contre-épreuve sur `screen-game` = musique OK |
+| `startMenuMusic()` parasite pendant le combat (sur `screen-game`) | **aucune** musique de menu ; contre-épreuve sur `screen-menu` = musique OK |
 
 ## Procédure
 

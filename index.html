@@ -14251,6 +14251,17 @@ function attemptPlayMusic(el, label){
     var _a=document.querySelector('.screen.active');
     if(!_fightMusicActive || !userPrefs.fightMusic || !_a || _a.id!=='screen-game') return;
   }
+  // 🔴 GARDE-FOU CENTRAL SYMÉTRIQUE (bug vécu 2026-08-05 : « une musique de
+  // combat EN PLUS de la musique du menu après Commencer »). L'inverse de la
+  // règle 7 : la musique de MENU ne doit jamais jouer sur l'écran de jeu.
+  // startMenuMusic n'avait AUCUNE garde d'écran ; un appel parasite pendant le
+  // combat (reprise de session, chemin non gardé) jouait la musique de menu
+  // PAR-DESSUS la musique de combat. On refuse ici, au niveau le plus bas —
+  // couvre startMenuMusic, son retry différé, et tout futur appelant.
+  if(el.id==='menu-music'){
+    var _m=document.querySelector('.screen.active');
+    if(!userPrefs.menuMusic || (_m && _m.id==='screen-game')) return;
+  }
   var p = el.play();
   if(p && p.catch){
     p.catch(function(err){
