@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.39.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.40.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1816,12 +1816,12 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
     <!-- Fuir -->
     <div class="devp-section">
-      <div class="devp-label">Fuir si roi menacé</div>
+      <div class="devp-label">Fuir si combattant menacé</div>
       <div style="margin-top:6px">
         <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:rgba(200,160,240,.7)">
           <input type="checkbox" id="devp-flee" onchange="devParamCurrent.fleeKing=this.checked"
             style="accent-color:rgba(160,80,200,.8);width:16px;height:16px">
-          Protéger l'épéiste en danger
+          Protéger le combattant en danger
         </label>
       </div>
     </div>
@@ -1947,7 +1947,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     </div>
 
     <div class="devp-section-v2">
-      <div class="devp-label-v2">Fuir si roi menac&#233;</div>
+      <div class="devp-label-v2">Fuir si combattant menac&#233;</div>
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-family:'VT323',monospace;font-size:14px;color:rgba(240,140,40,.7);margin-top:6px">
         <input type="checkbox" id="devp-v2-flee" onchange="devParamCurrent_V2.fleeKing=this.checked" style="accent-color:var(--orange-v2);width:16px;height:16px">
         Prot&#233;ger l'&#233;p&#233;iste en danger
@@ -2022,7 +2022,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
   <!-- Zone titre — agrandi -->
   <div style="width:100%;padding:28px 24px 0;display:flex;flex-direction:column;align-items:center;position:relative;z-index:1">
-    <img id="home-logo" src="" alt="Logo épéiste"
+    <img id="home-logo" src="" alt="Logo combattant"
       onclick="onHomeLogoClick()" ontouchend="if(getHomeLogoAction&&getHomeLogoAction()!=='none'){event.preventDefault();onHomeLogoClick();}"
       style="width:180px;height:180px;object-fit:contain;margin-bottom:4px;opacity:.95;filter:drop-shadow(0 0 16px rgba(232,213,163,.35))">
     <!-- Emblème du thème Wurmz : visible uniquement en ui-wurmz (voir CSS). -->
@@ -2128,7 +2128,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.39.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.40.0 &#9820;</div>
   </div>
 </div>
 
@@ -3492,8 +3492,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div class="rs" style="border-color:rgba(255,210,0,.3)">
       <div class="rs-t" style="color:var(--gold-bright)" data-i18n="rules_win_title">🏆 Comment gagner ?</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:var(--parchment);line-height:1.55;opacity:.95" data-i18n="rules_win_body">
-        Chaque camp protège un <strong>Épéiste</strong> — c'est la pièce à ne jamais perdre. Pour gagner, il faut <strong>capturer l'Épéiste adverse avec un Pion Épée</strong> : soit en vous déplaçant directement sur sa case, soit en poussant un de vos Pions Épée jusque dessus.<br><br>
-        L'Épéiste et le Bouclier peuvent bousculer l'Épéiste adverse, mais ça ne le capture jamais — ça sert juste à le déloger pour préparer l'attaque.
+        Chaque camp protège un <strong>Combattant</strong> — c'est la pièce à ne jamais perdre. Pour gagner, il faut <strong>capturer le Combattant adverse avec un Pion Épée</strong> : soit en vous déplaçant directement sur sa case, soit en poussant un de vos Pions Épée jusque dessus.<br><br>
+        Le Combattant et le Bouclier peuvent bousculer le Combattant adverse, mais ça ne le capture jamais — ça sert juste à le déloger pour préparer l'attaque.
       </div>
     </div>
 
@@ -3505,12 +3505,12 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     </div>
 
     <div class="rs">
-      <div class="rs-t" data-i18n="rules_epeiste_title">♛ L'Épéiste — la pièce à protéger</div>
+      <div class="rs-t" data-i18n="rules_epeiste_title">♛ Le Combattant — la pièce à protéger</div>
       <ul data-i18n="rules_epeiste_list">
-        <li>Avance d'une case, dans n'importe quelle direction (8 directions, comme un roi).</li>
+        <li>Avance d'une case, dans n'importe quelle direction (8 directions, une case à la fois).</li>
         <li>Ne capture jamais directement.</li>
         <li>Peut pousser un Pion Épée ou un Bouclier allié juste derrière lui, si la case est libre.</li>
-        <li>Peut aussi pousser l'Épéiste adverse sur une case libre — sans le capturer, juste pour le déplacer.</li>
+        <li>Peut aussi pousser le Combattant adverse sur une case libre — sans le capturer, juste pour le déplacer.</li>
         <li>Particularité : il peut revenir sur la case qu'il vient de quitter (les autres pièces ne le peuvent pas).</li>
       </ul>
     </div>
@@ -3519,9 +3519,9 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <div class="rs-t" data-i18n="rules_sword_title">⚔ Le Pion Épée — votre attaquant</div>
       <ul data-i18n="rules_sword_list">
         <li>Avance d'une case, uniquement à l'horizontale ou à la verticale (pas en diagonale).</li>
-        <li><strong>Capture l'Épéiste adverse</strong> en se déplaçant directement sur sa case → victoire immédiate !</li>
+        <li><strong>Capture le Combattant adverse</strong> en se déplaçant directement sur sa case → victoire immédiate !</li>
         <li>Peut pousser un autre Pion Épée (allié ou adverse) si la case derrière est libre.</li>
-        <li>Si cette poussée envoie un Pion Épée <strong>allié</strong> sur l'Épéiste adverse → victoire aussi !</li>
+        <li>Si cette poussée envoie un Pion Épée <strong>allié</strong> sur le Combattant adverse → victoire aussi !</li>
         <li>Ne peut pas pousser un Bouclier, ni allié ni adverse.</li>
         <li>Petite contrainte : il ne peut pas revenir sur la case qu'il occupait au tour précédent.</li>
       </ul>
@@ -3532,9 +3532,9 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <ul data-i18n="rules_shield_list">
         <li>Avance d'une case, uniquement à l'horizontale ou à la verticale.</li>
         <li>Peut pousser un Pion Épée (allié ou adverse) sur une case libre.</li>
-        <li>Peut aussi pousser l'Épéiste adverse sur une case libre — mais sans jamais le capturer.</li>
-        <li>Ne pousse jamais votre propre Épéiste.</li>
-        <li>Lui-même ne peut être poussé que par l'Épéiste de son propre camp — il est donc très bien protégé du reste.</li>
+        <li>Peut aussi pousser le Combattant adverse sur une case libre — mais sans jamais le capturer.</li>
+        <li>Ne pousse jamais votre propre Combattant.</li>
+        <li>Lui-même ne peut être poussé que par le Combattant de son propre camp — il est donc très bien protégé du reste.</li>
         <li>Comme le Pion Épée, il ne peut pas revenir sur sa case précédente.</li>
       </ul>
     </div>
@@ -3544,15 +3544,15 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <table class="rtbl">
         <tr><th data-i18n="rules_table_header_pusher">Pousseur → Cible</th><th style="text-align:center" data-i18n="rules_table_header_allowed">Autorisé</th></tr>
         <tbody data-i18n="rules_table_rows">
-        <tr><td>Épéiste → Pion Épée allié</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>
-        <tr><td>Épéiste → Bouclier allié</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>
-        <tr><td>Épéiste → Épéiste adverse</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>
+        <tr><td>Combattant → Pion Épée allié</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>
+        <tr><td>Combattant → Bouclier allié</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>
+        <tr><td>Combattant → Combattant adverse</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>
         <tr><td>Pion Épée → Pion Épée</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>
         <tr><td>Pion Épée → Bouclier</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>
         <tr><td>Bouclier → Pion Épée (allié/adv)</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>
-        <tr><td>Bouclier → Épéiste adverse</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>
-        <tr><td>Bouclier → Épéiste allié</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>
-        <tr><td>Pion Épée / Épéiste adverse → Bouclier</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>
+        <tr><td>Bouclier → Combattant adverse</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>
+        <tr><td>Bouclier → Combattant allié</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>
+        <tr><td>Pion Épée / Combattant adverse → Bouclier</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>
         </tbody>
       </table>
     </div>
@@ -3560,8 +3560,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div class="rs">
       <div class="rs-t" data-i18n="rules_tips_title">💡 Conseils pour débuter</div>
       <ul data-i18n="rules_tips_list">
-        <li>Protégez toujours votre Épéiste : ne le laissez jamais seul face à un Pion Épée adverse.</li>
-        <li>Le Bouclier est précieux : utilisez-le pour bousculer l'Épéiste adverse à découvert.</li>
+        <li>Protégez toujours votre Combattant : ne le laissez jamais seul face à un Pion Épée adverse.</li>
+        <li>Le Bouclier est précieux : utilisez-le pour bousculer le Combattant adverse à découvert.</li>
         <li>Vos propres pièces peuvent se pousser entre elles — réfléchissez avant de pousser, ça peut aussi aider l'adversaire !</li>
         <li>Pas encore à l'aise ? Retournez tester une partie sans chrono autant de fois que vous voulez, juste au-dessus.</li>
         <li>Si vous vous sentez maintenant à l'aise avec les règles, il est temps d'attaquer votre entraînement au dojo avec Musashi-sensei.</li>
@@ -3584,8 +3584,19 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.39.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.40.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.40.0 &mdash; 8 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; UN SEUL NOM : LE COMBATTANT</li>
+        <li>La pi&egrave;ce ma&icirc;tresse &mdash; nomm&eacute;e tant&ocirc;t <strong>Roi</strong>, tant&ocirc;t <strong>&Eacute;p&eacute;iste</strong> selon les &eacute;crans &mdash; porte d&eacute;sormais <strong>un seul nom partout&nbsp;: le Combattant</strong>. R&egrave;gles, r&eacute;glages et messages sont harmonis&eacute;s dans les trois langues (fran&ccedil;ais, anglais, japonais).</li>
+        <li style="list-style:none;margin-left:-14px;color:rgba(200,168,110,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">Le &laquo;&nbsp;Pion &Eacute;p&eacute;e&nbsp;&raquo; garde son nom &mdash; c'est une autre pi&egrave;ce.</li>
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; LABO (comptes dev)</li>
+        <li>Nouveau mode de test <strong>Sumo V2</strong>&nbsp;: une ar&egrave;ne en <strong>losange</strong> (un combattant + deux &eacute;p&eacute;es, sans bouclier), o&ugrave; l'on gagne en <strong>&eacute;jectant</strong> l'adversaire par les bords. Et depuis le hub <strong>Jouer</strong>, un bouton <strong>&laquo;&nbsp;inviter un ami&nbsp;&raquo;</strong> pour tester n'importe quel mode &agrave; deux en ligne.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -4366,21 +4377,21 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 <div id="skintab-caption" style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.45;margin-bottom:8px">Vos pi&#232;ces dans toutes les parties (IA, en ligne, local)</div>
 <div class="skin-section" id="skinsec-p1">
   <div class="skin-row-3">
-    <div class="skin-slot" onclick="openSkinPicker('player1','epeiste')"><div class="skin-slot-preview" id="skinprev-p1-epeiste"></div><div class="skin-slot-label">Épéiste</div></div>
+    <div class="skin-slot" onclick="openSkinPicker('player1','epeiste')"><div class="skin-slot-preview" id="skinprev-p1-epeiste"></div><div class="skin-slot-label">Combattant</div></div>
     <div class="skin-slot" onclick="openSkinPicker('player1','shield')"><div class="skin-slot-preview" id="skinprev-p1-shield"></div><div class="skin-slot-label">Bouclier</div></div>
     <div class="skin-slot" onclick="openSkinPicker('player1','sword')"><div class="skin-slot-preview" id="skinprev-p1-sword"></div><div class="skin-slot-label">Épée</div></div>
   </div>
 </div>
 <div class="skin-section" id="skinsec-opp" style="display:none">
   <div class="skin-row-3">
-    <div class="skin-slot" onclick="openSkinPicker('opponent','epeiste')"><div class="skin-slot-preview" id="skinprev-opp-epeiste"></div><div class="skin-slot-label">Épéiste</div></div>
+    <div class="skin-slot" onclick="openSkinPicker('opponent','epeiste')"><div class="skin-slot-preview" id="skinprev-opp-epeiste"></div><div class="skin-slot-label">Combattant</div></div>
     <div class="skin-slot" onclick="openSkinPicker('opponent','shield')"><div class="skin-slot-preview" id="skinprev-opp-shield"></div><div class="skin-slot-label">Bouclier</div></div>
     <div class="skin-slot" onclick="openSkinPicker('opponent','sword')"><div class="skin-slot-preview" id="skinprev-opp-sword"></div><div class="skin-slot-label">Épée</div></div>
   </div>
 </div>
 <div class="skin-section" id="skinsec-p2" style="display:none">
   <div class="skin-row-3">
-    <div class="skin-slot" onclick="openSkinPicker('player2','epeiste')"><div class="skin-slot-preview" id="skinprev-p2-epeiste"></div><div class="skin-slot-label">Épéiste</div></div>
+    <div class="skin-slot" onclick="openSkinPicker('player2','epeiste')"><div class="skin-slot-preview" id="skinprev-p2-epeiste"></div><div class="skin-slot-label">Combattant</div></div>
     <div class="skin-slot" onclick="openSkinPicker('player2','shield')"><div class="skin-slot-preview" id="skinprev-p2-shield"></div><div class="skin-slot-label">Bouclier</div></div>
     <div class="skin-slot" onclick="openSkinPicker('player2','sword')"><div class="skin-slot-preview" id="skinprev-p2-sword"></div><div class="skin-slot-label">Épée</div></div>
   </div>
@@ -4642,7 +4653,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <!-- Défense -->
     <div class="shinai-section">
       <div class="shinai-label">Défense</div>
-      <div class="shinai-hint">Poids de la protection du roi</div>
+      <div class="shinai-hint">Poids de la protection du combattant</div>
       <div class="shinai-row">
         <span class="shinai-val" id="shin-def-val">1.3</span>
         <input type="range" min="1" max="30" value="13" id="shin-def"
@@ -4696,8 +4707,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       </div>
       <div class="shinai-toggle-row">
         <div>
-          <div class="shinai-label">Fuir si roi menacé</div>
-          <div class="shinai-hint">Priorise la survie du roi</div>
+          <div class="shinai-label">Fuir si combattant menacé</div>
+          <div class="shinai-hint">Priorise la survie du combattant</div>
         </div>
         <div class="settings-toggle on" id="shin-t-flee" onclick="shinToggle('fleeKing','shin-t-flee')"></div>
       </div>
@@ -5370,7 +5381,7 @@ var MODE_INFO = {
     monnaie: '💗 Fame (心)',
     sections: [
       ['But', 'Événement d\'été, jusqu\'au 31 août. Le plateau perd ses murs : le combat se joue dans un dohyō circulaire, et les poussées peuvent faire TOMBER les pions hors du ring.'],
-      ['Règle du ring', 'Un pion éjecté ne revient JAMAIS en jeu (il reste visible en transparence au bord du cercle). Éjecter l\'Épéiste adverse hors du ring fait gagner la manche — exactement comme une capture.'],
+      ['Règle du ring', 'Un pion éjecté ne revient JAMAIS en jeu (il reste visible en transparence au bord du cercle). Éjecter le Combattant adverse hors du ring fait gagner la manche — exactement comme une capture.'],
       ['Format', 'Match en 3 manches (BO3), comme l\'Arène : le premier à 2 manches gagnées l\'emporte.'],
       ['Appariement', 'Le matchmaking te met SYSTÉMATIQUEMENT face au joueur au niveau (ELO) le plus proche du tien.'],
       ['Fame', 'Victoire de match : +2 💗 · Défaite : +1 💗. Au classement, un bonus en pourcentage s\'ajoute selon ton RATIO de victoires : plus tu gagnes souvent, plus ta légende enfle.'],
@@ -7307,7 +7318,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.39.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.40.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -7361,7 +7372,7 @@ const LANGS={
     msg_victory_black:'⚔ VICTOIRE NOIRS',
     msg_victory:'VICTOIRE',
     msg_defeat:'DÉFAITE',
-    msg_slay:"terrassent l'Épéiste !",
+    msg_slay:"terrassent le Combattant !",
     msg_no_moves:'Les Noirs n\'ont plus de mouvement !',
     msg_timeout:'Temps écoulé ! ',
     msg_timeout_win:' gagnent !',
@@ -7370,7 +7381,7 @@ const LANGS={
     msg_confirm_menu:'Retourner au menu ?',
     adv_desc_0:'Joue aléatoirement. Parfait pour débuter.',
     adv_desc_1:'Fonce vers l\'avant, cherche la capture.',
-    adv_desc_2:'Recule, protège son Maître.',
+    adv_desc_2:'Recule, protège son Combattant.',
     adv_desc_3:'Calcule 2 coups, utilise les poussées.',
     adv_desc_4:'Vision 4 coups, bloque et attaque.',
     adv_desc_5:'IA paramétrable : profondeur, agressivité, luck, chaos...',
@@ -7385,21 +7396,21 @@ const LANGS={
     rules_title:'🛡️ RÈGLES DU JEU',
     rules_subtitle:'Expliquées simplement',
     rules_win_title:'🏆 Comment gagner ?',
-    rules_win_body:'Chaque camp protège un <strong>Épéiste</strong> — c\'est la pièce à ne jamais perdre. Pour gagner, il faut <strong>capturer l\'Épéiste adverse avec un Pion Épée</strong> : soit en vous déplaçant directement sur sa case, soit en poussant un de vos Pions Épée jusque dessus.<br><br>L\'Épéiste et le Bouclier peuvent bousculer l\'Épéiste adverse, mais ça ne le capture jamais — ça sert juste à le déloger pour préparer l\'attaque.',
+    rules_win_body:'Chaque camp protège un <strong>Combattant</strong> — c\'est la pièce à ne jamais perdre. Pour gagner, il faut <strong>capturer le Combattant adverse avec un Pion Épée</strong> : soit en vous déplaçant directement sur sa case, soit en poussant un de vos Pions Épée jusque dessus.<br><br>Le Combattant et le Bouclier peuvent bousculer le Combattant adverse, mais ça ne le capture jamais — ça sert juste à le déloger pour préparer l\'attaque.',
     rules_test_hint:'Le plus simple pour apprendre : essayez directement, sans pression de temps.',
     rules_test_btn:'🎯 Tester le jeu (sans chrono)',
-    rules_epeiste_title:'♛ L\'Épéiste — la pièce à protéger',
-    rules_epeiste_list:'<li>Avance d\'une case, dans n\'importe quelle direction (8 directions, comme un roi).</li><li>Ne capture jamais directement.</li><li>Peut pousser un Pion Épée ou un Bouclier allié juste derrière lui, si la case est libre.</li><li>Peut aussi pousser l\'Épéiste adverse sur une case libre — sans le capturer, juste pour le déplacer.</li><li>Particularité : il peut revenir sur la case qu\'il vient de quitter (les autres pièces ne le peuvent pas).</li>',
+    rules_epeiste_title:'♛ Le Combattant — la pièce à protéger',
+    rules_epeiste_list:'<li>Avance d\'une case, dans n\'importe quelle direction (8 directions, une case à la fois).</li><li>Ne capture jamais directement.</li><li>Peut pousser un Pion Épée ou un Bouclier allié juste derrière lui, si la case est libre.</li><li>Peut aussi pousser le Combattant adverse sur une case libre — sans le capturer, juste pour le déplacer.</li><li>Particularité : il peut revenir sur la case qu\'il vient de quitter (les autres pièces ne le peuvent pas).</li>',
     rules_sword_title:'⚔ Le Pion Épée — votre attaquant',
-    rules_sword_list:'<li>Avance d\'une case, uniquement à l\'horizontale ou à la verticale (pas en diagonale).</li><li><strong>Capture l\'Épéiste adverse</strong> en se déplaçant directement sur sa case → victoire immédiate !</li><li>Peut pousser un autre Pion Épée (allié ou adverse) si la case derrière est libre.</li><li>Si cette poussée envoie un Pion Épée <strong>allié</strong> sur l\'Épéiste adverse → victoire aussi !</li><li>Ne peut pas pousser un Bouclier, ni allié ni adverse.</li><li>Petite contrainte : il ne peut pas revenir sur la case qu\'il occupait au tour précédent.</li>',
+    rules_sword_list:'<li>Avance d\'une case, uniquement à l\'horizontale ou à la verticale (pas en diagonale).</li><li><strong>Capture le Combattant adverse</strong> en se déplaçant directement sur sa case → victoire immédiate !</li><li>Peut pousser un autre Pion Épée (allié ou adverse) si la case derrière est libre.</li><li>Si cette poussée envoie un Pion Épée <strong>allié</strong> sur le Combattant adverse → victoire aussi !</li><li>Ne peut pas pousser un Bouclier, ni allié ni adverse.</li><li>Petite contrainte : il ne peut pas revenir sur la case qu\'il occupait au tour précédent.</li>',
     rules_shield_title:'🛡 Le Bouclier — votre protecteur',
-    rules_shield_list:'<li>Avance d\'une case, uniquement à l\'horizontale ou à la verticale.</li><li>Peut pousser un Pion Épée (allié ou adverse) sur une case libre.</li><li>Peut aussi pousser l\'Épéiste adverse sur une case libre — mais sans jamais le capturer.</li><li>Ne pousse jamais votre propre Épéiste.</li><li>Lui-même ne peut être poussé que par l\'Épéiste de son propre camp — il est donc très bien protégé du reste.</li><li>Comme le Pion Épée, il ne peut pas revenir sur sa case précédente.</li>',
+    rules_shield_list:'<li>Avance d\'une case, uniquement à l\'horizontale ou à la verticale.</li><li>Peut pousser un Pion Épée (allié ou adverse) sur une case libre.</li><li>Peut aussi pousser le Combattant adverse sur une case libre — mais sans jamais le capturer.</li><li>Ne pousse jamais votre propre Combattant.</li><li>Lui-même ne peut être poussé que par le Combattant de son propre camp — il est donc très bien protégé du reste.</li><li>Comme le Pion Épée, il ne peut pas revenir sur sa case précédente.</li>',
     rules_table_title:'📋 Qui peut pousser quoi ? (récapitulatif rapide)',
     rules_table_header_pusher:'Pousseur → Cible',
     rules_table_header_allowed:'Autorisé',
-    rules_table_rows:'<tr><td>Épéiste → Pion Épée allié</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Épéiste → Bouclier allié</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Épéiste → Épéiste adverse</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Pion Épée → Pion Épée</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Pion Épée → Bouclier</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>\n        <tr><td>Bouclier → Pion Épée (allié/adv)</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Bouclier → Épéiste adverse</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Bouclier → Épéiste allié</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>\n        <tr><td>Pion Épée / Épéiste adverse → Bouclier</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>',
+    rules_table_rows:'<tr><td>Combattant → Pion Épée allié</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Combattant → Bouclier allié</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Combattant → Combattant adverse</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Pion Épée → Pion Épée</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Pion Épée → Bouclier</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>\n        <tr><td>Bouclier → Pion Épée (allié/adv)</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Bouclier → Combattant adverse</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Bouclier → Combattant allié</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>\n        <tr><td>Pion Épée / Combattant adverse → Bouclier</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>',
     rules_tips_title:'💡 Conseils pour débuter',
-    rules_tips_list:'<li>Protégez toujours votre Épéiste : ne le laissez jamais seul face à un Pion Épée adverse.</li><li>Le Bouclier est précieux : utilisez-le pour bousculer l\'Épéiste adverse à découvert.</li><li>Vos propres pièces peuvent se pousser entre elles — réfléchissez avant de pousser, ça peut aussi aider l\'adversaire !</li><li>Pas encore à l\'aise ? Retournez tester une partie sans chrono autant de fois que vous voulez, juste au-dessus.</li><li>Si vous vous sentez maintenant à l\'aise avec les règles, il est temps d\'attaquer votre entraînement au dojo avec Musashi-sensei.</li>',
+    rules_tips_list:'<li>Protégez toujours votre Combattant : ne le laissez jamais seul face à un Pion Épée adverse.</li><li>Le Bouclier est précieux : utilisez-le pour bousculer le Combattant adverse à découvert.</li><li>Vos propres pièces peuvent se pousser entre elles — réfléchissez avant de pousser, ça peut aussi aider l\'adversaire !</li><li>Pas encore à l\'aise ? Retournez tester une partie sans chrono autant de fois que vous voulez, juste au-dessus.</li><li>Si vous vous sentez maintenant à l\'aise avec les règles, il est temps d\'attaquer votre entraînement au dojo avec Musashi-sensei.</li>',
     rules_dojo_btn:'🥋️ Rejoindre le dojo — La Voie du Bousier',
     menu_campaign:'Campagne',
     menu_rules:'Règles',
@@ -7521,7 +7532,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.39.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.40.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -7566,7 +7577,7 @@ const LANGS={
     msg_victory_black:'⚔ BLACK WINS',
     msg_victory:'VICTORY',
     msg_defeat:'DEFEAT',
-    msg_slay:'slays the Swordmaster!',
+    msg_slay:'slays the Fighter!',
     msg_no_moves:'Black has no moves!',
     msg_timeout:'Time out! ',
     msg_timeout_win:' wins!',
@@ -7575,7 +7586,7 @@ const LANGS={
     msg_confirm_menu:'Return to menu?',
     adv_desc_0:'Plays randomly. Perfect for beginners.',
     adv_desc_1:'Charges forward, seeks capture.',
-    adv_desc_2:'Retreats, protects its Master.',
+    adv_desc_2:'Retreats, protects its Fighter.',
     adv_desc_3:'Calculates 2 moves, uses pushes.',
     adv_desc_4:'4-move vision, blocks and attacks.',
     adv_desc_5:'Customizable AI: depth, aggression, luck, chaos...',
@@ -7590,21 +7601,21 @@ const LANGS={
     rules_title:'🛡️ GAME RULES',
     rules_subtitle:'Explained simply',
     rules_win_title:'🏆 How to win?',
-    rules_win_body:'Each side protects a <strong>Swordmaster</strong> — the piece you must never lose. To win, you must <strong>capture the enemy Swordmaster with a Sword Pawn</strong>: either by moving directly onto its square, or by pushing one of your Sword Pawns onto it.<br><br>The Swordmaster and the Shield can shove the enemy Swordmaster around, but that never captures it — it just dislodges it to set up the attack.',
+    rules_win_body:'Each side protects a <strong>Fighter</strong> — the piece you must never lose. To win, you must <strong>capture the enemy Fighter with a Sword Pawn</strong>: either by moving directly onto its square, or by pushing one of your Sword Pawns onto it.<br><br>The Fighter and the Shield can shove the enemy Fighter around, but that never captures it — it just dislodges it to set up the attack.',
     rules_test_hint:'The easiest way to learn: just try it out, no time pressure.',
     rules_test_btn:'🎯 Try the game (no timer)',
-    rules_epeiste_title:'♛ The Swordmaster — the piece to protect',
-    rules_epeiste_list:'<li>Moves one square, in any direction (8 directions, like a king).</li><li>Never captures directly.</li><li>Can push an allied Sword Pawn or Shield right behind it, if the square is free.</li><li>Can also push the enemy Swordmaster onto a free square — without capturing it, just to move it.</li><li>Special trait: it can move back onto the square it just left (other pieces can\'t).</li>',
+    rules_epeiste_title:'♛ The Fighter — the piece to protect',
+    rules_epeiste_list:'<li>Moves one square, in any direction (8 directions, one square at a time).</li><li>Never captures directly.</li><li>Can push an allied Sword Pawn or Shield right behind it, if the square is free.</li><li>Can also push the enemy Fighter onto a free square — without capturing it, just to move it.</li><li>Special trait: it can move back onto the square it just left (other pieces can\'t).</li>',
     rules_sword_title:'⚔ The Sword Pawn — your attacker',
-    rules_sword_list:'<li>Moves one square, horizontally or vertically only (no diagonals).</li><li><strong>Captures the enemy Swordmaster</strong> by moving directly onto its square → instant victory!</li><li>Can push another Sword Pawn (allied or enemy) if the square behind is free.</li><li>If that push sends an <strong>allied</strong> Sword Pawn onto the enemy Swordmaster → victory too!</li><li>Cannot push a Shield, allied or enemy.</li><li>Small restriction: it cannot move back onto the square it occupied last turn.</li>',
+    rules_sword_list:'<li>Moves one square, horizontally or vertically only (no diagonals).</li><li><strong>Captures the enemy Fighter</strong> by moving directly onto its square → instant victory!</li><li>Can push another Sword Pawn (allied or enemy) if the square behind is free.</li><li>If that push sends an <strong>allied</strong> Sword Pawn onto the enemy Fighter → victory too!</li><li>Cannot push a Shield, allied or enemy.</li><li>Small restriction: it cannot move back onto the square it occupied last turn.</li>',
     rules_shield_title:'🛡 The Shield — your protector',
-    rules_shield_list:'<li>Moves one square, horizontally or vertically only.</li><li>Can push a Sword Pawn (allied or enemy) onto a free square.</li><li>Can also push the enemy Swordmaster onto a free square — but never captures it.</li><li>Never pushes your own Swordmaster.</li><li>It can only be pushed by its own side\'s Swordmaster — so it\'s very well protected from everything else.</li><li>Like the Sword Pawn, it cannot move back onto its previous square.</li>',
+    rules_shield_list:'<li>Moves one square, horizontally or vertically only.</li><li>Can push a Sword Pawn (allied or enemy) onto a free square.</li><li>Can also push the enemy Fighter onto a free square — but never captures it.</li><li>Never pushes your own Fighter.</li><li>It can only be pushed by its own side\'s Fighter — so it\'s very well protected from everything else.</li><li>Like the Sword Pawn, it cannot move back onto its previous square.</li>',
     rules_table_title:'📋 Who can push what? (quick reference)',
     rules_table_header_pusher:'Pusher → Target',
     rules_table_header_allowed:'Allowed',
-    rules_table_rows:'<tr><td>Swordmaster → allied Sword Pawn</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Swordmaster → allied Shield</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Swordmaster → enemy Swordmaster</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Sword Pawn → Sword Pawn</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Sword Pawn → Shield</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>\n        <tr><td>Shield → Sword Pawn (allied/enemy)</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Shield → enemy Swordmaster</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Shield → allied Swordmaster</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>\n        <tr><td>Sword Pawn / enemy Swordmaster → Shield</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>',
+    rules_table_rows:'<tr><td>Fighter → allied Sword Pawn</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Fighter → allied Shield</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Fighter → enemy Fighter</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Sword Pawn → Sword Pawn</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Sword Pawn → Shield</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>\n        <tr><td>Shield → Sword Pawn (allied/enemy)</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Shield → enemy Fighter</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>Shield → allied Fighter</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>\n        <tr><td>Sword Pawn / enemy Fighter → Shield</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>',
     rules_tips_title:'💡 Tips for beginners',
-    rules_tips_list:'<li>Always protect your Swordmaster: never leave it alone facing an enemy Sword Pawn.</li><li>The Shield is precious: use it to shove the enemy Swordmaster out into the open.</li><li>Your own pieces can push each other — think before you push, it can help your opponent too!</li><li>Not comfortable yet? Go try a game with no timer as many times as you like, just above.</li><li>If you now feel comfortable with the rules, it\'s time to start your training at the dojo with Musashi-sensei.</li>',
+    rules_tips_list:'<li>Always protect your Fighter: never leave it alone facing an enemy Sword Pawn.</li><li>The Shield is precious: use it to shove the enemy Fighter out into the open.</li><li>Your own pieces can push each other — think before you push, it can help your opponent too!</li><li>Not comfortable yet? Go try a game with no timer as many times as you like, just above.</li><li>If you now feel comfortable with the rules, it\'s time to start your training at the dojo with Musashi-sensei.</li>',
     rules_dojo_btn:'🥋 Join the dojo — The Way of the Dung Beetle',
     menu_campaign:'Campaign',
     menu_rules:'Rules',
@@ -7726,7 +7737,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.39.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.40.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -7771,7 +7782,7 @@ const LANGS={
     msg_victory_black:'⚔ 黒の勝利',
     msg_victory:'勝利',
     msg_defeat:'敗北',
-    msg_slay:'が剣士を討ち取った！',
+    msg_slay:'が戦士を討ち取った！',
     msg_no_moves:'黒は動ける駒がありません！',
     msg_timeout:'時間切れ！ ',
     msg_timeout_win:' の勝ち！',
@@ -7780,7 +7791,7 @@ const LANGS={
     msg_confirm_menu:'メニューに戻りますか？',
     adv_desc_0:'ランダムに指す。初心者向け。',
     adv_desc_1:'前進して捕獲を狙う。',
-    adv_desc_2:'後退して主君を守る。',
+    adv_desc_2:'後退して戦士を守る。',
     adv_desc_3:'2手先を計算し、押し技を使う。',
     adv_desc_4:'4手先を見通し、防御と攻撃を両立。',
     adv_desc_5:'カスタマイズ可能なAI：深さ、攻撃性、運、混沌など…',
@@ -7795,21 +7806,21 @@ const LANGS={
     rules_title:'🛡️ ゲームルール',
     rules_subtitle:'やさしい解説',
     rules_win_title:'🏆 勝利条件',
-    rules_win_body:'各陣営は<strong>剣士（エペイスト）</strong>を守ります — 絶対に失ってはいけない駒です。勝利するには<strong>剣の駒で敵の剣士を捕獲</strong>する必要があります：直接そのマスに移動するか、自分の剣の駒を押してそのマスに到達させます。<br><br>剣士と盾は敵の剣士を押しのけることができますが、それは捕獲にはなりません — 攻撃の準備として追い出すだけです。',
+    rules_win_body:'各陣営は<strong>戦士</strong>を守ります — 絶対に失ってはいけない駒です。勝利するには<strong>剣の駒で敵の戦士を捕獲</strong>する必要があります：直接そのマスに移動するか、自分の剣の駒を押してそのマスに到達させます。<br><br>戦士と盾は敵の戦士を押しのけることができますが、それは捕獲にはなりません — 攻撃の準備として追い出すだけです。',
     rules_test_hint:'一番わかりやすい学び方：時間制限なしで、実際に試してみましょう。',
     rules_test_btn:'🎯 対局を試す（時間制限なし）',
-    rules_epeiste_title:'♛ 剣士（エペイスト） — 守るべき駒',
-    rules_epeiste_list:'<li>どの方向にも1マス進める（王将のように8方向）。</li><li>直接捕獲することはない。</li><li>すぐ後ろが空いていれば、味方の剣の駒や盾を押せる。</li><li>敵の剣士を空いているマスへ押すこともできる — 捕獲はせず、移動させるだけ。</li><li>特徴：直前にいたマスに戻ることができる（他の駒にはできない）。</li>',
+    rules_epeiste_title:'♛ 戦士 — 守るべき駒',
+    rules_epeiste_list:'<li>どの方向にも1マス進める（8方向）。</li><li>直接捕獲することはない。</li><li>すぐ後ろが空いていれば、味方の剣の駒や盾を押せる。</li><li>敵の戦士を空いているマスへ押すこともできる — 捕獲はせず、移動させるだけ。</li><li>特徴：直前にいたマスに戻ることができる（他の駒にはできない）。</li>',
     rules_sword_title:'⚔ 剣の駒 — あなたの攻撃役',
-    rules_sword_list:'<li>水平または垂直にのみ1マス進む（斜めは不可）。</li><li><strong>敵の剣士のマスに直接移動して捕獲</strong> → 即勝利！</li><li>後ろのマスが空いていれば、他の剣の駒（味方・敵とも）を押せる。</li><li>その押しで<strong>味方</strong>の剣の駒が敵の剣士に到達すれば → こちらも勝利！</li><li>盾は味方・敵ともに押せない。</li><li>制約：前のターンにいたマスには戻れない。</li>',
+    rules_sword_list:'<li>水平または垂直にのみ1マス進む（斜めは不可）。</li><li><strong>敵の戦士のマスに直接移動して捕獲</strong> → 即勝利！</li><li>後ろのマスが空いていれば、他の剣の駒（味方・敵とも）を押せる。</li><li>その押しで<strong>味方</strong>の剣の駒が敵の戦士に到達すれば → こちらも勝利！</li><li>盾は味方・敵ともに押せない。</li><li>制約：前のターンにいたマスには戻れない。</li>',
     rules_shield_title:'🛡 盾 — あなたの守護者',
-    rules_shield_list:'<li>水平または垂直にのみ1マス進む。</li><li>剣の駒（味方・敵とも）を空いているマスへ押せる。</li><li>敵の剣士を空いているマスへ押すこともできるが、捕獲はしない。</li><li>自分の剣士を押すことは決してない。</li><li>盾自身は自陣の剣士にしか押されない — そのため他からはよく守られている。</li><li>剣の駒と同様、直前のマスには戻れない。</li>',
+    rules_shield_list:'<li>水平または垂直にのみ1マス進む。</li><li>剣の駒（味方・敵とも）を空いているマスへ押せる。</li><li>敵の戦士を空いているマスへ押すこともできるが、捕獲はしない。</li><li>自分の戦士を押すことは決してない。</li><li>盾自身は自陣の戦士にしか押されない — そのため他からはよく守られている。</li><li>剣の駒と同様、直前のマスには戻れない。</li>',
     rules_table_title:'📋 何が何を押せる？（早見表）',
     rules_table_header_pusher:'押す側 → 対象',
     rules_table_header_allowed:'可否',
-    rules_table_rows:'<tr><td>剣士 → 味方の剣の駒</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>剣士 → 味方の盾</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>剣士 → 敵の剣士</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>剣の駒 → 剣の駒</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>剣の駒 → 盾</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>\n        <tr><td>盾 → 剣の駒（味方/敵）</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>盾 → 敵の剣士</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>盾 → 味方の剣士</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>\n        <tr><td>剣の駒／敵の剣士 → 盾</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>',
+    rules_table_rows:'<tr><td>戦士 → 味方の剣の駒</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>戦士 → 味方の盾</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>戦士 → 敵の戦士</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>剣の駒 → 剣の駒</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>剣の駒 → 盾</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>\n        <tr><td>盾 → 剣の駒（味方/敵）</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>盾 → 敵の戦士</td><td style="color:#90e090;text-align:center">&#10003;</td></tr>\n        <tr><td>盾 → 味方の戦士</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>\n        <tr><td>剣の駒／敵の戦士 → 盾</td><td style="color:#f08080;text-align:center">&#10007;</td></tr>',
     rules_tips_title:'💡 初心者へのアドバイス',
-    rules_tips_list:'<li>常に剣士を守りましょう：敵の剣の駒と一対一にさせないこと。</li><li>盾は貴重です：敵の剣士を無防備な場所へ押し出すのに使いましょう。</li><li>自分の駒同士も押し合えます — 押す前によく考えましょう、相手を助けてしまうこともあります！</li><li>まだ自信がない？　上のボタンから何度でも時間制限なしで練習できます。</li><li>ルールに慣れてきたら、武蔵老師との道場修行を始める時です。</li>',
+    rules_tips_list:'<li>常に戦士を守りましょう：敵の剣の駒と一対一にさせないこと。</li><li>盾は貴重です：敵の戦士を無防備な場所へ押し出すのに使いましょう。</li><li>自分の駒同士も押し合えます — 押す前によく考えましょう、相手を助けてしまうこともあります！</li><li>まだ自信がない？　上のボタンから何度でも時間制限なしで練習できます。</li><li>ルールに慣れてきたら、武蔵老師との道場修行を始める時です。</li>',
     rules_dojo_btn:'🥋 道場へ — 「糞虫の道」',
     menu_campaign:'キャンペーン',
     menu_rules:'ルール',
@@ -9210,7 +9221,7 @@ function renderSumoAdBannerHtml(){
     +SUMO_BANNER_ART
     +'<div style="flex:1;min-width:0">'
       +'<div style="font-family:\'Cinzel\',serif;font-size:13px;color:var(--gold-bright)">SUMO <span style="font-family:\'Noto Serif JP\',serif;font-size:11px;opacity:.7">相撲</span></div>'
-      +'<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Le ring sans murs · éjecte l\'Épéiste adverse · 💗 Fame</div>'
+      +'<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Le ring sans murs · éjecte le Combattant adverse · 💗 Fame</div>'
     +'</div>'
     +'<div style="font-family:VT323,monospace;font-size:10px;color:#ff9dbf;text-align:right;flex-shrink:0">jusqu\'au<br>31 août</div>'
   +'</div>';
@@ -9263,7 +9274,7 @@ var DID_YOU_KNOW = [
   { t:'astuce', title:'Le bouclier', body:'Le <b>bouclier</b> bloque et encaisse : bien placé, c\'est ton rempart mobile.' },
   { t:'astuce', title:'Skins & avatars', body:'Personnalise ton apparence : des <b>skins</b> et avatars se débloquent au fil du jeu.' },
   { t:'astuce', title:'Les monnaies', body:'<b>Ryu</b>, <b>Shiitake</b> et 💗 <b>Fame</b> : chacune a son usage ; la Fame est liée à l\'événement Sumo.' },
-  { t:'astuce', title:'L\'événement Sumo', body:'Le <b>Sumo</b> se joue sur un ring sans murs : éjecte l\'Épéiste adverse hors du cercle pour l\'emporter.' },
+  { t:'astuce', title:'L\'événement Sumo', body:'Le <b>Sumo</b> se joue sur un ring sans murs : éjecte le Combattant adverse hors du cercle pour l\'emporter.' },
   { t:'astuce', title:'Spectateur', body:'Pendant un tournoi, tu peux <b>regarder</b> les autres parties de la ronde en cours.' },
   // ── Anecdotes : lore, coulisses, compteurs ──
   { t:'anecdote', title:'Tout est parti d\'un repas', body:'Il nous fallait juste une <b>pendule</b> pour jouer à La Voie du Guerrier. Alors : un plateau en carton peint à la bombe, un rack de capsules de café en guise de pièces, trois pions de dames aux faces différentes — l\'un retourné, son motif en cercles faisant office de <b>bouclier</b> — et deux rois d\'échecs en bois pour combattants. On a commencé une simple app-pendule… et ça a complètement dégénéré en tout ceci. 😄' },
@@ -10077,7 +10088,7 @@ function getUnlockableOptions(){
   var opts = [{value:'', label:'— Aucun déblocage —'}];
   try{
     if(typeof PIECE_SKINS!=='undefined' && PIECE_SKINS){
-      var typeLabels = { epeiste:'Épéiste', sword:'Épée', shield:'Bouclier' };
+      var typeLabels = { epeiste:'Combattant', sword:'Épée', shield:'Bouclier' };
       Object.keys(PIECE_SKINS).forEach(function(type){
         var list = PIECE_SKINS[type];
         if(!Array.isArray(list)) return;
@@ -16530,6 +16541,23 @@ var LAB_FORMATS={
       {type:'epeiste',color:'black',r:4,c:2},{type:'sword',color:'black',r:4,c:1},{type:'sword',color:'black',r:4,c:3},{type:'shield',color:'black',r:3,c:2}
     ]
   },
+  // Sumo V2 = variante « arène en losange ». Même physique de poussée éjectante
+  // que le Sumo (sumo:true), mais un plateau taillé en diamant : 13 cases
+  // vivantes seulement, les 12 autres sont MORTES → autant de bords où éjecter
+  // l'adversaire. La compo est allégée : 1 combattant + 2 épées par camp, PAS de
+  // bouclier (les cases mortes remplacent la défense par la menace de sortie).
+  // Les épées sont posées en c:1 (main gauche) et c:3 (main droite) pour que
+  // buildSumoSkin choisisse le bon skin de rikishi (voir isLeft = col<cols/2).
+  // Cases mortes (notation joueur → indices moteur, r:0 = haut = rangée 5) :
+  //   A5 B5 D5 E5 / A4 E4 / A2 E2 / A1 B1 D1 E1.
+  sumoV2:{
+    id:'sumoV2', name:'Sumo V2 相撲 (arène losange)', rows:5, cols:5, v2:true, sumo:true,
+    voids:['0,0','0,1','0,3','0,4','1,0','1,4','3,0','3,4','4,0','4,1','4,3','4,4'],
+    setup:[
+      {type:'sword',color:'white',r:1,c:1},{type:'epeiste',color:'white',r:1,c:2},{type:'sword',color:'white',r:1,c:3},
+      {type:'sword',color:'black',r:3,c:1},{type:'epeiste',color:'black',r:3,c:2},{type:'sword',color:'black',r:3,c:3}
+    ]
+  },
   // Format expérimental : prouve que le moteur gère d'autres dimensions.
   // Disposition symétrique analogue au standard, sur un 7×7 aux coins retirés.
   large7:{
@@ -16915,11 +16943,14 @@ async function labRenderModesManager(){
   if(typeof isDevUser==='function' && !isDevUser()){ el.innerHTML='<div style="opacity:.6">Réservé aux comptes dev.</div>'; return; }
   var esc=(typeof escapeHtml==='function')?escapeHtml:function(s){return String(s);};
   function meta(f){ f=f||{}; return (f.rows||'?')+'×'+(f.cols||'?')+(f.sumo?', sumo':'')+(f.pieces?', '+Object.keys(f.pieces).length+' pièce(s)':''); }
-  function row(name,sub,play,edit,del){
+  function row(name,sub,play,edit,del,invite){
     return '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.08)">'
       +'<span style="min-width:0"><b>'+esc(name)+'</b> <span style="opacity:.55">'+esc(sub)+'</span></span>'
       +'<span style="white-space:nowrap">'
       +'<button onclick="'+play+'" title="Jouer contre l\'IA" style="padding:2px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(212,160,23,.5);background:var(--gold-bright);color:#1a1206">▶</button> '
+      // Inviter un ami à tester CE mode en ligne (défi amical, le format voyage
+      // avec le défi — voir labInviteFriendToMode / sendChallenge customFormat).
+      +(invite?'<button onclick="'+invite+'" title="Tester en ligne avec un ami" style="padding:2px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(90,170,120,.5);background:rgba(0,0,0,.3);color:#8fd0a6">🤝</button> ':'')
       +'<button onclick="'+edit+'" title="Éditer dans Créer" style="padding:2px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(212,160,23,.35);background:rgba(0,0,0,.3);color:var(--parchment)">✎</button>'
       +(del?' <button onclick="'+del+'" title="Supprimer" style="padding:2px 7px;border-radius:4px;cursor:pointer;border:1px solid rgba(200,60,60,.4);background:rgba(0,0,0,.3);color:#e0706a">🗑</button>':'')
       +'</span></div>';
@@ -16928,7 +16959,7 @@ async function labRenderModesManager(){
   Object.keys(LAB_FORMATS).forEach(function(k){
     if(k==='custom') return;            // le mode en cours d'édition n'est pas un mode "rangé"
     var f=LAB_FORMATS[k];
-    html+=row(f.name, meta(f), "labPlayModeVsAI(LAB_FORMATS['"+k+"'])", "labEditBuiltinMode('"+k+"')", null);
+    html+=row(f.name, meta(f), "labPlayModeVsAI(LAB_FORMATS['"+k+"'])", "labEditBuiltinMode('"+k+"')", null, "labInviteFriendToMode(LAB_FORMATS['"+k+"'])");
   });
   html+='<div style="color:var(--gold-bright);margin:12px 0 2px">◆ Mes modes enregistrés</div>';
   var saved='';
@@ -16940,7 +16971,7 @@ async function labRenderModesManager(){
     }
     if(!_labPublishedCache.length){ saved='<div style="opacity:.6">Aucun mode enregistré. Construis-en un dans <b>Créer</b> puis « Enregistrer le mode courant ».</div>'; }
     else _labPublishedCache.forEach(function(r){
-      saved+=row(r.name, meta(r.format)+(r.author?' · '+r.author:''), "labPlayPublishedMode('"+r.id+"')", "labEditSavedMode('"+r.id+"')", "labDeletePublishedMode('"+r.id+"')");
+      saved+=row(r.name, meta(r.format)+(r.author?' · '+r.author:''), "labPlayPublishedMode('"+r.id+"')", "labEditSavedMode('"+r.id+"')", "labDeletePublishedMode('"+r.id+"')", "labInviteFriendToPublished('"+r.id+"')");
     });
   }catch(e){ saved='<div style="opacity:.6">Erreur de chargement des modes enregistrés.</div>'; }
   el.innerHTML=html+saved;
@@ -17235,7 +17266,7 @@ function labValidateFormat(f){
     seen[r+','+c]=1;
     if(p.type==='epeiste') kings[p.color]++;
   }
-  if(kings.white!==1||kings.black!==1) return {ok:false,err:'Exactement un épéiste par camp requis (blanc:'+kings.white+', noir:'+kings.black+').'};
+  if(kings.white!==1||kings.black!==1) return {ok:false,err:'Exactement un Combattant par camp requis (blanc:'+kings.white+', noir:'+kings.black+').'};
   var out={id:'custom', name:(f.name||'Format personnalisé'), rows:rows, cols:cols, v2:(f.v2!==false), sumo:!!f.sumo, voids:voids, setup:f.setup.map(function(p){return {type:p.type,color:p.color,r:+p.r,c:+p.c};})};
   if(pieces) out.pieces=pieces; // transmis tel quel au Worker (G.pieceDefs)
   return {ok:true, format:out};
@@ -17706,6 +17737,84 @@ function labPlayPublishedMode(id){
   var r=(_labPublishedCache||[]).find(function(x){ return x.id===id; });
   if(!r){ if(typeof showToast==='function') showToast('Mode introuvable — rafraîchis la liste.', true); return; }
   labPlayModeVsAI(r.format);
+}
+
+// ── Inviter un ami à tester un mode EN LIGNE (bouton 🤝 du hub Jouer) ──
+// On récupère les amis acceptés, on affiche un petit sélecteur, et au clic on
+// ouvre le popup de défi PRÉ-RÉGLÉ sur ce format. Toute l'infra de défi est
+// réutilisée telle quelle (openChallengeConfigPopup → sendChallenge avec
+// customFormat) : le format voyage avec le défi, l'ami n'installe rien, et une
+// partie sur mode perso est TOUJOURS amicale (aucun effet ELO/gains/XP).
+var _labInvitePendingFormat=null;
+async function labInviteFriendToMode(format){
+  if(typeof isDevUser==='function' && !isDevUser()){ if(typeof showToast==='function') showToast('Réservé aux comptes dev.', true); return; }
+  if(typeof currentUser==='undefined' || !currentUser){ if(typeof showToast==='function') showToast('Connecte-toi pour inviter un ami.', true); return; }
+  var v=(typeof labValidateFormat==='function')?labValidateFormat(format):{ok:true,format:format};
+  if(!v.ok){ if(typeof showToast==='function') showToast('Format invalide : '+v.err, true); return; }
+  try{
+    // Amis ACCEPTÉS uniquement (même source que refreshFriendsList).
+    var res=await supa.from('friendships').select('*')
+      .or('requester_id.eq.'+currentUser.id+',addressee_id.eq.'+currentUser.id);
+    var accepted=(res.data||[]).filter(function(r){ return r.status==='accepted'; });
+    var ids=accepted.map(function(r){ return r.requester_id===currentUser.id?r.addressee_id:r.requester_id; });
+    if(!ids.length){ if(typeof showToast==='function') showToast('Aucun ami pour l\'instant — ajoute des joueurs dans « Amis ».', true); return; }
+    var pr=await supa.from('profiles').select('id,pseudo,is_online,last_seen').in('id', ids);
+    var friends=(pr.data||[]).slice().sort(function(a,b){ return String(a.pseudo||'').localeCompare(String(b.pseudo||'')); });
+    labShowFriendPicker(friends, v.format);
+  }catch(e){ if(typeof showToast==='function') showToast('Erreur de chargement des amis.', true); }
+}
+async function labInviteFriendToPublished(id){
+  var r=(_labPublishedCache||[]).find(function(x){ return x.id===id; });
+  if(!r){ if(typeof showToast==='function') showToast('Mode introuvable — rafraîchis la liste.', true); return; }
+  labInviteFriendToMode(r.format);
+}
+// Petit sélecteur d'ami (overlay créé à la volée). Le format choisi est gardé
+// dans _labInvitePendingFormat plutôt que sérialisé dans un onclick (un JSON de
+// format y serait trop gros et cassant à échapper).
+function labShowFriendPicker(friends, fmt){
+  var esc=(typeof escapeHtml==='function')?escapeHtml:function(s){return String(s);};
+  var old=document.getElementById('lab-friend-picker'); if(old) old.remove();
+  _labInvitePendingFormat=fmt;
+  var ov=document.createElement('div');
+  ov.id='lab-friend-picker';
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:16px';
+  var rows=(friends||[]).map(function(p){
+    var tier=(typeof presenceTier==='function')?presenceTier(p):'offline';
+    var dot=(tier==='online')?'<span style="width:8px;height:8px;border-radius:50%;background:#4caf50;box-shadow:0 0 6px #4caf50;display:inline-block;margin-right:7px;flex-shrink:0"></span>':'';
+    var safe=String(p.pseudo||'?').replace(/'/g,"\\'");
+    return '<button onclick="labPickFriendForMode(\''+p.id+'\',\''+safe+'\')" style="display:flex;align-items:center;width:100%;text-align:left;padding:9px 10px;margin:3px 0;border-radius:6px;cursor:pointer;border:1px solid rgba(212,160,23,.3);background:rgba(0,0,0,.3);color:var(--parchment);font-family:VT323,monospace;font-size:15px">'+dot+esc(p.pseudo||'?')+'</button>';
+  }).join('');
+  ov.innerHTML='<div style="background:linear-gradient(180deg,#20160c,#160f08);border:1px solid rgba(212,160,23,.4);border-radius:10px;max-width:340px;width:100%;max-height:80vh;overflow:auto;padding:16px;box-shadow:0 10px 40px rgba(0,0,0,.6)">'
+    +'<div style="font-family:Cinzel,serif;color:var(--gold-bright);font-size:15px;margin-bottom:2px">🤝 Tester en ligne</div>'
+    +'<div style="font-family:VT323,monospace;opacity:.65;font-size:13px;margin-bottom:10px">Mode « '+esc(fmt.name||'perso')+' » — choisis un ami à défier (partie amicale).</div>'
+    +(rows||'<div style="opacity:.6;font-family:VT323,monospace">Aucun ami.</div>')
+    +'<button onclick="var e=document.getElementById(\'lab-friend-picker\');if(e)e.remove()" style="width:100%;margin-top:10px;padding:8px;border-radius:6px;cursor:pointer;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--parchment);opacity:.7;font-family:VT323,monospace">Annuler</button>'
+    +'</div>';
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); }); // clic hors carte = fermeture
+  document.body.appendChild(ov);
+}
+function labPickFriendForMode(friendId, friendPseudo){
+  var e=document.getElementById('lab-friend-picker'); if(e) e.remove();
+  var fmt=_labInvitePendingFormat; _labInvitePendingFormat=null;
+  if(!fmt){ if(typeof showToast==='function') showToast('Mode perdu — réessaie.', true); return; }
+  if(typeof openChallengeConfigPopup==='function') openChallengeConfigPopup(friendId, friendPseudo, fmt);
+}
+// Force le sélecteur « mode perso » du popup de défi sur un format donné, même
+// s'il n'est pas dans la liste peuplée (les natifs standard/sumo en sont exclus,
+// mais on doit pouvoir les tester à 2 quand même). Réutilise
+// selectChallengeCustomFormat pour refléter l'état « amical » dans l'UI.
+function labApplyChallengePreFormat(fmt){
+  if(!fmt) return;
+  var sel=document.getElementById('cfg-custom-format');
+  var grp=document.getElementById('cfg-custom-group');
+  if(!sel) return;
+  if(grp) grp.style.display='';
+  var key='labinvite:'+(fmt.id||fmt.name||'mode');
+  if(typeof _cfgCustomFormats!=='undefined') _cfgCustomFormats[key]=fmt;
+  var exists=Array.prototype.some.call(sel.options,function(o){ return o.value===key; });
+  if(!exists){ var o=document.createElement('option'); o.value=key; o.textContent='🧪 '+(fmt.name||'mode testé'); sel.appendChild(o); }
+  sel.value=key;
+  if(typeof selectChallengeCustomFormat==='function') selectChallengeCustomFormat(key);
 }
 
 // ── LORE (bible narrative) — écran dev, synthèse de docs/LORE.md ──────
@@ -21594,7 +21703,7 @@ function showToast(message, isError){
 let challengeConfigTimer = 5;
 let challengeConfigMode = 'quick';
 let challengeConfigRanked = true;
-function openChallengeConfigPopup(playerId, playerPseudo){
+function openChallengeConfigPopup(playerId, playerPseudo, preFormat){
   const popup = document.getElementById('challenge-config-popup');
   if(!popup) return;
   // Mémorise depuis quel écran ce défi est lancé (Amis social vs menu
@@ -21609,7 +21718,11 @@ function openChallengeConfigPopup(playerId, playerPseudo){
   selectChallengeMode('quick');
   selectChallengeRanked(true);
   challengeConfigCustomFormat = null;      // aucun mode perso par défaut
-  populateChallengeCustomFormats();        // peuple le sélecteur (dev uniquement)
+  // Peuple le sélecteur (dev uniquement), PUIS pré-sélectionne le format si le
+  // défi a été lancé depuis le Labo (bouton « Tester en ligne avec un ami »).
+  populateChallengeCustomFormats().then(function(){
+    if(preFormat && typeof labApplyChallengePreFormat==='function') labApplyChallengePreFormat(preFormat);
+  });
   popup.classList.add('active');
 }
 
