@@ -15,3 +15,7 @@ skills-lock.json
 combined_check.js
 combined_tmp.js
 combined_tmp.cjs
+
+# Dépendances installées (workers) — reproductibles depuis package-lock.json,
+# ne se versionnent pas. Le lockfile, LUI, est committé (intégrité figée).
+node_modules/

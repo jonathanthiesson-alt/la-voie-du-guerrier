@@ -4735,7 +4735,12 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
 
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- Sécurité supply-chain : version FIGÉE (pas @2 flottant) + SRI (integrity).
+     Le navigateur refuse d'exécuter le script si son contenu ne correspond pas
+     au hash → un CDN/paquet compromis ne peut pas injecter de code aux joueurs.
+     Pour monter de version : changer le numéro ET recalculer le hash via
+     `curl … | openssl dgst -sha384 -binary | openssl base64 -A`. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.2/dist/umd/supabase.min.js" integrity="sha384-B2duOBIryCXbX4eDE4BdJwtNkQMRQde3o6IsjfPW28E6aH1CYE96hHeZRG3zY56O" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script>
 // Certains navigateurs/WebViews mobiles ne redimensionnent PAS les
 // unités vh/dvh quand le clavier virtuel s'ouvre (le fix CSS seul ne
