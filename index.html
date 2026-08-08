@@ -9051,7 +9051,11 @@ var PLAY_MODES = [
   // pas de « partie rapide »). Accès via la rangée de boutons sous le carrousel.
   { key:'tournament',  icon:'🏆', label:'Tournoi',       sub:'Élimination par rondes',     screen:'tournament',   cadence:false },
   { key:'guild',       icon:'🛡', label:'Guilde',        sub:'Ryu collectifs · défis',     screen:'guild',        cadence:false },
-  { key:'events',      icon:'🌸', label:'Événements',    sub:'Sumo & saisonniers',         screen:'events-mode',  cadence:false }
+  { key:'events',      icon:'🌸', label:'Événements',    sub:'Sumo & saisonniers',         screen:'events-mode',  cadence:false },
+  // Champ de bataille (3v3) : pour l'instant, la carte lance une partie SOLO vs
+  // IA (test) ; screen=null → launchCentralMode appelle playBattlefieldVsAI.
+  // L'online équipe vs équipe (Passe 2b) remplacera ce lancement plus tard.
+  { key:'battlefield', icon:'🏯', label:'Champ de bataille', sub:'3 v 3 · vs IA (test)',   screen:null,           cadence:false }
 ];
 var _playModeIdx = 0;
 function getPlayModeIdx(){ try{ var n=parseInt(localStorage.getItem('vtl_play_mode_idx'),10); return (n>=0&&n<PLAY_MODES.length)?n:0; }catch(e){ return 0; } }
@@ -9064,6 +9068,7 @@ function centralPlayMode(){ return PLAY_MODES[_playModeIdx] || PLAY_MODES[0]; }
 function launchCentralMode(){
   var m=centralPlayMode();
   if(m.key==='matchmaking'){ quickPlay(); return; }
+  if(m.key==='battlefield'){ playBattlefieldVsAI(); return; }
   if(m.key==='arena'){
     if(!currentUser){ showToast('Connectez-vous pour jouer en ligne.', true); showScreen('online-auth'); return; }
     showScreen('arena');
@@ -13967,9 +13972,13 @@ function initGame(){
   // Format custom → le moteur data-driven (Lots a–d) prend le relais : voidSet
   // pour isValid/isVoid, pieceDefs pour les pièces inventées, sumoMode pour les
   // bords éjectants. Absents en partie standard → moteur natif inchangé.
-  if(cf){ G.voidSet=new Set(cf.voids||[]); G.pieceDefs=cf.pieces||null; G.sumoMode=!!cf.sumo; }
-  if(cf){ (cf.setup||[]).forEach(function(p){ if(p.r>=0&&p.r<rows&&p.c>=0&&p.c<cols) G.board[p.r][p.c]={type:p.type,color:p.color}; }); }
+  if(cf){ G.voidSet=new Set(cf.voids||[]); G.pieceDefs=cf.pieces||null; G.sumoMode=!!cf.sumo; G.battlefieldMode=!!cf.battlefield; }
+  if(cf){ (cf.setup||[]).forEach(function(p){ if(p.r>=0&&p.r<rows&&p.c>=0&&p.c<cols){ var _pc={type:p.type,color:p.color}; if(p.unit!=null)_pc.unit=p.unit; G.board[p.r][p.c]=_pc; } }); }
   else setupBoard();
+  // Champ de bataille : la partie tourne siège par siège (Passe 2a). On
+  // initialise la rotation une fois le plateau posé — le siège 0 (Blanc 1)
+  // devient le tour courant, ce qui recale G.turn sur 'white' comme fc.
+  if(G.battlefieldMode) bfInitRotation(G.board);
   if(G.vsAI && G.gameMode!=='labtest') startSoloGameBroadcast(); // visible "EN COMBAT" + spectable (pas pour un test Labo : plateau custom illisible côté spectateur 5×5)
   // Noms personnalisés
   var p1name=(typeof currentUser!=='undefined'&&currentUser)?currentUser.pseudo:(PP.name||'Joueur');
@@ -14008,7 +14017,9 @@ function initGame(){
   if(settings._buildingOnlineGame){ settings._buildingOnlineGame = false; return; }
   setTimeout(function(){
     if(!G.gameOver){
-      document.getElementById('status-bar').textContent=(G.turn==='white'?t('color_white'):t('color_black'))+t('msg_select_piece');
+      document.getElementById('status-bar').textContent=G.bfRotation
+        ? bfStatusText()
+        : (G.turn==='white'?t('color_white'):t('color_black'))+t('msg_select_piece');
       startTurnTimer();
       if(typeof startFightMusic==='function') startFightMusic();
       if(G.vsAI&&G.turn===G.topColor)scheduleAI();
@@ -14718,6 +14729,10 @@ function endGame(winner,reason){
 
 function switchTurn(){
   if(G.gameOver)return;
+  // Champ de bataille : rotation siège par siège (saute les combattants
+  // tombés) au lieu d'une simple alternance de couleur. bfAdvanceSeat gère
+  // aussi la barre de statut et le minuteur.
+  if(G.bfRotation){ bfAdvanceSeat(); return; }
   G.turn=G.turn==='white'?'black':'white';
   document.getElementById('status-bar').textContent=(G.turn==='white'?t('color_white'):t('color_black'))+t('msg_select_piece');
   startTurnTimer();
@@ -15467,8 +15482,9 @@ function legalMoves(color,board,stacks,sel,lastMoved,lastPush){
         moves.push({r:tr,c:tc,isCapture:false,isPush:false});
       }else if(tgt&&!tStk){
         const pr=tr+d.dr,pc=tc+d.dc;
-        if(tgt.color===color&&(tgt.type==='sword'||tgt.type==='shield')){
+        if(tgt.color===color&&(tgt.type==='sword'||tgt.type==='shield')&&bfSameUnit(p,tgt)){
           // Pousse pion allié (sword ou shield) si case derrière libre
+          // — Champ de bataille : uniquement un pion de SON propre combattant.
           // NB: la liste est explicite (pas "!=='epeiste'") pour que les pièces
           // CUSTOM des formats expérimentaux ne soient PAS traitées comme des
           // pions poussables — l'épéiste les voit comme un obstacle. Identique
@@ -15494,8 +15510,9 @@ function legalMoves(color,board,stacks,sel,lastMoved,lastPush){
             if(!board[pr][pc]){
               // Case derrière vide → poussée simple
               moves.push({r:tr,c:tc,isCapture:false,isPush:true,pushesEpeiste:true});
-            } else if(board[pr][pc].type==='sword'&&board[pr][pc].color===color){
+            } else if(board[pr][pc].type==='sword'&&board[pr][pc].color===color&&bfSameUnit(p,board[pr][pc])){
               // Case derrière contient un pion épée ALLIÉ → push-capture !
+              // (Champ de bataille : l'épée qui écrase doit être de MON combattant.)
               // L'épéiste adverse est poussé sur le pion épée allié → victoire
               moves.push({r:tr,c:tc,isCapture:false,isPush:true,pushesEpeiste:true,pushCaptures:true,pushCaptureOnAlly:true});
             }
@@ -15519,8 +15536,11 @@ function legalMoves(color,board,stacks,sel,lastMoved,lastPush){
           // Pousse pion non-épeiste (sword ou shield allié/adverse)
           // Liste explicite (cf. épéiste) : les pièces custom ne sont pas
           // poussables → l'épée les voit comme un obstacle. Identique au live.
+          // Champ de bataille : un pion de coéquipier (même couleur, autre
+          // combattant) n'est pas poussable → obstacle.
+          if(G.battlefieldMode&&tgt.color===color&&tgt.unit!==p.unit){}
           // V2: bouclier ne peut pas être poussé
-          if(isV2mode()&&tgt.type==='shield'){}
+          else if(isV2mode()&&tgt.type==='shield'){}
           else{
             const pr=tr+d.dr,pc=tc+d.dc;
             if(!isValid(pr,pc)){
@@ -15577,15 +15597,15 @@ function legalMoves(color,board,stacks,sel,lastMoved,lastPush){
             if(isValid(pr,pc)&&!stacks[pr][pc]){
               if(!board[pr][pc]){
                 moves.push({r:tr,c:tc,isCapture:false,isPush:true,pushesEpeiste:true});
-              }else if(board[pr][pc].type==='sword'&&board[pr][pc].color===color){
+              }else if(board[pr][pc].type==='sword'&&board[pr][pc].color===color&&bfSameUnit(p,board[pr][pc])){
                 moves.push({r:tr,c:tc,isCapture:false,isPush:true,pushesEpeiste:true,pushCaptures:true,pushCaptureOnAlly:true});
               }
             }else if(G.sumoMode&&!isValid(pr,pc)){
               // SUMO : le Bouclier éjecte l'épéiste adverse du ring → victoire
               moves.push({r:tr,c:tc,isCapture:false,isPush:true,pushesEpeiste:true,pushCaptures:true,pushOut:true});
             }
-          }else if(tgt.type==='sword'){
-            // Pousse pion épée (allié ou adverse)
+          }else if(tgt.type==='sword'&&!(G.battlefieldMode&&tgt.color===color&&tgt.unit!==p.unit)){
+            // Pousse pion épée (allié ou adverse) — pas un coéquipier en Champ de bataille
             if(isValid(pr,pc)&&!stacks[pr][pc]){
               if(!board[pr][pc]){
                 moves.push({r:tr,c:tc,isCapture:false,isPush:true});
@@ -15779,6 +15799,154 @@ function findMaster(color,board){
   return null;
 }
 function dist(a,b){return Math.abs(a.r-b.r)+Math.abs(a.c-b.c)}
+
+// ══════════════════════════════════════════════════════
+// CHAMP DE BATAILLE — élimination d'unité (mode 3 v 3)
+// ══════════════════════════════════════════════════════
+// Chaque combattant a une escouade (pièces taguées `unit`). Capturer un
+// combattant ne finit PAS la partie : SES pièces quittent le plateau (son
+// joueur deviendra spectateur), et un camp n'est vaincu que lorsqu'il ne lui
+// reste plus AUCUN combattant. Les trois fonctions sont gardées par
+// G.battlefieldMode → le jeu standard (un seul combattant/camp) ne les
+// emprunte jamais, et execMove reste STRICTEMENT inchangé.
+
+// Identifie, AVANT execMove (qui écrase le plateau), le combattant adverse qui
+// va mourir sur ce coup : capture directe (case cible) ou poussée-capture (le
+// combattant est sur la case cible s'il est éjecté / poussé sur un allié, sinon
+// sur la case DERRIÈRE quand on pousse une épée alliée sur lui).
+function battlefieldVictim(mv,fr,fc,tr,tc,moverColor){
+  var b=G.board;
+  var tgt=(b[tr]&&b[tr][tc])?b[tr][tc]:null;
+  if(mv.isCapture){ return (tgt&&tgt.type==='epeiste'&&tgt.color!==moverColor)?tgt:null; }
+  if(mv.pushCaptures||mv.pushesEpeiste){
+    if(tgt&&tgt.type==='epeiste'&&tgt.color!==moverColor) return tgt;
+    var pr=tr+(tr-fr),pc=tc+(tc-fc);
+    var bp=(b[pr]&&b[pr][pc])?b[pr][pc]:null;
+    if(bp&&bp.type==='epeiste'&&bp.color!==moverColor) return bp;
+  }
+  return null;
+}
+
+// Retire du plateau toutes les pièces d'une escouade éliminée (y compris un
+// combattant éventuellement déplacé par une poussée, et un pion empilé dessous).
+function sweepBattlefieldUnit(color,unit){
+  var b=G.board,s=G.stacks;
+  for(var r=0;r<G.rows;r++)for(var c=0;c<G.cols;c++){
+    var p=b[r]&&b[r][c];
+    if(p&&p.color===color&&p.unit===unit){ b[r][c]=null; if(s[r])s[r][c]=null; }
+    var st=s[r]&&s[r][c];
+    if(st&&st.color===color&&st.unit===unit){ s[r][c]=null; }
+  }
+}
+
+// Appelé APRÈS execMove avec la victime pré-identifiée et le `won` natif du
+// moteur. Balaie l'escouade et renvoie le `won` AJUSTÉ : vrai uniquement si le
+// camp de la victime n'a plus aucun combattant (sinon la partie continue).
+function battlefieldResolve(victim,won){
+  if(!won||!victim) return won; // pas une mort de combattant → règle standard
+  sweepBattlefieldUnit(victim.color,victim.unit);
+  G.eliminatedUnits=G.eliminatedUnits||[];
+  G.eliminatedUnits.push(victim.color+':'+victim.unit);
+  return findMaster(victim.color,G.board)===null; // plus aucun combattant → défaite du camp
+}
+
+// Champ de bataille : deux pièces ne coopèrent (poussée alliée, poussée-capture)
+// que si elles appartiennent au MÊME combattant. Hors mode → toujours vrai (les
+// alliés coopèrent comme dans le jeu standard). Conséquence : un pion de
+// coéquipier (même couleur, AUTRE unité) devient un simple obstacle, exactement
+// comme demandé (« blanc-1 ne pousse que les pions de blanc-1 »).
+function bfSameUnit(a,b){ return !G.battlefieldMode || (!!a && !!b && a.unit===b.unit); }
+
+// ══════════════════════════════════════════════════════
+// CHAMP DE BATAILLE — MOTEUR DE ROTATION 6 SIÈGES (Passe 2a)
+// ══════════════════════════════════════════════════════
+// À 6 joueurs (et en hotseat de test local), le tour ne se contente pas
+// d'alterner les couleurs : il tourne SIÈGE par SIÈGE dans l'ordre
+// Blanc1 → Noir1 → Blanc2 → Noir2 → Blanc3 → Noir3. Chaque siège = un
+// combattant (couleur + unit). Un siège dont le combattant est tombé
+// (dans G.eliminatedUnits) est SAUTÉ : son « joueur » ne rejoue plus =
+// spectateur. G.turn reste synchronisé sur la couleur du siège actif pour
+// que tout le reste du moteur (rendu, execMove, gardes de poussée) marche
+// sans changement ; G.bfActiveUnit restreint la sélection au bon combattant.
+
+// Construit l'ordre des sièges à partir des combattants réellement présents,
+// intercalés par unité croissante : U1 blanc, U1 noir, U2 blanc, U2 noir…
+function bfBuildSeats(board){
+  var units={white:{},black:{}};
+  for(var r=0;r<G.rows;r++)for(var c=0;c<G.cols;c++){
+    var p=board[r]&&board[r][c];
+    if(p&&p.type==='epeiste'&&p.unit!=null) units[p.color][p.unit]=true;
+  }
+  var all={};
+  Object.keys(units.white).forEach(function(u){all[u]=true;});
+  Object.keys(units.black).forEach(function(u){all[u]=true;});
+  var seats=[];
+  Object.keys(all).map(Number).sort(function(a,b){return a-b;}).forEach(function(u){
+    if(units.white[u]) seats.push({color:'white',unit:u});
+    if(units.black[u]) seats.push({color:'black',unit:u});
+  });
+  return seats;
+}
+
+// Initialise la rotation : appelée par initGame une fois le plateau posé.
+function bfInitRotation(board){
+  G.bfRotation=true;
+  G.bfSeats=bfBuildSeats(board);
+  G.bfSeatIdx=0;
+  var s=G.bfSeats[0];
+  if(s){ G.turn=s.color; G.bfActiveUnit=s.unit; }
+}
+
+function bfSeatEliminated(seat){
+  return !!seat && (G.eliminatedUnits||[]).indexOf(seat.color+':'+seat.unit)>=0;
+}
+
+// Un siège est JOUABLE s'il n'est pas éliminé ET que son combattant a au moins
+// un coup légal. Un combattant temporairement bloqué (aucun coup) est SAUTÉ
+// (« passe ») au lieu de figer la partie — sinon un humain resterait coincé
+// sans rien à sélectionner, et l'IA déclencherait un faux « plus de coups ».
+// (allMoves absent = harness/robustesse → considéré jouable.)
+function bfSeatPlayable(seat){
+  if(bfSeatEliminated(seat)) return false;
+  if(typeof allMoves!=='function') return true;
+  var ms=allMoves(seat.color,G.board,G.stacks,G.lastMoved,G.lastPush,G.lastMovedByColor);
+  for(var i=0;i<ms.length;i++){
+    var p=G.board[ms[i].fr] && G.board[ms[i].fr][ms[i].fc];
+    if(p && p.unit===seat.unit) return true;
+  }
+  return false;
+}
+
+// Libellé du siège actif pour la barre de statut (i18n → Passe 3).
+function bfSeatLabel(seat){
+  if(!seat) return '';
+  return 'Combattant '+seat.unit+' ('+(seat.color==='white'?'Blanc':'Noir')+')';
+}
+
+// Phrase complète de la barre de statut pour le siège courant (source unique,
+// réutilisée par bfAdvanceSeat, le démarrage de partie et clearSelection).
+function bfStatusText(){ return bfSeatLabel(G.bfSeats[G.bfSeatIdx])+' — à vous de jouer'; }
+
+// Avance au prochain siège encore en jeu (saute les combattants tombés).
+// N'est jamais appelé quand un camp entier est éliminé : dans ce cas
+// battlefieldResolve a renvoyé won=true et executeDrop appelle endGame.
+function bfAdvanceSeat(){
+  var n=G.bfSeats.length; if(!n) return;
+  // Saute les sièges non jouables (éliminés OU combattant bloqué). Le garde
+  // `tries<=n` évite toute boucle infinie si, cas extrême, plus personne ne
+  // peut jouer — on s'arrête alors sur le dernier siège essayé.
+  var idx=G.bfSeatIdx, tries=0;
+  do{ idx=(idx+1)%n; tries++; } while(!bfSeatPlayable(G.bfSeats[idx]) && tries<=n);
+  G.bfSeatIdx=idx;
+  var seat=G.bfSeats[idx];
+  G.turn=seat.color; G.bfActiveUnit=seat.unit;
+  var sb=document.getElementById('status-bar');
+  if(sb) sb.textContent=bfStatusText();
+  startTurnTimer();
+  // Champ de bataille vs IA : si le siège actif est piloté par l'IA (camp du
+  // haut), elle joue. Restriction au combattant actif gérée dans scheduleAI.
+  if(G.vsAI && G.turn===G.topColor && !G.gameOver) scheduleAI();
+}
 
 function masterInDanger(color,board,stacks){
   const m=findMaster(color,board);if(!m)return false;
@@ -16558,6 +16726,35 @@ var LAB_FORMATS={
       {type:'sword',color:'black',r:3,c:1},{type:'epeiste',color:'black',r:3,c:2},{type:'sword',color:'black',r:3,c:3}
     ]
   },
+  // ── CHAMP DE BATAILLE — mode 3 contre 3 (à terme jusqu'à 6 joueurs) ──────
+  // Grand plateau 9 large × 8 profond, coins morts comme le standard. TROIS
+  // combattants par camp, chacun avec son escouade (1 combattant + 1 bouclier
+  // + 2 épées), en trois blocs de 3 colonnes. Les épées EXTÉRIEURES des blocs
+  // de bord sont remontées d'une rangée (A2/I2 au lieu de A1/I1) parce que les
+  // coins sont morts. `battlefield:true` active l'ÉLIMINATION D'UNITÉ : capturer
+  // un combattant retire toutes SES pièces, et un camp n'est vaincu que lorsque
+  // ses TROIS combattants sont tombés (cf. G.battlefieldMode / battlefieldResolve).
+  // `unit` (1/2/3) rattache chaque pièce à son combattant. Notation joueur→moteur :
+  // rangée joueur 1 = r0 (blancs en haut, comme le standard) ; colonnes A=c0 … I=c8.
+  champDeBataille:{
+    id:'champDeBataille', name:'Champ de bataille (3 v 3)', rows:9, cols:9, v2:true, sumo:false, battlefield:true,
+    voids:['0,0','0,8','8,0','8,8'], // 4 coins morts
+    setup:[
+      // Disposition (schéma Wurmz 2026-08-08, révisé 9×9) : chaque escouade = combattant
+      // + 2 épées sur la MÊME rangée arrière (X O X), bouclier une case devant vers le centre.
+      // Rangée arrière = X O X X O X X O X (combattants en B/E/H = c1/c4/c7).
+      // Plateau 9×9 SYMÉTRIQUE : r0/r8 = coins morts, r1/r7 = rangée vide derrière chaque
+      // camp, r4 = rangée vide centrale. Blancs r2-r3 (haut), noirs r5-r6 (bas), miroir parfait.
+      // ── BLANCS (haut) : rangée arrière r2, boucliers r3 (tournés vers le centre) ──
+      {type:'sword',color:'white',unit:1,r:2,c:0},{type:'epeiste',color:'white',unit:1,r:2,c:1},{type:'sword',color:'white',unit:1,r:2,c:2},{type:'shield',color:'white',unit:1,r:3,c:1},
+      {type:'sword',color:'white',unit:2,r:2,c:3},{type:'epeiste',color:'white',unit:2,r:2,c:4},{type:'sword',color:'white',unit:2,r:2,c:5},{type:'shield',color:'white',unit:2,r:3,c:4},
+      {type:'sword',color:'white',unit:3,r:2,c:6},{type:'epeiste',color:'white',unit:3,r:2,c:7},{type:'sword',color:'white',unit:3,r:2,c:8},{type:'shield',color:'white',unit:3,r:3,c:7},
+      // ── NOIRS (bas, miroir vertical : rangée arrière r6, boucliers r5 ; combattant 1 face au blanc 1) ──
+      {type:'sword',color:'black',unit:1,r:6,c:0},{type:'epeiste',color:'black',unit:1,r:6,c:1},{type:'sword',color:'black',unit:1,r:6,c:2},{type:'shield',color:'black',unit:1,r:5,c:1},
+      {type:'sword',color:'black',unit:2,r:6,c:3},{type:'epeiste',color:'black',unit:2,r:6,c:4},{type:'sword',color:'black',unit:2,r:6,c:5},{type:'shield',color:'black',unit:2,r:5,c:4},
+      {type:'sword',color:'black',unit:3,r:6,c:6},{type:'epeiste',color:'black',unit:3,r:6,c:7},{type:'sword',color:'black',unit:3,r:6,c:8},{type:'shield',color:'black',unit:3,r:5,c:7}
+    ]
+  },
   // Format expérimental : prouve que le moteur gère d'autres dimensions.
   // Disposition symétrique analogue au standard, sur un 7×7 aux coins retirés.
   large7:{
@@ -17266,9 +17463,13 @@ function labValidateFormat(f){
     seen[r+','+c]=1;
     if(p.type==='epeiste') kings[p.color]++;
   }
-  if(kings.white!==1||kings.black!==1) return {ok:false,err:'Exactement un Combattant par camp requis (blanc:'+kings.white+', noir:'+kings.black+').'};
-  var out={id:'custom', name:(f.name||'Format personnalisé'), rows:rows, cols:cols, v2:(f.v2!==false), sumo:!!f.sumo, voids:voids, setup:f.setup.map(function(p){return {type:p.type,color:p.color,r:+p.r,c:+p.c};})};
+  if(f.battlefield){
+    // Champ de bataille : plusieurs combattants par camp (chacun = une escouade).
+    if(kings.white<1||kings.black<1) return {ok:false,err:'Au moins un Combattant par camp requis (blanc:'+kings.white+', noir:'+kings.black+').'};
+  } else if(kings.white!==1||kings.black!==1) return {ok:false,err:'Exactement un Combattant par camp requis (blanc:'+kings.white+', noir:'+kings.black+').'};
+  var out={id:'custom', name:(f.name||'Format personnalisé'), rows:rows, cols:cols, v2:(f.v2!==false), sumo:!!f.sumo, voids:voids, setup:f.setup.map(function(p){var q={type:p.type,color:p.color,r:+p.r,c:+p.c}; if(p.unit!=null)q.unit=p.unit; return q;})};
   if(pieces) out.pieces=pieces; // transmis tel quel au Worker (G.pieceDefs)
+  if(f.battlefield) out.battlefield=true; // mode 3v3 : élimination d'unité (cf. G.battlefieldMode)
   return {ok:true, format:out};
 }
 
@@ -17715,7 +17916,7 @@ function labPlayModeVsAI(format){
   if(typeof isDevUser==='function' && !isDevUser()){ if(typeof showToast==='function') showToast('Réservé aux comptes dev.', true); return; }
   var v=labValidateFormat(format);
   if(!v.ok){ if(typeof showToast==='function') showToast('Format invalide : '+v.err, true); return; }
-  settings.vsAI=true;
+  settings.vsAI = !v.format.battlefield;   // Champ de bataille : hotseat 2 joueurs (les deux camps jouables) ; sinon vs IA
   settings.gameMode='labtest';
   settings.timerSeconds=0;          // pas de minuteur : test tranquille
   selectedAdvId=12;                 // bot générique (minimax + evalTrainer, gère les pièces custom)
@@ -17737,6 +17938,29 @@ function labPlayPublishedMode(id){
   var r=(_labPublishedCache||[]).find(function(x){ return x.id===id; });
   if(!r){ if(typeof showToast==='function') showToast('Mode introuvable — rafraîchis la liste.', true); return; }
   labPlayModeVsAI(r.format);
+}
+
+// Champ de bataille — SOLO vs IA (bouton du carrousel). Toi = équipe blanche
+// (tes 3 combattants, un par tour de rotation) ; l'IA joue les 3 combattants
+// noirs. Réutilise la rotation 6 sièges (Passe 2a) : l'IA est planifiée sur les
+// sièges du camp du haut et restreinte à son combattant actif (voir scheduleAI).
+// Partie locale sans enjeu (labtest : ni ELO, ni gains). Non dev-gaté : le mode
+// est jouable par tous. L'online (équipes/amis/worker) viendra par-dessus.
+function playBattlefieldVsAI(){
+  var f = (typeof LAB_FORMATS!=='undefined') ? LAB_FORMATS.champDeBataille : null;
+  if(!f){ if(typeof showToast==='function') showToast('Mode indisponible.', true); return; }
+  var v = labValidateFormat(f);
+  if(!v.ok){ if(typeof showToast==='function') showToast('Format invalide : '+v.err, true); return; }
+  settings.vsAI = true;              // l'IA pilote l'équipe adverse (camp du haut)
+  settings.gameMode = 'labtest';     // sans enjeu, pas de diffusion spectateur 5×5
+  settings.timerSeconds = 0;         // sans minuteur pour le test local
+  selectedAdvId = 12;                // bot générique (minimax, gère pièces/dims custom)
+  settings._playerColor = 'white';   // toi = équipe blanche (en bas)
+  settings._forcedStart = 'white';
+  settings._onlineBottomColor = null;
+  settings._customFormat = v.format; // lu par initGame
+  if(typeof showScreen==='function') showScreen('game');
+  initGame();
 }
 
 // ── Inviter un ami à tester un mode EN LIGNE (bouton 🤝 du hub Jouer) ──
@@ -18091,14 +18315,30 @@ function scheduleAI(){
   setTimeout(()=>{
     if(G.gameOver){G.aiThinking=false;return}
     const aiColor=G.topColor||'black';
-    const moves=allMoves(aiColor,G.board,G.stacks,G.lastMoved,G.lastPush,G.lastMovedByColor);
+    let moves=allMoves(aiColor,G.board,G.stacks,G.lastMoved,G.lastPush,G.lastMovedByColor);
+    // Champ de bataille : au tour d'un siège, l'IA ne joue QUE les pièces de son
+    // combattant actif (comme un joueur humain). On restreint les candidats à la
+    // racine ; le combattant sans coup fait passer la main (bfAdvanceSeat garantit
+    // normalement un siège jouable, mais on reste défensif).
+    if(G.bfRotation){
+      moves=moves.filter(function(m){var p=G.board[m.fr]&&G.board[m.fr][m.fc]; return p&&p.unit===G.bfActiveUnit;});
+      if(!moves.length){G.aiThinking=false;switchTurn();return}
+    }
     if(!moves.length){G.aiThinking=false;if(currentSoloGameId)finishSoloGameBroadcast(G.bottomColor);endGame(G.bottomColor,t('msg_no_moves'));return}
-    const chosen=adv.play(moves,G.board,G.stacks,G.lastMoved,G.lastPush);
+    let chosen=adv.play(moves,G.board,G.stacks,G.lastMoved,G.lastPush);
+    // Sécurité : si le bot a ignoré la liste restreinte et choisi un autre
+    // combattant, on retombe sur un coup valide du combattant actif.
+    if(G.bfRotation && chosen){
+      var cp=G.board[chosen.fr]&&G.board[chosen.fr][chosen.fc];
+      if(!cp||cp.unit!==G.bfActiveUnit) chosen=moves[0];
+    }
     if(chosen){
       var _combatMoverType = G.board[chosen.fr][chosen.fc] ? G.board[chosen.fr][chosen.fc].type : null;
       var _combatTargetType = G.board[chosen.tr][chosen.tc] ? G.board[chosen.tr][chosen.tc].type : null;
       var _combatTargetAlly = G.board[chosen.tr][chosen.tc] ? (G.board[chosen.tr][chosen.tc].color === aiColor) : false;
-      const won=execMove(chosen.fr,chosen.fc,chosen.tr,chosen.tc,chosen.action);
+      var _bfVictimAI = G.battlefieldMode ? battlefieldVictim(chosen.action,chosen.fr,chosen.fc,chosen.tr,chosen.tc,aiColor) : null;
+      var won=execMove(chosen.fr,chosen.fc,chosen.tr,chosen.tc,chosen.action);
+      if(G.battlefieldMode) won=battlefieldResolve(_bfVictimAI,won);
       if(typeof handleCombatAnimForMove==='function') handleCombatAnimForMove(_combatMoverType,_combatTargetType,chosen.action,aiColor,_combatTargetAlly);
       if(typeof updateWinProbBar==='function') updateWinProbBar();
       G.aiThinking=false;renderBoard();
@@ -20752,6 +20992,10 @@ function previewSelection(r,c){
   if(G.onlineGameId&&G.turn!==G.onlineMyColor)return;
   const piece=G.board[r][c];
   if(!piece||piece.color!==G.turn)return;
+  // Champ de bataille : au tour d'un siège, on ne peut sélectionner que les
+  // pièces de SON combattant actif (les autres unités du même camp sont
+  // jouées par leurs propres joueurs, à leur propre tour).
+  if(G.bfRotation&&piece.unit!==G.bfActiveUnit)return;
   G.selected={r:r,c:c};
   G.validMoves=legalMoves(G.turn,G.board,G.stacks,{r:r,c:c},G.lastMoved,G.lastPush);
   document.getElementById('status-bar').textContent=G.validMoves.length?G.validMoves.length+t('msg_actions_available'):t('msg_no_move');
@@ -20799,7 +21043,9 @@ function highlightSelectionOnly(){
 function clearSelection(){
   if(!G.selected)return;
   G.selected=null;G.validMoves=[];
-  document.getElementById('status-bar').textContent=(G.turn==='white'?t('color_white'):t('color_black'))+t('msg_select_piece');
+  document.getElementById('status-bar').textContent=G.bfRotation
+    ? bfStatusText()
+    : (G.turn==='white'?t('color_white'):t('color_black'))+t('msg_select_piece');
   // Appelée uniquement après la fin d'un geste (touchend déjà reçu) :
   // pas de risque ici, mais on reste léger en ne touchant que les classes.
   highlightSelectionOnly();
@@ -20847,7 +21093,18 @@ function executeDrop(r,c){
     _hintSuggestion = minimaxPlay(playerMoves, G.board, G.stacks, G.lastMoved, G.lastPush, 2, evalTrainer, G.turn);
     _hintBoardBefore = cloneBS(G.board, G.stacks).board;
   }
-  const won=execMove(G.selected.r,G.selected.c,r,c,mv);
+  var _bfVictim = G.battlefieldMode ? battlefieldVictim(mv,G.selected.r,G.selected.c,r,c,G.turn) : null;
+  var won=execMove(G.selected.r,G.selected.c,r,c,mv);
+  if(G.battlefieldMode){
+    // Un combattant tombe sur ce coup si le moteur a renvoyé une mort royale
+    // (won natif) ET qu'une victime avait été identifiée. battlefieldResolve
+    // balaie alors son escouade et ne renvoie won=true que si le CAMP entier
+    // est éliminé (sinon la partie continue, siège suivant).
+    var _bfElim = won && _bfVictim;
+    won=battlefieldResolve(_bfVictim,won);
+    if(_bfElim && !won && typeof showToast==='function')
+      showToast(bfSeatLabel(_bfVictim)+' éliminé — son joueur devient spectateur.');
+  }
   G.selected=null;G.validMoves=[];
   renderBoard();
   if(typeof handleCombatAnimForMove==='function') handleCombatAnimForMove(_combatMoverType,_combatTargetType,mv,G.turn,_combatTargetAlly);
