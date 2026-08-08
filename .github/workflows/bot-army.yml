@@ -62,7 +62,11 @@ jobs:
         with:
           node-version: "22"      # 22+ = WebSocket natif (requis par le Realtime Supabase)
       - name: Install deps
-        run: npm install --no-audit --no-fund
+        # Sécurité : `npm ci` = install reproductible depuis package-lock.json
+        # (versions + hash d'intégrité figés), et `--ignore-scripts` neutralise
+        # tout postinstall malveillant d'une dépendance — vecteur n°1 des
+        # attaques npm — ALORS que SUPABASE_SERVICE_ROLE_KEY est dans l'env.
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Run bot army
         run: node scripts/bot-army.mjs
         env:
