@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.41.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.42.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -221,6 +221,50 @@ body.ui-wurmz.sumo-game #sumo-ring{border-color:#c9a24b;box-shadow:0 0 0 3px rgb
 /* L'artwork Sumi de l'écran SUMO existe aussi en version Wurmz : mêmes
    silhouettes, re-teintées or sur noir par un simple filtre. */
 body.ui-wurmz #screen-sumo .sumi-sky{display:block;filter:sepia(1) hue-rotate(8deg) saturate(1.6) brightness(.75)}
+
+/* ═══════════ THÈME VILLAGE (menu graphique expérimental) ═══════════
+   ui-village = 4e thème. Contrairement à sumi/wurmz, il ne RE-TEINTE pas
+   les écrans : il REMPLACE la bottom-nav par une carte panoramique
+   (#screen-village) dont les bâtiments sont des boutons. Les écrans de
+   contenu restent inchangés (le village est un routeur graphique). Les
+   thèmes classic/sumi/wurmz ne sont pas touchés. Zones de clic en % → le
+   ratio natif de l'image (1024×572) est préservé par aspect-ratio. */
+body.ui-village #bottom-nav{display:none!important}
+/* Bouton flottant « retour au village » : partout où la bottom-nav serait
+   visible, SAUF sur la carte elle-même (on y est déjà). */
+#village-home-btn{display:none;position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:850;background:rgba(20,14,8,.92);border:1px solid rgba(212,160,23,.6);color:var(--gold-bright);font-family:'VT323',monospace;font-size:14px;letter-spacing:1px;border-radius:22px;padding:9px 16px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.55)}
+body.ui-village.bottomnav-visible #village-home-btn{display:block}
+body.ui-village.bottomnav-visible.village-map-open #village-home-btn{display:none}
+#screen-village{padding:0;overflow:hidden;background:#0a0806}
+#village-scroll{position:absolute;inset:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;display:flex}
+#village-canvas{position:relative;height:100%;aspect-ratio:1024/572;margin:auto;flex:0 0 auto}
+#village-canvas img#village-bg{display:block;height:100%;width:auto;user-select:none;-webkit-user-drag:none;pointer-events:none}
+/* Un bâtiment = un bouton elliptique transparent posé en % sur la carte.
+   Halo doré au survol/tap = signal « c'est cliquable ». */
+.village-zone{position:absolute;transform:translate(-50%,-50%);border:none;background:transparent;cursor:pointer;border-radius:50%;padding:0;transition:box-shadow .18s,background .18s}
+.village-zone::after{content:attr(data-label);position:absolute;left:50%;bottom:-4px;transform:translate(-50%,100%);font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;color:#ffe9a8;text-shadow:0 2px 5px rgba(0,0,0,.95);white-space:nowrap;opacity:0;transition:opacity .18s;pointer-events:none}
+.village-zone:hover,.village-zone:focus-visible{background:radial-gradient(closest-side,rgba(255,214,90,.28),rgba(255,214,90,.06) 70%,transparent);box-shadow:0 0 0 2px rgba(255,214,90,.55),0 0 22px rgba(255,214,90,.4);outline:none}
+.village-zone:hover::after,.village-zone:focus-visible::after{opacity:1}
+.village-zone.locked{cursor:not-allowed}
+.village-zone.locked:hover,.village-zone.locked:focus-visible{background:radial-gradient(closest-side,rgba(170,170,170,.16),transparent 70%);box-shadow:0 0 0 2px rgba(150,150,150,.4)}
+.village-zone.vhidden{display:none}
+#village-hint{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:5;font-family:'VT323',monospace;font-size:11px;letter-spacing:1px;color:#ffe9a8;background:rgba(10,8,6,.6);border:1px solid rgba(212,160,23,.4);border-radius:14px;padding:4px 12px;pointer-events:none}
+/* Pastille « Se connecter » : seule entrée d'auth quand le Village est le
+   thème actif et qu'on n'est pas connecté (villageRefreshLocks la pilote). */
+#village-login{display:none;position:absolute;top:6px;right:10px;z-index:6;font-family:'VT323',monospace;font-size:12px;letter-spacing:1px;color:#0a0806;background:var(--gold-bright);border:none;border-radius:14px;padding:5px 13px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.5)}
+/* Sous-panneau d'un bâtiment (liste de raccourcis vers les écrans existants) */
+#village-panel{display:none;position:fixed;inset:0;z-index:860;background:rgba(6,4,3,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:20px}
+#village-panel.open{display:flex}
+#village-panel .vp-box{background:linear-gradient(160deg,#1a130a,#0c0906);border:1px solid rgba(212,160,23,.4);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.7);max-width:340px;width:100%;max-height:82vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px}
+#village-panel .vp-title{font-family:'Cinzel',serif;font-size:18px;color:var(--gold-bright);text-align:center;letter-spacing:2px;margin-bottom:4px}
+#village-panel .vp-sub{font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.5;text-align:center;margin-bottom:14px}
+#village-panel .vp-item{display:flex;align-items:center;gap:10px;width:100%;background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.25);border-radius:8px;padding:11px 13px;margin-bottom:7px;cursor:pointer;color:var(--parchment);font-family:'VT323',monospace;font-size:14px;text-align:left}
+#village-panel .vp-item:hover{border-color:rgba(212,160,23,.6);background:rgba(212,160,23,.08)}
+#village-panel .vp-item .vp-ico{font-size:18px;flex-shrink:0;width:22px;text-align:center}
+#village-panel .vp-item.locked{opacity:.4;cursor:not-allowed}
+#village-panel .vp-item.dev{border-color:rgba(160,90,220,.5);color:#c58aff}
+#village-panel .vp-item.soon{opacity:.6}
+#village-panel .vp-close{display:block;width:100%;margin-top:6px;background:none;border:1px solid rgba(212,160,23,.3);border-radius:8px;color:var(--gold);font-family:'VT323',monospace;font-size:13px;padding:9px;cursor:pointer}
 
 /* Onglets du panneau d'administration */
 .adm-tab{flex:1;background:rgba(0,0,0,.25);border:1px solid rgba(200,168,110,.2);border-radius:5px;padding:6px 3px;font-family:VT323,monospace;font-size:11px;color:var(--parchment);cursor:pointer}
@@ -2147,7 +2191,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.41.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.42.0 &#9820;</div>
   </div>
 </div>
 
@@ -2434,6 +2478,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
         <div class="opt-btn selected uitheme-btn" data-theme="classic" onclick="setUiTheme('classic')">Classique</div>
         <div class="opt-btn uitheme-btn" data-theme="sumi" onclick="setUiTheme('sumi')">墨 Sumi</div>
         <div class="opt-btn uitheme-btn" data-theme="wurmz" onclick="setUiTheme('wurmz')">🪲 Wurmz</div>
+        <div class="opt-btn uitheme-btn" data-theme="village" onclick="setUiTheme('village')">🏘 Village</div>
       </div>
     </div>
 
@@ -3603,8 +3648,19 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.41.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.42.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.42.0 &mdash; 9 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; NOUVEL UI &laquo;&nbsp;VILLAGE&nbsp;&raquo; (EXP&Eacute;RIMENTAL)</li>
+        <li>Un <strong>nouveau th&egrave;me</strong> &agrave; choisir dans l&rsquo;<strong>Apparence</strong> (comme Sumi ou Wurmz)&nbsp;: <strong>Village</strong>. Il remplace la barre du bas par une <strong>carte de village</strong> que l&rsquo;on <strong>fait d&eacute;filer</strong> ; chaque <strong>b&acirc;timent est un bouton</strong> (halo dor&eacute; au survol).</li>
+        <li>R&eacute;partition&nbsp;: <strong>Ch&acirc;teau</strong> (d&eacute;fis &amp; qu&ecirc;tes, &eacute;v&eacute;nements), <strong>Ar&egrave;ne</strong> (tous les modes de combat + joueurs en ligne + ligue), <strong>Maison</strong> (profil, options, apparence, identit&eacute;&hellip; + menu DEV pour les admins), <strong>Guilde</strong>, <strong>Archives</strong> (stats, records, succ&egrave;s, classements, lore, journal), <strong>Auberge</strong> (amis, messagerie, DevLog, forums &amp; news &agrave; venir), <strong>Dojo</strong> (campagne, IA, Karakuri, r&egrave;gles, 2 joueurs&hellip;), <strong>March&eacute;</strong> (boutique).</li>
+        <li>Hors-ligne, les lieux <strong>en ligne</strong> sont gris&eacute;s ; une pastille <strong>Se connecter</strong> reste toujours accessible. Les th&egrave;mes <strong>Classique / Sumi / Wurmz</strong> ne changent pas.</li>
+        <li style="list-style:none;margin-left:-14px;color:rgba(200,168,110,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">C&rsquo;est un <strong>test</strong>&nbsp;: on bascule dessus si &ccedil;a plaît. Le <strong>Port</strong> (changer de village) et les <strong>forums / news</strong> arrivent plus tard.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -4397,6 +4453,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <div class="opt-btn selected uitheme-btn" data-theme="classic" onclick="setUiTheme('classic')">Classique</div>
       <div class="opt-btn uitheme-btn" data-theme="sumi" onclick="setUiTheme('sumi')">墨 Sumi</div>
       <div class="opt-btn uitheme-btn" data-theme="wurmz" onclick="setUiTheme('wurmz')">🪲 Wurmz</div>
+      <div class="opt-btn uitheme-btn" data-theme="village" onclick="setUiTheme('village')">🏘 Village</div>
     </div>
 
     <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold);letter-spacing:3px;opacity:.7;margin-bottom:6px;padding:3px 0;border-bottom:1px solid rgba(200,168,110,.15)">⚔ PIONS</div>
@@ -11067,6 +11124,11 @@ function showScreen(id){
   // destination — c'est le fait de QUITTER le jeu qui compte, pas où l'on va.
   if(id!=='game' && typeof cancelPendingEndgameSfx==='function') cancelPendingEndgameSfx();
   updateBottomNav(id);
+  // Thème Village : construire la carte à la première visite, rafraîchir le
+  // grisage online/dev à chaque visite, et masquer le bouton flottant «⛩
+  // Village» quand on EST sur la carte (via la classe village-map-open).
+  if(id==='village'){ if(typeof buildVillageMap==='function') buildVillageMap(); if(typeof villageRefreshLocks==='function') villageRefreshLocks(); }
+  document.body.classList.toggle('village-map-open', id==='village');
   if(id==='play') refreshPlayScreen();
   applyLang();
   if(typeof _pieceSkinShowHook==='function')_pieceSkinShowHook(id);
@@ -11123,6 +11185,154 @@ function showScreen(id){
   if(id!=='matchmaking') stopMatchmakingSearch(false);
   if(id!=='messaging' && _leagueChatPollInterval){ clearInterval(_leagueChatPollInterval); _leagueChatPollInterval=null; }
   if(id!=='messaging' && _guildChatPollInterval){ clearInterval(_guildChatPollInterval); _guildChatPollInterval=null; }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+//  MENU VILLAGE (thème ui-village) — routeur graphique
+//  Chaque bâtiment de la carte ouvre un sous-panneau de raccourcis vers les
+//  écrans/fonctions EXISTANTS (aucun écran n'est dupliqué ni déplacé). Voir
+//  docs/UI_VILLAGE.md. Positions en % du canvas (image 1024×572).
+//   item : {label, ico, screen? | fn?(+arg) | soon?, online?, dev?}
+//   bâtiment : {online?} = tout entier verrouillé hors-ligne (grisé) ;
+//              {dev?}    = visible/cliquable par les seuls comptes dev.
+// ══════════════════════════════════════════════════════════════════════
+var VILLAGE_BUILDINGS = [
+  { id:'chateau', label:'Château', cx:13, cy:20, w:24, h:32, items:[
+      {label:'Défis du jour', ico:'🎯', fn:'startDailyChallenge'},
+      {label:'Quêtes du jour', ico:'📜', screen:'play', online:true},
+      {label:'Événements & saisons', ico:'🎏', screen:'events', online:true} ] },
+  { id:'soleil', label:'', cx:50, cy:16, w:9, h:16, dev:true, items:[
+      {label:'Menu DEV', ico:'🛠', screen:'dev-hub', dev:true} ] },
+  { id:'maison', label:'Maison', cx:26, cy:50, w:20, h:28, items:[
+      {label:'Profil', ico:'侍', screen:'profile'},
+      {label:'Options & paramètres', ico:'⚙', screen:'menu'},
+      {label:'Identité', ico:'📇', screen:'identite'},
+      {label:'Apparence & thèmes', ico:'🎨', screen:'display'},
+      {label:'Skins de pièces', ico:'♟', screen:'piece-skins'},
+      {label:'Langue', ico:'🌐', screen:'language'},
+      {label:'Écran d’accueil', ico:'🏮', screen:'home-logo-cfg'},
+      {label:'Confidentialité du compte', ico:'🔒', screen:'account-privacy'},
+      {label:'Menu DEV', ico:'🛠', screen:'dev-hub', dev:true} ] },
+  { id:'auberge', label:'Auberge', cx:43, cy:46, w:17, h:23, items:[
+      {label:'Amis', ico:'👥', screen:'amis', online:true},
+      {label:'Messagerie', ico:'✉', screen:'messaging', online:true},
+      {label:'Forums', ico:'💬', soon:true},
+      {label:'News', ico:'📰', soon:true},
+      {label:'DevLog (mises à jour)', ico:'📓', screen:'devlog'},
+      {label:'Le saviez-vous ?', ico:'💡', fn:'openDidYouKnowPopup'} ] },
+  { id:'archives', label:'Archives', cx:55, cy:47, w:13, h:20, items:[
+      {label:'Statistiques', ico:'📊', screen:'profile-stats'},
+      {label:'Records', ico:'🏅', screen:'profile-records'},
+      {label:'Succès', ico:'🎖', screen:'profile-achievements'},
+      {label:'Classements', ico:'📈', screen:'leaderboard', online:true},
+      {label:'Lore & citations', ico:'📖', screen:'citations'},
+      {label:'Série de connexion', ico:'🔥', screen:'play', online:true},
+      {label:'Journal d’activité', ico:'📜', screen:'play', online:true} ] },
+  { id:'dojo', label:'Dojo', cx:73, cy:41, w:20, h:24, items:[
+      {label:'Campagne', ico:'📜', screen:'campaigns'},
+      {label:'IA', ico:'🤖', fn:'openLocalMode', arg:'ai'},
+      {label:'Maîtres IA', ico:'⚔', screen:'opponents'},
+      {label:'Adversaires notables', ico:'★', fn:'openLocalMode', arg:'ai-notable'},
+      {label:'Karakuri (entraînement)', ico:'傀', screen:'training-bot'},
+      {label:'Shin-AI', ico:'🗨', screen:'shinai'},
+      {label:'2 joueurs (même appareil)', ico:'対', fn:'openLocalMode', arg:'human'},
+      {label:'Pendule', ico:'⏱', screen:'clock'},
+      {label:'Règles', ico:'典', screen:'rules'} ] },
+  { id:'arene', label:'Arène', cx:12, cy:76, w:20, h:26, online:true, items:[
+      {label:'Modes de combat', ico:'⚔', screen:'play', online:true},
+      {label:'Joueurs en ligne', ico:'🟢', screen:'online-menu', online:true},
+      {label:'Ligue', ico:'🏆', screen:'league', online:true} ] },
+  { id:'guilde', label:'Guilde', cx:38, cy:75, w:24, h:30, online:true, items:[
+      {label:'Guilde', ico:'🏯', screen:'guild', online:true} ] },
+  { id:'marche', label:'Marché', cx:68, cy:65, w:20, h:22, online:true, items:[
+      {label:'Boutique', ico:'🏪', screen:'shop', online:true} ] },
+  { id:'port', label:'Port', cx:88, cy:76, w:15, h:22, items:[
+      {label:'Changer de village', ico:'⚓', soon:true} ] }
+];
+var _villageBuilt = false;
+function buildVillageMap(){
+  if(_villageBuilt) return;
+  var canvas = document.getElementById('village-canvas');
+  if(!canvas) return;
+  VILLAGE_BUILDINGS.forEach(function(b){
+    var z = document.createElement('button');
+    z.className = 'village-zone';
+    z.id = 'village-zone-'+b.id;
+    z.setAttribute('data-id', b.id);
+    if(b.label) z.setAttribute('data-label', b.label);
+    if(b.online) z.setAttribute('data-online','1');
+    if(b.dev) z.setAttribute('data-dev','1');
+    z.style.left = b.cx+'%'; z.style.top = b.cy+'%';
+    z.style.width = b.w+'%'; z.style.height = b.h+'%';
+    z.setAttribute('aria-label', b.label||b.id);
+    z.onclick = function(){ villageOpenBuilding(b.id); };
+    canvas.appendChild(z);
+  });
+  _villageBuilt = true;
+}
+// Grisage online + masquage dev, recalculés à chaque affichage de la carte
+// (l'état de session change après connexion/déconnexion).
+function villageRefreshLocks(){
+  var isDev = (typeof isDevUser==='function' && isDevUser());
+  VILLAGE_BUILDINGS.forEach(function(b){
+    var z = document.getElementById('village-zone-'+b.id);
+    if(!z) return;
+    if(b.dev){ z.classList.toggle('vhidden', !isDev); }
+    z.classList.toggle('locked', !!b.online && !currentUser);
+  });
+  // Entrée d'auth : visible seulement hors-ligne (le Village n'a pas d'écran
+  // de titre — sans ça, un visiteur non connecté ne pourrait pas se logger).
+  var lb = document.getElementById('village-login');
+  if(lb) lb.style.display = currentUser ? 'none' : 'block';
+}
+function closeVillagePanel(){
+  var p = document.getElementById('village-panel');
+  if(p) p.classList.remove('open');
+}
+// Exécute l'action d'un item : garde-fous (soon / online / dev) puis
+// navigation. Ferme le panneau AVANT de naviguer.
+function villageDoItem(it){
+  if(!it) return;
+  if(it.soon){ if(typeof showToast==='function') showToast('🚧 En cours de développement', false); return; }
+  if(it.online && !currentUser){ if(typeof showToast==='function') showToast('🔒 Connecte-toi pour accéder à ça', true); return; }
+  if(it.dev && !(typeof isDevUser==='function' && isDevUser())) return;
+  closeVillagePanel();
+  if(it.fn){ if(typeof window[it.fn]==='function'){ window[it.fn](it.arg); } return; }
+  if(it.screen){ showScreen(it.screen); }
+}
+function villageOpenBuilding(id){
+  var b = null;
+  for(var i=0;i<VILLAGE_BUILDINGS.length;i++){ if(VILLAGE_BUILDINGS[i].id===id){ b=VILLAGE_BUILDINGS[i]; break; } }
+  if(!b) return;
+  var isDev = (typeof isDevUser==='function' && isDevUser());
+  if(b.dev && !isDev) return;
+  if(b.online && !currentUser){ if(typeof showToast==='function') showToast('🔒 Connecte-toi pour accéder à '+(b.label||'ce lieu'), true); return; }
+  // Items visibles = tous sauf les items dev quand on n'est pas dev.
+  var items = (b.items||[]).filter(function(it){ return !(it.dev && !isDev); });
+  // Un seul item → on va droit au but (pas de panneau pour Guilde, Marché,
+  // Port, Soleil).
+  if(items.length===1){ villageDoItem(items[0]); return; }
+  var box = document.getElementById('village-panel-box');
+  if(!box) return;
+  var html = '<div class="vp-title">'+(b.label||'')+'</div>';
+  html += '<div class="vp-sub">Choisis une destination</div>';
+  items.forEach(function(it, idx){
+    var cls = 'vp-item';
+    var locked = (it.online && !currentUser);
+    if(locked) cls += ' locked';
+    if(it.dev) cls += ' dev';
+    if(it.soon) cls += ' soon';
+    var suffix = it.soon ? ' <span style="opacity:.6;font-size:11px">· bientôt</span>' : (locked ? ' 🔒' : '');
+    html += '<button class="'+cls+'" data-idx="'+idx+'"><span class="vp-ico">'+(it.ico||'▸')+'</span><span>'+it.label+suffix+'</span></button>';
+  });
+  html += '<button class="vp-close" onclick="closeVillagePanel()">Fermer</button>';
+  box.innerHTML = html;
+  // On rebranche les clics par index (évite d'injecter des handlers inline
+  // et de sérialiser les items dans le HTML).
+  box.querySelectorAll('.vp-item').forEach(function(btn){
+    btn.onclick = function(){ villageDoItem(items[parseInt(btn.getAttribute('data-idx'),10)]); };
+  });
+  document.getElementById('village-panel').classList.add('open');
 }
 
 // ══ QUICK PLAY ══
@@ -11229,10 +11439,13 @@ function selectTimer(t){settings.timerSeconds=t;[0,3,5,10].forEach(v=>{var b=doc
 // Jack : aplats nuit d'encre / vermillon). Voir le bloc CSS body.ui-sumi.
 // Trois thèmes désormais : 'classic' (aucune classe), 'sumi', 'wurmz'.
 // Chaque thème non-classique = une classe body exclusive.
-var UI_THEMES = ['classic','sumi','wurmz'];
+// 'village' = thème expérimental à navigation graphique (carte). Il n'a pas
+// de re-teinte d'écrans : sa singularité est de remplacer la bottom-nav.
+var UI_THEMES = ['classic','sumi','wurmz','village'];
 function currentUiTheme(){
   if(document.body.classList.contains('ui-sumi')) return 'sumi';
   if(document.body.classList.contains('ui-wurmz')) return 'wurmz';
+  if(document.body.classList.contains('ui-village')) return 'village';
   return 'classic';
 }
 function setUiTheme(v){
@@ -11242,13 +11455,20 @@ function setUiTheme(v){
     if(typeof showToast==='function') showToast('🔒 Thème verrouillé — attrape Wurmz sur l\'écran d\'accueil pour le débloquer !', true);
     return;
   }
+  var wasVillage = document.body.classList.contains('ui-village');
   // On retire TOUJOURS toutes les classes de thème avant d'ajouter la
   // bonne : sans ça, passer de Sumi à Wurmz laisserait les deux actives.
-  document.body.classList.remove('ui-sumi','ui-wurmz');
+  document.body.classList.remove('ui-sumi','ui-wurmz','ui-village');
   if(v==='sumi') document.body.classList.add('ui-sumi');
   else if(v==='wurmz') document.body.classList.add('ui-wurmz');
+  else if(v==='village') document.body.classList.add('ui-village');
   try{ localStorage.setItem('vtl_ui_theme', v); }catch(e){}
   updateUiThemeButtons();
+  // Le Village a sa propre navigation : on y entre en le choisissant. Et si
+  // on le quitte alors qu'on est SUR la carte, on rebascule vers un écran
+  // classique (sinon on resterait bloqué sur une carte sans bottom-nav).
+  if(v==='village'){ if(typeof showScreen==='function') showScreen('village'); }
+  else if(wasVillage){ var _cur=document.querySelector('.screen.active'); if(_cur && _cur.id==='screen-village' && typeof showScreen==='function') showScreen('menu'); }
 }
 // Bascule cyclique pour le bouton unique de l'accueil : Classique → Sumi
 // → Wurmz → Classique. Un toast nomme le thème atteint (découvrabilité).
@@ -11259,7 +11479,7 @@ function cycleUiTheme(){
   var idx = order.indexOf(currentUiTheme());
   var next = order[(idx+1) % order.length];
   setUiTheme(next);
-  var labels = {classic:'Classique', sumi:'墨 Sumi', wurmz:'🪲 Wurmz'};
+  var labels = {classic:'Classique', sumi:'墨 Sumi', wurmz:'🪲 Wurmz', village:'🏘 Village'};
   if(typeof showToast==='function') showToast('Thème : '+labels[next], false);
 }
 function updateUiThemeButtons(){
@@ -11300,7 +11520,7 @@ function rgbToHexSafe(rgb){
 // Application au démarrage (avant tout affichage d'écran).
 // Wurmz mémorisé mais plus débloqué sur cet appareil (cache vidé, autre
 // session...) : retour silencieux au Classique plutôt qu'un thème volé.
-try{ var _th=localStorage.getItem('vtl_ui_theme'); if(_th==='sumi') document.body.classList.add('ui-sumi'); else if(_th==='wurmz' && isWurmzThemeUnlocked()) document.body.classList.add('ui-wurmz'); }catch(e){}
+try{ var _th=localStorage.getItem('vtl_ui_theme'); if(_th==='sumi') document.body.classList.add('ui-sumi'); else if(_th==='wurmz' && isWurmzThemeUnlocked()) document.body.classList.add('ui-wurmz'); else if(_th==='village') document.body.classList.add('ui-village'); }catch(e){}
 try{ var _ss=localStorage.getItem('vtl_sumi_sky'); if(_ss) document.body.style.setProperty('--sumi-sky', _ss); }catch(e){}
 function setBoardSize(v){displayPrefs.boardSize=v;['small','auto','large'].forEach(x=>document.getElementById('board-'+x).classList.toggle('selected',x===v));if(document.getElementById('screen-game').classList.contains('active'))renderBoard()}
 function confirmMenu(){if(confirm(t('msg_confirm_menu'))){stopTimer();showScreen('menu')}}
@@ -25685,6 +25905,26 @@ window.addEventListener('beforeunload', () => {
     </div>
     <button onclick="closeEloInfoModal()" style="margin-top:14px;width:100%;font-family:'Cinzel',serif;font-size:13px;letter-spacing:1px;padding:10px;border:1px solid rgba(200,168,110,.3);background:rgba(0,0,0,.4);color:var(--parchment);cursor:pointer;border-radius:4px;flex-shrink:0">Fermer</button>
   </div>
+</div>
+
+<!-- ═══════════ MENU VILLAGE (thème ui-village, expérimental) ═══════════
+     Carte panoramique défilable ; chaque bâtiment cerclé ouvre un sous-panneau
+     de raccourcis vers les écrans existants. Les zones et les panneaux sont
+     générés par buildVillageMap() à partir de VILLAGE_BUILDINGS. Voir
+     docs/UI_VILLAGE.md. Le reste (torii, chariot, cascade…) est décor. -->
+<div id="screen-village" class="screen">
+  <div id="village-hint">↔ Balade-toi · touche un bâtiment</div>
+  <button id="village-login" onclick="showScreen('online-auth')">🔑 Se connecter</button>
+  <div id="village-scroll">
+    <div id="village-canvas">
+      <img id="village-bg" src="assets/village/village-map.png" alt="Village">
+      <!-- .village-zone injectées par buildVillageMap() -->
+    </div>
+  </div>
+</div>
+<button id="village-home-btn" onclick="showScreen('village')">⛩ Village</button>
+<div id="village-panel" onclick="if(event.target===this)closeVillagePanel()">
+  <div class="vp-box" id="village-panel-box"></div>
 </div>
 
 <!-- ═══════════ BOTTOM NAVIGATION (5 onglets) ═══════════ -->
