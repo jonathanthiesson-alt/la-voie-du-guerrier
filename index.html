@@ -325,6 +325,18 @@ body.ui-wurmz #screen-sumo .sumi-sky{display:block;filter:sepia(1) hue-rotate(8d
 .piece.epeiste{border-radius:50%;z-index:2}
 .piece.white{background:radial-gradient(circle at 35% 35%,#f5eed8,#c8b896 60%,#8a7050);border:2px solid #d4b870;box-shadow:0 3px 8px rgba(0,0,0,.6),inset 0 1px 3px rgba(255,255,255,.4);color:#3a2000}
 .piece.black{background:radial-gradient(circle at 35% 35%,#3a2810,#1a1008 60%,#0a0804);border:2px solid #5a3a15;box-shadow:0 3px 8px rgba(0,0,0,.8),inset 0 1px 3px rgba(100,70,20,.3);color:#d4a017}
+/* CHAMP DE BATAILLE — teinte par escouade : dans un même camp, les 3
+   combattants se distinguent par un ANNEAU coloré (bordure teintée) + un petit
+   numéro d'unité. Unité 1 = ambre, 2 = cyan, 3 = magenta. La couleur de camp
+   (blanc/noir) reste, c'est la teinte d'anneau qui identifie le combattant. */
+.piece.bf-unit-1{border-color:#e0a81e !important;box-shadow:0 0 0 2px rgba(224,168,30,.9),0 3px 8px rgba(0,0,0,.6) !important}
+.piece.bf-unit-2{border-color:#2fbfd0 !important;box-shadow:0 0 0 2px rgba(47,191,208,.9),0 3px 8px rgba(0,0,0,.6) !important}
+.piece.bf-unit-3{border-color:#d95fce !important;box-shadow:0 0 0 2px rgba(217,95,206,.9),0 3px 8px rgba(0,0,0,.6) !important}
+.piece.pion-shield.bf-unit-1,.piece.pion-shield.bf-unit-2,.piece.pion-shield.bf-unit-3{border-radius:4px}
+.bf-unit-badge{position:absolute;top:-5px;right:-5px;min-width:14px;height:14px;padding:0 2px;border-radius:8px;font:700 10px/14px VT323,monospace;text-align:center;color:#fff;z-index:5;box-shadow:0 0 0 1px rgba(255,255,255,.5)}
+.bf-unit-1>.bf-unit-badge{background:#c98a10}
+.bf-unit-2>.bf-unit-badge{background:#1f8f9c}
+.bf-unit-3>.bf-unit-badge{background:#a83f9e}
 /* WurmzSkin : le médaillon EST la pièce — on retire le fond, la bordure et
    l'ombre interne du pion standard pour qu'il occupe toute la surface.
    On conserve une ombre portée pour garder le relief sur le plateau. */
@@ -15049,6 +15061,13 @@ function mkPiece(piece,cs,isStackBottom,topType,col){
   else if(piece.type==='shield') el.classList.add('pion-shield');
   else el.classList.add('pion-sword');
   el.innerHTML = makePieceSVG(_skin, sz, piece);
+  // Champ de bataille : marque l'escouade (anneau teinté + numéro d'unité) pour
+  // distinguer les 3 combattants d'un même camp. Ajouté APRÈS innerHTML (qui
+  // écraserait le badge). Gardé par G.battlefieldMode → aucun effet ailleurs.
+  if(typeof G!=='undefined' && G && G.battlefieldMode && piece.unit!=null){
+    el.classList.add('bf-unit-'+piece.unit);
+    var _bdg=document.createElement('div'); _bdg.className='bf-unit-badge'; _bdg.textContent=piece.unit; el.appendChild(_bdg);
+  }
   return el;
 }
 
