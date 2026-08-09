@@ -112,6 +112,30 @@ sous-menus — le village est un **routeur graphique** par-dessus l'app.
 - i18n : chaînes FR littérales pour le test (comme Labo) → `LANGS` non touché
   tant que le thème n'est pas validé.
 
+## Bloc 1 livré (V0.43.0, 2026-08-09)
+
+- **Bandeau du haut** (`#village-topbar`) : koku + monnaies de mode
+  (`MODE_CURRENCIES`) + rang de Ligue (lazy `get_my_league_standings` →
+  `LEAGUE_TIERS`). `villageRefreshBanner()`/`villageFetchLeagueTier()`.
+- **Halo permanent + nom affiché** sous chaque bâtiment (CSS `.village-zone`
+  `::before`/`::after`, plus de hover-only).
+- **Pastilles de notif** : Arène (notifications non lues) + Auberge (DM non
+  lus) — `villageRefreshBadges()` ; item **Notifications** ajouté à l'Auberge.
+- **Navigation centrale** : `villageInterceptBack` (écouteur en capture) —
+  en `ui-village`, tout bouton retour `.screen-nav-bar .tuto-nav-btn` remonte
+  à l'écran précédent réel (historique, hubs exclus) ou au village. Le bouton
+  flottant ⛩ Village reste le retour rapide universel.
+
+## RESTE (Blocs 2 & 3, cross-cutting)
+
+- **Bloc 2 — Gestion de guilde** (par le GM) : bannière + devise + message
+  d'info, popup à la 1re connexion depuis un nouveau message, devise au
+  5-4-3-2-1 des matchs de guilde (comme les devises de joueurs). Nécessite des
+  **tables Supabase** → `sql_a_executer/` (à relire/exécuter par Jonathan).
+- **Bloc 3 — Minuteur type échecs** (cœur du jeu, TOUS les modes) : timer
+  déclenché au **1er coup des Blancs** ; si >10 s pour ce 1er coup → partie
+  annulée (amical) / défaite + ronde suivante (arène/tournoi).
+
 ## Découpage proposé (phases testables)
 
 1. **Squelette thème** : `ui-village` sélectionnable, carte panoramique

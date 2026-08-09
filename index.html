@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.42.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.43.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -241,17 +241,34 @@ body.ui-village.bottomnav-visible.village-map-open #village-home-btn{display:non
 #village-canvas img#village-bg{display:block;height:100%;width:auto;user-select:none;-webkit-user-drag:none;pointer-events:none}
 /* Un bâtiment = un bouton elliptique transparent posé en % sur la carte.
    Halo doré au survol/tap = signal « c'est cliquable ». */
-.village-zone{position:absolute;transform:translate(-50%,-50%);border:none;background:transparent;cursor:pointer;border-radius:50%;padding:0;transition:box-shadow .18s,background .18s}
-.village-zone::after{content:attr(data-label);position:absolute;left:50%;bottom:-4px;transform:translate(-50%,100%);font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;color:#ffe9a8;text-shadow:0 2px 5px rgba(0,0,0,.95);white-space:nowrap;opacity:0;transition:opacity .18s;pointer-events:none}
-.village-zone:hover,.village-zone:focus-visible{background:radial-gradient(closest-side,rgba(255,214,90,.28),rgba(255,214,90,.06) 70%,transparent);box-shadow:0 0 0 2px rgba(255,214,90,.55),0 0 22px rgba(255,214,90,.4);outline:none}
-.village-zone:hover::after,.village-zone:focus-visible::after{opacity:1}
+.village-zone{position:absolute;transform:translate(-50%,-50%);border:none;background:transparent;cursor:pointer;border-radius:50%;padding:0}
+/* Halo PERMANENT (léger, pulsé) : on voit en continu quels bâtiments sont
+   cliquables. Intensifié au survol/focus. */
+.village-zone::before{content:'';position:absolute;inset:0;border-radius:50%;background:radial-gradient(closest-side,rgba(255,214,90,.16),rgba(255,214,90,.03) 68%,transparent);box-shadow:0 0 0 1px rgba(255,220,120,.28),0 0 14px rgba(255,210,110,.18);pointer-events:none;animation:villageHalo 3.2s ease-in-out infinite;transition:box-shadow .18s,background .18s}
+@keyframes villageHalo{0%,100%{opacity:.55}50%{opacity:1}}
+.village-zone:hover::before,.village-zone:focus-visible::before{background:radial-gradient(closest-side,rgba(255,214,90,.32),rgba(255,214,90,.08) 70%,transparent);box-shadow:0 0 0 2px rgba(255,214,90,.6),0 0 24px rgba(255,214,90,.5);animation:none;opacity:1}
+.village-zone:focus-visible{outline:none}
+/* Nom du bâtiment, TOUJOURS visible sous la zone (pastille lisible). */
+.village-zone::after{content:attr(data-label);position:absolute;left:50%;bottom:-2px;transform:translate(-50%,100%);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;color:#ffe9a8;text-shadow:0 1px 3px rgba(0,0,0,.9);white-space:nowrap;background:rgba(10,8,6,.55);padding:1px 7px;border-radius:8px;border:1px solid rgba(212,160,23,.3);pointer-events:none}
+.village-zone:not([data-label])::after{display:none}
 .village-zone.locked{cursor:not-allowed}
-.village-zone.locked:hover,.village-zone.locked:focus-visible{background:radial-gradient(closest-side,rgba(170,170,170,.16),transparent 70%);box-shadow:0 0 0 2px rgba(150,150,150,.4)}
+.village-zone.locked::before{background:radial-gradient(closest-side,rgba(170,170,170,.14),transparent 70%);box-shadow:0 0 0 1px rgba(150,150,150,.35);animation:none}
+.village-zone.locked::after{color:#b9b2a2;border-color:rgba(150,150,150,.3)}
 .village-zone.vhidden{display:none}
-#village-hint{position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:5;font-family:'VT323',monospace;font-size:11px;letter-spacing:1px;color:#ffe9a8;background:rgba(10,8,6,.6);border:1px solid rgba(212,160,23,.4);border-radius:14px;padding:4px 12px;pointer-events:none}
+/* Pastille de notif posée sur un bâtiment (Arène = jeu, Auberge = social). */
+.village-zone .village-badge{position:absolute;top:6%;right:8%;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#e74c3c;box-shadow:0 0 6px rgba(231,76,60,.9);font-family:'VT323',monospace;font-size:12px;line-height:18px;color:#fff;text-align:center;pointer-events:none;display:none;z-index:2}
+/* Bandeau du haut : monnaies (koku + monnaies de mode) + rang de ligue. */
+#village-topbar{position:absolute;top:0;left:0;right:0;z-index:7;display:flex;align-items:center;gap:8px;padding:6px 10px;background:linear-gradient(180deg,rgba(8,6,4,.85),rgba(8,6,4,.4) 78%,transparent);pointer-events:none}
+#village-topbar .vtb-currencies{flex:1;display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;pointer-events:auto;scrollbar-width:none}
+#village-topbar .vtb-currencies::-webkit-scrollbar{display:none}
+#village-topbar .vtb-item{flex:0 0 auto;font-family:'VT323',monospace;font-size:13px;color:#ffe9a8;background:rgba(0,0,0,.4);border:1px solid rgba(212,160,23,.3);border-radius:11px;padding:2px 9px;white-space:nowrap}
+#village-topbar .vtb-item.vtb-koku{color:var(--gold-bright);border-color:rgba(212,160,23,.55)}
+#village-topbar .vtb-league{flex:0 0 auto;pointer-events:auto;font-family:'VT323',monospace;font-size:13px;color:#0a0806;background:var(--gold-bright);border:none;border-radius:11px;padding:3px 11px;cursor:pointer;white-space:nowrap}
+#village-hint{position:absolute;top:38px;left:50%;transform:translateX(-50%);z-index:5;font-family:'VT323',monospace;font-size:11px;letter-spacing:1px;color:#ffe9a8;background:rgba(10,8,6,.6);border:1px solid rgba(212,160,23,.4);border-radius:14px;padding:4px 12px;pointer-events:none}
 /* Pastille « Se connecter » : seule entrée d'auth quand le Village est le
-   thème actif et qu'on n'est pas connecté (villageRefreshLocks la pilote). */
-#village-login{display:none;position:absolute;top:6px;right:10px;z-index:6;font-family:'VT323',monospace;font-size:12px;letter-spacing:1px;color:#0a0806;background:var(--gold-bright);border:none;border-radius:14px;padding:5px 13px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.5)}
+   thème actif et qu'on n'est pas connecté (villageRefreshLocks la pilote).
+   Placée sous le bandeau du haut. */
+#village-login{display:none;position:absolute;top:38px;right:10px;z-index:6;font-family:'VT323',monospace;font-size:12px;letter-spacing:1px;color:#0a0806;background:var(--gold-bright);border:none;border-radius:14px;padding:5px 13px;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.5)}
 /* Sous-panneau d'un bâtiment (liste de raccourcis vers les écrans existants) */
 #village-panel{display:none;position:fixed;inset:0;z-index:860;background:rgba(6,4,3,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:20px}
 #village-panel.open{display:flex}
@@ -2191,7 +2208,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.42.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.43.0 &#9820;</div>
   </div>
 </div>
 
@@ -3648,8 +3665,19 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.42.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.43.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.43.0 &mdash; 9 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; VILLAGE &mdash; BANDEAU, REP&Egrave;RES &amp; NAVIGATION</li>
+        <li><strong>Bandeau du haut</strong>&nbsp;: tes <strong>monnaies</strong> (Koku + Shiso, Tamashii, Mon, Ryu, Hanafuda, Shiitake, Fame) et ton <strong>rang de Ligue</strong>, r&eacute;sum&eacute;s en permanence.</li>
+        <li>Chaque b&acirc;timent cliquable a d&eacute;sormais un <strong>halo lumineux</strong> et son <strong>nom affich&eacute;</strong> en dessous &mdash; plus de doute sur ce qui est cliquable.</li>
+        <li><strong>Pastilles de notif</strong>&nbsp;: sur l&rsquo;<strong>Ar&egrave;ne</strong> (notifications de jeu) et l&rsquo;<strong>Auberge</strong> (messages non lus), qui a aussi une entr&eacute;e <strong>Notifications</strong>.</li>
+        <li><strong>Le village est l&rsquo;aiguillage central</strong>&nbsp;: les boutons &laquo;&nbsp;retour&nbsp;&raquo; ne renvoient plus vers les anciens menus des autres th&egrave;mes &mdash; ils remontent &agrave; l&rsquo;&eacute;cran pr&eacute;c&eacute;dent, ou au <strong>village</strong>. Un bouton flottant <strong>&#9942; Village</strong> y ram&egrave;ne partout.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -5347,6 +5375,7 @@ function refreshAllCurrencyDisplays(){
   refreshGuildProgress();
   refreshEventsProgress();
   renderModeProgressBar('play-shiitake-fill','play-shiitake-milestones',shopState.shiitake);
+  if(typeof villageRefreshBanner==='function') villageRefreshBanner();
 }
 // Barre de progression du mode Arène — maintenant basée sur Tamashii
 // (âme du guerrier), monnaie propre à l'Arène, distincte du Koku général.
@@ -11127,7 +11156,7 @@ function showScreen(id){
   // Thème Village : construire la carte à la première visite, rafraîchir le
   // grisage online/dev à chaque visite, et masquer le bouton flottant «⛩
   // Village» quand on EST sur la carte (via la classe village-map-open).
-  if(id==='village'){ if(typeof buildVillageMap==='function') buildVillageMap(); if(typeof villageRefreshLocks==='function') villageRefreshLocks(); }
+  if(id==='village'){ if(typeof buildVillageMap==='function') buildVillageMap(); if(typeof villageRefreshLocks==='function') villageRefreshLocks(); if(typeof villageRefreshBanner==='function') villageRefreshBanner(); if(typeof villageRefreshBadges==='function') villageRefreshBadges(); }
   document.body.classList.toggle('village-map-open', id==='village');
   if(id==='play') refreshPlayScreen();
   applyLang();
@@ -11214,6 +11243,7 @@ var VILLAGE_BUILDINGS = [
       {label:'Confidentialité du compte', ico:'🔒', screen:'account-privacy'},
       {label:'Menu DEV', ico:'🛠', screen:'dev-hub', dev:true} ] },
   { id:'auberge', label:'Auberge', cx:43, cy:46, w:17, h:23, items:[
+      {label:'Notifications', ico:'🔔', fn:'openNotificationsModal', online:true},
       {label:'Amis', ico:'👥', screen:'amis', online:true},
       {label:'Messagerie', ico:'✉', screen:'messaging', online:true},
       {label:'Forums', ico:'💬', soon:true},
@@ -11265,11 +11295,75 @@ function buildVillageMap(){
     z.style.left = b.cx+'%'; z.style.top = b.cy+'%';
     z.style.width = b.w+'%'; z.style.height = b.h+'%';
     z.setAttribute('aria-label', b.label||b.id);
+    // Pastille de notif sur l'Arène (jeu) et l'Auberge (social).
+    if(b.id==='arene' || b.id==='auberge'){
+      var bd = document.createElement('span');
+      bd.className = 'village-badge';
+      bd.id = 'village-badge-'+b.id;
+      z.appendChild(bd);
+    }
     z.onclick = function(){ villageOpenBuilding(b.id); };
     canvas.appendChild(z);
   });
   _villageBuilt = true;
 }
+// Bandeau du haut : koku + monnaies de mode + rang de ligue (lazy).
+var _villageLeagueTier = null;
+function villageRefreshBanner(){
+  var box = document.getElementById('vtb-currencies');
+  if(!box || typeof shopState==='undefined') return;
+  var html = '<span class="vtb-item vtb-koku" title="Koku">石 '+(shopState.koku!=null?shopState.koku:0)+'</span>';
+  if(typeof MODE_CURRENCIES!=='undefined'){
+    MODE_CURRENCIES.forEach(function(c){
+      html += '<span class="vtb-item" title="'+c.name+'">'+c.icon+' '+(shopState[c.key]!=null?shopState[c.key]:0)+'</span>';
+    });
+  }
+  box.innerHTML = html;
+  var lt = document.getElementById('vtb-league-txt');
+  if(lt) lt.textContent = _villageLeagueTier ? ('Div. '+_villageLeagueTier) : (currentUser ? 'Ligue' : '—');
+  if(currentUser && _villageLeagueTier==null) villageFetchLeagueTier();
+}
+async function villageFetchLeagueTier(){
+  if(typeof supa==='undefined' || !supa || !currentUser) return;
+  try{
+    var r = await supa.rpc('get_my_league_standings');
+    if(r && r.data){
+      var tier = (typeof LEAGUE_TIERS!=='undefined' && LEAGUE_TIERS[r.data.tier||0]) || null;
+      _villageLeagueTier = tier ? tier.name : null;
+      var lt = document.getElementById('vtb-league-txt');
+      if(lt && _villageLeagueTier) lt.textContent = 'Div. '+_villageLeagueTier;
+    }
+  }catch(e){ /* ligue indispo : on laisse « Ligue » */ }
+}
+// Pastilles de notif sur les bâtiments (Arène = notifications de jeu,
+// Auberge = messages privés non lus).
+async function villageRefreshBadges(){
+  if(!document.body.classList.contains('ui-village')) return;
+  var setB = function(id,n){ var el=document.getElementById('village-badge-'+id); if(!el) return; if(n>0){ el.textContent = n>9?'9+':String(n); el.style.display='block'; } else { el.style.display='none'; } };
+  if(!currentUser || typeof supa==='undefined' || !supa){ setB('arene',0); setB('auberge',0); return; }
+  try{ var r = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false); setB('arene', r.count||0); }catch(e){ setB('arene',0); }
+  try{ var m = await supa.from('direct_messages').select('id',{count:'exact',head:true}).eq('recipient_id',currentUser.id).eq('read',false); setB('auberge', m.count||0); }catch(e){ setB('auberge',0); }
+}
+// Aiguillage central : en thème Village, un « retour » d'écran ne doit JAMAIS
+// atterrir sur un ancien hub d'onglet (menu/play/local-hub/amis) ni sur le
+// titre — il remonte à l'écran précédent RÉEL (historique), sinon au village.
+// Écoute en capture pour court-circuiter le onclick inline du bouton.
+function villageInterceptBack(e){
+  if(!document.body.classList.contains('ui-village')) return;
+  var btn = (e.target && e.target.closest) ? e.target.closest('.screen-nav-bar .tuto-nav-btn') : null;
+  if(!btn) return;
+  var active = document.querySelector('.screen.active');
+  if(active && (active.id==='screen-village' || active.id==='screen-game')) return;
+  e.preventDefault(); e.stopPropagation();
+  var HUBS = ['menu','play','local-hub','amis','home','online-menu'];
+  var prev = null;
+  if(typeof _screenHistory!=='undefined'){
+    while(_screenHistory.length){ var p=_screenHistory.pop(); if(HUBS.indexOf(p)===-1){ prev=p; break; } }
+  }
+  if(typeof _suppressHistoryPush!=='undefined') _suppressHistoryPush = true;
+  showScreen(prev || 'village');
+}
+document.addEventListener('click', villageInterceptBack, true);
 // Grisage online + masquage dev, recalculés à chaque affichage de la carte
 // (l'état de session change après connexion/déconnexion).
 function villageRefreshLocks(){
@@ -25913,6 +26007,10 @@ window.addEventListener('beforeunload', () => {
      générés par buildVillageMap() à partir de VILLAGE_BUILDINGS. Voir
      docs/UI_VILLAGE.md. Le reste (torii, chariot, cascade…) est décor. -->
 <div id="screen-village" class="screen">
+  <div id="village-topbar">
+    <div class="vtb-currencies" id="vtb-currencies"></div>
+    <button class="vtb-league" id="vtb-league" onclick="showScreen('league')" title="Ma ligue">🏆 <span id="vtb-league-txt">—</span></button>
+  </div>
   <div id="village-hint">↔ Balade-toi · touche un bâtiment</div>
   <button id="village-login" onclick="showScreen('online-auth')">🔑 Se connecter</button>
   <div id="village-scroll">
