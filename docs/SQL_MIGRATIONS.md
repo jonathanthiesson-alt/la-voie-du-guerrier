@@ -88,6 +88,20 @@ end $$;
 | 36 | `fix_tournament_report_uuid.sql` | **FIX CRITIQUE tournoi.** `tournament_report_from_game` avait une signature `(p_game_id BIGINT,…)` alors que `online_games.id`/`tournament_pairings.online_game_id` sont **UUID**. Le client (`reportTournamentGameEnd`) et le worker (`tournamentTick`) passaient un uuid → appel impossible → échec **silencieux** (catch vide) → **aucun résultat de tournoi jamais enregistré** : paires bloquées `result=null`, parties « en cours » à vie, puis double-forfait au timeout de ronde et clôture prématurée. La surcharge uuid (correcte) avait été supprimée par erreur (cf. #31 « surcharge zombie »). Rétablie en `uuid`, variante bigint retirée. **Appliqué via MCP le 2026-08-05** (repéré en test tournoi live). |
 | 35 | `bots_arena_tournament.sql` | **Les bots jouent partout.** (1) **Arène** : ajoute `want_backfill/backfill_after/backfill_random/backfill_max_elo` à `arena_matchmaking_queue` → un joueur d'arène qui poireaute est rejoint par un bot d'Elo voisin en match **amical** (le worker crée l'`arena_matches` `ranked=false` + manche 1 ; le client humain pilote la progression du BO3 face à un bot). (2) **Tournoi** : RPC `tournament_fill_with_bots(bigint)` (créateur/admin, statut `open` uniquement) qui complète les slots vides avec les **15 fragments** (01→15, jamais le Rōnin 00) ; les bots jouent ensuite réellement leurs rondes (worker : création/pilotage/report des paires contenant un bot, via `tournament_report_from_game`). **Appliqué via MCP le 2026-08-04.** Vérifié : remplissage 8/8 fragments sans Rōnin, gardes `forbidden`/`already_started`/`full` OK, insert arène avec colonnes backfill accepté. |
 
+### ⏳ À exécuter par Jonathan (Champ de bataille online — V0.41.0)
+
+Ordre : `battlefield_online.sql` **puis** `battlefield_lobby.sql` (le second
+dépend de la table `battlefield_games` du premier). Tous deux idempotents,
+additifs, sans effet sur `online_games`/1v1. Contrôle en fin de chaque script.
+
+| # | Script | Contenu |
+|---|---|---|
+| A | `battlefield_online.sql` | Table `battlefield_games` (6 sièges dans `seats` jsonb) + trigger `updated_at` + RLS (3 politiques) + realtime + RPC `battlefield_bot_fill(elo,count)`. |
+| B | `battlefield_lobby.sql` | Lobby d'équipe : `battlefield_teams` (3 slots), `battlefield_solo_queue`, `battlefield_invites` (dédiée — **pas** `challenges`) ; RLS (10 politiques) + realtime ; RPC `battlefield_join_open_slot`, `battlefield_accept_invite`, `battlefield_matchmake(team,format,timer)`, `battlefield_solo_place()`. |
+
+Après exécution : activer le worker (`bot-army.yml`, directive `enabled`) pour
+que les sièges bots jouent et que les timeouts s'appliquent.
+
 ---
 
 ## Diagnostic RLS

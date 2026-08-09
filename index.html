@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.40.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.41.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2128,7 +2128,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.40.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.41.0 &#9820;</div>
   </div>
 </div>
 
@@ -3584,8 +3584,19 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.40.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.41.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.41.0 &mdash; 9 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; CHAMP DE BATAILLE &mdash; EN &Eacute;QUIPE, EN LIGNE</li>
+        <li>Le mode <strong>Champ de bataille</strong> (3 v 3, plateau 9&times;9) se joue d&eacute;sormais <strong>en &eacute;quipe, en ligne</strong>. Depuis le carrousel <strong>Jouer</strong>, un <strong>lobby de pr&eacute;paration</strong>&nbsp;: cr&eacute;e une &eacute;quipe, vois tes <strong>3 slots</strong>, et remplis-les.</li>
+        <li>Le <strong>chef d'&eacute;quipe</strong> peut, par combattant&nbsp;: <strong>inviter un ami</strong>, <strong>placer un bot</strong>, ou <strong>ouvrir le slot</strong> &agrave; un joueur au hasard (salon des &eacute;quipes ouvertes, <strong>code</strong> d'&eacute;quipe, ou <strong>file solo</strong>).</li>
+        <li>Le <strong>matchmaking</strong> appaire deux &eacute;quipes selon leur <strong>ELO cumul&eacute;</strong>. Partie <strong>amicale</strong> (aucun impact classement). Les bots peuvent compl&eacute;ter l'&eacute;quipe adverse, et jouent r&eacute;ellement leurs si&egrave;ges.</li>
+        <li style="list-style:none;margin-left:-14px;color:rgba(200,168,110,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">Un combattant qui d&eacute;passe le temps ou se d&eacute;connecte est <strong>forfait</strong> (son escouade quitte le plateau). L'entra&icirc;nement <strong>solo vs IA</strong> reste accessible depuis le lobby.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -9068,7 +9079,7 @@ function centralPlayMode(){ return PLAY_MODES[_playModeIdx] || PLAY_MODES[0]; }
 function launchCentralMode(){
   var m=centralPlayMode();
   if(m.key==='matchmaking'){ quickPlay(); return; }
-  if(m.key==='battlefield'){ playBattlefieldVsAI(); return; }
+  if(m.key==='battlefield'){ openBattlefieldLobby(); return; }
   if(m.key==='arena'){
     if(!currentUser){ showToast('Connectez-vous pour jouer en ligne.', true); showScreen('online-auth'); return; }
     showScreen('arena');
@@ -14729,6 +14740,10 @@ function endGame(winner,reason){
 
 function switchTurn(){
   if(G.gameOver)return;
+  // Champ de bataille EN LIGNE : je viens de jouer mon siège → je pousse
+  // l'état au serveur, et c'est le retour realtime (applyRemote) qui avance
+  // le siège pour tous. Prioritaire sur la rotation locale.
+  if(G.bfOnline){ bfOnlineSync(false); return; }
   // Champ de bataille : rotation siège par siège (saute les combattants
   // tombés) au lieu d'une simple alternance de couleur. bfAdvanceSeat gère
   // aussi la barre de statut et le minuteur.
@@ -15947,6 +15962,491 @@ function bfAdvanceSeat(){
   // haut), elle joue. Restriction au combattant actif gérée dans scheduleAI.
   if(G.vsAI && G.turn===G.topColor && !G.gameOver) scheduleAI();
 }
+
+// ══════════════════════════════════════════════════════
+// CHAMP DE BATAILLE — ONLINE 6 SIÈGES (Passe 2b : lobby + synchro)
+// ══════════════════════════════════════════════════════
+// Chaque humain ne pilote QU'UN siège (celui dont seats[i].player_id == moi).
+// La saisie est verrouillée (pieceInputLocked) tant que ce n'est pas mon siège
+// actif ; quand ça l'est, la restriction d'unité existante (bfActiveUnit)
+// suffit. Les autres sièges (humains ou bots pilotés par le worker) arrivent
+// par realtime. Table dédiée battlefield_games — online_games (1v1) intact.
+
+var currentBfGameId=null;       // partie battlefield en cours (garde anti double-entrée)
+var currentBfGameChannel=null;  // canal realtime de la partie
+var currentBfTeamId=null;       // équipe (lobby) en cours
+var currentBfTeam=null;         // dernière ligne d'équipe connue
+var currentBfTeamChannel=null;  // canal realtime de l'équipe
+var _bfIncomingInvites=[];      // invitations de siège reçues (pending)
+var _bfInviteSlot=null;         // slot ciblé par le sélecteur d'ami
+var _bfSearchPoll=null;         // minuteur de re-sondage du matchmaking
+
+// Mon ELO (cadence 5s par défaut) — sert au calcul de l'ELO cumulé d'équipe.
+async function bfMyElo(){
+  try{ var r=await supa.from('profiles').select('elo_5s').eq('id',currentUser.id).single();
+       return (r.data&&r.data.elo_5s)||1200; }catch(e){ return 1200; }
+}
+function bfIsLeader(){ return !!(currentBfTeam && currentUser && currentBfTeam.leader_id===currentUser.id); }
+function bfSlotElo(s){ return (s && (s.state==='human'||s.state==='bot')) ? (s.elo||0) : 0; }
+function bfFilledCount(){ return (currentBfTeam&&currentBfTeam.slots||[]).filter(function(s){return s.state==='human'||s.state==='bot';}).length; }
+function bfTeamIsFull(t){ return t && (t.slots||[]).filter(function(s){return s.state==='human'||s.state==='bot';}).length===3; }
+function bfGenCode(){ var s=''; var a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; for(var i=0;i<6;i++) s+=a[Math.floor(Math.random()*a.length)]; return s; }
+
+// ── Ouverture du lobby (depuis le carrousel) ──────────────────────
+async function openBattlefieldLobby(){
+  if(typeof currentUser==='undefined' || !currentUser){
+    if(typeof showToast==='function') showToast('Connecte-toi pour jouer en équipe.', true);
+    if(typeof showScreen==='function') showScreen('online-auth'); return;
+  }
+  bfLobbyEnsureOverlay();
+  document.getElementById('bf-lobby').style.display='flex';
+  bfRefreshInvites();
+  bfLobbyRender();
+}
+function bfLobbyClose(){ var e=document.getElementById('bf-lobby'); if(e) e.style.display='none'; }
+// Ferme le lobby ET coupe les abonnements/poll (appelé en entrant en partie).
+function bfLobbyTeardown(){
+  bfLobbyClose();
+  if(_bfSearchPoll){ clearInterval(_bfSearchPoll); _bfSearchPoll=null; }
+}
+function bfLobbyEnsureOverlay(){
+  if(document.getElementById('bf-lobby')) return;
+  var ov=document.createElement('div');
+  ov.id='bf-lobby';
+  ov.style.cssText='position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;padding:14px';
+  ov.innerHTML='<div style="background:linear-gradient(180deg,#20160c,#160f08);border:1px solid rgba(212,160,23,.4);border-radius:12px;max-width:440px;width:100%;max-height:88vh;overflow:auto;padding:18px;box-shadow:0 12px 46px rgba(0,0,0,.7)">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+      +'<div style="font-family:Cinzel,serif;color:var(--gold-bright);font-size:17px">🏯 Champ de bataille — équipe</div>'
+      +'<button onclick="bfLobbyClose()" style="background:transparent;border:none;color:var(--parchment);opacity:.6;font-size:20px;cursor:pointer">✕</button>'
+    +'</div>'
+    +'<div id="bf-lobby-invites"></div>'
+    +'<div id="bf-lobby-body"></div>'
+    +'</div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click', function(e){ if(e.target===ov) bfLobbyClose(); });
+}
+
+// ── Rendu du corps du lobby ───────────────────────────────────────
+function bfLobbyRender(){
+  var body=document.getElementById('bf-lobby-body'); if(!body) return;
+  var esc=(typeof escapeHtml==='function')?escapeHtml:function(s){return String(s);};
+  if(!currentBfTeam){
+    // Pas encore d'équipe : créer / rejoindre / file solo / entraînement.
+    body.innerHTML=
+      '<button onclick="bfCreateTeam()" style="width:100%;padding:11px;margin:4px 0;border-radius:8px;cursor:pointer;border:1px solid rgba(212,160,23,.5);background:rgba(40,30,12,.6);color:var(--gold-bright);font-family:Cinzel,serif;font-size:15px">➕ Créer une équipe</button>'
+      +'<div style="display:flex;gap:6px;margin:8px 0">'
+        +'<input id="bf-code-input" placeholder="Code d\'équipe" maxlength="6" style="flex:1;min-width:0;padding:9px;border-radius:6px;border:1px solid rgba(212,160,23,.3);background:rgba(0,0,0,.3);color:var(--parchment);font-family:VT323,monospace;text-transform:uppercase">'
+        +'<button onclick="bfJoinByCode(document.getElementById(\'bf-code-input\').value)" style="padding:9px 12px;border-radius:6px;cursor:pointer;border:1px solid rgba(212,160,23,.4);background:rgba(40,30,12,.6);color:var(--parchment);font-family:VT323,monospace">Rejoindre</button>'
+      +'</div>'
+      +'<button onclick="bfSoloQueueJoin()" style="width:100%;padding:9px;margin:4px 0;border-radius:8px;cursor:pointer;border:1px solid rgba(120,180,120,.4);background:rgba(20,40,20,.4);color:#bfe3bf;font-family:VT323,monospace;font-size:14px">🎲 File solo — être placé dans une équipe</button>'
+      +'<div style="font-family:Cinzel,serif;color:var(--gold);font-size:13px;margin:12px 0 4px;opacity:.8">Salon des équipes ouvertes</div>'
+      +'<div id="bf-open-teams" style="font-family:VT323,monospace;opacity:.7;font-size:13px">Chargement…</div>'
+      +'<div style="border-top:1px solid rgba(212,160,23,.2);margin-top:12px;padding-top:10px">'
+        +'<button onclick="bfLobbyClose();playBattlefieldVsAI()" style="width:100%;padding:9px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--parchment);opacity:.75;font-family:VT323,monospace;font-size:14px">⚔ Entraînement solo vs IA</button>'
+      +'</div>';
+    bfLoadOpenTeams();
+    return;
+  }
+  // Panneau d'équipe : 3 slots + ELO cumulé + contrôles chef.
+  var t=currentBfTeam, leader=bfIsLeader();
+  var slotsHtml=(t.slots||[]).map(function(s){ return bfRenderSlot(s, leader); }).join('');
+  var full=bfTeamIsFull(t);
+  body.innerHTML=
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px">'
+      +'<div style="font-family:Cinzel,serif;color:var(--gold-bright);font-size:15px">'+esc(t.name||'Escouade')+(leader?' <span style="opacity:.6;font-size:12px">(chef)</span>':'')+'</div>'
+      +'<div style="font-family:VT323,monospace;color:var(--parchment);font-size:14px">ELO cumulé : <b style="color:var(--gold-bright)">'+(t.elo_sum||0)+'</b></div>'
+    +'</div>'
+    +'<div style="font-family:VT323,monospace;font-size:12px;opacity:.6;margin-bottom:8px">Code : <b style="letter-spacing:2px;color:var(--gold)">'+esc(t.invite_code||'—')+'</b></div>'
+    +slotsHtml
+    +(leader
+      ? '<button onclick="bfLaunchSearch()" '+(full?'':'disabled')+' style="width:100%;padding:12px;margin-top:10px;border-radius:8px;cursor:'+(full?'pointer':'not-allowed')+';border:1px solid rgba(212,160,23,.5);background:'+(full?'rgba(60,45,15,.8)':'rgba(30,25,15,.4)')+';color:'+(full?'var(--gold-bright)':'rgba(200,180,120,.4)')+';font-family:Cinzel,serif;font-size:15px">⚔ Lancer la recherche</button>'
+         +'<div id="bf-search-status" style="font-family:VT323,monospace;font-size:13px;opacity:.75;text-align:center;margin-top:6px"></div>'
+      : '<div style="font-family:VT323,monospace;font-size:13px;opacity:.7;text-align:center;margin-top:10px">En attente que le chef lance la partie…</div>')
+    +'<button onclick="bfLeaveTeam()" style="width:100%;padding:8px;margin-top:8px;border-radius:6px;cursor:pointer;border:1px solid rgba(255,255,255,.12);background:transparent;color:var(--parchment);opacity:.6;font-family:VT323,monospace;font-size:13px">Quitter l\'équipe</button>';
+}
+function bfRenderSlot(s, leader){
+  var esc=(typeof escapeHtml==='function')?escapeHtml:function(x){return String(x);};
+  var label, badge;
+  if(s.state==='human'){ label=esc(s.name||'Joueur'); badge='👤'; }
+  else if(s.state==='bot'){ label=esc(s.name||'Bot')+' <span style="opacity:.6">(bot '+(s.elo||'?')+')</span>'; badge='🤖'; }
+  else if(s.state==='open'){ label='<span style="opacity:.7">Ouvert (random / code)</span>'; badge='🔓'; }
+  else { label='<span style="opacity:.5">Vide</span>'; badge='➕'; }
+  var controls='';
+  if(leader && s.slot!==0){ // le slot 0 = le chef, non modifiable
+    if(s.state==='human'||s.state==='bot'||s.state==='open'){
+      controls='<button onclick="bfSlotClear('+s.slot+')" style="'+bfMiniBtn()+'">Vider</button>';
+    } else {
+      controls='<button onclick="bfInviteFriendPicker('+s.slot+')" style="'+bfMiniBtn()+'">Inviter</button>'
+        +'<button onclick="bfSlotPlaceBot('+s.slot+')" style="'+bfMiniBtn()+'">Bot</button>'
+        +'<button onclick="bfSlotOpen('+s.slot+')" style="'+bfMiniBtn()+'">Ouvrir</button>';
+    }
+  }
+  return '<div style="display:flex;align-items:center;gap:8px;padding:8px 9px;margin:4px 0;border-radius:7px;border:1px solid rgba(212,160,23,.25);background:rgba(0,0,0,.25)">'
+    +'<span style="font-size:17px">'+badge+'</span>'
+    +'<span style="flex:1;min-width:0;font-family:VT323,monospace;font-size:14px;color:var(--parchment)">Combattant '+(s.slot+1)+' — '+label+'</span>'
+    +'<span style="display:flex;gap:4px">'+controls+'</span></div>';
+}
+function bfMiniBtn(){ return 'padding:4px 7px;border-radius:5px;cursor:pointer;border:1px solid rgba(212,160,23,.3);background:rgba(40,30,12,.5);color:var(--parchment);font-family:VT323,monospace;font-size:12px'; }
+
+// ── Création / adhésion d'équipe ──────────────────────────────────
+async function bfCreateTeam(){
+  var myElo=await bfMyElo();
+  var slots=[
+    {slot:0,state:'human',player_id:currentUser.id,is_bot:false,bot_key:null,name:currentUser.pseudo||'Chef',elo:myElo},
+    {slot:1,state:'empty',player_id:null,is_bot:false,bot_key:null,name:null,elo:0},
+    {slot:2,state:'empty',player_id:null,is_bot:false,bot_key:null,name:null,elo:0}
+  ];
+  var ins=await supa.from('battlefield_teams').insert({
+    leader_id:currentUser.id, name:(currentUser.pseudo||'Escouade'), slots:slots,
+    elo_sum:myElo, invite_code:bfGenCode(), timer_seconds:5, status:'forming'
+  }).select().single();
+  if(ins.error){ if(typeof showToast==='function') showToast('Création impossible : '+ins.error.message,true); return; }
+  bfSetTeam(ins.data);
+}
+function bfSetTeam(row){
+  currentBfTeam=row; currentBfTeamId=row.id;
+  bfTeamSubscribe(row.id);
+  bfLobbyRender();
+}
+function bfTeamSubscribe(teamId){
+  if(currentBfTeamChannel){ try{ supa.removeChannel(currentBfTeamChannel); }catch(e){} }
+  currentBfTeamChannel=supa.channel('bfteam-'+teamId)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'battlefield_teams',filter:'id=eq.'+teamId},
+        function(p){ bfOnTeamUpdate(p.new); })
+    .subscribe();
+}
+function bfOnTeamUpdate(row){
+  currentBfTeam=row;
+  if(row.game_id && row.status==='matched'){
+    if(currentBfGameId===row.game_id) return; // déjà entré (garde)
+    supa.from('battlefield_games').select('*').eq('id',row.game_id).single().then(function(res){
+      if(res.data) enterBattlefieldGame(res.data,false);
+    });
+    return;
+  }
+  bfLobbyRender();
+}
+async function bfLeaveTeam(){
+  if(bfIsLeader() && currentBfTeamId){ try{ await supa.from('battlefield_teams').update({status:'closed'}).eq('id',currentBfTeamId); }catch(e){} }
+  if(currentBfTeamChannel){ try{ supa.removeChannel(currentBfTeamChannel); }catch(e){} currentBfTeamChannel=null; }
+  currentBfTeam=null; currentBfTeamId=null;
+  if(_bfSearchPoll){ clearInterval(_bfSearchPoll); _bfSearchPoll=null; }
+  bfLobbyRender();
+}
+
+// ── Salon / code / file solo ──────────────────────────────────────
+async function bfLoadOpenTeams(){
+  var box=document.getElementById('bf-open-teams'); if(!box) return;
+  var esc=(typeof escapeHtml==='function')?escapeHtml:function(s){return String(s);};
+  var q=await supa.from('battlefield_teams').select('*').eq('status','forming').eq('open_to_random',true).order('created_at',{ascending:false}).limit(20);
+  var teams=(q.data||[]).filter(function(t){ return t.leader_id!==currentUser.id && (t.slots||[]).some(function(s){return s.state==='open';}); });
+  if(!teams.length){ box.innerHTML='<span style="opacity:.5">Aucune équipe ouverte pour l\'instant.</span>'; return; }
+  box.innerHTML=teams.map(function(t){
+    var openSlot=t.slots.find(function(s){return s.state==='open';});
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 8px;margin:3px 0;border-radius:6px;border:1px solid rgba(212,160,23,.25);background:rgba(0,0,0,.25)">'
+      +'<span style="flex:1;min-width:0;font-family:VT323,monospace;font-size:13px;color:var(--parchment)">'+esc(t.name||'Escouade')+' <span style="opacity:.6">· ELO '+(t.elo_sum||0)+' · '+bfFilledOf(t)+'/3</span></span>'
+      +'<button onclick="bfJoinOpenSlot(\''+t.id+'\','+openSlot.slot+')" style="'+bfMiniBtn()+'">Rejoindre</button></div>';
+  }).join('');
+}
+function bfFilledOf(t){ return (t.slots||[]).filter(function(s){return s.state==='human'||s.state==='bot';}).length; }
+async function bfJoinOpenSlot(teamId, slot){
+  var r=await supa.rpc('battlefield_join_open_slot',{p_team_id:teamId,p_slot:slot});
+  if(r.error){ if(typeof showToast==='function') showToast('Impossible de rejoindre : '+r.error.message,true); return; }
+  bfSetTeam(r.data);
+}
+async function bfJoinByCode(code){
+  code=String(code||'').trim().toUpperCase();
+  if(code.length<4){ if(typeof showToast==='function') showToast('Code trop court.',true); return; }
+  var q=await supa.from('battlefield_teams').select('*').eq('invite_code',code).eq('status','forming').single();
+  if(q.error||!q.data){ if(typeof showToast==='function') showToast('Code invalide ou équipe indisponible.',true); return; }
+  var open=(q.data.slots||[]).find(function(s){return s.state==='open';});
+  if(!open){ if(typeof showToast==='function') showToast('Aucun slot ouvert — demande au chef d\'en ouvrir un.',true); return; }
+  bfJoinOpenSlot(q.data.id, open.slot);
+}
+async function bfSoloQueueJoin(){
+  var elo=await bfMyElo();
+  var up=await supa.from('battlefield_solo_queue').upsert({player_id:currentUser.id,name:currentUser.pseudo||'Joueur',elo:elo});
+  if(up.error){ if(typeof showToast==='function') showToast('File solo : '+up.error.message,true); return; }
+  if(typeof showToast==='function') showToast('Tu es dans la file solo — une équipe te placera.');
+  bfSoloPollStart();
+}
+// Sonde régulièrement si une équipe m'a intégré (placement worker ou invitation
+// acceptée hors de cet onglet) : requête « une équipe dont un slot porte mon id ».
+function bfSoloPollStart(){
+  if(_bfSearchPoll) clearInterval(_bfSearchPoll);
+  _bfSearchPoll=setInterval(async function(){
+    if(currentBfTeamId || currentBfGameId){ clearInterval(_bfSearchPoll); _bfSearchPoll=null; return; }
+    try{
+      var q=await supa.from('battlefield_teams').select('*').contains('slots',[{player_id:currentUser.id}]).in('status',['forming','queued','matched']).limit(1);
+      if(q.data&&q.data[0]){ clearInterval(_bfSearchPoll); _bfSearchPoll=null;
+        try{ await supa.from('battlefield_solo_queue').delete().eq('player_id',currentUser.id); }catch(e){}
+        bfSetTeam(q.data[0]);
+        if(q.data[0].game_id) bfOnTeamUpdate(q.data[0]);
+      }
+    }catch(e){}
+  }, 4000);
+}
+
+// ── Contrôles chef sur un slot ────────────────────────────────────
+async function bfSaveSlots(slots, extra){
+  var elo=slots.reduce(function(a,s){return a+bfSlotElo(s);},0);
+  var patch=Object.assign({slots:slots,elo_sum:elo}, extra||{});
+  var up=await supa.from('battlefield_teams').update(patch).eq('id',currentBfTeamId).select().single();
+  if(up.error){ if(typeof showToast==='function') showToast('MAJ équipe impossible : '+up.error.message,true); return; }
+  bfSetTeam(up.data);
+}
+function bfCloneSlots(){ return (currentBfTeam.slots||[]).map(function(s){return Object.assign({},s);}); }
+async function bfSlotPlaceBot(slot){
+  if(!bfIsLeader()) return;
+  var teamElo=currentBfTeam.elo_sum||1200, n=Math.max(1,bfFilledCount());
+  var r=await supa.rpc('battlefield_bot_fill',{p_elo:Math.round(teamElo/n),p_count:6});
+  var list=r.data||[]; var used={};
+  (currentBfTeam.slots||[]).forEach(function(s){ if(s.player_id) used[s.player_id]=1; });
+  var pick=list.find(function(b){ return !used[b.profile_id]; });
+  if(!pick){ if(typeof showToast==='function') showToast('Aucun bot disponible.',true); return; }
+  var slots=bfCloneSlots();
+  slots[slot]={slot:slot,state:'bot',player_id:pick.profile_id,is_bot:true,bot_key:pick.bot_key,name:pick.name,elo:pick.elo};
+  bfSaveSlots(slots);
+}
+async function bfSlotOpen(slot){
+  if(!bfIsLeader()) return;
+  var slots=bfCloneSlots();
+  slots[slot]={slot:slot,state:'open',player_id:null,is_bot:false,bot_key:null,name:null,elo:0};
+  bfSaveSlots(slots, {open_to_random:true}); // apparaît dans le salon ET joignable par code
+}
+async function bfSlotClear(slot){
+  if(!bfIsLeader()) return;
+  var slots=bfCloneSlots();
+  slots[slot]={slot:slot,state:'empty',player_id:null,is_bot:false,bot_key:null,name:null,elo:0};
+  var stillOpen=slots.some(function(s){return s.state==='open';});
+  bfSaveSlots(slots, {open_to_random:stillOpen});
+}
+
+// Sélecteur d'ami pour inviter sur un slot (réutilise la source d'amis acceptés).
+async function bfInviteFriendPicker(slot){
+  if(!bfIsLeader()) return;
+  _bfInviteSlot=slot;
+  try{
+    var res=await supa.from('friendships').select('*').or('requester_id.eq.'+currentUser.id+',addressee_id.eq.'+currentUser.id);
+    var accepted=(res.data||[]).filter(function(r){ return r.status==='accepted'; });
+    var ids=accepted.map(function(r){ return r.requester_id===currentUser.id?r.addressee_id:r.requester_id; });
+    if(!ids.length){ if(typeof showToast==='function') showToast('Aucun ami — ajoute des joueurs dans « Amis ».',true); return; }
+    var pr=await supa.from('profiles').select('id,pseudo').in('id', ids);
+    var friends=(pr.data||[]).slice().sort(function(a,b){ return String(a.pseudo||'').localeCompare(String(b.pseudo||'')); });
+    bfShowFriendPicker(friends);
+  }catch(e){ if(typeof showToast==='function') showToast('Erreur de chargement des amis.',true); }
+}
+function bfShowFriendPicker(friends){
+  var esc=(typeof escapeHtml==='function')?escapeHtml:function(s){return String(s);};
+  var old=document.getElementById('bf-friend-picker'); if(old) old.remove();
+  var ov=document.createElement('div');
+  ov.id='bf-friend-picker';
+  ov.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:16px';
+  var rows=(friends||[]).map(function(p){
+    var safe=String(p.pseudo||'?').replace(/'/g,"\\'");
+    return '<button onclick="bfSendInvite(\''+p.id+'\',\''+safe+'\')" style="display:block;width:100%;text-align:left;padding:9px 10px;margin:3px 0;border-radius:6px;cursor:pointer;border:1px solid rgba(212,160,23,.3);background:rgba(0,0,0,.3);color:var(--parchment);font-family:VT323,monospace;font-size:15px">'+esc(p.pseudo||'?')+'</button>';
+  }).join('');
+  ov.innerHTML='<div style="background:linear-gradient(180deg,#20160c,#160f08);border:1px solid rgba(212,160,23,.4);border-radius:10px;max-width:320px;width:100%;max-height:80vh;overflow:auto;padding:16px">'
+    +'<div style="font-family:Cinzel,serif;color:var(--gold-bright);font-size:15px;margin-bottom:8px">Inviter sur le combattant '+((_bfInviteSlot||0)+1)+'</div>'
+    +(rows||'<div style="opacity:.6;font-family:VT323,monospace">Aucun ami.</div>')
+    +'<button onclick="var e=document.getElementById(\'bf-friend-picker\');if(e)e.remove()" style="width:100%;margin-top:10px;padding:8px;border-radius:6px;cursor:pointer;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--parchment);opacity:.7;font-family:VT323,monospace">Annuler</button></div>';
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+async function bfSendInvite(friendId, friendPseudo){
+  var e=document.getElementById('bf-friend-picker'); if(e) e.remove();
+  var slot=_bfInviteSlot; _bfInviteSlot=null;
+  if(slot==null || !currentBfTeamId) return;
+  var ins=await supa.from('battlefield_invites').insert({team_id:currentBfTeamId,slot:slot,from_id:currentUser.id,to_id:friendId,status:'pending'});
+  if(ins.error){ if(typeof showToast==='function') showToast('Invitation impossible : '+ins.error.message,true); return; }
+  // On ouvre le slot pour que l'invité puisse s'y asseoir à l'acceptation.
+  var slots=bfCloneSlots();
+  if(slots[slot] && slots[slot].state==='empty'){ slots[slot].state='open'; bfSaveSlots(slots, {open_to_random:true}); }
+  if(typeof showToast==='function') showToast('Invitation envoyée à '+(friendPseudo||'ton ami')+'.');
+}
+
+// ── Invitations reçues ────────────────────────────────────────────
+async function bfRefreshInvites(){
+  if(!currentUser) return;
+  var q=await supa.from('battlefield_invites').select('*').eq('to_id',currentUser.id).eq('status','pending').order('created_at',{ascending:false});
+  _bfIncomingInvites=q.data||[];
+  bfRenderInvites();
+}
+function bfRenderInvites(){
+  var box=document.getElementById('bf-lobby-invites'); if(!box) return;
+  if(!_bfIncomingInvites.length){ box.innerHTML=''; return; }
+  box.innerHTML=_bfIncomingInvites.map(function(inv){
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 9px;margin:0 0 8px;border-radius:7px;border:1px solid rgba(120,180,120,.4);background:rgba(20,40,20,.35)">'
+      +'<span style="flex:1;min-width:0;font-family:VT323,monospace;font-size:13px;color:#cfe8cf">Invitation à rejoindre une équipe (combattant '+(inv.slot+1)+')</span>'
+      +'<button onclick="bfAcceptInvite(\''+inv.id+'\')" style="'+bfMiniBtn()+'">Accepter</button>'
+      +'<button onclick="bfDeclineInvite(\''+inv.id+'\')" style="'+bfMiniBtn()+'">Refuser</button></div>';
+  }).join('');
+}
+async function bfAcceptInvite(id){
+  var r=await supa.rpc('battlefield_accept_invite',{p_invite_id:id});
+  if(r.error){ if(typeof showToast==='function') showToast('Invitation : '+r.error.message,true); return; }
+  bfSetTeam(r.data); bfRefreshInvites();
+}
+async function bfDeclineInvite(id){
+  try{ await supa.from('battlefield_invites').update({status:'declined'}).eq('id',id); }catch(e){}
+  bfRefreshInvites();
+}
+
+// ── Matchmaking ───────────────────────────────────────────────────
+async function bfLaunchSearch(){
+  if(!bfIsLeader()) return;
+  if(!bfTeamIsFull(currentBfTeam)){ if(typeof showToast==='function') showToast('Complète les 3 slots avant de lancer.',true); return; }
+  var v=(typeof labValidateFormat==='function')?labValidateFormat(LAB_FORMATS.champDeBataille):{ok:true,format:LAB_FORMATS.champDeBataille};
+  if(!v.ok){ if(typeof showToast==='function') showToast('Format invalide : '+v.err,true); return; }
+  bfSetSearchStatus('Recherche d\'une équipe adverse…');
+  var r=await supa.rpc('battlefield_matchmake',{p_team_id:currentBfTeamId,p_format:v.format,p_timer:currentBfTeam.timer_seconds||5});
+  if(r.error){ if(typeof showToast==='function') showToast('Matchmaking : '+r.error.message,true); bfSetSearchStatus(''); return; }
+  if(r.data && r.data.game_id){ bfEnterGameById(r.data.game_id, true); return; }
+  // En file : re-sonder + proposer de compléter par des bots.
+  bfSetSearchStatus('En file d\'attente… <button onclick="bfFillOpponentWithBots()" style="'+bfMiniBtn()+'">Compléter par des bots</button>');
+  bfSearchPollStart(v.format);
+}
+function bfSetSearchStatus(html){ var e=document.getElementById('bf-search-status'); if(e) e.innerHTML=html; }
+function bfSearchPollStart(format){
+  if(_bfSearchPoll) clearInterval(_bfSearchPoll);
+  _bfSearchPoll=setInterval(async function(){
+    if(currentBfGameId){ clearInterval(_bfSearchPoll); _bfSearchPoll=null; return; }
+    var r=await supa.rpc('battlefield_matchmake',{p_team_id:currentBfTeamId,p_format:format,p_timer:currentBfTeam.timer_seconds||5});
+    if(r.data && r.data.game_id){ clearInterval(_bfSearchPoll); _bfSearchPoll=null; bfEnterGameById(r.data.game_id, true); }
+  }, 4000);
+}
+async function bfFillOpponentWithBots(){
+  if(!bfIsLeader()) return;
+  var v=(typeof labValidateFormat==='function')?labValidateFormat(LAB_FORMATS.champDeBataille):{ok:true,format:LAB_FORMATS.champDeBataille};
+  var elo=Math.round((currentBfTeam.elo_sum||1200)/3);
+  var br=await supa.rpc('battlefield_bot_fill',{p_elo:elo,p_count:3});
+  var bots=br.data||[];
+  if(bots.length<3){ if(typeof showToast==='function') showToast('Pas assez de bots disponibles.',true); return; }
+  var seats=[];
+  for(var u=0;u<3;u++){
+    var ws=currentBfTeam.slots[u], b=bots[u];
+    seats.push({seat:u*2,color:'white',unit:u+1,player_id:ws.player_id,is_bot:!!ws.is_bot,bot_key:ws.bot_key||null,name:ws.name,eliminated:false});
+    seats.push({seat:u*2+1,color:'black',unit:u+1,player_id:b.profile_id,is_bot:true,bot_key:b.bot_key,name:b.name,eliminated:false});
+  }
+  var ins=await supa.from('battlefield_games').insert({status:'active',format:v.format,game_state:{},seats:seats,seat_idx:0,turn:'white',timer_seconds:currentBfTeam.timer_seconds||5,team_a_elo:currentBfTeam.elo_sum,team_b_elo:elo*3}).select().single();
+  if(ins.error){ if(typeof showToast==='function') showToast('Création partie : '+ins.error.message,true); return; }
+  try{ await supa.from('battlefield_teams').update({status:'matched',game_id:ins.data.id,color:'white'}).eq('id',currentBfTeamId); }catch(e){}
+  if(_bfSearchPoll){ clearInterval(_bfSearchPoll); _bfSearchPoll=null; }
+  enterBattlefieldGame(ins.data, true);
+}
+function bfEnterGameById(gameId, asCreator){
+  supa.from('battlefield_games').select('*').eq('id',gameId).single().then(function(res){
+    if(res.data) enterBattlefieldGame(res.data, asCreator);
+  });
+}
+
+// ── Entrée en partie + synchronisation ────────────────────────────
+async function enterBattlefieldGame(gameRow, asCreator){
+  if(!gameRow) return;
+  if(currentBfGameId===gameRow.id) return; // garde anti double-entrée
+  currentBfGameId=gameRow.id;
+  bfLobbyTeardown();
+  var fmt=gameRow.format;
+  var seats=gameRow.seats||[];
+  var mySeat=seats.find(function(s){ return s.player_id && currentUser && s.player_id===currentUser.id; });
+  var myColor=(mySeat&&mySeat.color)||'white';
+  settings.vsAI=false; settings.gameMode='labtest'; settings.timerSeconds=gameRow.timer_seconds||5;
+  selectedAdvId=null; settings._playerColor=myColor; settings._forcedStart='white';
+  settings._onlineBottomColor=myColor; settings._customFormat=fmt;
+  if(typeof showScreen==='function') showScreen('game');
+  initGame(); // pose le plateau de départ (déterministe) + bfInitRotation
+  // Bascule ONLINE : sièges du serveur (avec player_id), synchro par realtime.
+  G.bfOnline=true; G.bfOnlineGameId=gameRow.id; G.vsAI=false;
+  G.bfSeats=seats.map(function(s){ return {color:s.color,unit:s.unit,player_id:s.player_id||null,is_bot:!!s.is_bot,bot_key:s.bot_key||null,name:s.name||null}; });
+  subscribeToBattlefieldGame(gameRow.id);
+  var hasBoard = gameRow.game_state && gameRow.game_state.board;
+  if(asCreator && !hasBoard){
+    await bfOnlineWriteInitial();
+    applyRemoteBattlefieldState({ id:gameRow.id, seats:G.bfSeats, seat_idx:0, turn:'white', status:'active',
+      game_state:{ board:G.board, stacks:G.stacks, lastMoved:null, lastMovedByColor:{white:null,black:null}, lastPush:null, eliminatedUnits:[], format:fmt } });
+  } else if(hasBoard){
+    applyRemoteBattlefieldState(gameRow);
+  } else {
+    pieceInputLocked=true;
+    var sb=document.getElementById('status-bar'); if(sb) sb.textContent='Préparation de la partie…';
+  }
+}
+async function bfOnlineWriteInitial(){
+  var gs={board:G.board,stacks:G.stacks,lastMoved:null,lastMovedByColor:{white:null,black:null},lastPush:null,eliminatedUnits:[],format:G._customFormat};
+  // turn_deadline dès le départ → le worker peut aussi faire expirer le PREMIER
+  // siège (sinon le combattant d'ouverture n'aurait jamais d'horloge).
+  try{ await supa.from('battlefield_games').update({game_state:gs, seat_idx:0, turn:'white', turn_deadline:bfDeadlineISO()}).eq('id', G.bfOnlineGameId); }catch(e){}
+}
+function subscribeToBattlefieldGame(gameId){
+  if(currentBfGameChannel){ try{ supa.removeChannel(currentBfGameChannel); }catch(e){} currentBfGameChannel=null; }
+  currentBfGameChannel=supa.channel('bfgame-'+gameId)
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'battlefield_games',filter:'id=eq.'+gameId},
+        function(p){ applyRemoteBattlefieldState(p.new); })
+    .subscribe();
+}
+// Applique l'état serveur (source de vérité). Le plateau, les sièges, le siège
+// actif et le verrou de saisie viennent tous d'ici → une seule voie de
+// transition de tour, identique pour tous les clients (mon écho compris).
+function applyRemoteBattlefieldState(row){
+  if(!row || currentBfGameId!==row.id) return; // périmé
+  var gs=row.game_state||{};
+  if(!gs.board){ return; } // plateau pas encore écrit par le créateur
+  G.board=gs.board; G.stacks=gs.stacks;
+  G.lastMoved=gs.lastMoved||null;
+  G.lastMovedByColor=gs.lastMovedByColor||{white:null,black:null};
+  G.lastPush=gs.lastPush||null;
+  G.eliminatedUnits=(gs.eliminatedUnits||[]).slice();
+  G.bfSeats=(row.seats||G.bfSeats||[]).map(function(s){ return {color:s.color,unit:s.unit,player_id:s.player_id||null,is_bot:!!s.is_bot,bot_key:s.bot_key||null,name:s.name||null}; });
+  G.bfSeatIdx=row.seat_idx||0;
+  var seat=G.bfSeats[G.bfSeatIdx]||{};
+  G.turn=row.turn||seat.color; G.bfActiveUnit=seat.unit;
+  if(typeof renderBoard==='function') renderBoard();
+  if(row.status==='finished' && row.winner){
+    if(!G.gameOver) endGame(row.winner, (row.winner==='white'?'Blanc':'Noir')+' '+t('msg_slay'));
+    return;
+  }
+  var mine=!!(seat.player_id && currentUser && seat.player_id===currentUser.id);
+  pieceInputLocked=!mine; // je ne peux jouer QUE mon siège
+  var sb=document.getElementById('status-bar');
+  if(sb) sb.textContent = mine ? ('À toi — '+bfSeatLabel(seat)) : ('En attente — '+bfSeatLabel(seat)+(seat.is_bot?' (bot)':''));
+}
+// Après MON coup : pousser l'état au serveur (les autres sièges suivront par
+// realtime). On ne fait AUCUNE transition locale ici — c'est applyRemote qui
+// avance le siège pour tout le monde à partir de la ligne serveur.
+async function bfOnlineSync(won){
+  if(!G.bfOnlineGameId) return;
+  var seats=bfOnlineSeatsWithElim();
+  var gs={board:G.board,stacks:G.stacks,lastMoved:G.lastMoved,lastMovedByColor:G.lastMovedByColor,lastPush:G.lastPush||null,eliminatedUnits:(G.eliminatedUnits||[]).slice(),format:G._customFormat};
+  var upd;
+  if(won){
+    upd={game_state:gs,seats:seats,status:'finished',winner:G.turn};
+  } else {
+    var nextIdx=bfOnlineComputeNextIdx();
+    var seat=G.bfSeats[nextIdx]||{};
+    upd={game_state:gs,seats:seats,seat_idx:nextIdx,turn:seat.color||G.turn,turn_deadline:bfDeadlineISO()};
+  }
+  pieceInputLocked=true; // en attente jusqu'à ce que le serveur me redonne la main
+  var sb=document.getElementById('status-bar'); if(sb) sb.textContent = won ? '' : 'Coup transmis — en attente…';
+  try{ await supa.from('battlefield_games').update(upd).eq('id', G.bfOnlineGameId); }
+  catch(e){ if(typeof showToast==='function') showToast('Réseau : coup non transmis.',true); }
+}
+function bfOnlineSeatsWithElim(){
+  return (G.bfSeats||[]).map(function(s,i){
+    return { seat:i, color:s.color, unit:s.unit, player_id:s.player_id||null,
+             is_bot:!!s.is_bot, bot_key:s.bot_key||null, name:s.name||null,
+             eliminated:(G.eliminatedUnits||[]).indexOf(s.color+':'+s.unit)>=0 };
+  });
+}
+// Prochain siège jouable à partir du courant (même règle que bfAdvanceSeat :
+// saute éliminés + combattants sans coup légal), calculé sur le plateau APRÈS
+// mon coup. bfSeatPlayable lit G.board/G.eliminatedUnits déjà à jour.
+function bfOnlineComputeNextIdx(){
+  var n=G.bfSeats.length; if(!n) return 0;
+  var idx=G.bfSeatIdx, tries=0;
+  do{ idx=(idx+1)%n; tries++; } while(!bfSeatPlayable(G.bfSeats[idx]) && tries<=n);
+  return idx;
+}
+function bfDeadlineISO(){ var s=settings.timerSeconds||5; return new Date(Date.now()+(s>0?s:5)*1000+3000).toISOString(); }
 
 function masterInDanger(color,board,stacks){
   const m=findMaster(color,board);if(!m)return false;
@@ -21118,7 +21618,7 @@ function executeDrop(r,c){
   } else if(G.vsAI && currentSoloGameId){
     pushSoloGameMove(won, G.turn);
   }
-  if(won){pushHistory();endGame(G.turn,(G.turn==='white'?t('color_white'):t('color_black'))+' '+t('msg_slay'))}
+  if(won){pushHistory(); if(G.bfOnline) bfOnlineSync(true); endGame(G.turn,(G.turn==='white'?t('color_white'):t('color_black'))+' '+t('msg_slay'))}
   else{
     pushHistory();switchTurn();
     if(trainingBotHint && _hintSuggestion){

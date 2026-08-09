@@ -128,6 +128,78 @@ function makeMover(format) {
   return factory();
 }
 
+// ── Moteur CHAMP DE BATAILLE (9×9, élimination d'unité) ───────────────
+// Comme makeMover mais avec le format champDeBataille + les fonctions
+// d'élimination (mêmes que le client, extraites d'index.html). G.battlefieldMode
+// active la règle de propriété (un combattant ne pousse QUE ses pièces) déjà
+// gardée dans legalMoves. Trois entrées :
+//   botChooseAndApplyBattlefield : joue le coup du combattant `unit` (restriction
+//     racine au bon combattant, comme scheduleAI côté client) + élimination.
+//   bfHasMove : le combattant a-t-il un coup légal (pour sauter un siège bloqué).
+//   bfEliminate : balaie une escouade (forfait/timeout) et dit si le camp tombe.
+function makeBattlefieldMover() {
+  const format = getFormat(html, "champDeBataille");
+  const prelude = [
+    "var FORMAT=" + JSON.stringify(format) + ";",
+    "var VOID_STD=new Set(FORMAT.voids||[]);",
+    'function isValid(r,c){return r>=0&&r<(FORMAT.rows||9)&&c>=0&&c<(FORMAT.cols||9)&&!VOID_STD.has(r+","+c);}',
+    "var DO=[{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1}];",
+    "var DA=[{dr:-1,dc:0},{dr:1,dc:0},{dr:0,dc:-1},{dr:0,dc:1},{dr:-1,dc:-1},{dr:-1,dc:1},{dr:1,dc:-1},{dr:1,dc:1}];",
+    "var PP={totalCaptures:0,totalPushes:0};",
+    "function playSound(){} function haptic(){}",
+    "var G={simulating:true,battlefieldMode:true,rows:FORMAT.rows||9,cols:FORMAT.cols||9,sumoMode:false,pieceDefs:(FORMAT.pieces||null),turn:null,lastPush:null,lastMoved:null,lastMovedByColor:{white:null,black:null},eliminatedUnits:[]};",
+    "function isV2mode(){return !!FORMAT.v2;}",
+  ].join("\n");
+  const names = ENGINE_NAMES.concat(["bfSameUnit", "battlefieldVictim", "sweepBattlefieldUnit", "battlefieldResolve"]);
+  const body = names.map((n) => extractFn(html, n)).join("\n\n");
+  const mover = `
+    function botChooseAndApplyBattlefield(stateJson, color, unit, depth){
+      var st=JSON.parse(stateJson);
+      G.board=st.board; G.stacks=st.stacks||{};
+      G.lastMoved=st.lastMoved||null; G.lastMovedByColor=st.lastMovedByColor||{white:null,black:null}; G.lastPush=st.lastPush||null;
+      G.eliminatedUnits=st.eliminatedUnits||[];
+      var all=allMoves(color,G.board,G.stacks,G.lastMoved,G.lastPush,G.lastMovedByColor);
+      // Restriction RACINE au combattant du siège (les autres unités du camp
+      // sont jouées par leurs propres joueurs, à leur propre tour).
+      var moves=all.filter(function(m){ var p=G.board[m.fr]&&G.board[m.fr][m.fc]; return p&&p.unit===unit; });
+      if(!moves.length) return JSON.stringify({ noMove:true });
+      var mv=null;
+      try{ mv=minimaxPlay(moves,G.board,G.stacks,G.lastMoved,G.lastPush,depth||1,evalTrainer,color); }catch(e){}
+      if(!mv) mv=moves[Math.floor(Math.random()*moves.length)];
+      // Victime identifiée AVANT execMove (qui écrase le plateau), puis résolution
+      // d'élimination : won=true seulement si le CAMP entier tombe.
+      var victim=battlefieldVictim(mv.action,mv.fr,mv.fc,mv.tr,mv.tc,color);
+      var won=execMove(mv.fr,mv.fc,mv.tr,mv.tc,mv.action);
+      won=battlefieldResolve(victim,won);
+      return JSON.stringify({
+        state:{ board:G.board, stacks:G.stacks, lastMoved:G.lastMoved, lastMovedByColor:G.lastMovedByColor, lastPush:G.lastPush, eliminatedUnits:G.eliminatedUnits, format:FORMAT },
+        won:!!won, camp:color
+      });
+    }
+    function bfHasMove(stateJson, color, unit){
+      var st=JSON.parse(stateJson);
+      G.board=st.board; G.stacks=st.stacks||{};
+      G.lastMoved=st.lastMoved||null; G.lastMovedByColor=st.lastMovedByColor||{white:null,black:null}; G.lastPush=st.lastPush||null;
+      var ms=allMoves(color,G.board,G.stacks,G.lastMoved,G.lastPush,G.lastMovedByColor);
+      for(var i=0;i<ms.length;i++){ var p=G.board[ms[i].fr]&&G.board[ms[i].fr][ms[i].fc]; if(p&&p.unit===unit) return true; }
+      return false;
+    }
+    function bfEliminate(stateJson, color, unit){
+      var st=JSON.parse(stateJson);
+      G.board=st.board; G.stacks=st.stacks||{};
+      G.eliminatedUnits=st.eliminatedUnits||[];
+      sweepBattlefieldUnit(color,unit);
+      if(G.eliminatedUnits.indexOf(color+':'+unit)<0) G.eliminatedUnits.push(color+':'+unit);
+      var camp=(findMaster(color,G.board)===null);
+      return JSON.stringify({
+        state:{ board:G.board, stacks:G.stacks, lastMoved:st.lastMoved||null, lastMovedByColor:st.lastMovedByColor||{white:null,black:null}, lastPush:st.lastPush||null, eliminatedUnits:G.eliminatedUnits, format:FORMAT },
+        campEliminated:camp
+      });
+    }`;
+  const factory = new Function(prelude + "\n\n" + body + "\n\n" + mover + "\n\nreturn { botChooseAndApplyBattlefield: botChooseAndApplyBattlefield, bfHasMove: bfHasMove, bfEliminate: bfEliminate };");
+  return factory();
+}
+
 // ── REST admin (service_role → contourne la RLS), comme le worker d'équilibre ──
 async function sbAdmin(path, init) {
   const res = await fetch(SUPABASE_URL + "/rest/v1/" + path, {
@@ -634,11 +706,116 @@ async function guildWarTick(mover, byPid, stats) {
   }
 }
 
+// ══════════════════════════════════════════════════════════════════
+// CHAMP DE BATAILLE — pilotage des sièges bots + timeouts + file solo
+// ══════════════════════════════════════════════════════════════════
+// battlefield_games : partie 6 sièges (table dédiée, cf. battlefield_online.sql).
+// Le siège ACTIF est seats[seat_idx]. On ne pilote que les sièges bots du roster ;
+// les humains jouent depuis le client. Toutes ces fonctions avalent l'absence de
+// table (SQL pas encore exécuté) pour ne jamais casser la boucle de backfill.
+
+function bfDeadline(timer){ const s = (timer && timer > 0) ? timer : 5; return new Date(Date.now() + s * 1000 + 3000).toISOString(); }
+function bfSeatsElim(seats, elim){ const e = elim || []; return (seats || []).map((s) => ({ ...s, eliminated: e.indexOf(s.color + ":" + s.unit) >= 0 })); }
+function bfSeatOk(bfMover, seat, state, elim){
+  if (!seat) return false;
+  if ((elim || []).indexOf(seat.color + ":" + seat.unit) >= 0) return false;
+  try { return bfMover.bfHasMove(JSON.stringify(state), seat.color, seat.unit); } catch (e) { return true; }
+}
+// Prochain siège jouable (saute éliminés + combattants sans coup), sur l'état
+// APRÈS le coup — même règle que bfAdvanceSeat/bfOnlineComputeNextIdx du client.
+function bfNextPlayable(bfMover, seats, fromIdx, state, elim){
+  const n = seats.length; if (!n) return 0;
+  let idx = fromIdx, tries = 0;
+  do { idx = (idx + 1) % n; tries++; } while (!bfSeatOk(bfMover, seats[idx], state, elim) && tries <= n);
+  return idx;
+}
+
+// Pilote le siège bot au trait dans chaque partie battlefield active.
+async function driveBattlefieldGames(bfMover, byPid, stats){
+  try {
+    const _games = await (await sbAdmin("battlefield_games?status=eq.active&select=*")).json();
+    const games = Array.isArray(_games) ? _games : [];
+    for (const g of games) {
+      try {
+        const seats = g.seats || [];
+        const seat = seats[g.seat_idx];
+        if (!seat || !seat.is_bot || !byPid.has(seat.player_id)) continue; // humain au trait, ou bot hors roster
+        if (!g.game_state || !g.game_state.board) continue;                // plateau pas encore posé par le créateur
+        let out;
+        // Profondeur 1 (glouton) : le 9×9 + 6 combattants a un facteur de
+        // branchement élevé ; on privilégie la réactivité à la profondeur.
+        try { out = JSON.parse(bfMover.botChooseAndApplyBattlefield(JSON.stringify(g.game_state), seat.color, seat.unit, 1)); }
+        catch (e) { stats.errors++; continue; }
+        let upd;
+        if (out.noMove) {
+          const ni = bfNextPlayable(bfMover, seats, g.seat_idx, g.game_state, (g.game_state.eliminatedUnits || []));
+          upd = { seat_idx: ni, turn: (seats[ni] || {}).color || g.turn, turn_deadline: bfDeadline(g.timer_seconds) };
+        } else if (out.won) {
+          upd = { game_state: out.state, seats: bfSeatsElim(seats, out.state.eliminatedUnits), status: "finished", winner: seat.color };
+        } else {
+          const seats2 = bfSeatsElim(seats, out.state.eliminatedUnits);
+          const ni = bfNextPlayable(bfMover, seats2, g.seat_idx, out.state, out.state.eliminatedUnits || []);
+          upd = { game_state: out.state, seats: seats2, seat_idx: ni, turn: (seats2[ni] || {}).color || otherColor(seat.color), turn_deadline: bfDeadline(g.timer_seconds) };
+        }
+        await sbAdmin("battlefield_games?id=eq." + g.id, { method: "PATCH", headers: { "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify(upd) });
+        if (out.won) { stats.wins++; stats.gamesPlayed++; }
+      } catch (e) { stats.errors++; console.warn("driveBattlefieldGames(g)", e.message); }
+    }
+  } catch (e) { /* table absente tant que battlefield_online.sql n'est pas exécuté */ }
+}
+
+// Impose la cadence : un siège HUMAIN dont l'échéance est dépassée = forfait
+// (son combattant est éliminé, comme une déconnexion), puis rotation. Les sièges
+// bots jouent vite, on ne les fait pas expirer.
+async function battlefieldTimeoutTick(bfMover, stats){
+  try {
+    const now = Date.now();
+    const _games = await (await sbAdmin("battlefield_games?status=eq.active&select=*")).json();
+    const games = Array.isArray(_games) ? _games : [];
+    for (const g of games) {
+      try {
+        const seats = g.seats || [];
+        const seat = seats[g.seat_idx];
+        if (!seat || seat.is_bot) continue;
+        if (!g.turn_deadline || new Date(g.turn_deadline).getTime() > now) continue;
+        if (!g.game_state || !g.game_state.board) continue;
+        let out;
+        try { out = JSON.parse(bfMover.bfEliminate(JSON.stringify(g.game_state), seat.color, seat.unit)); }
+        catch (e) { stats.errors++; continue; }
+        const seats2 = bfSeatsElim(seats, out.state.eliminatedUnits);
+        let upd;
+        if (out.campEliminated) {
+          upd = { game_state: out.state, seats: seats2, status: "finished", winner: otherColor(seat.color) };
+        } else {
+          const ni = bfNextPlayable(bfMover, seats2, g.seat_idx, out.state, out.state.eliminatedUnits || []);
+          upd = { game_state: out.state, seats: seats2, seat_idx: ni, turn: (seats2[ni] || {}).color, turn_deadline: bfDeadline(g.timer_seconds) };
+        }
+        await sbAdmin("battlefield_games?id=eq." + g.id, { method: "PATCH", headers: { "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify(upd) });
+        console.log("⏱ battlefield : forfait " + seat.color + ":" + seat.unit + " (temps dépassé).");
+      } catch (e) { stats.errors++; console.warn("battlefieldTimeoutTick(g)", e.message); }
+    }
+  } catch (e) { /* table absente */ }
+}
+
+// File solo → slots ouverts : délègue au RPC serveur (place les joueurs de
+// battlefield_solo_queue dans les équipes 'forming' ouvertes d'ELO proche).
+async function battlefieldSoloFill(stats){
+  try {
+    const res = await sbAdmin("rpc/battlefield_solo_place", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+    const n = await res.json();
+    if (n && n > 0) console.log("🎲 file solo battlefield : " + n + " joueur(s) placé(s).");
+  } catch (e) { /* RPC/table absents tant que le SQL n'est pas exécuté */ }
+}
+
 async function runBackfill(mover, t0) {
   const roster = await provisionRosterBots();
   if (!roster.length) { console.log("✗ Aucun bot du roster provisionné — abandon."); return; }
   const byPid = new Map(roster.map((b) => [b.profile_id, b]));
   const stats = { gamesPlayed: 0, wins: 0, losses: 0, errors: 0 };
+  // Moteur champ de bataille (9×9) — construit une fois. Si l'extraction échoue
+  // (format absent), on continue sans : le reste du backfill n'en dépend pas.
+  let bfMover = null;
+  try { bfMover = makeBattlefieldMover(); } catch (e) { console.warn("makeBattlefieldMover", e.message); }
   const budgetMs = RUN_MINUTES * 60 * 1000;
   let ticks = 0;
   while (Date.now() - t0 < budgetMs) {
@@ -656,6 +833,13 @@ async function runBackfill(mover, t0) {
       // 3bis) guerre de guilde : si un défi inter-guildes est actif, faire jouer
       //       et scorer les bots des deux guildes (dormant sinon)
       await guildWarTick(mover, byPid, stats);
+      // 3ter) champ de bataille : piloter les sièges bots, imposer les timeouts
+      //       (forfait) et remplir les slots ouverts depuis la file solo.
+      if (bfMover) {
+        await driveBattlefieldGames(bfMover, byPid, stats);
+        await battlefieldTimeoutTick(bfMover, stats);
+        await battlefieldSoloFill(stats);
+      }
       // 4) garder les bots « en ligne » (le pg_cron le fait aussi, ceinture+bretelles)
       if (++ticks % 30 === 0) {
         await sbAdmin("profiles?" + inList("id", [...byPid.keys()]), { method: "PATCH", headers: { "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ is_online: true, last_seen: new Date().toISOString() }) });

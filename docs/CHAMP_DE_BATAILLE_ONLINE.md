@@ -78,17 +78,38 @@ sièges vides. Sélection serveur = cohérente et respecte les règles de galeri
 
 ## Découpage en sous-lots
 
-| Lot | Contenu | Où | Risque |
+| Lot | Contenu | Où | État |
 |---|---|---|---|
-| **2b-①** | Schéma `battlefield_games` + RLS + realtime + RPC `battlefield_bot_fill` | `sql_a_executer/battlefield_online.sql` | **prod → relecture Jonathan** |
-| **2b-②** | Client : bouton **carrousel** + « partie rapide » (toi + 5 bots) → valide tout le pipeline online 6 sièges | `index.html` | client |
-| **2b-③** | Client : **inviter des amis** dans ton équipe (party) + matchmaking équipe vs équipe d'ELO proche (table `battlefield_queue`, lot SQL séparé) | `index.html` + SQL | prod |
-| **2b-④** | **Worker** (GitHub Actions) : piloter les sièges bots (deux camps) + imposer `turn_deadline` (timeout = forfait) | dépôt worker | worker |
-| **2b-⑤** | Tests en conditions réelles avec la bot army | — | — |
+| **2b-①** | Schéma `battlefield_games` + RLS + realtime + RPC `battlefield_bot_fill` | `sql_a_executer/battlefield_online.sql` | écrit — **prod → à exécuter** |
+| **2b-②③** | Lobby d'équipe (3 slots), matchmaking ELO cumulé, les 3 voies (salon/code/file solo), invitations, synchro partie | `sql_a_executer/battlefield_lobby.sql` + `index.html` | **livré** (SQL prod à exécuter) |
+| **2b-④** | **Worker** : pilote les sièges bots (deux camps), impose `turn_deadline` (timeout=forfait), remplit la file solo | `scripts/bot-army.mjs` | **livré** |
+| **2b-⑤** | Tests en conditions réelles avec la bot army | — | à faire (après SQL) |
 
-Le 2b-② (un humain + 5 bots) valide de bout en bout la synchro realtime, la
-rotation, le timeout et le pilotage bot **avant** d'ajouter la complexité des
-équipes 100 % humaines (2b-③).
+## Lobby d'équipe (livré)
+
+- **Créer / rejoindre** : `battlefield_teams` (3 slots jsonb, `elo_sum`,
+  `invite_code`, `open_to_random`). Le chef occupe le slot 0.
+- **Les 3 voies pour un slot ouvert** : (a) **salon** — équipes `forming` +
+  `open_to_random` listées, on clique pour rejoindre ; (b) **code** — n'importe
+  qui avec `invite_code` prend un slot ouvert ; (c) **file solo** —
+  `battlefield_solo_queue`, le worker (`battlefield_solo_place`) glisse les
+  joueurs dans les slots ouverts d'ELO proche.
+- **Contrôles chef par slot** : inviter un ami (`battlefield_invites`, table
+  dédiée — PAS `challenges`), placer un bot (`battlefield_bot_fill`), ouvrir.
+- **Matchmaking** : `battlefield_matchmake(team, format, timer)` — file `queued`,
+  apparie l'ELO cumulé le plus proche, crée la partie (6 sièges interleavés
+  `W1,B1,W2,B2,W3,B3`). Le caller = équipe A (blanc) écrit le plateau initial ;
+  l'adversaire découvre `game_id` par realtime. Sans adversaire humain : bouton
+  « compléter par des bots ».
+
+## Synchro de partie (client, livré)
+
+`enterBattlefieldGame` réutilise `initGame` (plateau custom) puis bascule ONLINE :
+sièges du serveur (avec `player_id`), abonnement realtime `battlefield_games`.
+Chaque humain ne pilote QUE son siège (verrou `pieceInputLocked` hors de son
+tour). `bfOnlineSync` pousse l'état après mon coup ; `applyRemoteBattlefieldState`
+est l'unique voie de transition de tour (mon écho compris). `switchTurn` et la
+branche victoire d'`executeDrop` branchent sur `bfOnlineSync`.
 
 ## Notes worker (2b-④, dépôt séparé — pas encore fait)
 
