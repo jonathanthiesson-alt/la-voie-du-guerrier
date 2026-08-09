@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.44.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.45.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2208,7 +2208,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.44.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.45.0 &#9820;</div>
   </div>
 </div>
 
@@ -3665,8 +3665,16 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.44.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.45.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.45.0 &mdash; 9 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; DEVISES AU D&Eacute;COMPTE</li>
+        <li>Au d&eacute;compte <strong>5-4-3-2-1</strong> de chaque combat, la <strong>devise de l&rsquo;adversaire</strong> s&rsquo;affiche en haut et <strong>la tienne</strong> en bas. En ligne, la devise adverse est celle de son profil ; en local, seule la tienne appara&icirc;t.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -21800,6 +21808,10 @@ function getOpeningMove(bookName, board, stacks, lm){ return null; }
 // showCombatStartBanner() (le mot "COMBATTEZ" sur la barre d'animation,
 // voir triggerCombatAnim/hideCombatAnim) prend le relais, pile au moment
 // où onDone() (= le vrai début de partie) est appelé.
+// Devise de l'adversaire pour le décompte de combat. Renseignée par le flux
+// online (enterOnlineGame) au moment où le profil adverse est chargé, remise
+// à '' pour toute partie locale (startCoinFlipSequence).
+var _combatOpponentDevise = '';
 function runCombatCountdown(onDone){
   var ov = document.getElementById('game-overlay');
   var box = ov.querySelector('.modal-box');
@@ -21813,9 +21825,20 @@ function runCombatCountdown(onDone){
   haptic('select');
   var counts = [5,4,3,2,1];
   var i = 0;
+  // Devises affichées pendant tout le décompte : l'adversaire en haut, la
+  // mienne en bas (comme les bandeaux de joueur). L'adversaire n'est connu
+  // qu'en ligne (renseigné par enterOnlineGame) ; en local, seule la mienne
+  // s'affiche. _combatOpponentDevise est remis à '' avant chaque partie locale.
+  var _oppD = _combatOpponentDevise ? escapeHtml(_combatOpponentDevise) : '';
+  var _myD = (typeof myDevise==='function' && myDevise()) ? escapeHtml(myDevise()) : '';
+  function _deviseLine(txt, where){
+    if(!txt) return '';
+    return '<div style="font-family:VT323,monospace;font-size:13px;color:#ffe9a8;opacity:.85;font-style:italic;max-width:280px;margin:0 auto;'+(where==='top'?'margin-bottom:12px':'margin-top:12px')+'">« '+txt+' »</div>';
+  }
   function renderCount(n){
-    box.innerHTML =
-      '<div style="font-family:Cinzel Decorative,serif;font-size:80px;font-weight:900;background:linear-gradient(180deg,#f0c040,#d4a017);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1">'+n+'</div>';
+    box.innerHTML = _deviseLine(_oppD,'top')
+      + '<div style="font-family:Cinzel Decorative,serif;font-size:80px;font-weight:900;background:linear-gradient(180deg,#f0c040,#d4a017);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1">'+n+'</div>'
+      + _deviseLine(_myD,'bottom');
   }
   renderCount(counts[0]);
   haptic('select');
@@ -21847,6 +21870,7 @@ function startCoinFlipSequence(onDone) {
   // pour déterminer qui a l'initiative. Seule la couleur attribuée au
   // joueur humain reste aléatoire (Blanc ou Noir), sauf contrainte
   // explicite (DevTest, sélecteur de couleur).
+  _combatOpponentDevise = ''; // partie locale : pas d'adversaire distant à citer
   var forcedColor = settings._playerColor;
   var playerColor = (forcedColor==='white'||forcedColor==='black') ? forcedColor : (Math.random()<.5?'white':'black');
   settings._playerColor = playerColor;
@@ -25276,6 +25300,7 @@ async function enterOnlineGame(gameId, whitePlayerId, gameState, turn, timerSeco
       var myProfile = rows.find(function(r){ return r.id===currentUser.id; });
       if(oppProfile){
         opponentPseudo = oppProfile.pseudo;
+        _combatOpponentDevise = oppProfile.devise || ''; // devise citée au décompte
         applyRemoteSkin(opponentColor==='white' ? 'onlineWhite' : 'onlineBlack', oppProfile.piece_skin, oppProfile.wurmz_skin);
         oppElo = (oppProfile[eloCol]==null) ? 1200 : oppProfile[eloCol];
         oppGradeIdx = getDisplayedGradeIdx(oppProfile.displayed_grade, oppProfile.xp||0);
