@@ -102,17 +102,27 @@ additifs, sans effet sur `online_games`/1v1. Contrôle en fin de chaque script.
 Après exécution : activer le worker (`bot-army.yml`, directive `enabled`) pour
 que les sièges bots jouent et que les timeouts s'appliquent.
 
-### ⏳ À exécuter par Jonathan (Identité de guilde — V0.44.0)
+### ✅ Exécuté (Identité de guilde — V0.44.0)
 
-`guild_identity.sql` — additif et idempotent (n'altère aucune donnée, ne touche
-pas au 1v1). Contrôle en fin de script.
+`guild_identity.sql` — **déployé** (vérifié 2026-08-10 : colonnes présentes,
+`guild_update_identity`/`guild_identity` existent, la guilde « Rottens » a déjà
+une bannière + devise). Additif et idempotent.
 
 | # | Script | Contenu |
 |---|---|---|
-| — | `guild_identity.sql` | 3 colonnes sur `guilds` (`banner` jsonb, `devise`, `info_message` + `info_message_at`) ; `get_my_guild()` étendu pour les renvoyer ; RPC `guild_update_identity(devise,banner,info)` (chef `role='leader'` uniquement, longueurs bornées, bump `info_message_at` seulement si le message change) ; RPC public `guild_identity(id)` pour l'affichage combat/popup. |
+| ✅ | `guild_identity.sql` | 3 colonnes sur `guilds` (`banner` jsonb, `devise`, `info_message` + `info_message_at`) ; `get_my_guild()` étendu ; RPC `guild_update_identity(devise,banner,info)` (chef uniquement) ; RPC public `guild_identity(id)`. |
 
-Tant que non exécuté : le panneau « Gérer la guilde » et le popup d'info se
-dégradent proprement (champs absents, aucun crash).
+### ⏳ À exécuter par Jonathan (Administration de guilde — V0.48.0)
+
+`guild_admin.sql` — additif et idempotent (aucune colonne neuve : réutilise
+`profiles.last_seen`/`is_online` existants). Contrôle en fin de script.
+
+| # | Script | Contenu |
+|---|---|---|
+| — | `guild_admin.sql` | RPC `guild_kick(p_player_id)` (le chef retire un membre ; pas soi-même, pas un autre chef) ; RPC public `guild_roster(p_guild_id)` (roster + présence d'une guilde, pour consulter les autres guildes). |
+
+Tant que non exécuté : le bouton ✕ « retirer » et le 👁 « voir le roster » se
+dégradent proprement (toast d'erreur, aucun crash).
 
 ---
 
