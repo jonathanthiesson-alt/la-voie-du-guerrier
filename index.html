@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.43.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.44.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2208,7 +2208,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.43.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.44.0 &#9820;</div>
   </div>
 </div>
 
@@ -3665,8 +3665,18 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.43.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.44.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.44.0 &mdash; 9 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; IDENTIT&Eacute; DE GUILDE</li>
+        <li>Le <strong>chef de guilde</strong> peut d&eacute;sormais donner une <strong>banni&egrave;re</strong> (embl&egrave;me + couleurs), une <strong>devise</strong> et un <strong>message d&rsquo;info</strong> &agrave; sa guilde &mdash; visibles de tous les membres sur l&rsquo;&eacute;cran Guilde.</li>
+        <li>Quand le chef poste un <strong>nouveau message</strong>, les membres le voient en <strong>popup</strong> &agrave; leur arriv&eacute;e au village.</li>
+        <li style="list-style:none;margin-left:-14px;color:rgba(200,168,110,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">Devise &amp; message passent la m&ecirc;me mod&eacute;ration que les devises de joueur. (&Agrave; venir : la devise de guilde au d&eacute;compte 5-4-3-2-1 des matchs.)</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -6324,6 +6334,10 @@ function renderMyGuild(data){
   var html = '<div style="text-align:center;margin-bottom:8px">'
     + '<div style="font-family:\'Cinzel\',serif;font-size:16px;color:var(--gold-bright)">'+escapeHtml(g.name)+' <span style="opacity:.5;font-size:12px">['+escapeHtml(g.tag||'')+']</span></div>'
     + '<div style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.6">🐉 '+g.ryu_total+' Ryu collectif · '+(g.join_mode==='open'?'🔓 Ouverte':'🔒 Sur demande')+'</div></div>';
+  // Identité de guilde (bannière + devise + message d'info du chef), visible
+  // de tous les membres ; le chef a en plus le bouton « Gérer ».
+  _guildIdentityCache = g;
+  html += guildIdentityHeaderHtml(g, isLeader);
   html += '<div style="display:flex;gap:6px;margin-bottom:10px">'
     + '<button class="btn" style="flex:1;font-size:11px;padding:7px" onclick="_guildView=\'list\';refreshGuildScreen()">🏆 Autres guildes</button>'
     + '<button class="btn" style="flex:1;font-size:11px;padding:7px" onclick="openGuildTournaments('+g.id+','+isLeader+')">⚔ Défis inter-guildes</button>'
@@ -6353,6 +6367,135 @@ function renderMyGuild(data){
   html += '<button class="btn" style="width:100%;font-size:11px;padding:7px;opacity:.55;margin-top:10px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="leaveGuild()">Quitter la guilde</button>';
   body.innerHTML = html;
 }
+// ── Identité de guilde : bannière, devise, message d'info (chef) ──────
+// Requiert sql_a_executer/guild_identity.sql. Dégradation propre si non
+// exécuté (les champs sont juste absents).
+var _guildIdentityCache = null;
+var _villageGuildInfoChecked = false; // popup d'info : une vérif par session
+function guildIdentityHeaderHtml(g, isLeader){
+  var b = g.banner || {};
+  var c1 = b.color1 || '#3a2c14', c2 = b.color2 || '#140f08', em = b.emblem || '🏯';
+  var h = '<div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,'+escapeHtml(c1)+','+escapeHtml(c2)+');border:1px solid rgba(212,160,23,.4);border-radius:8px;padding:8px 12px;margin-bottom:8px">'
+    + '<span style="font-size:26px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))">'+escapeHtml(em)+'</span>'
+    + '<div style="flex:1;min-width:0">'
+    + (g.devise
+        ? '<div style="font-family:VT323,monospace;font-size:13px;color:#ffe9a8;font-style:italic">« '+escapeHtml(g.devise)+' »</div>'
+        : '<div style="font-family:VT323,monospace;font-size:11px;color:#ffe9a8;opacity:.5">'+(isLeader?'Ajoute une devise de guilde…':'—')+'</div>')
+    + '</div></div>';
+  if(g.info_message){
+    h += '<div style="background:rgba(212,160,23,.08);border:1px solid rgba(212,160,23,.25);border-radius:6px;padding:7px 10px;margin-bottom:8px;font-family:VT323,monospace;font-size:12px;color:var(--parchment)">📜 '+escapeHtml(g.info_message)+'</div>';
+  }
+  if(isLeader){
+    h += '<button class="btn" style="width:100%;font-size:11px;padding:7px;margin-bottom:10px" onclick="openGuildIdentityEditor()">🛡 Gérer la guilde (bannière · devise · message)</button>';
+  }
+  return h;
+}
+function openGuildIdentityEditor(){
+  var g = _guildIdentityCache || {};
+  var b = g.banner || {};
+  var em = b.emblem || '🏯', c1 = b.color1 || '#3a2c14', c2 = b.color2 || '#140f08';
+  var ov = document.createElement('div');
+  ov.id = 'guild-identity-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:900;background:rgba(6,4,3,.8);display:flex;align-items:center;justify-content:center;padding:18px';
+  ov.innerHTML =
+    '<div style="background:linear-gradient(160deg,#1a130a,#0c0906);border:1px solid rgba(212,160,23,.4);border-radius:12px;max-width:340px;width:100%;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:18px">'
+    + '<div style="font-family:\'Cinzel\',serif;font-size:16px;color:var(--gold-bright);letter-spacing:1px;text-align:center;margin-bottom:12px">🛡 Identité de la guilde</div>'
+    + '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.7;margin-bottom:3px">Emblème (emoji)</div>'
+    + '<input id="gi-emblem" type="text" maxlength="4" value="'+escapeHtml(em)+'" style="width:64px;text-align:center;font-size:22px;background:rgba(0,0,0,.4);border:1px solid rgba(212,160,23,.3);border-radius:6px;color:#fff;padding:4px;margin-bottom:10px">'
+    + '<div style="display:flex;gap:14px;margin-bottom:10px">'
+    +   '<label style="font-family:VT323,monospace;font-size:12px;color:var(--parchment)">Couleur 1<br><input id="gi-color1" type="color" value="'+escapeHtml(c1)+'" style="width:52px;height:32px;border:none;background:none;cursor:pointer"></label>'
+    +   '<label style="font-family:VT323,monospace;font-size:12px;color:var(--parchment)">Couleur 2<br><input id="gi-color2" type="color" value="'+escapeHtml(c2)+'" style="width:52px;height:32px;border:none;background:none;cursor:pointer"></label>'
+    + '</div>'
+    + '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.7;margin-bottom:3px">Devise de guilde ('+DEVISE_MAX+' car. max)</div>'
+    + '<input id="gi-devise" type="text" maxlength="'+DEVISE_MAX+'" value="'+escapeHtml(g.devise||'')+'" placeholder="Ex : Unis sous une seule lame." style="width:100%;box-sizing:border-box;background:rgba(0,0,0,.4);border:1px solid rgba(212,160,23,.3);border-radius:6px;color:var(--gold-bright);padding:8px;font-family:VT323,monospace;font-size:13px;margin-bottom:10px">'
+    + '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.7;margin-bottom:3px">Message d\'info (popup pour les membres, 500 car. max)</div>'
+    + '<textarea id="gi-info" maxlength="500" rows="4" placeholder="Un mot du chef à toute la guilde…" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,.4);border:1px solid rgba(212,160,23,.3);border-radius:6px;color:var(--parchment);padding:8px;font-family:VT323,monospace;font-size:13px;resize:vertical">'+escapeHtml(g.info_message||'')+'</textarea>'
+    + '<div id="gi-error" style="font-family:VT323,monospace;font-size:12px;color:#f08080;min-height:16px;margin:4px 0"></div>'
+    + '<div style="display:flex;gap:8px;margin-top:6px">'
+    +   '<button class="btn" style="flex:1;font-size:12px;padding:9px" onclick="saveGuildIdentity()">Enregistrer</button>'
+    +   '<button class="btn" style="flex:1;font-size:12px;padding:9px;opacity:.7" onclick="closeGuildIdentityEditor()">Annuler</button>'
+    + '</div></div>';
+  document.body.appendChild(ov);
+}
+function closeGuildIdentityEditor(){ var ov=document.getElementById('guild-identity-overlay'); if(ov) ov.remove(); }
+async function saveGuildIdentity(){
+  var errEl = document.getElementById('gi-error');
+  var em = (document.getElementById('gi-emblem').value||'🏯').trim() || '🏯';
+  var c1 = document.getElementById('gi-color1').value || '#3a2c14';
+  var c2 = document.getElementById('gi-color2').value || '#140f08';
+  var deviseRaw = document.getElementById('gi-devise').value || '';
+  var infoRaw = document.getElementById('gi-info').value || '';
+  // Même modération que la devise de joueur (racisme/insultes), pour la
+  // devise ET le message d'info.
+  var md = moderateDevise(deviseRaw);
+  if(!md.ok){ if(errEl) errEl.textContent = md.reason; return; }
+  var mi = moderateGuildInfo(infoRaw);
+  if(!mi.ok){ if(errEl) errEl.textContent = mi.reason; return; }
+  if(!currentUser){ if(errEl) errEl.textContent='Connecte-toi.'; return; }
+  var banner = { emblem: em, color1: c1, color2: c2 };
+  try{
+    const { data } = await supa.rpc('guild_update_identity', { p_devise: md.clean, p_banner: banner, p_info_message: mi.clean });
+    if(data && data.ok){
+      // Le chef ne doit pas recevoir son propre popup : on marque le message
+      // comme « vu » côté appareil (approx. now ≈ horodatage serveur).
+      if(_guildIdentityCache && _guildIdentityCache.id!=null){ try{ localStorage.setItem('vtl_guild_info_seen_'+_guildIdentityCache.id, String(Date.now())); }catch(e){} }
+      showToast('Identité de guilde mise à jour.', false);
+      closeGuildIdentityEditor();
+      _guildView='auto'; refreshGuildScreen();
+    } else if(data && data.reason==='not_leader'){ if(errEl) errEl.textContent='Seul le chef peut modifier la guilde.'; }
+    else { if(errEl) errEl.textContent='Enregistrement impossible.'; }
+  }catch(e){ if(errEl) errEl.textContent='Enregistrement impossible (guild_identity.sql exécuté ?).'; }
+}
+// Message d'info : borné à 500, mêmes termes bannis que la devise.
+function moderateGuildInfo(raw){
+  var clean = (raw||'').replace(/[ \t]+/g,' ').trim();
+  if(clean===''){ return { ok:true, reason:'', clean:'' }; }
+  if(clean.length>500){ return { ok:false, reason:'Message trop long (500 caractères max).', clean:clean }; }
+  var collapsed = _normDevise(clean);
+  for(var i=0;i<DEVISE_BANNED.length;i++){
+    if(collapsed.indexOf(_normDevise(DEVISE_BANNED[i]))!==-1){
+      return { ok:false, reason:'Message refusé (racisme, discriminations ou insultes bannis).', clean:clean };
+    }
+  }
+  return { ok:true, reason:'', clean:clean };
+}
+// Popup à l'arrivée au village si le chef a posté un NOUVEAU message d'info
+// depuis la dernière fois vu sur cet appareil.
+function villageMaybeGuildInfoPopup(){
+  if(!currentUser || typeof supa==='undefined' || !supa) return;
+  if(_villageGuildInfoChecked) return;
+  _villageGuildInfoChecked = true;
+  supa.rpc('get_my_guild').then(function(r){
+    var d = r && r.data;
+    if(!d || !d.in_guild || !d.guild) return;
+    var g = d.guild;
+    if(!g.info_message || !g.info_message_at) return;
+    var key = 'vtl_guild_info_seen_'+g.id, seen = 0;
+    try{ seen = parseInt(localStorage.getItem(key),10) || 0; }catch(e){}
+    var ts = new Date(g.info_message_at).getTime();
+    if(ts > seen){ showGuildInfoPopup(g); try{ localStorage.setItem(key, String(ts)); }catch(e){} }
+  }).catch(function(){});
+}
+function showGuildInfoPopup(g){
+  var b = g.banner || {}; var em = b.emblem || '🏯';
+  var c1 = b.color1 || '#3a2c14', c2 = b.color2 || '#140f08';
+  var ov = document.createElement('div');
+  ov.id = 'guild-info-popup';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:905;background:rgba(6,4,3,.82);display:flex;align-items:center;justify-content:center;padding:20px';
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+  ov.innerHTML =
+    '<div style="background:linear-gradient(160deg,#1a130a,#0c0906);border:1px solid rgba(212,160,23,.45);border-radius:12px;max-width:330px;width:100%;padding:0;overflow:hidden">'
+    + '<div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,'+escapeHtml(c1)+','+escapeHtml(c2)+');padding:12px 14px">'
+    +   '<span style="font-size:30px">'+escapeHtml(em)+'</span>'
+    +   '<div><div style="font-family:\'Cinzel\',serif;font-size:15px;color:#ffe9a8">'+escapeHtml(g.name||'Guilde')+'</div>'
+    +   (g.devise?'<div style="font-family:VT323,monospace;font-size:11px;color:#ffe9a8;opacity:.8;font-style:italic">« '+escapeHtml(g.devise)+' »</div>':'')+'</div>'
+    + '</div>'
+    + '<div style="padding:14px 16px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);line-height:1.5">📜 '+escapeHtml(g.info_message)+'</div>'
+    + '<button class="btn" style="width:calc(100% - 28px);margin:0 14px 14px;font-size:12px;padding:9px" onclick="var p=document.getElementById(\'guild-info-popup\');if(p)p.remove()">Compris</button>'
+    + '</div>';
+  document.body.appendChild(ov);
+}
+
 async function createGuild(mode){
   var input = document.getElementById('guild-name-input');
   var name = input ? input.value.trim() : '';
@@ -11156,7 +11299,7 @@ function showScreen(id){
   // Thème Village : construire la carte à la première visite, rafraîchir le
   // grisage online/dev à chaque visite, et masquer le bouton flottant «⛩
   // Village» quand on EST sur la carte (via la classe village-map-open).
-  if(id==='village'){ if(typeof buildVillageMap==='function') buildVillageMap(); if(typeof villageRefreshLocks==='function') villageRefreshLocks(); if(typeof villageRefreshBanner==='function') villageRefreshBanner(); if(typeof villageRefreshBadges==='function') villageRefreshBadges(); }
+  if(id==='village'){ if(typeof buildVillageMap==='function') buildVillageMap(); if(typeof villageRefreshLocks==='function') villageRefreshLocks(); if(typeof villageRefreshBanner==='function') villageRefreshBanner(); if(typeof villageRefreshBadges==='function') villageRefreshBadges(); if(typeof villageMaybeGuildInfoPopup==='function') villageMaybeGuildInfoPopup(); }
   document.body.classList.toggle('village-map-open', id==='village');
   if(id==='play') refreshPlayScreen();
   applyLang();

@@ -102,6 +102,18 @@ additifs, sans effet sur `online_games`/1v1. Contrôle en fin de chaque script.
 Après exécution : activer le worker (`bot-army.yml`, directive `enabled`) pour
 que les sièges bots jouent et que les timeouts s'appliquent.
 
+### ⏳ À exécuter par Jonathan (Identité de guilde — V0.44.0)
+
+`guild_identity.sql` — additif et idempotent (n'altère aucune donnée, ne touche
+pas au 1v1). Contrôle en fin de script.
+
+| # | Script | Contenu |
+|---|---|---|
+| — | `guild_identity.sql` | 3 colonnes sur `guilds` (`banner` jsonb, `devise`, `info_message` + `info_message_at`) ; `get_my_guild()` étendu pour les renvoyer ; RPC `guild_update_identity(devise,banner,info)` (chef `role='leader'` uniquement, longueurs bornées, bump `info_message_at` seulement si le message change) ; RPC public `guild_identity(id)` pour l'affichage combat/popup. |
+
+Tant que non exécuté : le panneau « Gérer la guilde » et le popup d'info se
+dégradent proprement (champs absents, aucun crash).
+
 ---
 
 ## Diagnostic RLS
