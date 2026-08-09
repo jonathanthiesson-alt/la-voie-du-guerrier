@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.47.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.48.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2213,7 +2213,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.47.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.48.0 &#9820;</div>
   </div>
 </div>
 
@@ -3670,13 +3670,17 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.47.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.48.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
     </div>
 
     <div class="devlog-entry">
-      <div class="devlog-version">ONLINE alpha V0.47.0 &mdash; 9 ao&ucirc;t 2026</div>
+      <div class="devlog-version">ONLINE alpha V0.48.0 &mdash; 10 ao&ucirc;t 2026</div>
       <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; ADMINISTRATION DE GUILDE</li>
+        <li>Le chef peut d&eacute;sormais <strong>retirer un membre</strong>. Chaque membre affiche sa <strong>pr&eacute;sence</strong> (en ligne / absent / hors ligne depuis X).</li>
+        <li>On peut <strong>rechercher</strong> une guilde et <strong>consulter le roster</strong> de n&rsquo;importe quelle guilde (ses joueurs, leur pr&eacute;sence) avant de la rejoindre.</li>
+        <li style="list-style:none;margin-left:-14px;color:rgba(200,168,110,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">N&eacute;cessite l&rsquo;ex&eacute;cution de <code>guild_admin.sql</code> (retrait + roster) et <code>guild_identity.sql</code> (banni&egrave;re/devise).</li>
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; VILLAGE&nbsp;: NAVIGATION &amp; NOTIFS</li>
         <li>Le bouton <strong>&#9773; Village</strong> est d&eacute;sormais pr&eacute;sent sur <strong>tous les &eacute;crans</strong> (y compris Identit&eacute;), sauf en pleine partie.</li>
         <li>Les boutons <strong>&laquo; Retour &raquo;</strong> remontent enfin &agrave; l&rsquo;<strong>&eacute;cran pr&eacute;c&eacute;dent r&eacute;el</strong> (fini Identit&eacute;&rarr;Param&egrave;tres et les renvois vers les anciens menus).</li>
@@ -6336,6 +6340,9 @@ async function renderGuildList(){
     + '<button class="btn" style="flex:1;font-size:11px;padding:8px" onclick="createGuild(\'request\')">➕ Créer (sur demande)</button>'
     + '</div>';
   html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;margin-bottom:5px;letter-spacing:1px">🏆 CLASSEMENT DES GUILDES</div>';
+  // Recherche : filtre les lignes par nom, côté client (la liste est déjà là).
+  html += '<input type="text" id="guild-search-input" placeholder="🔎 Rechercher une guilde…" oninput="filterGuildList(this.value)" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,.3);border:1px solid rgba(200,168,110,.3);border-radius:4px;color:var(--parchment);padding:7px 10px;font-family:VT323,monospace;font-size:13px;margin-bottom:8px">';
+  html += '<div id="guild-list-rows">';
   if(!list.length){ html += '<div style="text-align:center;padding:12px;opacity:.5;font-family:VT323,monospace">Aucune guilde. Crée la première !</div>'; }
   else {
     html += list.map(function(g,i){
@@ -6344,15 +6351,111 @@ async function renderGuildList(){
       // ⚠ .btn a width:100% par défaut : sans width:auto/flex-shrink:0
       // inline, le bouton s'étale sur toute la ligne et écrase le nom
       // (vécu : classement des guildes illisible en thème sombre).
-      return '<div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.22);border-radius:7px;padding:8px 11px;margin-bottom:5px">'
+      return '<div class="guild-row" data-gname="'+escapeHtml((g.name||'').toLowerCase())+'" style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.22);border-radius:7px;padding:8px 11px;margin-bottom:5px">'
         + '<span style="font-family:VT323,monospace;font-size:13px;color:var(--gold);width:26px;flex-shrink:0">'+podium+'</span>'
         + '<div style="flex:1;min-width:0"><div style="font-family:\'Cinzel\',serif;font-size:12px;color:var(--gold-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+modeIcon+' '+escapeHtml(g.name)+' <span style="opacity:.5">['+escapeHtml(g.tag||'')+']</span></div>'
         + '<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.55;white-space:nowrap">🐉 '+g.ryu_total+' · '+g.members+'/20 membres</div></div>'
+        + '<button class="btn" style="font-size:10px;padding:5px 8px;width:auto;flex-shrink:0;margin:0;opacity:.85" onclick="openGuildRoster('+g.id+')" title="Voir le roster">👁</button>'
         + '<button class="btn" style="font-size:10px;padding:5px 9px;width:auto;flex-shrink:0;margin:0" onclick="joinGuild('+g.id+')">'+(g.join_mode==='open'?'Rejoindre':'Demander')+'</button>'
       + '</div>';
     }).join('');
   }
+  html += '</div>'; // #guild-list-rows
   body.innerHTML = html;
+}
+// Filtre client des lignes de guilde par nom (aucun appel réseau).
+function filterGuildList(q){
+  q = (q||'').trim().toLowerCase();
+  var rows = document.querySelectorAll('#guild-list-rows .guild-row');
+  var shown = 0;
+  rows.forEach(function(r){
+    var ok = !q || (r.getAttribute('data-gname')||'').indexOf(q)!==-1;
+    r.style.display = ok ? '' : 'none';
+    if(ok) shown++;
+  });
+  var none = document.getElementById('guild-list-none');
+  if(!none){
+    none = document.createElement('div');
+    none.id = 'guild-list-none';
+    none.style.cssText = 'text-align:center;padding:12px;opacity:.5;font-family:VT323,monospace';
+    none.textContent = 'Aucune guilde à ce nom.';
+    var cont = document.getElementById('guild-list-rows');
+    if(cont) cont.appendChild(none);
+  }
+  none.style.display = (rows.length && shown===0) ? 'block' : 'none';
+}
+// ── Présence des membres de guilde (réutilise last_seen/presenceTier) ──
+// Texte « hors ligne depuis X » à partir de last_seen.
+function lastSeenText(p){
+  if(!p || !p.last_seen) return 'hors ligne';
+  var min = (Date.now() - new Date(p.last_seen).getTime())/60000;
+  if(min < 60) return 'hors ligne · '+Math.max(1,Math.round(min))+' min';
+  var h = min/60;
+  if(h < 24) return 'hors ligne · '+Math.round(h)+' h';
+  return 'hors ligne · '+Math.round(h/24)+' j';
+}
+function guildPresenceBadgeHtml(p){
+  var tier = (typeof presenceTier==='function') ? presenceTier(p) : 'offline';
+  if(tier==='online') return '<span class="presence-badge is-online"><span class="presence-dot"></span>en ligne</span>';
+  if(tier==='away')   return '<span class="presence-badge is-away"><span class="presence-dot"></span>absent</span>';
+  return '<span class="presence-badge is-offline"><span class="presence-dot"></span>'+lastSeenText(p)+'</span>';
+}
+// Remplit les pastilles de présence des membres après le rendu (un seul appel
+// réseau pour tous les ids). Les emplacements sont marqués id="gmpres-<uuid>".
+async function enrichGuildMemberPresence(ids){
+  if(!ids || !ids.length || typeof supa==='undefined' || !supa) return;
+  try{
+    var r = await supa.from('profiles').select('id,is_online,last_seen').in('id', ids);
+    (r.data||[]).forEach(function(p){
+      var el = document.getElementById('gmpres-'+p.id);
+      if(el) el.innerHTML = guildPresenceBadgeHtml(p);
+    });
+  }catch(e){ /* présence indispo : on laisse les emplacements vides */ }
+}
+// Le chef retire un membre (guild_kick, chef-only côté serveur).
+async function kickGuildMember(pid, pseudo){
+  if(!confirm('Retirer '+(pseudo||'ce joueur')+' de la guilde ?')) return;
+  try{
+    var r = await supa.rpc('guild_kick', { p_player_id: pid });
+    if(r && r.data && r.data.ok){ showToast((pseudo||'Le membre')+' a été retiré.', false); _guildView='auto'; refreshGuildScreen(); }
+    else {
+      var why = (r && r.data && r.data.reason) || '?';
+      var msg = why==='not_leader' ? 'Seul le chef peut retirer un membre.'
+        : why==='cant_kick_leader' ? 'Impossible de retirer un chef.'
+        : 'Retrait impossible ('+why+').';
+      showToast(msg, true);
+    }
+  }catch(e){ showToast('Retrait impossible (guild_admin.sql exécuté ?).', true); }
+}
+// Consulter le roster PUBLIC d'une autre guilde (nom, membres, présence).
+async function openGuildRoster(gid){
+  var ov = document.getElementById('guild-roster-overlay');
+  if(ov) ov.remove();
+  ov = document.createElement('div');
+  ov.id = 'guild-roster-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:900;background:rgba(6,4,3,.82);display:flex;align-items:center;justify-content:center;padding:18px';
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+  ov.innerHTML = '<div style="background:linear-gradient(160deg,#1a130a,#0c0906);border:1px solid rgba(212,160,23,.4);border-radius:12px;max-width:340px;width:100%;max-height:86vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px" id="guild-roster-box"><div style="text-align:center;opacity:.6;font-family:VT323,monospace;padding:14px">Chargement…</div></div>';
+  document.body.appendChild(ov);
+  try{
+    var r = await supa.rpc('guild_roster', { p_guild_id: gid });
+    var d = r && r.data; if(!d || !d.guild){ document.getElementById('guild-roster-box').innerHTML='<div style="text-align:center;opacity:.6;font-family:VT323,monospace;padding:14px">Guilde introuvable.</div>'; return; }
+    var g = d.guild, members = d.members||[];
+    var b = g.banner||{}, em = b.emblem||'🏯', c1 = b.color1||'#3a2c14', c2 = b.color2||'#140f08';
+    var h = '<div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,'+escapeHtml(c1)+','+escapeHtml(c2)+');border-radius:8px;padding:10px 12px;margin-bottom:8px">'
+      + '<span style="font-size:26px">'+escapeHtml(em)+'</span>'
+      + '<div style="flex:1;min-width:0"><div style="font-family:\'Cinzel\',serif;font-size:15px;color:#ffe9a8">'+escapeHtml(g.name)+' <span style="opacity:.5;font-size:11px">['+escapeHtml(g.tag||'')+']</span></div>'
+      + (g.devise?'<div style="font-family:VT323,monospace;font-size:11px;color:#ffe9a8;opacity:.8;font-style:italic">« '+escapeHtml(g.devise)+' »</div>':'')+'</div></div>';
+    h += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.6;margin-bottom:6px">🐉 '+g.ryu_total+' Ryu collectif · '+members.length+'/20 membres</div>';
+    h += members.map(function(m){
+      var crown = m.role==='leader' ? '👑 ' : '';
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-bottom:1px solid rgba(200,168,110,.1)">'
+        + '<span style="font-family:VT323,monospace;font-size:13px;color:var(--parchment);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+crown+escapeHtml(m.pseudo||'?')+'</span>'
+        + '<span style="flex-shrink:0">'+guildPresenceBadgeHtml(m)+'</span></div>';
+    }).join('');
+    h += '<button class="btn" style="width:100%;font-size:12px;padding:9px;margin-top:12px" onclick="var o=document.getElementById(\'guild-roster-overlay\');if(o)o.remove()">Fermer</button>';
+    document.getElementById('guild-roster-box').innerHTML = h;
+  }catch(e){ var box=document.getElementById('guild-roster-box'); if(box) box.innerHTML='<div style="text-align:center;opacity:.6;font-family:VT323,monospace;padding:14px">Roster indisponible (guild_admin.sql exécuté ?).</div>'; }
 }
 function renderMyGuild(data){
   var body = document.getElementById('guild-body');
@@ -6386,13 +6489,22 @@ function renderMyGuild(data){
   html += members.map(function(m){
     var isMe = m.player_id===currentUser.id;
     var crown = m.role==='leader' ? '👑 ' : '';
-    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-bottom:1px solid rgba(200,168,110,.1)'+(isMe?';background:rgba(212,160,23,.1)':'')+'">'
-      + '<span style="font-family:VT323,monospace;font-size:13px;color:var(--parchment)">'+crown+playerNameHtml(m.player_id, m.pseudo)+(isMe?' (vous)':'')+'</span>'
-      + '<span style="font-family:VT323,monospace;font-size:11px;color:var(--gold-bright)">🐉 '+m.contributed_ryu+'</span>'
+    // Bouton « retirer » : chef uniquement, sur les autres membres (jamais
+    // soi-même ni un autre chef). guild_kick revalide côté serveur.
+    var kick = (isLeader && !isMe && m.role!=='leader')
+      ? '<button class="btn" style="font-size:10px;padding:3px 7px;width:auto;flex-shrink:0;margin:0;border-color:rgba(200,80,80,.4);color:#f08080" onclick="kickGuildMember(\''+m.player_id+'\',\''+escapeHtml((m.pseudo||'').replace(/\x27/g,''))+'\')" title="Retirer">✕</button>'
+      : '';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;border-bottom:1px solid rgba(200,168,110,.1)'+(isMe?';background:rgba(212,160,23,.1)':'')+'">'
+      + '<div style="min-width:0;flex:1"><span style="font-family:VT323,monospace;font-size:13px;color:var(--parchment)">'+crown+playerNameHtml(m.player_id, m.pseudo)+(isMe?' (vous)':'')+'</span>'
+      + ' <span class="gm-pres" id="gmpres-'+m.player_id+'"></span></div>'
+      + '<span style="font-family:VT323,monospace;font-size:11px;color:var(--gold-bright);flex-shrink:0">🐉 '+m.contributed_ryu+'</span>'
+      + kick
     + '</div>';
   }).join('');
   html += '<button class="btn" style="width:100%;font-size:11px;padding:7px;opacity:.55;margin-top:10px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="leaveGuild()">Quitter la guilde</button>';
   body.innerHTML = html;
+  // Présence des membres, en un seul appel réseau après le rendu.
+  enrichGuildMemberPresence(members.map(function(m){ return m.player_id; }));
 }
 // ── Identité de guilde : bannière, devise, message d'info (chef) ──────
 // Requiert sql_a_executer/guild_identity.sql. Dégradation propre si non
@@ -11399,7 +11511,7 @@ function showScreen(id){
 //              {dev?}    = visible/cliquable par les seuls comptes dev.
 // ══════════════════════════════════════════════════════════════════════
 var VILLAGE_BUILDINGS = [
-  { id:'chateau', label:'Château', cx:13, cy:20, w:24, h:32, items:[
+  { id:'chateau', label:'Château', cx:13, cy:20, w:24, h:32, online:true, items:[
       {label:'Défis du jour', ico:'🎯', fn:'startDailyChallenge'},
       {label:'Quêtes du jour', ico:'📜', screen:'play', online:true},
       {label:'Événements & saisons', ico:'🎏', screen:'events', online:true} ] },
@@ -11431,7 +11543,7 @@ var VILLAGE_BUILDINGS = [
       {label:'Lore & citations', ico:'📖', screen:'citations'},
       {label:'Série de connexion', ico:'🔥', screen:'play', online:true},
       {label:'Journal d’activité', ico:'📜', screen:'play', online:true} ] },
-  { id:'dojo', label:'Dojo', cx:73, cy:41, w:20, h:24, items:[
+  { id:'dojo', label:'Dojo', cx:73, cy:41, w:20, h:24, online:true, items:[
       {label:'Campagne', ico:'📜', screen:'campaigns'},
       {label:'IA', ico:'🤖', fn:'openLocalMode', arg:'ai'},
       {label:'Maîtres IA', ico:'⚔', screen:'opponents'},
