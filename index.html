@@ -11933,7 +11933,9 @@ function rgbToHexSafe(rgb){
 try{ var _th=localStorage.getItem('vtl_ui_theme'); if(_th==='sumi') document.body.classList.add('ui-sumi'); else if(_th==='wurmz' && isWurmzThemeUnlocked()) document.body.classList.add('ui-wurmz'); else if(_th==='village') document.body.classList.add('ui-village'); }catch(e){}
 try{ var _ss=localStorage.getItem('vtl_sumi_sky'); if(_ss) document.body.style.setProperty('--sumi-sky', _ss); }catch(e){}
 function setBoardSize(v){displayPrefs.boardSize=v;['small','auto','large'].forEach(x=>document.getElementById('board-'+x).classList.toggle('selected',x===v));if(document.getElementById('screen-game').classList.contains('active'))renderBoard()}
-function confirmMenu(){if(confirm(t('msg_confirm_menu'))){stopTimer();showScreen('menu')}}
+// Quitter une partie EN COURS : comme la fin de partie, on revient au mode
+// d'origine (ou au village en thème Village), pas à l'écran Options.
+function confirmMenu(){if(confirm(t('msg_confirm_menu'))){stopTimer();showScreen(typeof gameOriginReturnScreen==='function'?gameOriginReturnScreen():'menu')}}
 
 // ══════════════════════════════════════════════════════
 // SETTINGS & PREFS
@@ -11956,7 +11958,9 @@ function startClock(){
 function changeClockDuration(s){clockDuration=s;startClock()}
 function updateClockBtns(){[3,5,10].forEach(s=>{const b=document.getElementById('clock-opt-'+s);if(b)b.classList.toggle('selected',s===clockDuration)})}
 function resetClock(){startClock()}
-function quitClock(){if(clockState&&clockState.interval)clearInterval(clockState.interval);showScreen('menu')}
+// Sortie de la pendule : retour au hub du jeu local (ou au village en thème
+// Village), jamais à l'écran Options ('menu').
+function quitClock(){if(clockState&&clockState.interval)clearInterval(clockState.interval);showScreen(document.body.classList.contains('ui-village')?'village':'local-hub')}
 
 // Quitte une partie en ligne EN COURS (bouton "Quitter" du bandeau
 // #online-game-bar) — distinct de handleMenuClick(), qui ne s'utilise
