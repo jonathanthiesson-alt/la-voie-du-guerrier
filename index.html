@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.48.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.49.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2213,7 +2213,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.48.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.49.0 &#9820;</div>
   </div>
 </div>
 
@@ -3670,13 +3670,15 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.48.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.49.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
     </div>
 
     <div class="devlog-entry">
-      <div class="devlog-version">ONLINE alpha V0.48.0 &mdash; 10 ao&ucirc;t 2026</div>
+      <div class="devlog-version">ONLINE alpha V0.49.0 &mdash; 10 ao&ucirc;t 2026</div>
       <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; INFOS DE MODE</li>
+        <li>Bouton <strong>ℹ « comment &ccedil;a marche »</strong> sur chaque carte du carrousel. Fiche <strong>Champ de bataille</strong> ajout&eacute;e ; fiche <strong>Guilde</strong> enrichie (pr&eacute;sence, consultation d&rsquo;autres guildes, pouvoirs du chef).</li>
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; ADMINISTRATION DE GUILDE</li>
         <li>Le chef peut d&eacute;sormais <strong>retirer un membre</strong>. Chaque membre affiche sa <strong>pr&eacute;sence</strong> (en ligne / absent / hors ligne depuis X).</li>
         <li>On peut <strong>rechercher</strong> une guilde et <strong>consulter le roster</strong> de n&rsquo;importe quelle guilde (ses joueurs, leur pr&eacute;sence) avant de la rejoindre.</li>
@@ -5579,10 +5581,23 @@ var MODE_INFO = {
     sections: [
       ['But', 'Rejoindre un clan, cumuler du Ryu collectif et défier d\'autres guildes.'],
       ['Adhésion', 'Le créateur choisit : 🔓 ouverte (n\'importe qui rejoint) ou 🔒 sur demande (le chef approuve). 20 membres maximum.'],
-      ['Rôles', 'Chef 👑 (approuve les demandes) et membres. Si le chef quitte, le plus ancien membre est promu automatiquement.'],
+      ['Rôles', 'Chef 👑 et membres. Si le chef quitte, le plus ancien membre est promu automatiquement.'],
       ['Ryu collectif', 'Chaque membre contribue au total de la guilde. Le classement des guildes se fait sur ce total.'],
+      ['Présence', 'Chaque membre affiche son statut : 🟢 en ligne, 🟡 absent, 🔴 hors ligne depuis X. De quoi savoir qui est actif.'],
+      ['Consulter les autres guildes', 'Depuis la liste (🏆 Autres guildes), recherche une guilde par son nom et ouvre son 👁 roster : ses membres et leur présence, avant de la rejoindre ou de la défier.'],
       ['Défis inter-guildes', 'Depuis ta guilde, tu peux défier un autre clan. Le score cumulé des membres décide du vainqueur.'],
+      ['Chef (GM)', 'Le chef gère l\'identité — 🛡 bannière, devise et message d\'info (qui s\'affiche en popup aux membres). Il ✉ accepte les demandes d\'adhésion et peut ✕ retirer un membre (jamais un autre chef).'],
       ['À savoir', 'Un joueur ne peut appartenir qu\'à UNE seule guilde à la fois.']
+    ]
+  },
+  battlefield: {
+    titre: '🏯 CHAMP DE BATAILLE',
+    monnaie: '—',
+    sections: [
+      ['But', '3 contre 3 sur un grand plateau : chaque camp aligne trois Combattants et doit éliminer ceux d\'en face.'],
+      ['Tour par tour', 'On joue siège par siège, en rotation : un Combattant de chaque unité agit à son tour. Les unités éliminées sont sautées.'],
+      ['Élimination', 'Capturer (ou pousser hors du plateau) le Combattant d\'une unité l\'élimine du champ. Le dernier camp encore debout l\'emporte.'],
+      ['À savoir', 'Pour l\'instant en test SOLO contre l\'IA ; l\'affrontement en ligne équipe contre équipe (avec ELO cumulé) arrivera ensuite.']
     ]
   },
   events: {
@@ -6338,7 +6353,8 @@ async function renderGuildList(){
     + '<div style="display:flex;gap:6px;margin-bottom:12px">'
     + '<button class="btn" style="flex:1;font-size:11px;padding:8px" onclick="createGuild(\'open\')">➕ Créer (ouverte)</button>'
     + '<button class="btn" style="flex:1;font-size:11px;padding:8px" onclick="createGuild(\'request\')">➕ Créer (sur demande)</button>'
-    + '</div>';
+    + '</div>'
+    + '<button class="btn" style="width:100%;font-size:11px;padding:6px;opacity:.7;margin-bottom:10px" onclick="showModeInfo(\'guild\')">ℹ Comment fonctionnent les guildes ?</button>';
   html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;margin-bottom:5px;letter-spacing:1px">🏆 CLASSEMENT DES GUILDES</div>';
   // Recherche : filtre les lignes par nom, côté client (la liste est déjà là).
   html += '<input type="text" id="guild-search-input" placeholder="🔎 Rechercher une guilde…" oninput="filterGuildList(this.value)" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,.3);border:1px solid rgba(200,168,110,.3);border-radius:4px;color:var(--parchment);padding:7px 10px;font-family:VT323,monospace;font-size:13px;margin-bottom:8px">';
@@ -6468,6 +6484,7 @@ function renderMyGuild(data){
   // de tous les membres ; le chef a en plus le bouton « Gérer ».
   _guildIdentityCache = g;
   html += guildIdentityHeaderHtml(g, isLeader);
+  html += '<button class="btn" style="width:100%;font-size:11px;padding:6px;opacity:.7;margin-bottom:8px" onclick="showModeInfo(\'guild\')">ℹ Fonctions de la guilde (joueur & chef)</button>';
   html += '<div style="display:flex;gap:6px;margin-bottom:10px">'
     + '<button class="btn" style="flex:1;font-size:11px;padding:7px" onclick="_guildView=\'list\';refreshGuildScreen()">🏆 Autres guildes</button>'
     + '<button class="btn" style="flex:1;font-size:11px;padding:7px" onclick="openGuildTournaments('+g.id+','+isLeader+')">⚔ Défis inter-guildes</button>'
@@ -9502,7 +9519,7 @@ function renderPlayModeCarousel(){
       +'<div style="font-size:34px;line-height:1;margin-bottom:2px">'+m.icon+'</div>'
       +'<div style="font-family:\'Cinzel\',serif;font-size:16px;color:var(--gold-bright);letter-spacing:1px">'+escapeHtml(m.label)+'</div>'
       +'<div style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.65;text-align:center">'+escapeHtml(m.sub)+'</div>'
-      +'<div style="font-family:VT323,monospace;font-size:10px;color:var(--gold);opacity:.45;margin-top:3px">Touchez pour ouvrir le menu</div>'
+      +'<div style="font-family:VT323,monospace;font-size:10px;color:var(--gold);opacity:.45;margin-top:3px">Touchez pour ouvrir le menu · <span onclick="event.stopPropagation();showModeInfo(\''+m.key+'\')" style="text-decoration:underline;cursor:pointer">ℹ comment ça marche</span></div>'
     +'</div>'
     +_playModePeek(next,1);
   var dots=document.getElementById('play-mode-dots');
