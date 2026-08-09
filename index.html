@@ -3604,7 +3604,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <div class="devlog-version">ONLINE alpha V0.41.0 &mdash; 9 ao&ucirc;t 2026</div>
       <ul class="devlog-list">
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; CHAMP DE BATAILLE &mdash; EN &Eacute;QUIPE, EN LIGNE</li>
-        <li>Le mode <strong>Champ de bataille</strong> (3 v 3, plateau 9&times;9) se joue d&eacute;sormais <strong>en &eacute;quipe, en ligne</strong>. Depuis le carrousel <strong>Jouer</strong>, un <strong>lobby de pr&eacute;paration</strong>&nbsp;: cr&eacute;e une &eacute;quipe, vois tes <strong>3 slots</strong>, et remplis-les.</li>
+        <li>Le mode <strong>Champ de bataille</strong> (plateau 9&times;9, 3 combattants par camp) a son <strong>menu</strong> depuis le carrousel <strong>Jouer</strong>, avec deux modes&nbsp;: <strong>2 joueurs</strong> (sur le m&ecirc;me appareil &mdash; un joueur m&egrave;ne les blancs, l&rsquo;autre les noirs) et <strong>3 v 3 en ligne</strong> (lobby d&rsquo;&eacute;quipe). Chaque combattant a sa <strong>teinte d&rsquo;escouade</strong> (bois clair &agrave; bois pour les blancs, marron clair &agrave; fonc&eacute; pour les noirs).</li>
+        <li>En <strong>3 v 3</strong>&nbsp;: cr&eacute;e une &eacute;quipe, vois tes <strong>3 slots</strong>, et remplis-les.</li>
         <li>Le <strong>chef d'&eacute;quipe</strong> peut, par combattant&nbsp;: <strong>inviter un ami</strong>, <strong>placer un bot</strong>, ou <strong>ouvrir le slot</strong> &agrave; un joueur au hasard (salon des &eacute;quipes ouvertes, <strong>code</strong> d'&eacute;quipe, ou <strong>file solo</strong>).</li>
         <li>Le <strong>matchmaking</strong> appaire deux &eacute;quipes selon leur <strong>ELO cumul&eacute;</strong>. Partie <strong>amicale</strong> (aucun impact classement). Les bots peuvent compl&eacute;ter l'&eacute;quipe adverse, et jouent r&eacute;ellement leurs si&egrave;ges.</li>
         <li style="list-style:none;margin-left:-14px;color:rgba(200,168,110,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">Un combattant qui d&eacute;passe le temps ou se d&eacute;connecte est <strong>forfait</strong> (son escouade quitte le plateau). L'entra&icirc;nement <strong>solo vs IA</strong> reste accessible depuis le lobby.</li>
@@ -9091,7 +9092,7 @@ function centralPlayMode(){ return PLAY_MODES[_playModeIdx] || PLAY_MODES[0]; }
 function launchCentralMode(){
   var m=centralPlayMode();
   if(m.key==='matchmaking'){ quickPlay(); return; }
-  if(m.key==='battlefield'){ openBattlefieldLobby(); return; }
+  if(m.key==='battlefield'){ openBattlefieldMenu(); return; }
   if(m.key==='arena'){
     if(!currentUser){ showToast('Connectez-vous pour jouer en ligne.', true); showScreen('online-auth'); return; }
     showScreen('arena');
@@ -9410,7 +9411,8 @@ async function loadBotRosterFromDB(){
     if(data && data.length){
       _botRoster = data.map(function(r){ return {
         key:r.key, num:r.num, kanji:r.kanji, reading:r.reading, rank:r.rank,
-        rankKanji:r.rank_kanji, meaning:r.meaning, lore:r.lore, elo:r.base_elo, tier:r.tier
+        rankKanji:r.rank_kanji, meaning:r.meaning, lore:r.lore, elo:r.base_elo, tier:r.tier,
+        profileId:r.profile_id, pseudo:r.pseudo // profileId : requis pour asseoir un bot précis en Champ de bataille
       }; });
     }
   }catch(e){}
@@ -16013,6 +16015,53 @@ function bfFilledCount(){ return (currentBfTeam&&currentBfTeam.slots||[]).filter
 function bfTeamIsFull(t){ return t && (t.slots||[]).filter(function(s){return s.state==='human'||s.state==='bot';}).length===3; }
 function bfGenCode(){ var s=''; var a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; for(var i=0;i<6;i++) s+=a[Math.floor(Math.random()*a.length)]; return s; }
 
+// ── Menu Champ de bataille (choix du mode, depuis le carrousel) ───
+// Deux modes : « 2 joueurs » (hotseat local, un joueur = camp blanc, l'autre =
+// camp noir, chacun ses 3 combattants) et « 3 v 3 en ligne » (le lobby d'équipe
+// + matchmaking par ELO cumulé). L'entraînement solo vs IA reste accessible.
+function openBattlefieldMenu(){
+  bfMenuEnsureOverlay();
+  document.getElementById('bf-menu').style.display='flex';
+  // Précharge le roster (avec profile_id) pour le sélecteur de bot du lobby.
+  if(typeof loadBotRosterFromDB==='function' && (!_botRoster[0] || _botRoster[0].profileId===undefined)){ try{ loadBotRosterFromDB(); }catch(e){} }
+}
+function bfMenuClose(){ var e=document.getElementById('bf-menu'); if(e) e.style.display='none'; }
+function bfMenuEnsureOverlay(){
+  if(document.getElementById('bf-menu')) return;
+  var ov=document.createElement('div');
+  ov.id='bf-menu';
+  ov.style.cssText='position:fixed;inset:0;z-index:9997;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;padding:16px';
+  var card='<div style="background:linear-gradient(180deg,#20160c,#160f08);border:1px solid rgba(212,160,23,.4);border-radius:12px;max-width:400px;width:100%;padding:20px;box-shadow:0 12px 46px rgba(0,0,0,.7)">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">'
+      +'<div style="font-family:Cinzel,serif;color:var(--gold-bright);font-size:18px">🏯 Champ de bataille</div>'
+      +'<button onclick="bfMenuClose()" style="background:transparent;border:none;color:var(--parchment);opacity:.6;font-size:20px;cursor:pointer">✕</button>'
+    +'</div>'
+    +'<div style="font-family:VT323,monospace;font-size:13px;opacity:.65;margin-bottom:14px">Plateau 9×9, 3 combattants par camp — élimination d\'unité.</div>'
+    +'<button onclick="bfMenuClose();playBattlefield2Players()" style="width:100%;padding:13px;margin:6px 0;border-radius:9px;cursor:pointer;border:1px solid rgba(212,160,23,.5);background:rgba(40,30,12,.6);color:var(--gold-bright);font-family:Cinzel,serif;font-size:15px;text-align:left">'
+      +'👥 2 joueurs <span style="font-family:VT323,monospace;font-size:12px;opacity:.7;display:block;margin-top:2px;color:var(--parchment)">Sur cet appareil — un joueur mène les blancs, l\'autre les noirs.</span></button>'
+    +'<button onclick="bfMenuClose();openBattlefieldLobby()" style="width:100%;padding:13px;margin:6px 0;border-radius:9px;cursor:pointer;border:1px solid rgba(212,160,23,.5);background:rgba(40,30,12,.6);color:var(--gold-bright);font-family:Cinzel,serif;font-size:15px;text-align:left">'
+      +'⚔ 3 v 3 en ligne <span style="font-family:VT323,monospace;font-size:12px;opacity:.7;display:block;margin-top:2px;color:var(--parchment)">Forme une équipe de 3, puis affronte une équipe d\'ELO proche.</span></button>'
+    +'<button onclick="bfMenuClose();playBattlefieldVsAI()" style="width:100%;padding:10px;margin-top:8px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--parchment);opacity:.75;font-family:VT323,monospace;font-size:14px">⚔ Entraînement solo vs IA</button>'
+    +'</div>';
+  ov.innerHTML=card;
+  ov.addEventListener('click', function(e){ if(e.target===ov) bfMenuClose(); });
+  document.body.appendChild(ov);
+}
+// Mode 2 joueurs local (hotseat) : les DEUX camps sont humains. La rotation
+// 6 sièges gère le passage de main (un joueur joue W1/W2/W3 à leurs tours,
+// l'autre B1/B2/B3). Aucune IA (vsAI=false), aucune cadence (pass-and-play).
+function playBattlefield2Players(){
+  var f=(typeof LAB_FORMATS!=='undefined')?LAB_FORMATS.champDeBataille:null;
+  if(!f){ if(typeof showToast==='function') showToast('Mode indisponible.',true); return; }
+  var v=(typeof labValidateFormat==='function')?labValidateFormat(f):{ok:true,format:f};
+  if(!v.ok){ if(typeof showToast==='function') showToast('Format invalide : '+v.err,true); return; }
+  settings.vsAI=false; settings.gameMode='labtest'; settings.timerSeconds=0;
+  selectedAdvId=null; settings._playerColor='white'; settings._forcedStart='white';
+  settings._onlineBottomColor=null; settings._customFormat=v.format;
+  if(typeof showScreen==='function') showScreen('game');
+  initGame();
+}
+
 // ── Ouverture du lobby (depuis le carrousel) ──────────────────────
 async function openBattlefieldLobby(){
   if(typeof currentUser==='undefined' || !currentUser){
@@ -16217,16 +16266,43 @@ async function bfSaveSlots(slots, extra){
   bfSetTeam(up.data);
 }
 function bfCloneSlots(){ return (currentBfTeam.slots||[]).map(function(s){return Object.assign({},s);}); }
+// Placer un bot = CHOISIR parmi l'équipe des 15 DÉBLOQUÉS (déblocage en chaîne,
+// même règle que la galerie : botArmyUnlocked). On a besoin du profile_id du bot
+// (pour que le worker pilote son siège) → roster chargé depuis la DB.
 async function bfSlotPlaceBot(slot){
   if(!bfIsLeader()) return;
-  var teamElo=currentBfTeam.elo_sum||1200, n=Math.max(1,bfFilledCount());
-  var r=await supa.rpc('battlefield_bot_fill',{p_elo:Math.round(teamElo/n),p_count:6});
-  var list=r.data||[]; var used={};
-  (currentBfTeam.slots||[]).forEach(function(s){ if(s.player_id) used[s.player_id]=1; });
-  var pick=list.find(function(b){ return !used[b.profile_id]; });
-  if(!pick){ if(typeof showToast==='function') showToast('Aucun bot disponible.',true); return; }
+  if(typeof loadBotRosterFromDB==='function' && (!_botRoster[0] || _botRoster[0].profileId===undefined)){ await loadBotRosterFromDB(); }
+  bfShowBotPicker(slot);
+}
+function bfShowBotPicker(slot){
+  var esc=(typeof escapeHtml==='function')?escapeHtml:function(s){return String(s);};
+  var old=document.getElementById('bf-bot-picker'); if(old) old.remove();
+  var used={}; (currentBfTeam.slots||[]).forEach(function(s){ if(s.player_id) used[s.player_id]=1; });
+  var avail=(_botRoster||[]).filter(function(b){
+    return b.tier!=='hidden' && (typeof botArmyUnlocked!=='function' || botArmyUnlocked(b)) && b.profileId && !used[b.profileId];
+  });
+  var rows=avail.map(function(b){
+    return '<button onclick="bfPlaceChosenBot('+slot+',\''+b.key+'\')" style="display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:8px 9px;margin:3px 0;border-radius:7px;cursor:pointer;border:1px solid rgba(212,160,23,.3);background:rgba(0,0,0,.3);color:var(--parchment);font-family:VT323,monospace;font-size:14px">'
+      +(typeof _botMedallion==='function'?_botMedallion(b,34,false):'')
+      +'<span style="flex:1;min-width:0">№'+b.num+' · '+esc(b.rank||b.pseudo||'Bot')+' <span style="opacity:.55">· ELO '+b.elo+'</span></span></button>';
+  }).join('');
+  var ov=document.createElement('div');
+  ov.id='bf-bot-picker';
+  ov.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:16px';
+  ov.innerHTML='<div style="background:linear-gradient(180deg,#20160c,#160f08);border:1px solid rgba(212,160,23,.4);border-radius:10px;max-width:340px;width:100%;max-height:80vh;overflow:auto;padding:16px">'
+    +'<div style="font-family:Cinzel,serif;color:var(--gold-bright);font-size:15px;margin-bottom:2px">Choisir un bot — combattant '+(slot+1)+'</div>'
+    +'<div style="font-family:VT323,monospace;opacity:.6;font-size:12px;margin-bottom:10px">Parmi l\'équipe des 15 débloqués.</div>'
+    +(rows||'<div style="opacity:.6;font-family:VT323,monospace">Aucun bot débloqué disponible — bats le №01 pour commencer.</div>')
+    +'<button onclick="var e=document.getElementById(\'bf-bot-picker\');if(e)e.remove()" style="width:100%;margin-top:10px;padding:8px;border-radius:6px;cursor:pointer;border:1px solid rgba(255,255,255,.15);background:transparent;color:var(--parchment);opacity:.7;font-family:VT323,monospace">Annuler</button></div>';
+  ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+  document.body.appendChild(ov);
+}
+function bfPlaceChosenBot(slot, key){
+  var e=document.getElementById('bf-bot-picker'); if(e) e.remove();
+  var b=(_botRoster||[]).find(function(x){ return x.key===key; });
+  if(!b || !b.profileId){ if(typeof showToast==='function') showToast('Ce bot n\'est pas disponible.',true); return; }
   var slots=bfCloneSlots();
-  slots[slot]={slot:slot,state:'bot',player_id:pick.profile_id,is_bot:true,bot_key:pick.bot_key,name:pick.name,elo:pick.elo};
+  slots[slot]={slot:slot,state:'bot',player_id:b.profileId,is_bot:true,bot_key:b.key,name:(b.rank||b.pseudo||'Bot'),elo:b.elo};
   bfSaveSlots(slots);
 }
 async function bfSlotOpen(slot){
