@@ -337,6 +337,13 @@ body.ui-wurmz #screen-sumo .sumi-sky{display:block;filter:sepia(1) hue-rotate(8d
 .piece.black.bf-unit-1{background:radial-gradient(circle at 35% 35%,#6a4526,#40260f 60%,#22140a)!important;border-color:#6a4a24!important}
 .piece.black.bf-unit-2{background:radial-gradient(circle at 35% 35%,#8a5e38,#573a1d 60%,#301e0e)!important;border-color:#8a5e30!important}
 .piece.black.bf-unit-3{background:radial-gradient(circle at 35% 35%,#3a2410,#1e1206 60%,#0a0604)!important;border-color:#4a3015!important}
+/* Prochain combattant à jouer : petit cercle JAUNE discret sur ses pièces
+   pendant le tour courant (::before, sous l'anneau de minuteur qui est ::after). */
+.piece.bf-next::before{content:'';position:absolute;inset:-3px;border-radius:50%;border:1.5px solid rgba(232,200,70,.72);box-shadow:0 0 4px rgba(232,200,70,.4);pointer-events:none;z-index:3}
+.piece.pion-shield.bf-next::before{border-radius:6px}
+/* Clic maintenu sur un combattant : cerclage clair de TOUTES ses pièces
+   (via outline, indépendant des ::before/::after déjà pris). */
+.piece.bf-held{outline:2px solid rgba(255,255,255,.9);outline-offset:2px}
 /* WurmzSkin : le médaillon EST la pièce — on retire le fond, la bordure et
    l'ombre interne du pion standard pour qu'il occupe toute la surface.
    On conserve une ombre portée pour garder le relief sur le plateau. */
@@ -3606,6 +3613,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; CHAMP DE BATAILLE &mdash; EN &Eacute;QUIPE, EN LIGNE</li>
         <li>Le mode <strong>Champ de bataille</strong> (plateau 9&times;9, 3 combattants par camp) a son <strong>menu</strong> depuis le carrousel <strong>Jouer</strong>, avec deux modes&nbsp;: <strong>2 joueurs</strong> (sur le m&ecirc;me appareil &mdash; un joueur m&egrave;ne les blancs, l&rsquo;autre les noirs) et <strong>3 v 3 en ligne</strong> (lobby d&rsquo;&eacute;quipe). Chaque combattant a sa <strong>teinte d&rsquo;escouade</strong> (bois clair &agrave; bois pour les blancs, marron clair &agrave; fonc&eacute; pour les noirs).</li>
         <li>En <strong>3 v 3</strong>&nbsp;: cr&eacute;e une &eacute;quipe, vois tes <strong>3 slots</strong>, et remplis-les.</li>
+        <li><strong>Cadences 3 / 5 / 10 s</strong> dans les deux modes&nbsp;: un <strong>anneau vert&rarr;rouge</strong> d&eacute;compte le temps du combattant au trait (temps &eacute;coul&eacute; = son escouade forfait, la partie continue). Un <strong>cercle jaune discret</strong> montre le <strong>prochain</strong> combattant, et <strong>maintenir le clic</strong> sur n&rsquo;importe quel combattant cercle toutes ses pi&egrave;ces.</li>
         <li>Le <strong>chef d'&eacute;quipe</strong> peut, par combattant&nbsp;: <strong>inviter un ami</strong>, <strong>placer un bot</strong>, ou <strong>ouvrir le slot</strong> &agrave; un joueur au hasard (salon des &eacute;quipes ouvertes, <strong>code</strong> d'&eacute;quipe, ou <strong>file solo</strong>).</li>
         <li>Le <strong>matchmaking</strong> appaire deux &eacute;quipes selon leur <strong>ELO cumul&eacute;</strong>. Partie <strong>amicale</strong> (aucun impact classement). Les bots peuvent compl&eacute;ter l'&eacute;quipe adverse, et jouent r&eacute;ellement leurs si&egrave;ges.</li>
         <li style="list-style:none;margin-left:-14px;color:rgba(200,168,110,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">Un combattant qui d&eacute;passe le temps ou se d&eacute;connecte est <strong>forfait</strong> (son escouade quitte le plateau). L'entra&icirc;nement <strong>solo vs IA</strong> reste accessible depuis le lobby.</li>
@@ -14098,6 +14106,9 @@ function startTurnTimer(){
     const now=performance.now();const dt=now-last;last=now;G.timeLeft-=dt;
     if(G.timeLeft<=0){
       G.timeLeft=0;stopTimer();updateTimerUI();
+      // Champ de bataille : le temps écoulé forfaite le combattant, pas la
+      // partie (gère aussi le cas en ligne). Court-circuite endGame/triggerTimeout.
+      if(G.bfRotation){ bfOnTimeout(); return; }
       if(G.onlineGameId){
         // Bug corrigé (parties 3s/coup injouables) : le coup tout juste
         // joué relance switchTurn() → startTurnTimer() IMMÉDIATEMENT sur
@@ -15028,6 +15039,9 @@ function renderBoard(overrideLM,isRev){
   if(!isRev&&!grid._dragSetup){grid._dragSetup=true;setupBoardDrag(grid,cs);}
   // Draw best-move arrow ONLY during active review mode
   if(isRev&&reviewMode)drawBestMoveArrow(cs,rows,cols);
+  // Champ de bataille : (re)poser le cercle jaune du prochain combattant après
+  // chaque reconstruction du plateau.
+  if(!isRev && G.battlefieldMode && typeof bfMarkNextCombatant==='function') bfMarkNextCombatant();
 }
 
 function mkPiece(piece,cs,isStackBottom,topType,col){
@@ -15981,6 +15995,7 @@ function bfAdvanceSeat(){
   var sb=document.getElementById('status-bar');
   if(sb) sb.textContent=bfStatusText();
   startTurnTimer();
+  if(typeof bfMarkNextCombatant==='function') bfMarkNextCombatant(); // recale le cercle jaune
   // Champ de bataille vs IA : si le siège actif est piloté par l'IA (camp du
   // haut), elle joue. Restriction au combattant actif gérée dans scheduleAI.
   if(G.vsAI && G.turn===G.topColor && !G.gameOver) scheduleAI();
@@ -16022,9 +16037,18 @@ function bfGenCode(){ var s=''; var a='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; for(va
 function openBattlefieldMenu(){
   bfMenuEnsureOverlay();
   document.getElementById('bf-menu').style.display='flex';
+  bfRenderCadence();
   // Précharge le roster (avec profile_id) pour le sélecteur de bot du lobby.
   if(typeof loadBotRosterFromDB==='function' && (!_botRoster[0] || _botRoster[0].profileId===undefined)){ try{ loadBotRosterFromDB(); }catch(e){} }
 }
+function bfRenderCadence(){
+  var box=document.getElementById('bf-menu-cadence'); if(!box) return;
+  box.innerHTML=[3,5,10].map(function(n){
+    var on=(_bfCadence===n);
+    return '<button onclick="bfSetCadence('+n+')" style="flex:1;padding:8px;border-radius:6px;cursor:pointer;border:1px solid '+(on?'var(--gold-bright)':'rgba(212,160,23,.3)')+';background:'+(on?'rgba(60,45,15,.8)':'rgba(0,0,0,.25)')+';color:'+(on?'var(--gold-bright)':'var(--parchment)')+';font-family:VT323,monospace;font-size:15px">'+n+'s</button>';
+  }).join('');
+}
+function bfSetCadence(n){ _bfCadence=n; bfRenderCadence(); }
 function bfMenuClose(){ var e=document.getElementById('bf-menu'); if(e) e.style.display='none'; }
 function bfMenuEnsureOverlay(){
   if(document.getElementById('bf-menu')) return;
@@ -16036,7 +16060,9 @@ function bfMenuEnsureOverlay(){
       +'<div style="font-family:Cinzel,serif;color:var(--gold-bright);font-size:18px">🏯 Champ de bataille</div>'
       +'<button onclick="bfMenuClose()" style="background:transparent;border:none;color:var(--parchment);opacity:.6;font-size:20px;cursor:pointer">✕</button>'
     +'</div>'
-    +'<div style="font-family:VT323,monospace;font-size:13px;opacity:.65;margin-bottom:14px">Plateau 9×9, 3 combattants par camp — élimination d\'unité.</div>'
+    +'<div style="font-family:VT323,monospace;font-size:13px;opacity:.65;margin-bottom:10px">Plateau 9×9, 3 combattants par camp — élimination d\'unité.</div>'
+    +'<div style="font-family:VT323,monospace;font-size:12px;opacity:.7;margin-bottom:4px">Cadence par combattant</div>'
+    +'<div id="bf-menu-cadence" style="display:flex;gap:6px;margin-bottom:12px"></div>'
     +'<button onclick="bfMenuClose();playBattlefield2Players()" style="width:100%;padding:13px;margin:6px 0;border-radius:9px;cursor:pointer;border:1px solid rgba(212,160,23,.5);background:rgba(40,30,12,.6);color:var(--gold-bright);font-family:Cinzel,serif;font-size:15px;text-align:left">'
       +'👥 2 joueurs <span style="font-family:VT323,monospace;font-size:12px;opacity:.7;display:block;margin-top:2px;color:var(--parchment)">Sur cet appareil — un joueur mène les blancs, l\'autre les noirs.</span></button>'
     +'<button onclick="bfMenuClose();openBattlefieldLobby()" style="width:100%;padding:13px;margin:6px 0;border-radius:9px;cursor:pointer;border:1px solid rgba(212,160,23,.5);background:rgba(40,30,12,.6);color:var(--gold-bright);font-family:Cinzel,serif;font-size:15px;text-align:left">'
@@ -16055,7 +16081,7 @@ function playBattlefield2Players(){
   if(!f){ if(typeof showToast==='function') showToast('Mode indisponible.',true); return; }
   var v=(typeof labValidateFormat==='function')?labValidateFormat(f):{ok:true,format:f};
   if(!v.ok){ if(typeof showToast==='function') showToast('Format invalide : '+v.err,true); return; }
-  settings.vsAI=false; settings.gameMode='labtest'; settings.timerSeconds=0;
+  settings.vsAI=false; settings.gameMode='labtest'; settings.timerSeconds=_bfCadence||5;
   selectedAdvId=null; settings._playerColor='white'; settings._forcedStart='white';
   settings._onlineBottomColor=null; settings._customFormat=v.format;
   if(typeof showScreen==='function') showScreen('game');
@@ -16127,6 +16153,12 @@ function bfLobbyRender(){
       +'<div style="font-family:VT323,monospace;color:var(--parchment);font-size:14px">ELO cumulé : <b style="color:var(--gold-bright)">'+(t.elo_sum||0)+'</b></div>'
     +'</div>'
     +'<div style="font-family:VT323,monospace;font-size:12px;opacity:.6;margin-bottom:8px">Code : <b style="letter-spacing:2px;color:var(--gold)">'+esc(t.invite_code||'—')+'</b></div>'
+    +(leader
+      ? '<div style="font-family:VT323,monospace;font-size:12px;opacity:.7;margin-bottom:3px">Cadence</div><div style="display:flex;gap:6px;margin-bottom:10px">'
+          +[3,5,10].map(function(n){ var on=((t.timer_seconds||5)===n);
+            return '<button onclick="bfSetTeamCadence('+n+')" style="flex:1;padding:6px;border-radius:6px;cursor:pointer;border:1px solid '+(on?'var(--gold-bright)':'rgba(212,160,23,.3)')+';background:'+(on?'rgba(60,45,15,.8)':'rgba(0,0,0,.25)')+';color:'+(on?'var(--gold-bright)':'var(--parchment)')+';font-family:VT323,monospace;font-size:14px">'+n+'s</button>'; }).join('')
+          +'</div>'
+      : '<div style="font-family:VT323,monospace;font-size:12px;opacity:.55;margin-bottom:8px">Cadence : '+(t.timer_seconds||5)+'s</div>')
     +slotsHtml
     +(leader
       ? '<button onclick="bfLaunchSearch()" '+(full?'':'disabled')+' style="width:100%;padding:12px;margin-top:10px;border-radius:8px;cursor:'+(full?'pointer':'not-allowed')+';border:1px solid rgba(212,160,23,.5);background:'+(full?'rgba(60,45,15,.8)':'rgba(30,25,15,.4)')+';color:'+(full?'var(--gold-bright)':'rgba(200,180,120,.4)')+';font-family:Cinzel,serif;font-size:15px">⚔ Lancer la recherche</button>'
@@ -16266,6 +16298,12 @@ async function bfSaveSlots(slots, extra){
   bfSetTeam(up.data);
 }
 function bfCloneSlots(){ return (currentBfTeam.slots||[]).map(function(s){return Object.assign({},s);}); }
+async function bfSetTeamCadence(n){
+  if(!bfIsLeader()) return;
+  var up=await supa.from('battlefield_teams').update({timer_seconds:n}).eq('id',currentBfTeamId).select().single();
+  if(up.error){ if(typeof showToast==='function') showToast('Cadence : '+up.error.message,true); return; }
+  bfSetTeam(up.data);
+}
 // Placer un bot = CHOISIR parmi l'équipe des 15 DÉBLOQUÉS (déblocage en chaîne,
 // même règle que la galerie : botArmyUnlocked). On a besoin du profile_id du bot
 // (pour que le worker pilote son siège) → roster chargé depuis la DB.
@@ -16506,6 +16544,19 @@ function applyRemoteBattlefieldState(row){
   pieceInputLocked=!mine; // je ne peux jouer QUE mon siège
   var sb=document.getElementById('status-bar');
   if(sb) sb.textContent = mine ? ('À toi — '+bfSeatLabel(seat)) : ('En attente — '+bfSeatLabel(seat)+(seat.is_bot?' (bot)':''));
+  bfMarkNextCombatant();
+  // Anneau de minuteur (vert→rouge) sur le combattant au trait, chez tous les
+  // clients. À mon tour, mon horloge fait autorité (forfait à 0 = bfOnlineForfeit
+  // Self via bfOnTimeout). Sinon, décompte d'AFFICHAGE aligné sur turn_deadline
+  // du serveur (le forfait réel est géré par le worker / le joueur concerné).
+  if(settings.timerSeconds>0){
+    startTurnTimer();
+    if(!mine && row.turn_deadline){
+      var rem=new Date(row.turn_deadline).getTime()-Date.now();
+      if(rem>0) G.timeLeft=Math.min(rem, settings.timerSeconds*1000);
+      updateTimerUI();
+    }
+  }
 }
 // Après MON coup : pousser l'état au serveur (les autres sièges suivront par
 // realtime). On ne fait AUCUNE transition locale ici — c'est applyRemote qui
@@ -16544,6 +16595,92 @@ function bfOnlineComputeNextIdx(){
   return idx;
 }
 function bfDeadlineISO(){ var s=settings.timerSeconds||5; return new Date(Date.now()+(s>0?s:5)*1000+3000).toISOString(); }
+
+// ── Repères visuels Champ de bataille ─────────────────────────────
+// Cadence choisie pour les modes locaux (2 joueurs / vs IA). 3/5/10 s ; le 3v3
+// en ligne porte sa cadence sur la ligne d'équipe.
+var _bfCadence = 5;
+
+// Cercle JAUNE discret sur le PROCHAIN combattant à jouer (et ses pièces),
+// pendant le tour courant. Recalcule le prochain siège jouable (saute éliminés /
+// bloqués), puis tague ses pièces. Appelé après chaque rendu et à chaque
+// changement de siège.
+function bfMarkNextCombatant(){
+  document.querySelectorAll('.piece.bf-next').forEach(function(el){ el.classList.remove('bf-next'); });
+  if(!G.bfRotation || !G.bfSeats || !G.bfSeats.length || G.gameOver) return;
+  var n=G.bfSeats.length, idx=G.bfSeatIdx, tries=0;
+  do{ idx=(idx+1)%n; tries++; } while(!bfSeatPlayable(G.bfSeats[idx]) && tries<=n);
+  var s=G.bfSeats[idx]; if(!s) return;
+  document.querySelectorAll('.piece.'+s.color+'.bf-unit-'+s.unit).forEach(function(el){ el.classList.add('bf-next'); });
+}
+
+// Clic MAINTENU sur n'importe quel combattant (le mien inclus) → cerclage clair
+// de toutes ses pièces tant que le doigt/souris reste appuyé. N'interfère pas
+// avec le glissé (outline seulement, aucun changement de sélection/DOM).
+function bfSetHeldUnit(color, unit){
+  document.querySelectorAll('.piece.bf-held').forEach(function(el){ el.classList.remove('bf-held'); });
+  if(color==null || unit==null) return;
+  document.querySelectorAll('.piece.'+color+'.bf-unit-'+unit).forEach(function(el){ el.classList.add('bf-held'); });
+}
+function bfHoldCircle(e){
+  if(!G || !G.battlefieldMode || G.gameOver) return;
+  var isTouch = e.touches!==undefined;
+  var x = isTouch ? (e.touches[0]?e.touches[0].clientX:0) : e.clientX;
+  var y = isTouch ? (e.touches[0]?e.touches[0].clientY:0) : e.clientY;
+  var cs=getCellSize(), rows=G.rows||9, cols=G.cols||9;
+  var cell=getCellFromPoint(x,y,cs,rows,cols);
+  if(!cell) return;
+  var p=G.board[cell.r] && G.board[cell.r][cell.c];
+  if(!p || p.unit==null) return;
+  bfSetHeldUnit(p.color, p.unit);
+  var clear=function(){ bfSetHeldUnit(null,null);
+    document.removeEventListener('mouseup',clear); document.removeEventListener('touchend',clear); document.removeEventListener('touchcancel',clear); };
+  document.addEventListener('mouseup',clear);
+  document.addEventListener('touchend',clear);
+  document.addEventListener('touchcancel',clear);
+}
+
+// Temps écoulé sur un combattant (Champ de bataille) : PAS une fin de partie,
+// mais un FORFAIT du combattant au trait (son escouade quitte le plateau), puis
+// rotation. En ligne, seul le joueur dont c'est vraiment le tour se déclare
+// forfait (le worker sert de filet) ; hors de mon tour, on ne fait rien.
+function bfOnTimeout(){
+  if(G.gameOver) return;
+  if(G.bfOnline){
+    var seat=G.bfSeats[G.bfSeatIdx]||{};
+    if(seat.player_id && currentUser && seat.player_id===currentUser.id) bfOnlineForfeitSelf();
+    return;
+  }
+  bfLocalForfeit();
+}
+function bfLocalForfeit(){
+  var seat=G.bfSeats[G.bfSeatIdx]; if(!seat) return;
+  G.eliminatedUnits=G.eliminatedUnits||[];
+  if(G.eliminatedUnits.indexOf(seat.color+':'+seat.unit)<0) G.eliminatedUnits.push(seat.color+':'+seat.unit);
+  sweepBattlefieldUnit(seat.color,seat.unit);
+  renderBoard();
+  if(typeof showToast==='function') showToast(bfSeatLabel(seat)+' — temps écoulé, forfait.');
+  if(findMaster(seat.color,G.board)===null){
+    endGame(seat.color==='white'?'black':'white', (seat.color==='white'?t('color_black'):t('color_white'))+' '+t('msg_slay'));
+    return;
+  }
+  bfAdvanceSeat();
+}
+function bfOnlineForfeitSelf(){
+  var seat=G.bfSeats[G.bfSeatIdx]; if(!seat) return;
+  G.eliminatedUnits=G.eliminatedUnits||[];
+  if(G.eliminatedUnits.indexOf(seat.color+':'+seat.unit)<0) G.eliminatedUnits.push(seat.color+':'+seat.unit);
+  sweepBattlefieldUnit(seat.color,seat.unit);
+  var camp=(findMaster(seat.color,G.board)===null);
+  var seats=bfOnlineSeatsWithElim();
+  var gs={board:G.board,stacks:G.stacks,lastMoved:G.lastMoved,lastMovedByColor:G.lastMovedByColor,lastPush:G.lastPush||null,eliminatedUnits:(G.eliminatedUnits||[]).slice(),format:G._customFormat};
+  var upd;
+  if(camp){ upd={game_state:gs,seats:seats,status:'finished',winner:(seat.color==='white'?'black':'white')}; }
+  else { var ni=bfOnlineComputeNextIdx(); var ns=G.bfSeats[ni]||{}; upd={game_state:gs,seats:seats,seat_idx:ni,turn:ns.color||seat.color,turn_deadline:bfDeadlineISO()}; }
+  pieceInputLocked=true;
+  var sb=document.getElementById('status-bar'); if(sb) sb.textContent='Temps écoulé — combattant forfait.';
+  try{ supa.from('battlefield_games').update(upd).eq('id',G.bfOnlineGameId).then(function(){},function(){}); }catch(e){}
+}
 
 function masterInDanger(color,board,stacks){
   const m=findMaster(color,board);if(!m)return false;
@@ -18550,7 +18687,7 @@ function playBattlefieldVsAI(){
   if(!v.ok){ if(typeof showToast==='function') showToast('Format invalide : '+v.err, true); return; }
   settings.vsAI = true;              // l'IA pilote l'équipe adverse (camp du haut)
   settings.gameMode = 'labtest';     // sans enjeu, pas de diffusion spectateur 5×5
-  settings.timerSeconds = 0;         // sans minuteur pour le test local
+  settings.timerSeconds = _bfCadence||5; // cadence choisie (anneau vert→rouge, forfait du combattant à 0)
   selectedAdvId = 12;                // bot générique (minimax, gère pièces/dims custom)
   settings._playerColor = 'white';   // toi = équipe blanche (en bas)
   settings._forcedStart = 'white';
@@ -21554,6 +21691,11 @@ var _dragRafId = null;     // requestAnimationFrame throttling
 function setupBoardDrag(gridEl, cs) {
   gridEl.addEventListener('touchstart', onDragStart, {passive:false});
   gridEl.addEventListener('mousedown',  onDragStart);
+  // Champ de bataille : clic maintenu = cerclage des pièces du combattant visé
+  // (n'importe lequel). Écouteurs séparés, purement visuels, sans preventDefault
+  // → n'entravent jamais le glissé géré par onDragStart.
+  gridEl.addEventListener('touchstart', bfHoldCircle, {passive:true});
+  gridEl.addEventListener('mousedown',  bfHoldCircle);
 }
 
 function getCellFromPoint(x, y, cs, rows, cols) {
