@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.46.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.47.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -233,8 +233,13 @@ body.ui-village #bottom-nav{display:none!important}
 /* Bouton flottant « retour au village » : partout où la bottom-nav serait
    visible, SAUF sur la carte elle-même (on y est déjà). */
 #village-home-btn{display:none;position:fixed;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:850;background:rgba(20,14,8,.92);border:1px solid rgba(212,160,23,.6);color:var(--gold-bright);font-family:'VT323',monospace;font-size:14px;letter-spacing:1px;border-radius:22px;padding:9px 16px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.55)}
-body.ui-village.bottomnav-visible #village-home-btn{display:block}
-body.ui-village.bottomnav-visible.village-map-open #village-home-btn{display:none}
+/* En thème Village, le bouton ⛩ Village est un retour universel : présent sur
+   TOUS les écrans (y compris ceux à header custom comme Identité), sauf la
+   carte elle-même (village-map-open) et le plein-jeu (village-nofab). Il ne
+   dépend PLUS de bottomnav-visible (qui disparaît sur NAV_HIDDEN_SCREENS). */
+body.ui-village #village-home-btn{display:block}
+body.ui-village.village-map-open #village-home-btn{display:none}
+body.ui-village.village-nofab #village-home-btn{display:none}
 #screen-village{padding:0;overflow:hidden;background:#0a0806}
 #village-scroll{position:absolute;inset:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;display:flex}
 #village-canvas{position:relative;height:100%;aspect-ratio:1024/572;margin:auto;flex:0 0 auto}
@@ -2208,7 +2213,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.46.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.47.0 &#9820;</div>
   </div>
 </div>
 
@@ -3665,13 +3670,18 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.46.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.47.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
     </div>
 
     <div class="devlog-entry">
-      <div class="devlog-version">ONLINE alpha V0.46.0 &mdash; 9 ao&ucirc;t 2026</div>
+      <div class="devlog-version">ONLINE alpha V0.47.0 &mdash; 9 ao&ucirc;t 2026</div>
       <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; VILLAGE&nbsp;: NAVIGATION &amp; NOTIFS</li>
+        <li>Le bouton <strong>&#9773; Village</strong> est d&eacute;sormais pr&eacute;sent sur <strong>tous les &eacute;crans</strong> (y compris Identit&eacute;), sauf en pleine partie.</li>
+        <li>Les boutons <strong>&laquo; Retour &raquo;</strong> remontent enfin &agrave; l&rsquo;<strong>&eacute;cran pr&eacute;c&eacute;dent r&eacute;el</strong> (fini Identit&eacute;&rarr;Param&egrave;tres et les renvois vers les anciens menus).</li>
+        <li>Depuis l&rsquo;<strong>&eacute;cran de fin de partie</strong>, &laquo;&nbsp;Menu&nbsp;&raquo; te ram&egrave;ne au <strong>mode d&rsquo;o&ugrave; tu venais</strong> (Karakuri, campagne, Ar&egrave;ne, tournoi&hellip;), plus vers l&rsquo;&eacute;cran Options.</li>
+        <li>Pastilles de notif corrig&eacute;es&nbsp;: les <strong>messages</strong> comptent sur l&rsquo;<strong>Auberge</strong> (social), les <strong>d&eacute;fis / parties</strong> sur l&rsquo;<strong>Ar&egrave;ne</strong>.</li>
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; MINUTEUR TYPE &Eacute;CHECS (parties locales)</li>
         <li>Comme aux &eacute;checs&nbsp;: les horloges ne partent qu&rsquo;au <strong>1er coup des Blancs</strong>. L&rsquo;ouverture b&eacute;n&eacute;ficie d&rsquo;une <strong>gr&acirc;ce de 10 s</strong> ; au-del&agrave;, la partie est <strong>annul&eacute;e</strong>.</li>
         <li style="list-style:none;margin-left:-14px;color:rgba(200,168,110,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">Pour l&rsquo;instant sur les parties <strong>locales</strong> (l&rsquo;extension en ligne / ar&egrave;ne / tournoi, avec d&eacute;faite + ronde suivante, viendra apr&egrave;s tests en conditions r&eacute;elles).</li>
@@ -11318,6 +11328,9 @@ function showScreen(id){
   // Village» quand on EST sur la carte (via la classe village-map-open).
   if(id==='village'){ if(typeof buildVillageMap==='function') buildVillageMap(); if(typeof villageRefreshLocks==='function') villageRefreshLocks(); if(typeof villageRefreshBanner==='function') villageRefreshBanner(); if(typeof villageRefreshBadges==='function') villageRefreshBadges(); if(typeof villageMaybeGuildInfoPopup==='function') villageMaybeGuildInfoPopup(); }
   document.body.classList.toggle('village-map-open', id==='village');
+  // Plein-jeu (partie, pile-ou-face) : on masque le retour ⛩ Village pour ne
+  // pas polluer le plateau. Partout ailleurs il reste visible (retour universel).
+  document.body.classList.toggle('village-nofab', id==='game' || id==='coinflip');
   if(id==='play') refreshPlayScreen();
   applyLang();
   if(typeof _pieceSkinShowHook==='function')_pieceSkinShowHook(id);
@@ -11501,8 +11514,12 @@ async function villageRefreshBadges(){
   if(!document.body.classList.contains('ui-village')) return;
   var setB = function(id,n){ var el=document.getElementById('village-badge-'+id); if(!el) return; if(n>0){ el.textContent = n>9?'9+':String(n); el.style.display='block'; } else { el.style.display='none'; } };
   if(!currentUser || typeof supa==='undefined' || !supa){ setB('arene',0); setB('auberge',0); return; }
-  try{ var r = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false); setB('arene', r.count||0); }catch(e){ setB('arene',0); }
-  try{ var m = await supa.from('direct_messages').select('id',{count:'exact',head:true}).eq('recipient_id',currentUser.id).eq('read',false); setB('auberge', m.count||0); }catch(e){ setB('auberge',0); }
+  // Arène = notifs de JEU (défis reçus, parties de tournoi). Auberge = SOCIAL
+  // (messages privés + demandes d'ami). Un MP crée une notif type 'message'
+  // (trigger trg_notify_new_message) → on compte les notifs, PAS direct_messages,
+  // sinon on double-compterait chaque MP.
+  try{ var r = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false).in('type',['challenge','tournament_game']); setB('arene', r.count||0); }catch(e){ setB('arene',0); }
+  try{ var m = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false).in('type',['message','friend_request']); setB('auberge', m.count||0); }catch(e){ setB('auberge',0); }
 }
 // Aiguillage central : en thème Village, un « retour » d'écran ne doit JAMAIS
 // atterrir sur un ancien hub d'onglet (menu/play/local-hub/amis) ni sur le
@@ -11510,8 +11527,18 @@ async function villageRefreshBadges(){
 // Écoute en capture pour court-circuiter le onclick inline du bouton.
 function villageInterceptBack(e){
   if(!document.body.classList.contains('ui-village')) return;
-  var btn = (e.target && e.target.closest) ? e.target.closest('.screen-nav-bar .tuto-nav-btn') : null;
+  // On attrape TOUT bouton retour `.tuto-nav-btn`, où qu'il soit (certains
+  // écrans — Identité, etc. — mettent leur retour dans un header custom, hors
+  // `.screen-nav-bar` : l'ancien sélecteur les ratait et l'onclick codé en dur
+  // renvoyait vers un ancien menu, ex. Identité → Paramètres).
+  var btn = (e.target && e.target.closest) ? e.target.closest('.tuto-nav-btn') : null;
   if(!btn) return;
+  // Mais on ne détourne QUE les retours de navigation pure (onclick = showScreen).
+  // Les boutons qui appellent une fonction de fermeture (closeShinAIScreen,
+  // devCloseLearn…) doivent exécuter leur propre teardown — ils rappelleront
+  // showScreen eux-mêmes, ce que l'historique suit déjà.
+  var oc = (btn.getAttribute && btn.getAttribute('onclick')) || '';
+  if(!/^\s*showScreen\(/.test(oc)) return;
   var active = document.querySelector('.screen.active');
   if(active && (active.id==='screen-village' || active.id==='screen-game')) return;
   e.preventDefault(); e.stopPropagation();
@@ -11579,7 +11606,7 @@ function villageOpenBuilding(id){
     var suffix = it.soon ? ' <span style="opacity:.6;font-size:11px">· bientôt</span>' : (locked ? ' 🔒' : '');
     html += '<button class="'+cls+'" data-idx="'+idx+'"><span class="vp-ico">'+(it.ico||'▸')+'</span><span>'+it.label+suffix+'</span></button>';
   });
-  html += '<button class="vp-close" onclick="closeVillagePanel()">Fermer</button>';
+  html += '<button class="vp-close" onclick="closeVillagePanel()">⛩ Village</button>';
   box.innerHTML = html;
   // On rebranche les clics par index (évite d'injecter des handlers inline
   // et de sérialiser les items dans le HTML).
@@ -23538,6 +23565,25 @@ async function handleAnalyseClick(){
   startReviewMode();
 }
 
+// Retour depuis l'écran de fin de partie : on remonte à l'écran d'où la partie
+// a été lancée (Karakuri, campagne, Adversaires, pendule, 2 joueurs…), JAMAIS
+// vers l'écran Options ('menu'). On saute les écrans transitoires (jeu,
+// pile-ou-face, config 'local') et les hubs génériques : l'écran significatif
+// le plus récent de l'historique est l'origine réelle.
+function gameOriginReturnScreen(){
+  var TRANSIENT = ['game','coinflip','local'];
+  var HUBS = ['menu','play','online-menu','amis'];
+  if(typeof _screenHistory!=='undefined'){
+    for(var i=_screenHistory.length-1;i>=0;i--){
+      var s=_screenHistory[i];
+      if(TRANSIENT.indexOf(s)===-1 && HUBS.indexOf(s)===-1) return s;
+    }
+  }
+  // Rien de pertinent en historique : en thème Village on rentre au village,
+  // sinon au hub du jeu local (tous les modes hors-ligne y vivent).
+  if(document.body.classList.contains('ui-village')) return 'village';
+  return 'local-hub';
+}
 async function handleMenuClick(){
   await signalRematchLeave();
   if(_lastGameTournamentId && currentUser){
@@ -23547,6 +23593,10 @@ async function handleMenuClick(){
     _lastGameTournamentId = null;
     showScreen('tournament');
     openTournament(tid);
+  } else if((G.arenaMatchId || G.arenaMatch) && currentUser){
+    // On quitte une manche/un match d'ARÈNE depuis l'overlay standard : retour
+    // à l'écran Arène (recherche/manche suivante), pas la liste des joueurs.
+    showScreen('arena');
   } else if(_lastGameFromMatchmaking && currentUser){
     // On quitte une partie de MATCHMAKING classé : retour à son écran
     // dédié (cadences/recherche), pas la liste générique des joueurs —
@@ -23568,7 +23618,9 @@ async function handleMenuClick(){
     refreshOnlinePlayersList();
     var op=document.getElementById('online-my-pseudo'); if(op) op.textContent='Connecté : '+currentUser.pseudo;
   } else {
-    showScreen('menu');
+    // Modes LOCAUX (Karakuri, campagne, IA, Adversaires, 2 joueurs, pendule…)
+    // et parties hors-ligne : retour à l'écran d'origine, pas l'écran Options.
+    showScreen(gameOriginReturnScreen());
   }
 }
 
