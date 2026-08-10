@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.57.3</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.57.4</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2178,7 +2178,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <!-- Combat rapide : lance directement un « Combat simple » (matchmaking en
        ligne), sans passer par le village. quickPlay() gère la connexion requise. -->
   <div style="width:100%;padding:0 24px 12px;position:relative;z-index:1">
-    <button class="home-btn-secondary" style="width:100%;font-size:14px;padding:14px;letter-spacing:2px" onclick="quickPlay()" data-i18n="home_quick_combat">&#9889; COMBAT RAPIDE</button>
+    <button class="home-btn-secondary" style="width:100%;font-size:14px;padding:14px;letter-spacing:2px" onclick="quickPlay('home')" data-i18n="home_quick_combat">&#9889; COMBAT RAPIDE</button>
   </div>
 
   <!-- Accès directs au jeu local (déplacés depuis le Dojo) : pendule et duel
@@ -2250,7 +2250,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.57.3 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.57.4 &#9820;</div>
   </div>
 </div>
 
@@ -3712,7 +3712,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.57.3</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.57.4</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
     </div>
 
@@ -7805,7 +7805,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.57.3 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.57.4 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8022,7 +8022,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.57.3 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.57.4 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -8230,7 +8230,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.57.3 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.57.4 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -9633,7 +9633,13 @@ function initPlayModeCarousel(){
     }
   }
 }
-function quickPlay(){
+// origin='home' quand on lance via le bouton « Combat rapide » de l'accueil : le
+// bouton MENU de l'écran matchmaking ramène alors à l'accueil (au lieu du
+// carrousel 'play'). null pour les entrées via le carrousel Arène → 'play'
+// comme d'habitude (voir matchmakingMenuBack).
+var _matchmakingFromHome = false;
+function quickPlay(origin){
+  _matchmakingFromHome = (origin==='home');
   if(!currentUser){ showToast('Connectez-vous pour jouer en ligne.', true); showScreen('online-auth'); return; }
   var cad = getQuickCadence();
   console.log('[quickPlay] cadence =', cad);
@@ -9645,6 +9651,14 @@ function quickPlay(){
     return;
   }
   startMatchmakingSearch(cad);
+}
+// Bouton MENU de l'écran matchmaking : retour à l'accueil si on est venu du
+// bouton « Combat rapide » de l'accueil, sinon au carrousel 'play' (entrée via
+// le village → Arène → Modes de combat), comportement conservé.
+function matchmakingMenuBack(){
+  stopMatchmakingSearch();
+  if(_matchmakingFromHome){ _matchmakingFromHome = false; showScreen('home'); return; }
+  showScreen('play');
 }
 async function refreshPlayScreen(){
   setQuickCadence(getQuickCadence());
@@ -26127,7 +26141,7 @@ window.addEventListener('beforeunload', () => {
 
 <!-- ═══════════ MATCHMAKING (ELO ±100) ═══════════ -->
 <div id="screen-matchmaking" class="screen">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="stopMatchmakingSearch();showScreen('play')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="matchmakingMenuBack()" data-i18n="btn_menu_back">&#8617; MENU</button></div>
   <div class="panel" style="max-width:300px">
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px" data-i18n="online_hub_matchmaking">&#9889; MATCHMAKING</div><button onclick="showModeInfo('matchmaking')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
     <!-- Soldes monnaies du mode -->
