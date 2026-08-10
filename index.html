@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.62.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.63.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3726,8 +3726,18 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.62.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.63.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.63.0 &mdash; 11 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; TOURNOIS : CLASSEMENT PAR &Eacute;LO</li>
+        <li>Le classement d'un tournoi affiche d&eacute;sormais l'<strong>&Eacute;lo</strong> de chaque joueur (pour la <strong>cadence</strong> du tournoi).</li>
+        <li>&Agrave; &eacute;galit&eacute; de points, les joueurs sont <strong>d&eacute;partag&eacute;s &agrave; l'&Eacute;lo</strong> (le plus fort devant).</li>
+        <li>L'&Eacute;lo appara&icirc;t aussi dans l'&eacute;cran d'appariement de ronde et dans la pr&eacute;sentation du tournoi.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -5950,7 +5960,8 @@ function showTournamentPresentation(id){
   var meta = (tn.kind==='guild'?'🛡 Tournoi de guilde':'⚔ Tournoi individuel')
     + ' · '+(tn.audience==='subscriber'?'Abonnés':(tn.audience==='freemium'?'Freemium':'Ouvert à tous'))
     + '<br>Système suisse · '+tn.total_rounds+' rondes · ⏱ '+tn.timer_seconds+'s'
-    + (tn.round_minutes?(' · '+tn.round_minutes+' min/ronde'):'');
+    + (tn.round_minutes?(' · '+tn.round_minutes+' min/ronde'):'')
+    + '<br>Classement par points · départage à l\'Élo';
   ov.innerHTML =
     '<div style="max-width:340px;width:100%;max-height:82vh;display:flex;flex-direction:column;background:linear-gradient(165deg,rgba(26,22,15,.99),rgba(12,10,8,.99));border:1px solid rgba(212,160,23,.45);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.7)">'
       + '<div style="padding:14px 16px 8px;border-bottom:1px solid rgba(200,168,110,.15);flex-shrink:0;display:flex;align-items:center;justify-content:space-between">'
@@ -6049,7 +6060,8 @@ async function maybeShowTournamentRoundIntro(id, tn, standings){
       if(s.abandoned) return;
       rang++;
       var pos = rang<=3 ? ['🥇','🥈','🥉'][rang-1] : '#'+rang;
-      html += '<div style="display:flex;justify-content:space-between;padding:3px 10px;font-family:VT323,monospace;font-size:12px;color:var(--parchment)"><span>'+pos+' '+playerNameHtml(s.player_id, s.pseudo)+(s.player_id===currentUser.id?' (vous)':'')+'</span><span style="color:var(--gold-bright)">'+s.score+' pt'+(s.score===1?'':'s')+'</span></div>';
+      var eloTag2 = (s.elo!=null) ? '<span style="opacity:.5;font-size:10px;margin-right:7px">⚔'+s.elo+'</span>' : '';
+      html += '<div style="display:flex;justify-content:space-between;padding:3px 10px;font-family:VT323,monospace;font-size:12px;color:var(--parchment)"><span>'+pos+' '+playerNameHtml(s.player_id, s.pseudo)+(s.player_id===currentUser.id?' (vous)':'')+'</span><span style="display:flex;align-items:center">'+eloTag2+'<span style="color:var(--gold-bright)">'+s.score+' pt'+(s.score===1?'':'s')+'</span></span></div>';
     });
     html += '</div>';
   }
@@ -6136,20 +6148,24 @@ async function renderTournamentDetail(id){
       html += await renderMyPairing(id, tn.current_round, tn.round_deadline);
       html += await renderRoundMatches(id, tn.current_round);
     }
-    // Classement
-    html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;margin:8px 0 4px;letter-spacing:1px">CLASSEMENT</div>';
+    // Classement — points de match ; l'Élo (cadence du tournoi) départage
+    // et s'affiche à côté de chaque joueur.
+    html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;margin:8px 0 4px;letter-spacing:1px">CLASSEMENT <span style="opacity:.7;letter-spacing:0">· Élo au départage</span></div>';
     var rangActif = 0;
     html += standings.map(function(s){
       var isMe = s.player_id===currentUser.id;
       var pos;
       if(s.abandoned){ pos = '✖'; }
       else { rangActif++; pos = rangActif<=3 ? ['🥇','🥈','🥉'][rangActif-1] : '#'+rangActif; }
+      var eloTag = (s.elo!=null) ? '<span style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.5;margin-right:8px">⚔'+s.elo+'</span>' : '';
       return '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-bottom:1px solid rgba(200,168,110,.1)'
         + (isMe?';background:rgba(212,160,23,.12)':'')
         + (s.abandoned?';opacity:.4':'')+'">'
         + '<span style="font-family:VT323,monospace;font-size:13px;color:var(--parchment)">'+pos+' '+playerNameHtml(s.player_id, s.pseudo)
           +(isMe?' (vous)':'')+(s.abandoned?' <span style="font-size:10px;color:#f08080">abandon</span>':'')+'</span>'
-        + '<span style="font-family:Cinzel,serif;font-size:12px;color:var(--gold-bright)">'+s.score+' pt'+(s.score===1?'':'s')+'</span>'
+        + '<span style="display:flex;align-items:center">'+eloTag
+          + '<span style="font-family:Cinzel,serif;font-size:12px;color:var(--gold-bright)">'+s.score+' pt'+(s.score===1?'':'s')+'</span>'
+        + '</span>'
       + '</div>';
     }).join('');
     body.innerHTML = html;
@@ -7946,7 +7962,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.62.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.63.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8164,7 +8180,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.62.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.63.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -8373,7 +8389,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.62.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.63.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -12057,7 +12073,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.62.0';
+var DEVLOG_LATEST = 'V0.63.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
