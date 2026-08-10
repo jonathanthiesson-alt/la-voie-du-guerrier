@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.61.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.62.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3726,8 +3726,19 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.61.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.62.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.62.0 &mdash; 10 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; REFONTE DES TOURNOIS</li>
+        <li>Les <strong>joueurs ne cr&eacute;ent plus de tournois</strong> : la programmation est d&eacute;sormais r&eacute;serv&eacute;e &agrave; l'<strong>administration</strong>.</li>
+        <li>Nouvel <strong>outil admin</strong> complet : type (individuel / guilde), <strong>public</strong> (abonn&eacute;s / freemium), mode de jeu, cadence, rondes, cr&eacute;neaux d'inscription, horaire de d&eacute;but, <strong>r&eacute;compenses par rang</strong> (monnaie au choix) et <strong>texte de pr&eacute;sentation</strong>.</li>
+        <li>&Eacute;cran Tournois refondu : onglets <strong>Individuel / Guilde</strong>, badges de public et de r&eacute;compense.</li>
+        <li><strong>Pr&eacute;sentation</strong> de chaque tournoi (lore, cadences, r&eacute;compenses) affich&eacute;e &agrave; la <strong>1re connexion</strong> et recliquable via le <strong>&laquo;&nbsp;?&nbsp;&raquo;</strong>.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -5866,38 +5877,108 @@ async function refreshTournamentScreen(){
     // pouvait rester « en cours » indéfiniment (constaté en test réel).
     const { data } = await supa.rpc('tournament_list');
     var list = (data && data.tournaments) || [];
-    var html = '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;margin-bottom:5px;letter-spacing:1px">CRÉER UN TOURNOI</div>';
-    html += '<div style="display:flex;gap:5px;margin-bottom:12px">';
-    [3,5,10].forEach(function(c){
-      var p = TOURNAMENT_CADENCES[c];
-      html += '<button class="btn" style="flex:1;font-size:11px;padding:7px 3px;line-height:1.4" onclick="createTournament('+c+')">'
-        + '<div style="font-size:13px;color:var(--gold-bright)">'+c+'s</div>'
-        + '<div style="font-size:9px;opacity:.6">max '+p.max+' · '+p.duree+'</div>'
-        + '</button>';
-    });
-    html += '</div>';
-    if(!list.length){
-      html += '<div style="text-align:center;padding:16px;font-family:VT323,monospace;color:var(--parchment);opacity:.5">Aucun tournoi ouvert.<br>Crée le premier !</div>';
+    // Cache des tournois (par id) pour que le « ? » présentation retrouve son
+    // texte sans re-fetch. Les joueurs ne créent plus de tournois (réservé à
+    // l'admin) : plus de boutons de cadence ici.
+    _tourneyCache = {};
+    list.forEach(function(tn){ _tourneyCache[tn.id] = tn; });
+    // Filtre Individuel / Guilde (les tournois sans kind sont traités « individual »).
+    var filtered = list.filter(function(tn){ return (tn.kind||'individual') === _tourneyKindFilter; });
+    var tabBtn = function(k,lbl){
+      var act = _tourneyKindFilter===k;
+      return '<button onclick="setTourneyKindFilter(\''+k+'\')" style="flex:1;background:'+(act?'rgba(212,160,23,.22)':'rgba(0,0,0,.25)')+';border:1px solid '+(act?'rgba(212,160,23,.6)':'rgba(200,168,110,.2)')+';border-radius:6px;padding:7px 3px;font-family:VT323,monospace;font-size:12px;color:'+(act?'var(--gold-bright)':'var(--parchment)')+';cursor:pointer">'+lbl+'</button>';
+    };
+    var html = '<div style="display:flex;gap:6px;margin-bottom:12px">'+tabBtn('individual','⚔ Individuel')+tabBtn('guild','🛡 Guilde')+'</div>';
+    if(!filtered.length){
+      html += '<div style="text-align:center;padding:18px;font-family:VT323,monospace;color:var(--parchment);opacity:.5">Aucun tournoi '+(_tourneyKindFilter==='guild'?'de guilde':'individuel')+' pour l\'instant.<br><span style="opacity:.7">Les tournois sont programmés par l\'administration.</span></div>';
     } else {
-      html += list.map(function(tn){
+      html += filtered.map(function(tn){
         var full = tn.players >= tn.max_players;
         var statusLabel = tn.status==='open'
           ? (full ? '🔒 Complet' : '🟢 Inscriptions ouvertes')
           : ('⚔ Ronde '+tn.current_round+'/'+tn.total_rounds);
-        var mien = (tn.created_by === currentUser.id);
+        // Badge public : abonnés / freemium (récompenses gérées séparément côté admin).
+        var audBadge = tn.audience==='subscriber'
+          ? '<span style="font-size:9px;color:#ffd76a;border:1px solid rgba(255,200,80,.4);border-radius:4px;padding:0 4px;margin-left:5px">👑 Abonnés</span>'
+          : (tn.audience==='freemium' ? '<span style="font-size:9px;color:#8fd0ff;border:1px solid rgba(120,180,255,.4);border-radius:4px;padding:0 4px;margin-left:5px">Freemium</span>' : '');
+        // Aperçu de récompense (rang 1) avec l'icône de la monnaie du tournoi.
+        var rwHint = '';
+        var r1 = tn.rewards && tn.rewards['1'];
+        if(r1){ var cc = (TOURNEY_CURRENCIES.filter(function(c){return c.v===(tn.reward_currency||'mon');})[0]||{ico:'🏮'}); rwHint = ' · 🥇 '+r1+' '+cc.ico; }
+        var hasPres = tn.presentation && String(tn.presentation).trim();
         return '<div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.25);border:1px solid rgba(212,160,23,.25);border-radius:8px;padding:10px 12px;margin-bottom:6px">'
           + '<div onclick="openTournament('+tn.id+')" style="flex:1;min-width:0;cursor:pointer">'
-            + '<div style="font-family:\'Cinzel\',serif;font-size:13px;color:var(--gold-bright)">'+escapeHtml(tn.name)+' <span style="font-size:11px;opacity:.6">⏱'+tn.timer_seconds+'s</span></div>'
-            + '<div style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.6">'+statusLabel+' · '+tn.players+'/'+tn.max_players+' joueurs</div>'
+            + '<div style="font-family:\'Cinzel\',serif;font-size:13px;color:var(--gold-bright)">'+escapeHtml(tn.name)+' <span style="font-size:11px;opacity:.6">⏱'+tn.timer_seconds+'s</span>'+audBadge+'</div>'
+            + '<div style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.6">'+statusLabel+' · '+tn.players+'/'+tn.max_players+' joueurs'+rwHint+'</div>'
           + '</div>'
-          + (mien ? '<button onclick="event.stopPropagation();cancelTournament('+tn.id+')" title="Annuler ce tournoi" style="flex-shrink:0;background:rgba(120,30,30,.25);border:1px solid rgba(220,80,80,.4);border-radius:5px;color:#f08080;width:26px;height:26px;font-size:13px;cursor:pointer;padding:0">✕</button>' : '')
+          + (hasPres ? '<button onclick="event.stopPropagation();showTournamentPresentation('+tn.id+')" title="Présentation du tournoi" style="flex-shrink:0;background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:24px;height:24px;color:var(--gold-bright);font-family:serif;font-size:12px;cursor:pointer;padding:0;line-height:1">&#8505;</button>' : '')
         + '</div>';
       }).join('');
     }
     body.innerHTML = html;
+    // Présentation à la 1re connexion : ouvre automatiquement le lore du
+    // tournoi le plus imminent qu'on n'a pas encore vu (recliquable via « ? »).
+    maybeShowFirstTournamentPresentation(filtered);
   }catch(e){
     body.innerHTML='<div style="text-align:center;padding:16px;font-family:VT323,monospace;color:var(--parchment);opacity:.6">Tournois indisponibles — le script SQL tournaments.sql a-t-il été exécuté ?</div>';
   }
+}
+// Filtre courant de l'écran Tournois + cache des tournois listés (pour le « ? »).
+var _tourneyKindFilter = 'individual';
+var _tourneyCache = {};
+function setTourneyKindFilter(k){
+  _tourneyKindFilter = (k==='guild') ? 'guild' : 'individual';
+  refreshTournamentScreen();
+}
+// Popup de présentation d'un tournoi (lore, cadences, durée…). Réutilise
+// l'overlay de mode-info pour rester cohérent visuellement.
+function showTournamentPresentation(id){
+  var tn = _tourneyCache[id];
+  if(!tn) return;
+  var ov = document.getElementById('mode-info-overlay');
+  if(!ov){
+    ov = document.createElement('div');
+    ov.id = 'mode-info-overlay';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:940;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;animation:fadeIn .25s ease';
+    ov.onclick = function(e){ if(e.target===ov) closeModeInfo(); };
+    document.body.appendChild(ov);
+  }
+  var cc = (TOURNEY_CURRENCIES.filter(function(c){return c.v===(tn.reward_currency||'mon');})[0]||{ico:'🏮',label:'Mon'});
+  var rw = tn.rewards||{};
+  var podium = ['1','2','3'].filter(function(r){return rw[r];}).map(function(r){ return ['🥇','🥈','🥉'][+r-1]+' '+rw[r]+' '+cc.ico; }).join('   ');
+  var pres = escapeHtml(tn.presentation||'').replace(/\n/g,'<br>');
+  var meta = (tn.kind==='guild'?'🛡 Tournoi de guilde':'⚔ Tournoi individuel')
+    + ' · '+(tn.audience==='subscriber'?'Abonnés':(tn.audience==='freemium'?'Freemium':'Ouvert à tous'))
+    + '<br>Système suisse · '+tn.total_rounds+' rondes · ⏱ '+tn.timer_seconds+'s'
+    + (tn.round_minutes?(' · '+tn.round_minutes+' min/ronde'):'');
+  ov.innerHTML =
+    '<div style="max-width:340px;width:100%;max-height:82vh;display:flex;flex-direction:column;background:linear-gradient(165deg,rgba(26,22,15,.99),rgba(12,10,8,.99));border:1px solid rgba(212,160,23,.45);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.7)">'
+      + '<div style="padding:14px 16px 8px;border-bottom:1px solid rgba(200,168,110,.15);flex-shrink:0;display:flex;align-items:center;justify-content:space-between">'
+        + '<span style="font-family:\'Cinzel\',serif;font-size:15px;color:var(--gold-bright);letter-spacing:1px">🏆 '+escapeHtml(tn.name)+'</span>'
+        + '<span onclick="closeModeInfo()" style="cursor:pointer;color:var(--parchment);opacity:.5;font-size:20px;line-height:1;padding:0 4px">×</span>'
+      + '</div>'
+      + '<div style="padding:14px 16px;overflow-y:auto;-webkit-overflow-scrolling:touch">'
+        + '<div style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.7;line-height:1.5;margin-bottom:10px">'+meta+'</div>'
+        + (pres ? '<div style="font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.9;line-height:1.55;margin-bottom:10px">'+pres+'</div>' : '')
+        + (podium ? '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;letter-spacing:1px;margin-bottom:3px">RÉCOMPENSES</div><div style="font-family:VT323,monospace;font-size:13px;color:var(--gold-bright)">'+podium+'</div>' : '')
+      + '</div>'
+      + '<div style="padding:0 16px 14px;flex-shrink:0"><button class="btn" style="width:100%;font-size:12px;padding:8px" onclick="closeModeInfo()">Compris</button></div>'
+    + '</div>';
+  ov.style.display = 'flex';
+}
+// À la 1re connexion, ouvre auto la présentation du tournoi le plus imminent
+// non encore vu (marqué vu dans localStorage pour ne pas re-spammer).
+function maybeShowFirstTournamentPresentation(list){
+  try{
+    if(!list || !list.length) return;
+    var seen = {};
+    try{ seen = JSON.parse(localStorage.getItem('vtl_tourney_pres_seen')||'{}')||{}; }catch(e){}
+    var target = list.filter(function(tn){ return tn.presentation && String(tn.presentation).trim() && !seen[tn.id]; })[0];
+    if(!target) return;
+    seen[target.id] = 1;
+    localStorage.setItem('vtl_tourney_pres_seen', JSON.stringify(seen));
+    setTimeout(function(){ showTournamentPresentation(target.id); }, 350);
+  }catch(e){}
 }
 // Paramètres par cadence (doivent refléter tournament_cadence_params côté SQL).
 var TOURNAMENT_CADENCES = {
@@ -7865,7 +7946,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.61.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.62.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8083,7 +8164,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.61.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.62.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -8292,7 +8373,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.61.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.62.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -10720,7 +10801,7 @@ function getUnlockableOptions(){
   return opts;
 }
 
-var ADMIN_SECTIONS = ['stats','players','moderation','liveops','rewards','conversion','events','audit'];
+var ADMIN_SECTIONS = ['stats','players','moderation','liveops','rewards','conversion','events','tournaments','audit'];
 function setAdminSection(sec){
   _adminSection = sec;
   ADMIN_SECTIONS.forEach(function(s){
@@ -10758,10 +10839,178 @@ async function refreshDevRewardsScreen(){
       const { data: evs } = await supa.from('game_events').select('*').order('start_date',{ascending:false});
       _devEvents = evs||[];
       renderAdminEvents();
+    } else if(_adminSection==='tournaments'){
+      await renderAdminTournaments();
     }
   }catch(e){
     body.innerHTML='<div style="text-align:center;padding:16px;font-family:VT323,monospace;opacity:.6">Section indisponible — les scripts SQL (economy_fix_shiitake / admin_panel / game_administration) ont-ils tous été exécutés ?</div>';
   }
+}
+
+// ── SECTION TOURNOIS (création & pilotage admin) ────────────────
+// Monnaies autorisées côté serveur (tournament_reward_currency_ok).
+var TOURNEY_CURRENCIES = [
+  {v:'mon',ico:'🏮',label:'Mon'},{v:'koku',ico:'石',label:'Koku'},
+  {v:'fame',ico:'💗',label:'Fame'},{v:'hanafuda',ico:'🌸',label:'Hanafuda'},
+  {v:'roku',ico:'🎴',label:'Roku'},{v:'ryu',ico:'🐉',label:'Ryu'},
+  {v:'shiitake',ico:'🍄',label:'Shiitake'},{v:'shiso',ico:'🌿',label:'Shiso'},
+  {v:'tamashii',ico:'🔮',label:'Tamashii'}
+];
+// Modes de jeu proposés pour un tournoi (game_mode côté serveur, libre).
+var TOURNEY_MODES = [
+  {v:'standard',label:'Classique 5×5'},
+  {v:'sumo',label:'Sumo (éjection)'},
+  {v:'battlefield',label:'Champ de bataille 3v3'}
+];
+// Convertit une valeur d'<input type="datetime-local"> (heure locale) en ISO,
+// ou null si vide. Le serveur stocke en timestamptz.
+function tourneyDtToIso(id){
+  var el=document.getElementById(id); if(!el||!el.value) return null;
+  var d=new Date(el.value); return isNaN(d)?null:d.toISOString();
+}
+// Formate un timestamptz serveur en valeur d'<input datetime-local> (heure locale).
+function tourneyIsoToLocal(iso){
+  if(!iso) return '';
+  var d=new Date(iso); if(isNaN(d)) return '';
+  var p=function(n){return String(n).padStart(2,'0');};
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());
+}
+
+async function renderAdminTournaments(){
+  var body=document.getElementById('admin-body');
+  if(!body) return;
+  var list=[];
+  try{
+    var r=await supa.rpc('tournament_list');
+    list=(r&&r.data&&r.data.tournaments)||[];
+  }catch(e){ list=[]; }
+  var html='';
+  html+='<div class="adm-h">CRÉER UN TOURNOI</div>';
+  html+=adminTournamentForm(null);
+  html+='<div class="adm-h" style="margin-top:14px">TOURNOIS EXISTANTS</div>';
+  if(!list.length){
+    html+='<div style="font-family:VT323,monospace;font-size:11px;opacity:.5;padding:6px">Aucun tournoi pour l\'instant.</div>';
+  } else {
+    list.forEach(function(t){
+      var st=t.status||'?';
+      var stCol=st==='open'?'#7fd18a':(st==='running'?'#e0a020':'#999');
+      html+='<div class="adm-card">'
+        + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'
+          + '<span style="flex:1;font-family:VT323,monospace;font-size:13px;color:var(--gold-bright)">'+esc(t.name||('#'+t.id))+'</span>'
+          + '<span style="font-family:VT323,monospace;font-size:10px;color:'+stCol+'">'+st.toUpperCase()+'</span>'
+        + '</div>'
+        + '<div style="font-family:VT323,monospace;font-size:10px;opacity:.6;margin-bottom:5px">'
+          + '#'+t.id+' · '+(t.kind==='guild'?'Guilde':'Individuel')+' · '+(t.audience||'all')+' · '+(t.game_mode||'standard')
+          + ' · '+(t.players||0)+'/'+(t.max_players||'∞')+' joueurs</div>';
+      if(st==='open'){
+        html+='<div style="display:flex;gap:5px;flex-wrap:wrap">'
+          + '<button class="adm-btn" onclick="adminToggleTournamentEdit('+t.id+')">✎ Modifier</button>'
+          + '<button class="adm-btn" onclick="adminTournamentFillBots('+t.id+')">🤖 Remplir bots</button>'
+          + '<button class="adm-btn" onclick="adminTournamentCloseReg('+t.id+')">🔒 Clore inscr.</button>'
+          + '<button class="adm-btn" style="border-color:rgba(220,80,80,.5);color:#f08080;background:rgba(120,30,30,.2)" onclick="adminTournamentCancel('+t.id+')">✕ Annuler</button>'
+          + '</div>'
+          + '<div id="adm-tourney-edit-'+t.id+'" style="display:none;margin-top:8px">'+adminTournamentForm(t)+'</div>';
+      }
+      html+='</div>';
+    });
+  }
+  body.innerHTML=html;
+}
+
+// Petit échappement HTML pour les noms saisis.
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+// Formulaire de paramétrage — sert à la création (t=null) et à l'édition (t=objet).
+// Les id des champs sont suffixés par l'id du tournoi (ou 'new') pour éviter les collisions.
+function adminTournamentForm(t){
+  var sfx=t?String(t.id):'new';
+  var val=function(k,d){ return t&&t[k]!=null?t[k]:d; };
+  var rw=(t&&t.rewards)||{};
+  var opt=function(arr,cur){ return arr.map(function(o){ return '<option value="'+o.v+'"'+(o.v===cur?' selected':'')+'>'+(o.ico?o.ico+' ':'')+o.label+'</option>'; }).join(''); };
+  var row=function(lbl,inner){ return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px"><span style="width:96px;font-family:VT323,monospace;font-size:10px;opacity:.7;flex-shrink:0">'+lbl+'</span>'+inner+'</div>'; };
+  var h='<div style="border:1px dashed rgba(160,90,220,.35);border-radius:6px;padding:8px">';
+  h+=row('Nom', '<input id="tf-name-'+sfx+'" class="adm-input" style="flex:1" value="'+esc(val('name',''))+'" placeholder="Nom du tournoi">');
+  h+=row('Type', '<select id="tf-kind-'+sfx+'" class="adm-input" style="flex:1;color:var(--parchment)">'+opt([{v:'individual',label:'Individuel'},{v:'guild',label:'Guilde'}],val('kind','individual'))+'</select>');
+  h+=row('Public', '<select id="tf-audience-'+sfx+'" class="adm-input" style="flex:1;color:var(--parchment)">'+opt([{v:'all',label:'Tous'},{v:'subscriber',label:'Abonnés'},{v:'freemium',label:'Freemium (non abonnés)'}],val('audience','all'))+'</select>');
+  h+=row('Mode', '<select id="tf-mode-'+sfx+'" class="adm-input" style="flex:1;color:var(--parchment)">'+opt(TOURNEY_MODES,val('game_mode','standard'))+'</select>');
+  h+=row('Cadence (s)', '<input id="tf-timer-'+sfx+'" type="number" min="0" class="adm-input" style="width:70px;text-align:center" value="'+val('timer_seconds',300)+'">');
+  h+=row('Rondes', '<input id="tf-rounds-'+sfx+'" type="number" min="1" class="adm-input" style="width:70px;text-align:center" value="'+val('total_rounds',3)+'">');
+  h+=row('Joueurs max', '<input id="tf-max-'+sfx+'" type="number" min="2" class="adm-input" style="width:70px;text-align:center" value="'+val('max_players',32)+'">');
+  h+=row('Durée ronde (min)', '<input id="tf-roundmin-'+sfx+'" type="number" min="1" class="adm-input" style="width:70px;text-align:center" value="'+val('round_minutes',10)+'">');
+  h+=row('Début', '<input id="tf-starts-'+sfx+'" type="datetime-local" class="adm-input" style="flex:1;color:var(--parchment)" value="'+tourneyIsoToLocal(val('starts_at',null))+'">');
+  h+=row('Inscr. ouvre', '<input id="tf-regopen-'+sfx+'" type="datetime-local" class="adm-input" style="flex:1;color:var(--parchment)" value="'+tourneyIsoToLocal(val('registration_opens_at',null))+'">');
+  h+=row('Inscr. ferme', '<input id="tf-regclose-'+sfx+'" type="datetime-local" class="adm-input" style="flex:1;color:var(--parchment)" value="'+tourneyIsoToLocal(val('registration_closes_at',null))+'">');
+  h+='<div style="font-family:VT323,monospace;font-size:10px;opacity:.6;margin:6px 0 3px">RÉCOMPENSES (par rang)</div>';
+  h+=row('Monnaie', '<select id="tf-cur-'+sfx+'" class="adm-input" style="flex:1;color:var(--parchment)">'+opt(TOURNEY_CURRENCIES,val('reward_currency','mon'))+'</select>');
+  h+='<div style="display:flex;gap:6px;margin-bottom:5px">'
+    + '<span style="font-family:VT323,monospace;font-size:10px;opacity:.7;align-self:center">🥇</span><input id="tf-rw1-'+sfx+'" type="number" min="0" class="adm-input" style="width:56px;text-align:center" value="'+(rw['1']||0)+'">'
+    + '<span style="font-family:VT323,monospace;font-size:10px;opacity:.7;align-self:center">🥈</span><input id="tf-rw2-'+sfx+'" type="number" min="0" class="adm-input" style="width:56px;text-align:center" value="'+(rw['2']||0)+'">'
+    + '<span style="font-family:VT323,monospace;font-size:10px;opacity:.7;align-self:center">🥉</span><input id="tf-rw3-'+sfx+'" type="number" min="0" class="adm-input" style="width:56px;text-align:center" value="'+(rw['3']||0)+'">'
+    + '</div>';
+  h+='<div style="font-family:VT323,monospace;font-size:10px;opacity:.7;margin-bottom:3px">Texte de présentation (lore, affiché à la 1re connexion + « ? ») :</div>';
+  h+='<textarea id="tf-pres-'+sfx+'" class="adm-input" style="width:100%;min-height:52px;font-family:VT323,monospace;font-size:11px;color:var(--parchment)" placeholder="Présentation du tournoi…">'+esc(val('presentation',''))+'</textarea>';
+  if(t){
+    h+='<button class="adm-btn" style="margin-top:6px" onclick="adminSaveTournament('+t.id+')">💾 Enregistrer les modifs</button>';
+  } else {
+    h+='<button class="adm-btn" style="margin-top:6px" onclick="adminSaveTournament(null)">✚ Créer le tournoi</button>';
+  }
+  h+='</div>';
+  return h;
+}
+
+// Récupère tous les champs du formulaire et appelle le bon RPC.
+async function adminSaveTournament(id){
+  var sfx=id?String(id):'new';
+  var g=function(k){ var el=document.getElementById('tf-'+k+'-'+sfx); return el?el.value:''; };
+  var gi=function(k){ var v=parseInt(g(k),10); return isNaN(v)?null:v; };
+  var rewards={};
+  var r1=gi('rw1'),r2=gi('rw2'),r3=gi('rw3');
+  if(r1) rewards['1']=r1; if(r2) rewards['2']=r2; if(r3) rewards['3']=r3;
+  var payload={
+    p_kind:g('kind'), p_audience:g('audience'), p_game_mode:g('mode'),
+    p_timer:gi('timer'), p_total_rounds:gi('rounds'), p_max_players:gi('max'),
+    p_round_minutes:gi('roundmin'),
+    p_starts_at:tourneyDtToIso('tf-starts-'+sfx),
+    p_reg_opens_at:tourneyDtToIso('tf-regopen-'+sfx),
+    p_reg_closes_at:tourneyDtToIso('tf-regclose-'+sfx),
+    p_presentation:g('pres')||null,
+    p_rewards:rewards, p_reward_currency:g('cur')
+  };
+  try{
+    var res;
+    if(id){
+      payload.p_id=id;
+      res=await supa.rpc('tournament_admin_update', payload);
+    } else {
+      var nm=(g('name')||'').trim();
+      if(!nm){ showToast('Nom requis.', true); return; }
+      payload.p_name=nm;
+      res=await supa.rpc('tournament_admin_create', payload);
+    }
+    var d=res&&res.data;
+    if(res&&res.error){ showToast('Erreur : '+res.error.message, true); return; }
+    if(d&&d.ok===false){ showToast('Refusé : '+(d.reason||'?'), true); return; }
+    showToast(id?'Tournoi mis à jour.':'Tournoi créé ✔');
+    renderAdminTournaments();
+  }catch(e){ showToast('Échec : '+(e&&e.message||e), true); }
+}
+
+function adminToggleTournamentEdit(id){
+  var el=document.getElementById('adm-tourney-edit-'+id);
+  if(el) el.style.display = el.style.display==='none' ? 'block' : 'none';
+}
+async function adminTournamentFillBots(id){
+  try{ var r=await supa.rpc('tournament_fill_with_bots',{p_tournament_id:id}); if(r&&r.error){ showToast('Erreur : '+r.error.message,true); return;} showToast('Bots ajoutés ✔'); renderAdminTournaments(); }
+  catch(e){ showToast('Échec remplissage bots.', true); }
+}
+async function adminTournamentCloseReg(id){
+  try{ var r=await supa.rpc('tournament_close_registration',{p_tournament_id:id}); if(r&&r.error){ showToast('Erreur : '+r.error.message,true); return;} showToast('Inscriptions closes ✔'); renderAdminTournaments(); }
+  catch(e){ showToast('Échec clôture.', true); }
+}
+async function adminTournamentCancel(id){
+  if(!confirm('Annuler définitivement ce tournoi ?')) return;
+  try{ var r=await supa.rpc('tournament_cancel',{p_tournament_id:id}); if(r&&r.error){ showToast('Erreur : '+r.error.message,true); return;} showToast('Tournoi annulé.'); renderAdminTournaments(); }
+  catch(e){ showToast('Échec annulation.', true); }
 }
 
 // ── SECTION 1 : RÉCOMPENSES (par mode) ──────────────────────────
@@ -11808,7 +12057,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.61.0';
+var DEVLOG_LATEST = 'V0.62.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -26442,6 +26691,7 @@ window.addEventListener('beforeunload', () => {
       <button onclick="setAdminSection('rewards')" id="adm-tab-rewards" class="adm-tab" style="flex:1 1 30%">🎁 Récompenses</button>
       <button onclick="setAdminSection('conversion')" id="adm-tab-conversion" class="adm-tab" style="flex:1 1 30%">💱 Conversion</button>
       <button onclick="setAdminSection('events')" id="adm-tab-events" class="adm-tab" style="flex:1 1 30%">📅 Événements</button>
+      <button onclick="setAdminSection('tournaments')" id="adm-tab-tournaments" class="adm-tab" style="flex:1 1 30%">🏆 Tournois</button>
       <button onclick="setAdminSection('audit')" id="adm-tab-audit" class="adm-tab" style="flex:1 1 30%">📜 Journal</button>
     </div>
     <div id="admin-body" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch"></div>
