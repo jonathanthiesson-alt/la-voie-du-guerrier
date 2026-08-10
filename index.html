@@ -2,6 +2,11 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
+<!-- Anti-cache : GitHub Pages / navigateurs mobiles gardaient de vieilles copies
+     malgré les mises à jour. On force la revalidation à chaque chargement. -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
 <title>La Voie du Guerrier — ONLINE alpha V0.57.2</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
@@ -2068,6 +2073,10 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   </div>
 </div>
 
+
+<!-- ⚠️ BANDEAU DIAGNOSTIC FIXE (visible sur TOUS les écrans, indépendant du
+     thème) : sonde de fraîcheur. À retirer une fois le cache réglé. -->
+<div style="position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#e11;color:#fff;font-family:monospace;font-size:15px;font-weight:700;text-align:center;padding:7px 4px;letter-spacing:1px;box-shadow:0 2px 10px rgba(0,0,0,.7)">BUILD 574</div>
 
 <!-- HOME -->
 <div id="screen-home" class="screen active">
