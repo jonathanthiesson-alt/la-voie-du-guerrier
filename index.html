@@ -3694,6 +3694,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <div class="devlog-version">ONLINE alpha V0.51.0 &mdash; 10 ao&ucirc;t 2026</div>
       <ul class="devlog-list">
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; ACCUEIL DU VILLAGE</li>
+        <li>Le th&egrave;me <strong>Village est d&eacute;sormais le th&egrave;me par d&eacute;faut</strong> (Classique / Sumi / Wurmz restent dispo pour les tests).</li>
         <li>Choisir le th&egrave;me <strong>Village</strong> depuis l&rsquo;accueil <strong>ne t&rsquo;y t&eacute;l&eacute;porte plus</strong> : on reste sur l&rsquo;accueil. Le village s&rsquo;ouvre en cliquant <strong>COMMENCER</strong> une fois connect&eacute;.</li>
         <li>Sur l&rsquo;accueil en th&egrave;me Village, &agrave; la place du logo&nbsp;: le <strong>sommet du Fuji et le soleil</strong> de la carte. Le <strong>soleil</strong> est la zone de clic (avec aura) du <strong>raccourci de lancement rapide</strong>.</li>
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; COMPAGNON IA PAR D&Eacute;FAUT</li>
@@ -11961,7 +11962,21 @@ function rgbToHexSafe(rgb){
 // Application au démarrage (avant tout affichage d'écran).
 // Wurmz mémorisé mais plus débloqué sur cet appareil (cache vidé, autre
 // session...) : retour silencieux au Classique plutôt qu'un thème volé.
-try{ var _th=localStorage.getItem('vtl_ui_theme'); if(_th==='sumi') document.body.classList.add('ui-sumi'); else if(_th==='wurmz' && isWurmzThemeUnlocked()) document.body.classList.add('ui-wurmz'); else if(_th==='village') document.body.classList.add('ui-village'); }catch(e){}
+// THÈME PAR DÉFAUT = VILLAGE (thème principal du projet). Classique/Sumi/Wurmz
+// ne s'appliquent que si EXPLICITEMENT choisis (ils servent surtout aux tests de
+// fonctionnement). Sans préférence enregistrée → village.
+try{
+  var _th=localStorage.getItem('vtl_ui_theme');
+  if(_th==='sumi') document.body.classList.add('ui-sumi');
+  else if(_th==='wurmz' && isWurmzThemeUnlocked()) document.body.classList.add('ui-wurmz');
+  else if(_th==='classic'){ /* classique explicite : aucune classe de thème */ }
+  else document.body.classList.add('ui-village'); // null / 'village' → défaut village
+}catch(e){ document.body.classList.add('ui-village'); }
+// On démarre sur l'accueil (screen-home actif en HTML) sans passer par
+// showScreen : on pose donc à la main village-nofab pour masquer le bouton
+// ⛩ Village au boot (sinon il s'afficherait sur l'accueil, cf. règle « village
+// après COMMENCER »). showScreen le retirera dès la première vraie navigation.
+document.body.classList.add('village-nofab');
 try{ var _ss=localStorage.getItem('vtl_sumi_sky'); if(_ss) document.body.style.setProperty('--sumi-sky', _ss); }catch(e){}
 function setBoardSize(v){displayPrefs.boardSize=v;['small','auto','large'].forEach(x=>document.getElementById('board-'+x).classList.toggle('selected',x===v));if(document.getElementById('screen-game').classList.contains('active'))renderBoard()}
 // Quitter une partie EN COURS : comme la fin de partie, on revient au mode
