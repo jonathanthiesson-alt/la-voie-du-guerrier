@@ -116,10 +116,16 @@
 
 ---
 
-## PHASE 4 — Refonte Tournois (ÉPIC : SQL + Admin + Client) — en dernier
+## PHASE 4 — Refonte Tournois (ÉPIC : SQL + Admin + Client) — ✅ LIVRÉE (V0.62.0)
 
 > Le seul lot qui touche **base + outil admin + client**. À faire d'un bloc,
 > après stabilisation des phases 1–3.
+>
+> **État (2026-08-11)** : Lot A (SQL `tournaments_v4_admin.sql`) appliqué via
+> MCP ✅ · Lot B (section admin « 🏆 Tournois ») ✅ · Lot C (écran joueur
+> refondu + popup présentation) ✅. **Reste à valider en conditions réelles**
+> (voir la liste de tests). Le classement Élo affiché reste à brancher sur un
+> vrai Élo serveur (aujourd'hui le classement suisse par points est conservé).
 
 ### 4.1 Modèle & droits
 - **Les joueurs ne créent plus de tournois.** Création/déclenchement **réservés
