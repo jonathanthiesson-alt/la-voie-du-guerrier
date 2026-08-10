@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.57.5</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.58.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2185,7 +2185,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
        sur le même appareil, disponibles sans passer par le village. -->
   <div style="width:100%;padding:0 24px 12px;display:flex;gap:10px;position:relative;z-index:1">
     <button class="home-btn-secondary" style="flex:1;font-size:13px;padding:12px 6px;letter-spacing:1px" onclick="openLocalMode('human','home')" data-i18n="home_two_players">&#23550; 2 joueurs</button>
-    <button class="home-btn-secondary" style="flex:1;font-size:13px;padding:12px 6px;letter-spacing:1px" onclick="_villageLocalOrigin='home';showScreen('clock')" data-i18n="home_clock">&#9201; Pendule</button>
+    <button class="home-btn-secondary" style="flex:1;font-size:13px;padding:12px 6px;letter-spacing:1px" onclick="_villageFromHome=true;showScreen('clock')" data-i18n="home_clock">&#9201; Pendule</button>
   </div>
 
   <!-- Profil strip (grade) -->
@@ -2250,7 +2250,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.57.5 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.58.0 &#9820;</div>
   </div>
 </div>
 
@@ -3310,7 +3310,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
              direct au village + une relance immédiate. Cachés par défaut,
              révélés par la config de l'overlay quand _lastGameFromMatchmaking. -->
         <button class="btn btn-small" onclick="endgameNewCombat()" id="endgame-newcombat-btn" style="display:none">&#9889; Nouveau combat</button>
-        <button class="btn btn-small btn-danger" onclick="endgameToVillage()" id="endgame-village-btn" style="display:none">&#9773; Village</button>
+        <button class="btn btn-small btn-danger" onclick="endgameToVillage()" id="endgame-village-btn" style="display:none">&#8617; Retour</button>
       </div>
       <button class="btn btn-small" onclick="shareGameResult()" style="font-size:11px;margin-top:6px;width:100%">&#128228; <span data-i18n="share_result">Partager le résultat</span></button>
       <!-- Emplacement publicitaire (bandeau) — même contenu que celui de
@@ -3409,7 +3409,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
 <!-- ═══════════ PROFIL — RECORDS (écran dédié, ex-section du profil) ═══════════ -->
 <div id="screen-profile-records" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('profile')" data-i18n="btn_back">&#8617; RETOUR</button></div>
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('profile')" data-i18n="btn_prev_back">&#8617; PRÉCÉDENT</button></div>
   <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
   <div class="panel" style="max-width:380px;width:100%">
     <div class="menu-title" style="font-size:18px" data-i18n="profile_records_title">&#127894; RECORDS</div>
@@ -3431,7 +3431,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
 <!-- ═══════════ PROFIL — STATISTIQUES (écran dédié, ex-section du profil) ═══════════ -->
 <div id="screen-profile-stats" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('profile')" data-i18n="btn_back">&#8617; RETOUR</button></div>
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('profile')" data-i18n="btn_prev_back">&#8617; PRÉCÉDENT</button></div>
   <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
   <div class="panel" style="max-width:380px;width:100%">
     <div class="menu-title" style="font-size:18px" data-i18n="profile_stats_title">&#128202; STATISTIQUES</div>
@@ -3450,7 +3450,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
 <!-- ═══════════ PROFIL — SUCCÈS (écran dédié, ex-section du profil) ═══════════ -->
 <div id="screen-profile-achievements" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('profile')" data-i18n="btn_back">&#8617; RETOUR</button></div>
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('profile')" data-i18n="btn_prev_back">&#8617; PRÉCÉDENT</button></div>
   <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
   <div class="panel" style="max-width:380px;width:100%">
     <div class="menu-title" style="font-size:18px" data-i18n="profile_ach_title">&#127942; SUCC&#200;S</div>
@@ -3712,8 +3712,19 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.57.5</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.58.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.58.0 &mdash; 10 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; NAVIGATION VILLAGE &mdash; R&Egrave;GLE UNIFI&Eacute;E</li>
+        <li>La touche <strong>MENU</strong> ram&egrave;ne toujours au <strong>premier menu du b&acirc;timent</strong> d'o&ugrave; l'on vient (ex. Ar&egrave;ne &rarr; Combat simple &rarr; MENU rouvre le panneau <strong>Ar&egrave;ne</strong>), jamais &agrave; l'accueil.</li>
+        <li>La touche <strong>&#9773; Village</strong> ram&egrave;ne &agrave; la <strong>carte du village</strong> ; seul le <strong>chariot</strong> ram&egrave;ne &agrave; l'<strong>accueil</strong>.</li>
+        <li><strong>Fin de partie</strong> contextuelle : combat lanc&eacute; depuis l'accueil &rarr; retour accueil ; depuis l'Ar&egrave;ne &rarr; menu Ar&egrave;ne.</li>
+        <li>Les retours vers la <strong>page pr&eacute;c&eacute;dente</strong> sont libell&eacute;s <strong>&laquo; Pr&eacute;c&eacute;dent &raquo;</strong> (au lieu de &laquo; Menu &raquo;).</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -7805,7 +7816,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.57.5 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.58.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -7837,6 +7848,7 @@ const LANGS={
     btn_home:'↩ HOME',
     btn_menu_back:'↩ MENU',
     btn_back:'↩ RETOUR',
+    btn_prev_back:'↩ PRÉCÉDENT',
     btn_next:'⚔ Suivant',
     btn_launch:'⚔ LANCER ⚔',
     btn_replay:'↺ Rejouer',
@@ -8022,7 +8034,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.57.5 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.58.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -8047,6 +8059,7 @@ const LANGS={
     btn_home:'↩ HOME',
     btn_menu_back:'↩ MENU',
     btn_back:'↩ BACK',
+    btn_prev_back:'↩ PREVIOUS',
     btn_next:'⚔ Next',
     btn_launch:'⚔ START ⚔',
     btn_replay:'↺ Replay',
@@ -8230,7 +8243,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.57.5 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.58.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -8255,6 +8268,7 @@ const LANGS={
     btn_home:'↩ ホーム',
     btn_menu_back:'↩ メニュー',
     btn_back:'↩ 戻る',
+    btn_prev_back:'↩ 前へ',
     btn_next:'⚔ 次へ',
     btn_launch:'⚔ 開始 ⚔',
     btn_replay:'↺ もう一度',
@@ -9637,9 +9651,14 @@ function initPlayModeCarousel(){
 // bouton MENU de l'écran matchmaking ramène alors à l'accueil (au lieu du
 // carrousel 'play'). null pour les entrées via le carrousel Arène → 'play'
 // comme d'habitude (voir matchmakingMenuBack).
-var _matchmakingFromHome = false;
+// true si la chaîne de navigation COURANTE vient d'un raccourci de l'ACCUEIL
+// (Combat rapide, 2 joueurs, Pendule) ; false si elle vient d'un bâtiment du
+// village. Avec _villageReturnBuilding, détermine où « MENU » ramène
+// (voir villageMenuReturn). Remplace les anciens _matchmakingFromHome /
+// _villageLocalOrigin, désormais unifiés.
+var _villageFromHome = false;
 function quickPlay(origin){
-  _matchmakingFromHome = (origin==='home');
+  _villageFromHome = (origin==='home');
   if(!currentUser){ showToast('Connectez-vous pour jouer en ligne.', true); showScreen('online-auth'); return; }
   var cad = getQuickCadence();
   console.log('[quickPlay] cadence =', cad);
@@ -9657,8 +9676,22 @@ function quickPlay(origin){
 // le village → Arène → Modes de combat), comportement conservé.
 function matchmakingMenuBack(){
   stopMatchmakingSearch();
-  if(_matchmakingFromHome){ _matchmakingFromHome = false; showScreen('home'); return; }
+  // Thème village : « MENU » suit la règle unifiée (accueil si venu de l'accueil,
+  // sinon panneau du bâtiment d'origine — ici l'Arène). Hors village : carrousel.
+  if(document.body.classList.contains('ui-village')){ villageMenuReturn(); return; }
   showScreen('play');
+}
+// Retours « MENU » des écrans de recherche Arène et Sumo (onclick personnalisé,
+// donc non capturés par villageInterceptBack) : même règle unifiée en village.
+function arenaMenuBack(){
+  if(typeof stopArenaMatchmakingSearch==='function') stopArenaMatchmakingSearch();
+  if(document.body.classList.contains('ui-village')){ villageMenuReturn(); return; }
+  showScreen('play');
+}
+function sumoMenuBack(){
+  if(typeof stopSumoMatchmakingSearch==='function') stopSumoMatchmakingSearch();
+  if(document.body.classList.contains('ui-village')){ villageMenuReturn(); return; }
+  showScreen('events-mode');
 }
 async function refreshPlayScreen(){
   setQuickCadence(getQuickCadence());
@@ -11762,30 +11795,29 @@ async function villageRefreshBadges(){
 // lancé — on doit donc le ré-ouvrir au retour, pas juste montrer la carte nue.
 var _villagePanelBuilding = null;
 var _villageReturnBuilding = null;
-// Retour en thème Village : remonte à l'écran précédent RÉEL (historique, hubs
-// exclus). Si ce précédent est le village (donc l'écran a été lancé depuis un
-// panneau de bâtiment), on RÉ-OUVRE ce panneau — c'est le « menu précédent ».
-function villageBack(){
-  var HUBS=['menu','play','local-hub','local','amis','home','online-menu'];
-  var prev=null;
-  if(typeof _screenHistory!=='undefined'){
-    while(_screenHistory.length){ var p=_screenHistory.pop(); if(HUBS.indexOf(p)===-1){ prev=p; break; } }
-  }
-  if(typeof _suppressHistoryPush!=='undefined') _suppressHistoryPush=true;
-  if((!prev || prev==='village') && _villageReturnBuilding && typeof villageOpenBuilding==='function'){
-    var b=_villageReturnBuilding;
-    showScreen('village');
-    villageOpenBuilding(b);   // ré-ouvre le panneau du bâtiment d'origine
-  } else {
-    showScreen(prev||'village');
-  }
-}
+// (villageBack, basé sur l'historique, a été remplacé par villageMenuReturn —
+// règle unifiée « MENU = 1er menu du bâtiment ».)
 // Sortie du village par le chariot → écran d'accueil. On repart de zéro côté
 // panneau/historique pour que le prochain retour ne reboucle pas dans le village.
 function quitVillageToHome(){
   _villagePanelBuilding = null; _villageReturnBuilding = null;
   if(typeof closeVillagePanel==='function') closeVillagePanel();
   showScreen('home');
+}
+// Résolveur unifié du bouton « MENU » en thème village. Règle :
+//   1. venu d'un raccourci de l'ACCUEIL → écran d'accueil ;
+//   2. venu d'un bâtiment → on RÉ-OUVRE son panneau (= son 1er menu) ;
+//   3. sinon (bâtiment mono-item, contexte inconnu) → carte du village.
+// Seul le chariot ramène à l'accueil ; seul le FAB ⛩ ramène à la carte nue.
+function villageMenuReturn(){
+  if(_villageFromHome){ _villageFromHome = false; showScreen('home'); return; }
+  if(_villageReturnBuilding && typeof villageOpenBuilding==='function'){
+    var b = _villageReturnBuilding;
+    showScreen('village');
+    villageOpenBuilding(b);
+    return;
+  }
+  showScreen('village');
 }
 function villageInterceptBack(e){
   if(!document.body.classList.contains('ui-village')) return;
@@ -11800,18 +11832,22 @@ function villageInterceptBack(e){
   // devCloseLearn…) doivent exécuter leur propre teardown — ils rappelleront
   // showScreen eux-mêmes, ce que l'historique suit déjà.
   var oc = (btn.getAttribute && btn.getAttribute('onclick')) || '';
-  if(!/^\s*showScreen\(/.test(oc)) return;
+  // On ne détourne QUE les retours « MENU » vers un ANCIEN HUB d'onglet
+  // (menu/play/settings/local-hub/online-menu/events-mode). Les retours
+  // CONTEXTUELS vers une page précise (campagnes, profil…) sont conservés tels
+  // quels — cf. règle « MENU = 1er menu du bâtiment » vs « Précédent = page
+  // précédente ». Les onclick à fonction (closeShinAIScreen…) gèrent leur propre
+  // teardown et ne sont pas concernés.
+  var m = /^\s*showScreen\(\s*['"]([a-z0-9-]+)['"]\s*\)\s*;?\s*$/.exec(oc);
+  if(!m) return;
+  var HUBS = ['menu','play','settings','local-hub','online-menu','events-mode'];
+  if(HUBS.indexOf(m[1])===-1) return;   // retour contextuel → on laisse faire
   var active = document.querySelector('.screen.active');
   if(active && (active.id==='screen-village' || active.id==='screen-game')) return;
   e.preventDefault(); e.stopPropagation();
-  // Jeu local lancé depuis un raccourci de l'accueil → le RETOUR du menu ramène
-  // à l'accueil (le FAB ⛩ Village, lui, appelle villageBack() et va au village).
-  if(_villageLocalOrigin==='home' && active && active.id==='screen-local'){
-    _villageLocalOrigin=null; showScreen('home'); return;
-  }
-  // Retour unifié : écran précédent réel, ou ré-ouverture du panneau du bâtiment
-  // d'origine (le « menu précédent »), voir villageBack().
-  villageBack();
+  // Règle unifiée : accueil si on vient d'un raccourci de l'accueil, sinon
+  // ré-ouverture du panneau du bâtiment d'origine (son 1er menu).
+  villageMenuReturn();
 }
 document.addEventListener('click', villageInterceptBack, true);
 // Grisage online + masquage dev, recalculés à chaque affichage de la carte
@@ -11844,6 +11880,7 @@ function villageDoItem(it){
   // précédent). null si on vient d'un bâtiment mono-item (pas de panneau à
   // ré-ouvrir — sinon on reboucterait direct sur l'écran).
   _villageReturnBuilding = _villagePanelBuilding;
+  _villageFromHome = false;   // on entre depuis un bâtiment → « MENU » = son panneau
   closeVillagePanel();
   if(it.fn){ if(typeof window[it.fn]==='function'){ window[it.fn](it.arg); } return; }
   if(it.screen){ showScreen(it.screen); }
@@ -11934,11 +11971,10 @@ function isDevAccount(){
 // Adversaire — il ne reste plus qu'à choisir la cadence (et l'adversaire
 // IA le cas échéant).
 // origin='home' quand on entre depuis les raccourcis de l'accueil (2 joueurs) :
-// le « retour » doit alors ramener à l'accueil, pas au village (voir villageBack).
-// null pour les entrées depuis le Dojo → retour au village comme d'habitude.
-var _villageLocalOrigin = null;
+// le « retour » ramène alors à l'accueil. Sans origine (Dojo) → panneau du
+// bâtiment. Unifié via _villageFromHome (voir villageMenuReturn).
 function openLocalMode(mode, origin){
-  _villageLocalOrigin = origin || null;
+  _villageFromHome = (origin==='home');
   _protoBannerOn = false;   // une entrée locale normale n'active PAS le film d'avatars (protoPlay le rallume après)
   showScreen('local');
   selectLocalMode(mode);
@@ -12128,10 +12164,10 @@ function resetClock(){startClock()}
 // Sortie de la pendule : retour au hub du jeu local (ou au village en thème
 // Village), jamais à l'écran Options ('menu').
 function quitClock(){if(clockState&&clockState.interval)clearInterval(clockState.interval);
-  // Pendule lancée depuis un raccourci de l'accueil → retour à l'accueil (même
-  // logique que le jeu local, cf. _villageLocalOrigin).
-  if(_villageLocalOrigin==='home'){_villageLocalOrigin=null;return showScreen('home');}
-  showScreen(document.body.classList.contains('ui-village')?'village':'local-hub');}
+  // Thème village : règle unifiée (accueil si lancée depuis l'accueil, sinon
+  // panneau du bâtiment — le Dojo). Hors village : hub du jeu local.
+  if(document.body.classList.contains('ui-village')){ return villageMenuReturn(); }
+  showScreen('local-hub');}
 
 // Quitte une partie en ligne EN COURS (bouton "Quitter" du bandeau
 // #online-game-bar) — distinct de handleMenuClick(), qui ne s'utilise
@@ -14243,7 +14279,7 @@ function completeCampaignLesson(){
 // prochaine vraie partie.
 function exitCampaignLesson(){
   campaignLessonActive = false;
-  if(_trainingMode){ _trainingMode = null; var clbT=document.getElementById('campaign-lesson-bar'); if(clbT) clbT.style.display='none'; var bubT=document.getElementById('aldric-bubble'); if(bubT) bubT.style.display='none'; if(document.body.classList.contains('ui-village')){ villageBack(); } else { showScreen('home'); } return; }
+  if(_trainingMode){ _trainingMode = null; var clbT=document.getElementById('campaign-lesson-bar'); if(clbT) clbT.style.display='none'; var bubT=document.getElementById('aldric-bubble'); if(bubT) bubT.style.display='none'; if(document.body.classList.contains('ui-village')){ villageMenuReturn(); } else { showScreen('home'); } return; }
   var clb=document.getElementById('campaign-lesson-bar'); if(clb) clb.style.display='none';
   var bubble=document.getElementById('aldric-bubble'); if(bubble) bubble.style.display='none';
   var id = campaignState ? campaignState.campaignId : _currentCampaignId;
@@ -20045,7 +20081,7 @@ function openShinAIScreen(returnTo) {
 }
 
 function closeShinAIScreen() {
-  if(document.body.classList.contains('ui-village')){ villageBack(); return; }
+  if(document.body.classList.contains('ui-village')){ villageMenuReturn(); return; }
   showScreen(window._shinAIReturnTo || 'local');
 }
 
@@ -22294,7 +22330,7 @@ function startCoinFlipSequence(onDone) {
 function restoreGameOverlayTemplate(){
   var ov = document.getElementById('game-overlay');
   var box2 = ov && ov.querySelector('.modal-box');
-  if(box2) box2.innerHTML = '<button class="modal-close-btn" onclick="startReviewMode()" title="Analyser">&#128269;</button>\n      <div class="crown-icon" id="overlay-crown">&#128081;</div>\n      <div class="modal-title" id="overlay-title">VICTOIRE</div>\n      <div class="modal-reason" id="overlay-reason">&#8212;</div>\n      <div class="endgame-stats" id="endgame-stats"></div>\n      <div class="endgame-verdict" id="endgame-verdict"></div>\n      <div class="xp-gain-row" id="xp-gain-row" style="display:none">\n        <div class="xp-gain-label">XP</div>\n        <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xp-bar-anim" style="width:0%"></div></div>\n        <div class="xp-gain-val" id="xp-gain-val">+0</div>\n      </div>\n      <div id="xp-bonus-label" style="display:none;text-align:center;font-family:\'VT323\',monospace;font-size:13px;color:#ffd75e;margin:-4px 0 8px;text-shadow:0 0 6px rgba(255,215,94,.5)"></div>\n      <div id="elo-gain-row" style="display:none;font-family:\'VT323\',monospace;font-size:13px;color:var(--gold-bright);text-align:center;margin:2px 0 6px"></div>\n      <div id="rematch-fled-message" class="modal-reason" style="display:none;color:#ff8888"></div>\n      <div class="modal-btn-row" style="margin-top:10px">\n        <button class="btn btn-small" onclick="handleRematchClick()" id="rematch-btn"><span id="rematch-indicator" class="rematch-dot"></span>Revanche<span id="rematch-timer-label" class="rematch-timer-label"></span></button>\n        <button class="btn btn-small" onclick="handleAnalyseClick()" style="font-size:11px">&#128269; Analyse</button>\n        <button class="btn btn-small btn-danger" onclick="handleMenuClick()" id="endgame-menu-btn">&#8962; Menu</button>\n        <button class="btn btn-small" onclick="endgameNewCombat()" id="endgame-newcombat-btn" style="display:none">&#9889; Nouveau combat</button>\n        <button class="btn btn-small btn-danger" onclick="endgameToVillage()" id="endgame-village-btn" style="display:none">&#9773; Village</button>\n      </div>';
+  if(box2) box2.innerHTML = '<button class="modal-close-btn" onclick="startReviewMode()" title="Analyser">&#128269;</button>\n      <div class="crown-icon" id="overlay-crown">&#128081;</div>\n      <div class="modal-title" id="overlay-title">VICTOIRE</div>\n      <div class="modal-reason" id="overlay-reason">&#8212;</div>\n      <div class="endgame-stats" id="endgame-stats"></div>\n      <div class="endgame-verdict" id="endgame-verdict"></div>\n      <div class="xp-gain-row" id="xp-gain-row" style="display:none">\n        <div class="xp-gain-label">XP</div>\n        <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xp-bar-anim" style="width:0%"></div></div>\n        <div class="xp-gain-val" id="xp-gain-val">+0</div>\n      </div>\n      <div id="xp-bonus-label" style="display:none;text-align:center;font-family:\'VT323\',monospace;font-size:13px;color:#ffd75e;margin:-4px 0 8px;text-shadow:0 0 6px rgba(255,215,94,.5)"></div>\n      <div id="elo-gain-row" style="display:none;font-family:\'VT323\',monospace;font-size:13px;color:var(--gold-bright);text-align:center;margin:2px 0 6px"></div>\n      <div id="rematch-fled-message" class="modal-reason" style="display:none;color:#ff8888"></div>\n      <div class="modal-btn-row" style="margin-top:10px">\n        <button class="btn btn-small" onclick="handleRematchClick()" id="rematch-btn"><span id="rematch-indicator" class="rematch-dot"></span>Revanche<span id="rematch-timer-label" class="rematch-timer-label"></span></button>\n        <button class="btn btn-small" onclick="handleAnalyseClick()" style="font-size:11px">&#128269; Analyse</button>\n        <button class="btn btn-small btn-danger" onclick="handleMenuClick()" id="endgame-menu-btn">&#8962; Menu</button>\n        <button class="btn btn-small" onclick="endgameNewCombat()" id="endgame-newcombat-btn" style="display:none">&#9889; Nouveau combat</button>\n        <button class="btn btn-small btn-danger" onclick="endgameToVillage()" id="endgame-village-btn" style="display:none">&#8617; Retour</button>\n      </div>';
 }
 
 // Même décompte que le mode local (voir runCombatCountdown, 5,4,3,2,1
@@ -23941,19 +23977,25 @@ async function handleMenuClick(){
     showScreen('online-menu');
     refreshOnlinePlayersList();
     var op=document.getElementById('online-my-pseudo'); if(op) op.textContent='Connecté : '+currentUser.pseudo;
-  } else {
+  } else if(document.body.classList.contains('ui-village')){
     // Modes LOCAUX (Karakuri, campagne, IA, Adversaires, 2 joueurs, pendule…)
-    // et parties hors-ligne : retour à l'écran d'origine, pas l'écran Options.
+    // en thème village : règle unifiée → panneau du bâtiment d'origine (Dojo…)
+    // ou accueil si lancé depuis un raccourci de l'accueil. Jamais l'écran nu.
+    villageMenuReturn();
+  } else {
+    // Hors village : retour à l'écran d'origine, pas l'écran Options.
     showScreen(gameOriginReturnScreen());
   }
 }
 
-// Combat rapide — fin de partie : retour direct au village (remplace « Menu »).
+// Combat rapide — fin de partie : retour CONTEXTUEL (règle unifiée). Accueil si
+// le combat a été lancé depuis l'accueil, sinon menu du bâtiment d'origine
+// (l'Arène). Remplace l'ancien retour « toujours au village ».
 async function endgameToVillage(){
   await signalRematchLeave();
   _lastGameFromMatchmaking = false;
   var go=document.getElementById('game-overlay'); if(go) go.classList.remove('active');
-  showScreen('village');
+  villageMenuReturn();
 }
 // Combat rapide — fin de partie : relance immédiatement une recherche (quickPlay
 // ré-arme _lastGameFromMatchmaking à l'entrée en partie).
@@ -23965,7 +24007,7 @@ async function endgameNewCombat(){
   // bouton « Combat rapide » de l'accueil, le nouveau combat garde cette origine
   // (son bouton MENU ramènera aussi à l'accueil). quickPlay écrasant le flag, on
   // le lit AVANT l'appel.
-  quickPlay(_matchmakingFromHome ? 'home' : undefined);
+  quickPlay(_villageFromHome ? 'home' : undefined);
 }
 function initSupabase(){
   if(typeof window.supabase === 'undefined'){
@@ -26183,7 +26225,7 @@ window.addEventListener('beforeunload', () => {
 
 <!-- ═══════════ ARÈNE (matchs en 3 manches, 石 Koku) ═══════════ -->
 <div id="screen-arena" class="screen">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="stopArenaMatchmakingSearch();showScreen('play')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="arenaMenuBack()" data-i18n="btn_menu_back">&#8617; MENU</button></div>
   <div class="panel" style="max-width:300px">
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px">&#9876; COMBAT 3 MANCHES</div><button onclick="showModeInfo('arena')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px">
@@ -26211,7 +26253,7 @@ window.addEventListener('beforeunload', () => {
 
 <!-- ═══════════ SUMO — événement d'été (jusqu'au 31 août) ═══════════ -->
 <div id="screen-sumo" class="screen">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="stopSumoMatchmakingSearch();showScreen('events-mode')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="sumoMenuBack()" data-i18n="btn_menu_back">&#8617; MENU</button></div>
   <div class="panel" style="max-width:300px">
     <!-- Ciel Sumi : le dohyō sous la lune, deux lutteurs face à face
          (réutilisé en thème Wurmz via un filtre or — voir CSS) -->
@@ -26643,7 +26685,7 @@ window.addEventListener('beforeunload', () => {
     </div>
   </div>
 </div>
-<button id="village-home-btn" onclick="villageBack()">⛩ Village</button>
+<button id="village-home-btn" onclick="showScreen('village')">⛩ Village</button>
 <div id="village-panel" onclick="if(event.target===this)closeVillagePanel()">
   <div class="vp-box" id="village-panel-box"></div>
 </div>
