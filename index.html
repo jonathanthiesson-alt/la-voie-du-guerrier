@@ -259,6 +259,13 @@ body.ui-village.village-nofab #village-home-btn{display:none}
 #village-sumo-btn{position:relative}#village-dyk-btn{position:relative}
 /* Sumo terminé : on masque le raccourci et son timer. */
 #village-corner-tools.sumo-over #village-sumo-tool{display:none}
+/* Bandeau pub de l'Arène (écran Jouer) : pleine largeur, collé aux bords de
+   l'écran — il déborde le panneau (max-width 370px) via la technique full-bleed
+   (width:100vw + marges négatives calc(50% - 50vw)). Coins carrés et pas de
+   bordure latérale pour un vrai bord-à-bord. Le bandeau de fin de partie
+   (#endgame-ad-banner) n'est pas concerné. */
+#play-ad-banner{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw)}
+#play-ad-banner>div{border-radius:0!important;border-left:none!important;border-right:none!important;margin:0!important}
 /* Accueil en thème Village : à la place du logo aléatoire (épéiste), on montre
    le HAUT de la carte du village — sommet du Fuji + soleil. Le soleil est la
    zone de clic (+ aura) du raccourci de lancement rapide. Crop = bande haute de
@@ -3727,6 +3734,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
         <li>Les boutons de <strong>cadence (3/5/10 s)</strong> lancent maintenant <strong>directement</strong> le mode s&eacute;lectionn&eacute; (Combat simple, Ar&egrave;ne) &agrave; cette cadence.</li>
         <li>Cliquer la <strong>carte</strong> du mode ouvre son <strong>menu</strong> (Ar&egrave;ne, Tournoi, Guilde, &Eacute;v&eacute;nements).</li>
         <li>Le bouton <strong>&laquo; Partie rapide &raquo;</strong> et les raccourcis sous le carrousel ont &eacute;t&eacute; <strong>retir&eacute;s</strong> (tout passe par la carte et les cadences).</li>
+        <li>Le <strong>bandeau publicitaire</strong> touche d&eacute;sormais les <strong>bords de l'&eacute;cran</strong> (pleine largeur).</li>
       </ul>
     </div>
 
