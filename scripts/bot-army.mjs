@@ -35,6 +35,11 @@ const ENGINE_NAMES = [
   "findMaster", "dist", "threatCount", "cloneBS", "applyToClone", "allMoves",
   "labResolveDirs", "labGenericMoves", "labPieceValue", "legalMoves", "execMove",
   "evalPosition", "evalTrainer", "minimaxFn", "minimaxPlay",
+  // legalMoves appelle bfSameUnit (ajouté par le Champ de bataille). En mode
+  // standard G.battlefieldMode est absent → bfSameUnit renvoie true (empilement
+  // d'alliés inchangé). Sans cette extraction, le bot standard planterait sur
+  // « bfSameUnit is not defined » et ne jouerait aucun coup (bug vécu).
+  "bfSameUnit",
 ];
 function extractFn(src, name) {
   const sig = "function " + name + "(";
@@ -150,7 +155,9 @@ function makeBattlefieldMover() {
     "var G={simulating:true,battlefieldMode:true,rows:FORMAT.rows||9,cols:FORMAT.cols||9,sumoMode:false,pieceDefs:(FORMAT.pieces||null),turn:null,lastPush:null,lastMoved:null,lastMovedByColor:{white:null,black:null},eliminatedUnits:[]};",
     "function isV2mode(){return !!FORMAT.v2;}",
   ].join("\n");
-  const names = ENGINE_NAMES.concat(["bfSameUnit", "battlefieldVictim", "sweepBattlefieldUnit", "battlefieldResolve"]);
+  // bfSameUnit est déjà dans ENGINE_NAMES → on ne l'ajoute PAS ici (sinon double
+  // définition = SyntaxError dans new Function).
+  const names = ENGINE_NAMES.concat(["battlefieldVictim", "sweepBattlefieldUnit", "battlefieldResolve"]);
   const body = names.map((n) => extractFn(html, n)).join("\n\n");
   const mover = `
     function botChooseAndApplyBattlefield(stateJson, color, unit, depth){
