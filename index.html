@@ -3285,6 +3285,9 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <button class="modal-close-btn" onclick="startReviewMode()" title="Analyser">&#128269;</button>
       <div class="crown-icon" id="overlay-crown">&#128081;</div>
       <div class="modal-title" id="overlay-title">VICTOIRE</div>
+      <!-- ⚠️ MARQUEUR DIAGNOSTIC TEMPORAIRE : prouve que c'est bien le nouvel
+           écran de victoire qui s'affiche sur le téléphone (à retirer). -->
+      <div style="background:#e11;color:#fff;font-family:monospace;font-weight:700;padding:4px;border-radius:5px;margin:4px auto;font-size:13px">BUILD 572 — écran victoire à jour</div>
       <div class="modal-reason" id="overlay-reason">&#8212;</div>
       <div class="endgame-stats" id="endgame-stats"></div>
       <div class="endgame-verdict" id="endgame-verdict"></div>
@@ -15594,9 +15597,11 @@ function endGame(winner,reason){
                          !G.bfOnline && !_lastGameFromFriendChallenge);
   var vBtn=document.getElementById('endgame-village-btn');
   var ncBtn=document.getElementById('endgame-newcombat-btn');
-  if(menuBtn) menuBtn.style.display = isMatchmaking ? 'none' : '';
-  if(vBtn)  vBtn.style.display  = isMatchmaking ? '' : 'none';
-  if(ncBtn) ncBtn.style.display = isMatchmaking ? '' : 'none';
+  // ⚠️ DIAG : boutons forcés visibles partout le temps du test (à remettre en
+  // conditionnel : isMatchmaking).
+  if(menuBtn) menuBtn.style.display = '';
+  if(vBtn)  vBtn.style.display  = '';
+  if(ncBtn) ncBtn.style.display = '';
   var overlayDelay=(G.captureCount>0)?4000:0;
   setTimeout(function(){
     document.getElementById('game-overlay').classList.add('active');
