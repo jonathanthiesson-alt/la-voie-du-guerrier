@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.60.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.61.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2305,13 +2305,15 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
     <!-- Cadence : ne concerne que les modes « à cadence » (matchmaking, arène) -->
     <div id="play-cadence-row" style="display:flex;gap:6px;justify-content:center;margin-bottom:8px">
-      <div class="opt-btn play-cadence-btn" data-cad="3" onclick="setQuickCadence(3)" style="font-size:12px;padding:4px 12px">3s</div>
-      <div class="opt-btn play-cadence-btn" data-cad="5" onclick="setQuickCadence(5)" style="font-size:12px;padding:4px 12px">5s</div>
-      <div class="opt-btn play-cadence-btn" data-cad="10" onclick="setQuickCadence(10)" style="font-size:12px;padding:4px 12px">10s</div>
+      <div class="opt-btn play-cadence-btn" data-cad="3" onclick="launchCadence(3)" style="font-size:12px;padding:4px 12px">3s</div>
+      <div class="opt-btn play-cadence-btn" data-cad="5" onclick="launchCadence(5)" style="font-size:12px;padding:4px 12px">5s</div>
+      <div class="opt-btn play-cadence-btn" data-cad="10" onclick="launchCadence(10)" style="font-size:12px;padding:4px 12px">10s</div>
     </div>
 
-    <!-- Bouton primaire : lance le mode central -->
-    <button class="home-btn-primary" id="play-launch-btn" style="width:100%;font-size:15px;padding:15px;margin:0 0 8px;letter-spacing:3px" onclick="launchCentralMode()">&#9889; PARTIE RAPIDE</button>
+    <!-- Plus de bouton « PARTIE RAPIDE » sous le carrousel : les cadences
+         lancent directement (modes à cadence), et cliquer la carte ouvre le menu
+         du mode. -->
+
     <!-- Ligue / Classement / Bot-Army retirés de l'Arène (Ligue & Classement →
          Archives ; Bot army → Soleil du village, réservé dev). -->
 
@@ -3714,8 +3716,18 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.60.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.61.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.61.0 &mdash; 10 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; CARROUSEL DE JEU</li>
+        <li>Les boutons de <strong>cadence (3/5/10 s)</strong> lancent maintenant <strong>directement</strong> le mode s&eacute;lectionn&eacute; (Combat simple, Ar&egrave;ne) &agrave; cette cadence.</li>
+        <li>Cliquer la <strong>carte</strong> du mode ouvre son <strong>menu</strong> (Ar&egrave;ne, Tournoi, Guilde, &Eacute;v&eacute;nements).</li>
+        <li>Le bouton <strong>&laquo; Partie rapide &raquo;</strong> et les raccourcis sous le carrousel ont &eacute;t&eacute; <strong>retir&eacute;s</strong> (tout passe par la carte et les cadences).</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -7842,7 +7854,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.60.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.61.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8060,7 +8072,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.60.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.61.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -8269,7 +8281,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.60.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.61.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -9628,6 +9640,15 @@ function openCentralModeScreen(){
   var m=centralPlayMode();
   if(m.screen) showScreen(m.screen); else launchCentralMode();
 }
+// Clic sur un bouton de cadence (3/5/10 s) = LANCEMENT DIRECT du mode central à
+// cette cadence, sans passer par son menu (ne concerne que les modes à cadence :
+// Combat simple, Arène — le bandeau de cadence est masqué pour les autres).
+function launchCadence(sec){
+  setQuickCadence(sec);
+  var m=centralPlayMode();
+  if(!m || !m.cadence){ renderPlayModeCarousel(); return; }
+  launchCentralMode();
+}
 function _playModePeek(idx, dir){
   var m=PLAY_MODES[idx];
   var chev = dir<0 ? '&#8249;' : '&#8250;';
@@ -9658,8 +9679,6 @@ function renderPlayModeCarousel(){
   }
   var cadRow=document.getElementById('play-cadence-row');
   if(cadRow) cadRow.style.display = m.cadence ? 'flex' : 'none';
-  var btn=document.getElementById('play-launch-btn');
-  if(btn) btn.innerHTML = m.cadence ? '⚡ PARTIE RAPIDE' : ('▶ '+m.label.toUpperCase());
 }
 // Init à l'entrée sur l'écran Jouer : restaure la position mémorisée, cale la
 // surbrillance de cadence, et branche le swipe tactile (une seule fois).
@@ -11778,7 +11797,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.60.0';
+var DEVLOG_LATEST = 'V0.61.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
