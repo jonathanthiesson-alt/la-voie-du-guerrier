@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.57.2</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.57.3</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2074,10 +2074,6 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 </div>
 
 
-<!-- ⚠️ BANDEAU DIAGNOSTIC FIXE (visible sur TOUS les écrans, indépendant du
-     thème) : sonde de fraîcheur. À retirer une fois le cache réglé. -->
-<div style="position:fixed;top:0;left:0;right:0;z-index:2147483647;background:#e11;color:#fff;font-family:monospace;font-size:15px;font-weight:700;text-align:center;padding:7px 4px;letter-spacing:1px;box-shadow:0 2px 10px rgba(0,0,0,.7)">BUILD 574</div>
-
 <!-- HOME -->
 <div id="screen-home" class="screen active">
 
@@ -2254,7 +2250,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.57.2 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.57.3 &#9820;</div>
   </div>
 </div>
 
@@ -3294,9 +3290,6 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <button class="modal-close-btn" onclick="startReviewMode()" title="Analyser">&#128269;</button>
       <div class="crown-icon" id="overlay-crown">&#128081;</div>
       <div class="modal-title" id="overlay-title">VICTOIRE</div>
-      <!-- ⚠️ MARQUEUR DIAGNOSTIC TEMPORAIRE : prouve que c'est bien le nouvel
-           écran de victoire qui s'affiche sur le téléphone (à retirer). -->
-      <div style="background:#e11;color:#fff;font-family:monospace;font-weight:700;padding:4px;border-radius:5px;margin:4px auto;font-size:13px">BUILD 572 — écran victoire à jour</div>
       <div class="modal-reason" id="overlay-reason">&#8212;</div>
       <div class="endgame-stats" id="endgame-stats"></div>
       <div class="endgame-verdict" id="endgame-verdict"></div>
@@ -3719,7 +3712,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.57.2</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.57.3</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
     </div>
 
@@ -7812,7 +7805,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.57.2 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.57.3 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8029,7 +8022,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.57.2 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.57.3 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -8237,7 +8230,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.57.2 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.57.3 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -15606,11 +15599,9 @@ function endGame(winner,reason){
                          !G.bfOnline && !_lastGameFromFriendChallenge);
   var vBtn=document.getElementById('endgame-village-btn');
   var ncBtn=document.getElementById('endgame-newcombat-btn');
-  // ⚠️ DIAG : boutons forcés visibles partout le temps du test (à remettre en
-  // conditionnel : isMatchmaking).
-  if(menuBtn) menuBtn.style.display = '';
-  if(vBtn)  vBtn.style.display  = '';
-  if(ncBtn) ncBtn.style.display = '';
+  if(menuBtn) menuBtn.style.display = isMatchmaking ? 'none' : '';
+  if(vBtn)  vBtn.style.display  = isMatchmaking ? '' : 'none';
+  if(ncBtn) ncBtn.style.display = isMatchmaking ? '' : 'none';
   var overlayDelay=(G.captureCount>0)?4000:0;
   setTimeout(function(){
     document.getElementById('game-overlay').classList.add('active');
@@ -22289,7 +22280,7 @@ function startCoinFlipSequence(onDone) {
 function restoreGameOverlayTemplate(){
   var ov = document.getElementById('game-overlay');
   var box2 = ov && ov.querySelector('.modal-box');
-  if(box2) box2.innerHTML = '<button class="modal-close-btn" onclick="startReviewMode()" title="Analyser">&#128269;</button>\n      <div class="crown-icon" id="overlay-crown">&#128081;</div>\n      <div class="modal-title" id="overlay-title">VICTOIRE</div>\n      <div class="modal-reason" id="overlay-reason">&#8212;</div>\n      <div class="endgame-stats" id="endgame-stats"></div>\n      <div class="endgame-verdict" id="endgame-verdict"></div>\n      <div class="xp-gain-row" id="xp-gain-row" style="display:none">\n        <div class="xp-gain-label">XP</div>\n        <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xp-bar-anim" style="width:0%"></div></div>\n        <div class="xp-gain-val" id="xp-gain-val">+0</div>\n      </div>\n      <div id="xp-bonus-label" style="display:none;text-align:center;font-family:\'VT323\',monospace;font-size:13px;color:#ffd75e;margin:-4px 0 8px;text-shadow:0 0 6px rgba(255,215,94,.5)"></div>\n      <div id="elo-gain-row" style="display:none;font-family:\'VT323\',monospace;font-size:13px;color:var(--gold-bright);text-align:center;margin:2px 0 6px"></div>\n      <div id="rematch-fled-message" class="modal-reason" style="display:none;color:#ff8888"></div>\n      <div class="modal-btn-row" style="margin-top:10px">\n        <button class="btn btn-small" onclick="handleRematchClick()" id="rematch-btn"><span id="rematch-indicator" class="rematch-dot"></span>Revanche<span id="rematch-timer-label" class="rematch-timer-label"></span></button>\n        <button class="btn btn-small" onclick="handleAnalyseClick()" style="font-size:11px">&#128269; Analyse</button>\n        <button class="btn btn-small btn-danger" onclick="handleMenuClick()" id="endgame-menu-btn">&#8962; Menu</button>\n      </div>';
+  if(box2) box2.innerHTML = '<button class="modal-close-btn" onclick="startReviewMode()" title="Analyser">&#128269;</button>\n      <div class="crown-icon" id="overlay-crown">&#128081;</div>\n      <div class="modal-title" id="overlay-title">VICTOIRE</div>\n      <div class="modal-reason" id="overlay-reason">&#8212;</div>\n      <div class="endgame-stats" id="endgame-stats"></div>\n      <div class="endgame-verdict" id="endgame-verdict"></div>\n      <div class="xp-gain-row" id="xp-gain-row" style="display:none">\n        <div class="xp-gain-label">XP</div>\n        <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xp-bar-anim" style="width:0%"></div></div>\n        <div class="xp-gain-val" id="xp-gain-val">+0</div>\n      </div>\n      <div id="xp-bonus-label" style="display:none;text-align:center;font-family:\'VT323\',monospace;font-size:13px;color:#ffd75e;margin:-4px 0 8px;text-shadow:0 0 6px rgba(255,215,94,.5)"></div>\n      <div id="elo-gain-row" style="display:none;font-family:\'VT323\',monospace;font-size:13px;color:var(--gold-bright);text-align:center;margin:2px 0 6px"></div>\n      <div id="rematch-fled-message" class="modal-reason" style="display:none;color:#ff8888"></div>\n      <div class="modal-btn-row" style="margin-top:10px">\n        <button class="btn btn-small" onclick="handleRematchClick()" id="rematch-btn"><span id="rematch-indicator" class="rematch-dot"></span>Revanche<span id="rematch-timer-label" class="rematch-timer-label"></span></button>\n        <button class="btn btn-small" onclick="handleAnalyseClick()" style="font-size:11px">&#128269; Analyse</button>\n        <button class="btn btn-small btn-danger" onclick="handleMenuClick()" id="endgame-menu-btn">&#8962; Menu</button>\n        <button class="btn btn-small" onclick="endgameNewCombat()" id="endgame-newcombat-btn" style="display:none">&#9889; Nouveau combat</button>\n        <button class="btn btn-small btn-danger" onclick="endgameToVillage()" id="endgame-village-btn" style="display:none">&#9773; Village</button>\n      </div>';
 }
 
 // Même décompte que le mode local (voir runCombatCountdown, 5,4,3,2,1
