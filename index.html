@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.55.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.56.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1133,6 +1133,9 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 .home-actions{width:100%;padding:16px 20px 12px;display:flex;flex-direction:column;gap:10px}
 .home-btn-primary{font-family:'Cinzel',serif;font-size:18px;font-weight:900;letter-spacing:3px;padding:16px;border:2px solid var(--gold);border-radius:8px;background:linear-gradient(135deg,rgba(212,160,23,.15),rgba(212,160,23,.05));color:var(--gold-bright);cursor:pointer;width:100%;text-align:center;text-shadow:var(--glow-gold);position:relative;overflow:hidden;transition:all .2s;box-shadow:0 4px 20px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,200,50,.2)}
 .home-btn-primary::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(212,160,23,.12),transparent);animation:shimmer 2.5s infinite}
+/* Accès directs au jeu local sous COMMENCER : plus discrets que le primaire. */
+.home-btn-secondary{font-family:'Cinzel',serif;font-weight:600;border:1px solid rgba(200,168,110,.35);border-radius:6px;background:rgba(200,168,110,.06);color:rgba(232,213,163,.9);cursor:pointer;text-align:center;transition:all .2s}
+.home-btn-secondary:active{transform:scale(.98);background:rgba(200,168,110,.12)}
 .home-btn-primary:active{transform:scale(.98);box-shadow:var(--glow-gold)}
 .home-btn-row{display:flex;gap:8px}
 .home-btn-sec{flex:1;font-family:'Cinzel',serif;font-size:13px;font-weight:700;letter-spacing:1px;padding:12px 8px;border:1px solid rgba(200,169,110,.3);border-radius:6px;background:rgba(255,255,255,.03);color:var(--parchment);cursor:pointer;text-align:center;transition:all .2s}
@@ -2141,7 +2144,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <!-- Titre principal — grand -->
     <div style="font-family:'Cinzel',serif;font-size:32px;font-weight:700;color:rgba(232,213,163,.95);text-align:center;letter-spacing:6px;line-height:1.15;margin-bottom:6px;text-shadow:0 0 30px rgba(200,168,110,.25)">LA VOIE<br>DU GUERRIER</div>
     <!-- Tagline -->
-    <div style="font-family:'Noto Serif JP',serif;font-size:11px;color:rgba(200,168,110,.35);letter-spacing:4px;margin-bottom:6px;font-weight:300">jeu de strat&#233;gie tactique</div>
+    <div style="font-family:'Noto Serif JP',serif;font-size:11px;color:rgba(200,168,110,.35);letter-spacing:4px;margin-bottom:6px;font-weight:300">jeu de tactique</div>
     <!-- Idéogrammes décoratifs -->
     <div style="font-family:'Noto Serif JP',serif;font-size:15px;color:rgba(200,168,110,.2);letter-spacing:12px;margin-bottom:30px">&#23736;&#30340;&#36947;</div>
   </div>
@@ -2164,7 +2167,20 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
   <!-- Bouton COMMENCER -->
   <div style="width:100%;padding:0 24px 12px;position:relative;z-index:1">
-    <button class="home-btn-primary" style="width:100%;font-size:16px;padding:18px;margin:0;letter-spacing:5px" onclick="enterMainMenu()">COMMENCER</button>
+    <button class="home-btn-primary" style="width:100%;font-size:16px;padding:18px;margin:0;letter-spacing:5px" onclick="enterMainMenu()">SE RENDRE AU VILLAGE</button>
+  </div>
+
+  <!-- Combat rapide : lance directement un « Combat simple » (matchmaking en
+       ligne), sans passer par le village. quickPlay() gère la connexion requise. -->
+  <div style="width:100%;padding:0 24px 12px;position:relative;z-index:1">
+    <button class="home-btn-secondary" style="width:100%;font-size:14px;padding:14px;letter-spacing:2px" onclick="quickPlay()" data-i18n="home_quick_combat">&#9889; COMBAT RAPIDE</button>
+  </div>
+
+  <!-- Accès directs au jeu local (déplacés depuis le Dojo) : pendule et duel
+       sur le même appareil, disponibles sans passer par le village. -->
+  <div style="width:100%;padding:0 24px 12px;display:flex;gap:10px;position:relative;z-index:1">
+    <button class="home-btn-secondary" style="flex:1;font-size:13px;padding:12px 6px;letter-spacing:1px" onclick="openLocalMode('human','home')" data-i18n="home_two_players">&#23550; 2 joueurs</button>
+    <button class="home-btn-secondary" style="flex:1;font-size:13px;padding:12px 6px;letter-spacing:1px" onclick="_villageLocalOrigin='home';showScreen('clock')" data-i18n="home_clock">&#9201; Pendule</button>
   </div>
 
   <!-- Profil strip (grade) -->
@@ -2229,7 +2245,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.55.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.56.0 &#9820;</div>
   </div>
 </div>
 
@@ -3686,8 +3702,18 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.55.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.56.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.56.0 &mdash; 10 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; &Eacute;CRAN D&rsquo;ACCUEIL &mdash; ACC&Egrave;S DIRECTS</li>
+        <li>Nouveaux boutons sur l&rsquo;accueil&nbsp;: <strong>&#9889; Combat rapide</strong> (lance direct un Combat simple en ligne), <strong>&#23550; 2 joueurs</strong> et <strong>&#9201; Pendule</strong> (d&eacute;plac&eacute;s depuis le Dojo). Leur bouton &laquo;&nbsp;retour&nbsp;&raquo; ram&egrave;ne &agrave; l&rsquo;accueil.</li>
+        <li>Le bouton principal <strong>COMMENCER</strong> devient <strong>&laquo;&nbsp;Se rendre au village&nbsp;&raquo;</strong>. Sous-titre&nbsp;: &laquo;&nbsp;jeu de tactique&nbsp;&raquo;.</li>
+        <li>Dans le village, le <strong>chariot</strong> (en bas &agrave; gauche) est une sortie <strong>&laquo;&nbsp;Quitter le village&nbsp;&raquo;</strong> vers l&rsquo;accueil.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -7860,6 +7886,9 @@ const LANGS={
     menu_profile:'Profil & Succès',
     menu_devlog:'DevLog',
     nav_home:'↩ ACCUEIL',
+    home_two_players:'対 2 joueurs',
+    home_clock:'⏱ Pendule',
+    home_quick_combat:'⚡ COMBAT RAPIDE',
     settings_display_item:'Affichage',
     settings_sound:'Sons',
     settings_sound_volume:'Volume des sons',
@@ -8065,6 +8094,9 @@ const LANGS={
     menu_profile:'Profile & Achievements',
     menu_devlog:'DevLog',
     nav_home:'↩ HOME',
+    home_two_players:'対 2 players',
+    home_clock:'⏱ Clock',
+    home_quick_combat:'⚡ QUICK COMBAT',
     settings_display_item:'Display',
     settings_sound:'Sound',
     settings_sound_volume:'Sound volume',
@@ -8270,6 +8302,9 @@ const LANGS={
     menu_profile:'プロフィール＆実績',
     menu_devlog:'DevLog',
     nav_home:'↩ ホーム',
+    home_two_players:'対 2人対戦',
+    home_clock:'⏱ 時計',
+    home_quick_combat:'⚡ クイック対戦',
     settings_display_item:'表示',
     settings_sound:'サウンド',
     settings_sound_volume:'サウンド音量',
@@ -11600,8 +11635,6 @@ var VILLAGE_BUILDINGS = [
       {label:'Adversaires notables', ico:'★', fn:'openLocalMode', arg:'ai-notable'},
       {label:'Karakuri (entraînement)', ico:'傀', screen:'training-bot'},
       {label:'Shin-AI', ico:'🗨', screen:'shinai'},
-      {label:'2 joueurs (même appareil)', ico:'対', fn:'openLocalMode', arg:'human'},
-      {label:'Pendule', ico:'⏱', screen:'clock'},
       {label:'Règles', ico:'典', screen:'rules'} ] },
   { id:'arene', label:'Arène', cx:12, cy:76, w:20, h:26, online:true, items:[
       {label:'Modes de combat', ico:'⚔', screen:'play', online:true},
@@ -11612,7 +11645,11 @@ var VILLAGE_BUILDINGS = [
   { id:'marche', label:'Marché', cx:68, cy:65, w:20, h:22, online:true, items:[
       {label:'Boutique', ico:'🏪', screen:'shop', online:true} ] },
   { id:'port', label:'Port', cx:88, cy:76, w:15, h:22, items:[
-      {label:'Changer de village', ico:'⚓', soon:true} ] }
+      {label:'Changer de village', ico:'⚓', soon:true} ] },
+  // Chariot (décor en bas à gauche de la carte) = sortie du village vers
+  // l'écran d'accueil. Mono-item → clic direct, pas de panneau.
+  { id:'chariot', label:'Quitter le village', cx:6, cy:53, w:14, h:20, items:[
+      {label:'Quitter le village', ico:'🐴', fn:'quitVillageToHome'} ] }
 ];
 var _villageBuilt = false;
 function buildVillageMap(){
@@ -11711,6 +11748,13 @@ function villageBack(){
     showScreen(prev||'village');
   }
 }
+// Sortie du village par le chariot → écran d'accueil. On repart de zéro côté
+// panneau/historique pour que le prochain retour ne reboucle pas dans le village.
+function quitVillageToHome(){
+  _villagePanelBuilding = null; _villageReturnBuilding = null;
+  if(typeof closeVillagePanel==='function') closeVillagePanel();
+  showScreen('home');
+}
 function villageInterceptBack(e){
   if(!document.body.classList.contains('ui-village')) return;
   // On attrape TOUT bouton retour `.tuto-nav-btn`, où qu'il soit (certains
@@ -11728,6 +11772,11 @@ function villageInterceptBack(e){
   var active = document.querySelector('.screen.active');
   if(active && (active.id==='screen-village' || active.id==='screen-game')) return;
   e.preventDefault(); e.stopPropagation();
+  // Jeu local lancé depuis un raccourci de l'accueil → le RETOUR du menu ramène
+  // à l'accueil (le FAB ⛩ Village, lui, appelle villageBack() et va au village).
+  if(_villageLocalOrigin==='home' && active && active.id==='screen-local'){
+    _villageLocalOrigin=null; showScreen('home'); return;
+  }
   // Retour unifié : écran précédent réel, ou ré-ouverture du panneau du bâtiment
   // d'origine (le « menu précédent »), voir villageBack().
   villageBack();
@@ -11852,7 +11901,12 @@ function isDevAccount(){
 // à faire dedans. Le mode arrive déjà décidé, donc on masque le sélecteur
 // Adversaire — il ne reste plus qu'à choisir la cadence (et l'adversaire
 // IA le cas échéant).
-function openLocalMode(mode){
+// origin='home' quand on entre depuis les raccourcis de l'accueil (2 joueurs) :
+// le « retour » doit alors ramener à l'accueil, pas au village (voir villageBack).
+// null pour les entrées depuis le Dojo → retour au village comme d'habitude.
+var _villageLocalOrigin = null;
+function openLocalMode(mode, origin){
+  _villageLocalOrigin = origin || null;
   _protoBannerOn = false;   // une entrée locale normale n'active PAS le film d'avatars (protoPlay le rallume après)
   showScreen('local');
   selectLocalMode(mode);
@@ -12041,7 +12095,11 @@ function updateClockBtns(){[3,5,10].forEach(s=>{const b=document.getElementById(
 function resetClock(){startClock()}
 // Sortie de la pendule : retour au hub du jeu local (ou au village en thème
 // Village), jamais à l'écran Options ('menu').
-function quitClock(){if(clockState&&clockState.interval)clearInterval(clockState.interval);showScreen(document.body.classList.contains('ui-village')?'village':'local-hub')}
+function quitClock(){if(clockState&&clockState.interval)clearInterval(clockState.interval);
+  // Pendule lancée depuis un raccourci de l'accueil → retour à l'accueil (même
+  // logique que le jeu local, cf. _villageLocalOrigin).
+  if(_villageLocalOrigin==='home'){_villageLocalOrigin=null;return showScreen('home');}
+  showScreen(document.body.classList.contains('ui-village')?'village':'local-hub');}
 
 // Quitte une partie en ligne EN COURS (bouton "Quitter" du bandeau
 // #online-game-bar) — distinct de handleMenuClick(), qui ne s'utilise
