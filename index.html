@@ -265,7 +265,10 @@ body.ui-village.village-nofab #village-home-btn{display:none}
    bordure latérale pour un vrai bord-à-bord. Le bandeau de fin de partie
    (#endgame-ad-banner) n'est pas concerné. */
 #play-ad-banner{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw)}
-#play-ad-banner>div{border-radius:0!important;border-left:none!important;border-right:none!important;margin:0!important}
+/* Fond pleine largeur, mais CONTENU recentré dans la colonne centrale (~370px,
+   comme le panneau) via un padding latéral calculé — reste lisible et aligné
+   avec le reste de l'écran au lieu de coller au bord gauche. */
+#play-ad-banner>div{border-radius:0!important;border-left:none!important;border-right:none!important;margin:0!important;padding-left:max(14px,calc(50vw - 185px))!important;padding-right:max(14px,calc(50vw - 185px))!important}
 /* Accueil en thème Village : à la place du logo aléatoire (épéiste), on montre
    le HAUT de la carte du village — sommet du Fuji + soleil. Le soleil est la
    zone de clic (+ aura) du raccourci de lancement rapide. Crop = bande haute de
