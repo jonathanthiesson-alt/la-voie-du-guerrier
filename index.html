@@ -24180,12 +24180,15 @@ async function enterMainMenu(){
   }
 }
 // Clic sur le soleil de l'accueil (thème Village) : lance le raccourci d'accueil
-// s'il est configuré, sinon COMMENCER (entrée dans le village si connecté).
+// UNIQUEMENT s'il est paramétré. Sans raccourci configuré, le soleil ne fait
+// RIEN (surtout pas entrer dans le village — on n'y va qu'au COMMENCER) : on
+// affiche juste une aide pour indiquer où le régler.
 function villageHomeSunClick(){
-  if(typeof getHomeLogoAction==='function' && getHomeLogoAction()!=='none'){
+  var hasShortcut = (typeof getHomeLogoAction==='function' && getHomeLogoAction()!=='none');
+  if(hasShortcut){
     if(typeof onHomeLogoClick==='function') onHomeLogoClick();
-  } else if(typeof enterMainMenu==='function'){
-    enterMainMenu();
+  } else if(typeof showToast==='function'){
+    showToast('Aucun raccourci réglé — configure-le dans ⚙ Options → Logo d\'accueil.', false);
   }
 }
 
