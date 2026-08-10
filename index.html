@@ -15594,9 +15594,15 @@ function endGame(winner,reason){
                          !G.bfOnline && !_lastGameFromFriendChallenge);
   var vBtn=document.getElementById('endgame-village-btn');
   var ncBtn=document.getElementById('endgame-newcombat-btn');
-  if(menuBtn) menuBtn.style.display = isMatchmaking ? 'none' : '';
-  if(vBtn)  vBtn.style.display  = isMatchmaking ? '' : 'none';
-  if(ncBtn) ncBtn.style.display = isMatchmaking ? '' : 'none';
+  // ⚠️ DIAGNOSTIC TEMPORAIRE : on affiche TOUJOURS les deux nouveaux boutons
+  // (dans tous les modes de fin de partie) pour vérifier qu'ils arrivent bien
+  // jusqu'au téléphone. Si tu les vois → le déploiement/cache est OK et il ne
+  // restera qu'à remettre la condition ci-dessus. Si tu ne les vois pas → c'est
+  // une vieille version en cache. À RETIRER une fois le test fait.
+  var _DIAG_ALWAYS = true;
+  if(menuBtn) menuBtn.style.display = (isMatchmaking && !_DIAG_ALWAYS) ? 'none' : '';
+  if(vBtn)  vBtn.style.display  = (isMatchmaking || _DIAG_ALWAYS) ? '' : 'none';
+  if(ncBtn) ncBtn.style.display = (isMatchmaking || _DIAG_ALWAYS) ? '' : 'none';
   var overlayDelay=(G.captureCount>0)?4000:0;
   setTimeout(function(){
     document.getElementById('game-overlay').classList.add('active');
