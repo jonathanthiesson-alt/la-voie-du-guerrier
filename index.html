@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.56.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.57.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2245,7 +2245,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.56.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.57.0 &#9820;</div>
   </div>
 </div>
 
@@ -3301,6 +3301,11 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
         <button class="btn btn-small" onclick="handleRematchClick()" id="rematch-btn"><span id="rematch-indicator" class="rematch-dot"></span>Revanche<span id="rematch-timer-label" class="rematch-timer-label"></span></button>
         <button class="btn btn-small" onclick="handleAnalyseClick()" style="font-size:11px">&#128269; Analyse</button>
         <button class="btn btn-small btn-danger" onclick="handleMenuClick()" id="endgame-menu-btn">&#8962; Menu</button>
+        <!-- Combat rapide (matchmaking) : on remplace « Menu » par un retour
+             direct au village + une relance immédiate. Cachés par défaut,
+             révélés par la config de l'overlay quand _lastGameFromMatchmaking. -->
+        <button class="btn btn-small" onclick="endgameNewCombat()" id="endgame-newcombat-btn" style="display:none">&#9889; Nouveau combat</button>
+        <button class="btn btn-small btn-danger" onclick="endgameToVillage()" id="endgame-village-btn" style="display:none">&#9773; Village</button>
       </div>
       <button class="btn btn-small" onclick="shareGameResult()" style="font-size:11px;margin-top:6px;width:100%">&#128228; <span data-i18n="share_result">Partager le résultat</span></button>
       <!-- Emplacement publicitaire (bandeau) — même contenu que celui de
@@ -3702,8 +3707,16 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.56.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.57.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.57.0 &mdash; 10 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; FIN DE COMBAT RAPIDE</li>
+        <li>Sur l&rsquo;&eacute;cran de victoire d&rsquo;un <strong>combat rapide</strong>, le bouton &laquo;&nbsp;Menu&nbsp;&raquo; c&egrave;de la place &agrave; <strong>&#9889; Nouveau combat</strong> (relance direct une recherche) et <strong>&#9773; Village</strong> (retour au village). Les autres modes gardent leur bouton Menu.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -15569,6 +15582,15 @@ function endGame(winner,reason){
   if(rmBtn) rmBtn.style.display = isTournamentGame ? 'none' : '';
   var menuBtn=document.getElementById('endgame-menu-btn');
   if(menuBtn) menuBtn.innerHTML = isTournamentGame ? '&#8962; Retour au tournoi' : '&#8962; Menu';
+  // Combat rapide (matchmaking) : « Menu » cédé la place à « Village » (retour
+  // direct) + « Nouveau combat » (relance quickPlay). Les autres modes gardent
+  // le bouton Menu standard.
+  var isMatchmaking = (_lastGameFromMatchmaking && currentUser);
+  var vBtn=document.getElementById('endgame-village-btn');
+  var ncBtn=document.getElementById('endgame-newcombat-btn');
+  if(menuBtn) menuBtn.style.display = isMatchmaking ? 'none' : '';
+  if(vBtn)  vBtn.style.display  = isMatchmaking ? '' : 'none';
+  if(ncBtn) ncBtn.style.display = isMatchmaking ? '' : 'none';
   var overlayDelay=(G.captureCount>0)?4000:0;
   setTimeout(function(){
     document.getElementById('game-overlay').classList.add('active');
@@ -23901,6 +23923,21 @@ async function handleMenuClick(){
   }
 }
 
+// Combat rapide — fin de partie : retour direct au village (remplace « Menu »).
+async function endgameToVillage(){
+  await signalRematchLeave();
+  _lastGameFromMatchmaking = false;
+  var go=document.getElementById('game-overlay'); if(go) go.classList.remove('active');
+  showScreen('village');
+}
+// Combat rapide — fin de partie : relance immédiatement une recherche (quickPlay
+// ré-arme _lastGameFromMatchmaking à l'entrée en partie).
+async function endgameNewCombat(){
+  await signalRematchLeave();
+  _lastGameFromMatchmaking = false;
+  var go=document.getElementById('game-overlay'); if(go) go.classList.remove('active');
+  quickPlay();
+}
 function initSupabase(){
   if(typeof window.supabase === 'undefined'){
     console.error('Bibliothèque Supabase non chargée.');
