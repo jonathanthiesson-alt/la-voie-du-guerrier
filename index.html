@@ -3725,8 +3725,21 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.58.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.59.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.59.0 &mdash; 10 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; VILLAGE = INTERFACE UNIQUE</li>
+        <li>Le <strong>Village</strong> devient le seul th&egrave;me joueur : Sumi / Classique / Wurmz passent en <strong>outils DEV</strong> (masqu&eacute;s pour les joueurs).</li>
+        <li>&laquo;&nbsp;Le saviez-vous&nbsp;&raquo; devient &laquo;&nbsp;<strong>Le saviez-tu&nbsp;?</strong>&nbsp;&raquo; et migre sur un bouton <strong>&laquo;&nbsp;?&nbsp;&raquo;</strong> flottant en bas &agrave; gauche de la carte.</li>
+        <li>Nouveau raccourci <strong>Sumo</strong> d&eacute;tour&eacute; &agrave; c&ocirc;t&eacute;, avec le <strong>temps restant</strong> de l'&eacute;v&eacute;nement affich&eacute; au-dessus.</li>
+        <li>L'<strong>Arm&eacute;e de bots</strong> est accessible via le <strong>Soleil</strong> du village.</li>
+        <li>Les <strong>notifications</strong> adoptent un <strong>code couleur</strong> par cat&eacute;gorie (syst&egrave;me, qu&ecirc;tes, social, jeu).</li>
+        <li style="list-style:none;margin-left:-14px;color:rgba(160,80,240,.5);font-family:'VT323',monospace;font-size:11px;padding-top:4px">&#128296; Le devlog s'ouvre automatiquement &agrave; l'arriv&eacute;e au village pour les devs quand il y a du nouveau.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -11599,7 +11612,7 @@ function showScreen(id){
   // Thème Village : construire la carte à la première visite, rafraîchir le
   // grisage online/dev à chaque visite, et masquer le bouton flottant «⛩
   // Village» quand on EST sur la carte (via la classe village-map-open).
-  if(id==='village'){ if(typeof buildVillageMap==='function') buildVillageMap(); if(typeof villageRefreshLocks==='function') villageRefreshLocks(); if(typeof villageRefreshBanner==='function') villageRefreshBanner(); if(typeof villageRefreshBadges==='function') villageRefreshBadges(); if(typeof villageUpdateSumoTimer==='function') villageUpdateSumoTimer(); if(typeof villageMaybeGuildInfoPopup==='function') villageMaybeGuildInfoPopup(); }
+  if(id==='village'){ if(typeof buildVillageMap==='function') buildVillageMap(); if(typeof villageRefreshLocks==='function') villageRefreshLocks(); if(typeof villageRefreshBanner==='function') villageRefreshBanner(); if(typeof villageRefreshBadges==='function') villageRefreshBadges(); if(typeof villageUpdateSumoTimer==='function') villageUpdateSumoTimer(); if(typeof villageMaybeGuildInfoPopup==='function') villageMaybeGuildInfoPopup(); if(typeof villageMaybeShowDevlog==='function') villageMaybeShowDevlog(); }
   document.body.classList.toggle('village-map-open', id==='village');
   // On masque le retour ⛩ Village : en plein-jeu (partie/pile-ou-face) pour ne
   // pas polluer le plateau, ET sur l'accueil / l'écran de connexion — car le
@@ -11675,8 +11688,11 @@ function showScreen(id){
 // ══════════════════════════════════════════════════════════════════════
 var VILLAGE_BUILDINGS = [
   { id:'chateau', label:'Château', cx:13, cy:20, w:24, h:32, online:true, items:[
-      {label:'Défis du jour', ico:'🎯', fn:'startDailyChallenge'},
-      {label:'Quêtes du jour', ico:'📜', screen:'play', online:true},
+      // Campagne : en chantier (popup « bientôt »). Défi du jour a migré au Dojo.
+      {label:'Campagne', ico:'📜', soon:true},
+      // Tuto : l'écran Règles héberge les règles ET le lien « La Voie du Bousier ».
+      {label:'Tuto (règles & Voie du Bousier)', ico:'典', screen:'rules'},
+      {label:'Quêtes du jour', ico:'🗒', soon:true},
       {label:'Événements & saisons', ico:'🎏', screen:'events', online:true} ] },
   { id:'soleil', label:'', cx:50, cy:16, w:9, h:16, dev:true, items:[
       {label:'Menu DEV', ico:'🛠', screen:'dev-hub', dev:true},
@@ -11707,13 +11723,14 @@ var VILLAGE_BUILDINGS = [
       {label:'Série de connexion', ico:'🔥', screen:'play', online:true},
       {label:'Journal d’activité', ico:'📜', screen:'play', online:true} ] },
   { id:'dojo', label:'Dojo', cx:73, cy:41, w:20, h:24, online:true, items:[
-      {label:'Campagne', ico:'📜', screen:'campaigns'},
-      {label:'IA', ico:'🤖', fn:'openLocalMode', arg:'ai'},
-      {label:'Maîtres IA', ico:'⚔', screen:'opponents'},
+      // Défi du jour rapatrié depuis le Château. « IA » retiré ; « Maîtres IA »
+      // renommé « Adversaires ». Shin-AI retiré (déjà dans Adversaires notables) ;
+      // Règles déplacé dans le Tuto (Château). Karakuri regroupé avec les
+      // adversaires notables.
+      {label:'Défi du jour', ico:'🎯', fn:'startDailyChallenge'},
+      {label:'Adversaires', ico:'⚔', screen:'opponents'},
       {label:'Adversaires notables', ico:'★', fn:'openLocalMode', arg:'ai-notable'},
-      {label:'Karakuri (entraînement)', ico:'傀', screen:'training-bot'},
-      {label:'Shin-AI', ico:'🗨', screen:'shinai'},
-      {label:'Règles', ico:'典', screen:'rules'} ] },
+      {label:'Karakuri (entraînement)', ico:'傀', screen:'training-bot'} ] },
   { id:'arene', label:'Arène', cx:12, cy:76, w:20, h:26, online:true, items:[
       {label:'Modes de combat', ico:'⚔', screen:'play', online:true},
       {label:'Joueurs en ligne', ico:'🟢', screen:'online-menu', online:true},
@@ -11745,6 +11762,20 @@ function villageUpdateSumoTimer(){
   var hours = Math.floor((ms%86400000)/3600000);
   // > 24 h : on n'affiche que les jours (J-N) ; dernier jour : Hh restantes.
   el.textContent = days >= 1 ? ('J-'+days) : (hours+'h');
+}
+// Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
+// c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
+var DEVLOG_LATEST = 'V0.59.0';
+// À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
+// dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
+// les changements sans y penser). Marque la version comme vue pour ne pas répéter.
+function villageMaybeShowDevlog(){
+  if(!(typeof isDevUser==='function' && isDevUser())) return;
+  var seen; try{ seen = localStorage.getItem('vtl_devlog_seen'); }catch(e){ seen = null; }
+  if(seen === DEVLOG_LATEST) return;
+  try{ localStorage.setItem('vtl_devlog_seen', DEVLOG_LATEST); }catch(e){}
+  // Différé pour ne pas ré-entrer dans showScreen pendant l'ouverture du village.
+  setTimeout(function(){ if(typeof showScreen==='function') showScreen('devlog'); }, 60);
 }
 var _villageBuilt = false;
 function buildVillageMap(){
