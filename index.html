@@ -15585,7 +15585,13 @@ function endGame(winner,reason){
   // Combat rapide (matchmaking) : « Menu » cédé la place à « Village » (retour
   // direct) + « Nouveau combat » (relance quickPlay). Les autres modes gardent
   // le bouton Menu standard.
-  var isMatchmaking = (_lastGameFromMatchmaking && currentUser);
+  // Détection ROBUSTE via l'état de partie (fiable au moment de endGame) plutôt
+  // que le seul flag _lastGameFromMatchmaking, qui est posé APRÈS enterOnlineGame
+  // et peut manquer selon le timing. Un combat rapide = partie en ligne, hors
+  // arène (déjà sortie plus haut), hors tournoi, hors champ de bataille, et hors
+  // défi entre amis (celui-ci garde son Menu → retour à la liste des joueurs).
+  var isMatchmaking = !!(currentUser && isOnlineGame && !isTournamentGame &&
+                         !G.bfOnline && !_lastGameFromFriendChallenge);
   var vBtn=document.getElementById('endgame-village-btn');
   var ncBtn=document.getElementById('endgame-newcombat-btn');
   if(menuBtn) menuBtn.style.display = isMatchmaking ? 'none' : '';
