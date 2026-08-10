@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rive — test des skins par défaut (Blanc / Noir)</title>
+<!--
+  Harnais de test DÉDIÉ aux 2 skins par défaut (cf. docs/RIVE_DEFAULT_SKINS_SPEC.md).
+  Reproduit la logique du jeu : chaque joueur voit SON combattant → on choisit
+  l'artboard par couleur (combattant_blanc / combattant_noir) sur un MÊME .riv,
+  et on pilote la state machine 'combat' (mêmes inputs des 2 côtés).
+  Page de DEV : runtime Rive depuis le CDN (open source), séparée d'index.html.
+-->
+<style>
+  :root{ --bg:#12151c; --panel:#1b2030; --panel2:#232a3d; --ink:#e8ecf5; --muted:#96a0b5; --line:#333c53; --red:#e5432f; --blue:#3f7be6; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,Segoe UI,sans-serif}
+  header{padding:14px 18px;border-bottom:1px solid var(--line);background:#0e1119}
+  h1{margin:0;font-size:16px}
+  .sub{color:var(--muted);font-size:12px;margin-top:2px}
+  main{display:grid;grid-template-columns:300px 1fr;min-height:calc(100dvh - 56px)}
+  .side{border-right:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:14px}
+  .stage{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:20px}
+  /* Cadre au format du bandeau de combat (large et court). */
+  .banner{width:100%;max-width:720px;aspect-ratio:720/260;background:#0c0e12;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  canvas{width:100%;height:100%;display:block}
+  label{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}
+  button,input[type=file]{width:100%;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px;cursor:pointer;font-size:13px}
+  .side-toggle{display:flex;gap:8px}
+  .side-toggle button{font-weight:600}
+  .side-toggle button.on[data-side=white]{background:#e6e0d1;color:#1a1206;border-color:#e6e0d1}
+  .side-toggle button.on[data-side=black]{background:#363b45;color:#e8ecf5;border-color:#5e646f}
+  .inputs{display:flex;flex-direction:column;gap:6px}
+  .status{font-size:12px;white-space:pre-wrap;background:#0c0e12;border:1px solid var(--line);border-radius:6px;padding:10px;color:var(--muted);min-height:80px}
+  .ok{color:#5ad19a}.err{color:#ff6b6b}
+  .hint{font-size:11px;color:var(--muted)}
+  h2{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:6px 0 2px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Rive — skins par défaut <span style="color:var(--red)">Blanc</span> / <span style="color:var(--blue)">Noir</span></h1>
+  <div class="sub">Un seul <code>default-skins.riv</code>, deux artboards <code>combattant_blanc</code> / <code>combattant_noir</code>, state machine <code>combat</code>.</div>
+</header>
+<main>
+  <div class="side">
+    <div>
+      <label>1. Charger le fichier</label>
+      <input type="file" id="file" accept=".riv">
+      <button id="loadDefault" style="margin-top:6px">Charger ./default-skins.riv</button>
+    </div>
+
+    <div>
+      <label>2. Camp affiché (POV du joueur)</label>
+      <div class="side-toggle">
+        <button id="btnWhite" data-side="white" class="on">Blanc</button>
+        <button id="btnBlack" data-side="black">Noir</button>
+      </div>
+      <div class="hint" style="margin-top:4px">Choisit l'artboard, comme le jeu choisit le combattant du joueur.</div>
+    </div>
+
+    <div>
+      <h2>États rapides</h2>
+      <div class="inputs">
+        <button data-quick="idle">Idle</button>
+        <button data-quick="reflexion">Réflexion (yeux)</button>
+        <button data-quick="strike">Frappe</button>
+        <button data-quick="salut">Salut (si présent)</button>
+      </div>
+    </div>
+
+    <div>
+      <h2>Inputs de la state machine</h2>
+      <div class="inputs" id="smInputs"><span class="hint">— charge un fichier —</span></div>
+    </div>
+
+    <div>
+      <label>Journal</label>
+      <div id="status" class="status">En attente d'un fichier…</div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="banner"><canvas id="cv" width="720" height="260"></canvas></div>
+    <div class="hint">Format du bandeau de combat. Le combattant doit tenir dans ce cadre large.</div>
+  </div>
+</main>
+
+<script src="https://unpkg.com/@rive-app/canvas@2/rive.js"></script>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const st=$('status');
+  const SM='combat';
+  const ARTBOARD={white:'combattant_blanc', black:'combattant_noir'};
+  let buffer=null, side='white', riveInstance=null, availableArtboards=[];
+
+  function log(m,c){ st.textContent=m; st.className='status'+(c?' '+c:''); }
+  function add(m){ st.textContent+='\n'+m; }
+
+  if(typeof rive==='undefined'){ log('❌ Runtime Rive non chargé (réseau ?). Cette page de test a besoin du CDN unpkg.','err'); return; }
+
+  function inspect(buf){
+    buffer=buf;
+    // 1re instance pour lire les artboards disponibles, puis on monte le bon camp.
+    if(riveInstance){ try{riveInstance.cleanup();}catch(e){} riveInstance=null; }
+    log('Fichier lu ('+buf.byteLength+' o). Analyse…');
+    const probe=new rive.Rive({ buffer:buf, canvas:$('cv'), autoplay:false,
+      onLoad:()=>{
+        availableArtboards = probe.contents ? probe.contents.artboards.map(a=>a.name) : [];
+        try{probe.cleanup();}catch(e){}
+        add('Artboards : '+(availableArtboards.join(', ')||'aucun'));
+        add((availableArtboards.includes(ARTBOARD.white)?'✓':'✗')+" 'combattant_blanc'");
+        add((availableArtboards.includes(ARTBOARD.black)?'✓':'✗')+" 'combattant_noir'");
+        mount();
+      },
+      onLoadError:e=>log('❌ Chargement : '+(e&&e.message||e),'err')
+    });
+  }
+
+  // Monte l'artboard du camp courant + la state machine 'combat'.
+  function mount(){
+    if(!buffer) return;
+    if(riveInstance){ try{riveInstance.cleanup();}catch(e){} }
+    const ab=ARTBOARD[side];
+    const useAb = availableArtboards.includes(ab) ? ab : (availableArtboards[0]||undefined);
+    riveInstance=new rive.Rive({
+      buffer:buffer, canvas:$('cv'), autoplay:true,
+      artboard:useAb, stateMachines:SM, fit:rive.Fit.contain, alignment:rive.Alignment.center,
+      onLoad:()=>{
+        riveInstance.resizeDrawingSurfaceToCanvas();
+        log('▶ Camp '+(side==='white'?'Blanc':'Noir')+' · artboard '+useAb+' · SM '+SM, 'ok');
+        buildInputs();
+      },
+      onLoadError:e=>log('❌ '+(e&&e.message||e),'err')
+    });
+  }
+
+  // Liste les inputs de la SM en boutons (dont le trigger 'impact').
+  function buildInputs(){
+    const box=$('smInputs'); box.innerHTML='';
+    let inputs=[];
+    try{ inputs=riveInstance.stateMachineInputs(SM)||[]; }catch(e){}
+    if(!inputs.length){ box.innerHTML='<span class="hint">state machine \''+SM+'\' introuvable ou sans input</span>'; return; }
+    inputs.forEach(inp=>{
+      const b=document.createElement('button');
+      const kind=inp.type===56?'trigger':(inp.type===59?'bool':'number');
+      b.textContent='⚡ '+inp.name+' ('+kind+')';
+      b.onclick=()=>fire(inp);
+      box.appendChild(b);
+    });
+  }
+  function fire(inp){
+    try{
+      if(inp.type===56) inp.fire();
+      else if(inp.type===59) inp.value=!inp.value;
+      add('→ '+inp.name);
+    }catch(e){ add('⚠ '+e.message); }
+  }
+
+  // Boutons "états rapides" : cherchent un input dont le nom contient le mot-clé,
+  // sinon jouent l'anim du même nom hors state machine (repli).
+  function quick(word){
+    if(!riveInstance){ log('Charge d’abord un fichier.','err'); return; }
+    let inputs=[]; try{ inputs=riveInstance.stateMachineInputs(SM)||[]; }catch(e){}
+    const hit=inputs.find(i=>i.name.toLowerCase().includes(word));
+    if(hit){ fire(hit); return; }
+    add("(pas d'input « "+word+" » ; nomme un input toReflexion/toStrike…)");
+  }
+
+  $('file').addEventListener('change',e=>{
+    const f=e.target.files[0]; if(!f) return;
+    const r=new FileReader(); r.onload=()=>inspect(r.result); r.onerror=()=>log('❌ Lecture impossible.','err');
+    r.readAsArrayBuffer(f);
+  });
+  $('loadDefault').addEventListener('click',()=>{
+    log('Téléchargement de ./default-skins.riv…');
+    fetch('default-skins.riv').then(res=>{ if(!res.ok) throw new Error('HTTP '+res.status+' (fichier pas encore déposé ?)'); return res.arrayBuffer(); })
+      .then(inspect).catch(e=>log('❌ '+e.message,'err'));
+  });
+  function setSide(s){ side=s;
+    $('btnWhite').classList.toggle('on',s==='white');
+    $('btnBlack').classList.toggle('on',s==='black');
+    mount();
+  }
+  $('btnWhite').addEventListener('click',()=>setSide('white'));
+  $('btnBlack').addEventListener('click',()=>setSide('black'));
+  document.querySelectorAll('[data-quick]').forEach(b=>b.addEventListener('click',()=>quick(b.dataset.quick)));
+})();
+</script>
+</body>
+</html>

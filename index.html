@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.58.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.59.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -245,6 +245,20 @@ body.ui-village #bottom-nav{display:none!important}
 body.ui-village #village-home-btn{display:block}
 body.ui-village.village-map-open #village-home-btn{display:none}
 body.ui-village.village-nofab #village-home-btn{display:none}
+/* Outils flottants bas-gauche de la carte (détourés = fond transparent pour
+   laisser voir le village), au tout premier plan cliquable (z > .village-zone).
+   Enfants de #screen-village → auto-masqués hors carte. */
+#village-corner-tools{position:absolute;left:calc(10px + env(safe-area-inset-left,0px));bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:900;display:flex;align-items:flex-end;gap:10px;pointer-events:none}
+#village-corner-tools>*{pointer-events:auto}
+#village-sumo-tool{display:flex;flex-direction:column;align-items:center;gap:3px}
+#village-sumo-timer{font-family:'VT323',monospace;font-size:11px;line-height:1;color:#ff9dbf;text-shadow:0 1px 3px rgba(0,0,0,.9);white-space:nowrap}
+#village-sumo-btn,#village-dyk-btn{width:44px;height:44px;border-radius:50%;background:transparent;border:none;cursor:pointer;padding:0;font-size:24px;line-height:1;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 4px rgba(0,0,0,.85));-webkit-tap-highlight-color:transparent;transition:transform .12s}
+#village-dyk-btn{font-family:'Cinzel',serif;font-weight:700;color:var(--gold-bright);font-size:26px}
+#village-sumo-btn:active,#village-dyk-btn:active{transform:scale(.9)}
+#village-sumo-btn::before,#village-dyk-btn::before{content:'';position:absolute;inset:-4px;border-radius:50%;background:radial-gradient(circle,rgba(0,0,0,.35),rgba(0,0,0,0) 72%);z-index:-1;pointer-events:none}
+#village-sumo-btn{position:relative}#village-dyk-btn{position:relative}
+/* Sumo terminé : on masque le raccourci et son timer. */
+#village-corner-tools.sumo-over #village-sumo-tool{display:none}
 /* Accueil en thème Village : à la place du logo aléatoire (épéiste), on montre
    le HAUT de la carte du village — sommet du Fuji + soleil. Le soleil est la
    zone de clic (+ aura) du raccourci de lancement rapide. Crop = bande haute de
@@ -2309,9 +2323,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
     <!-- Bandeau Sumo remonté ici (au-dessus du Défi du jour, comme convenu) -->
     <div id="play-ad-banner" style="margin-bottom:10px"></div>
-    <!-- « Le saviez-vous ? » — juste sous le bandeau Sumo. Clic → popup ; à la
-         fermeture on tire une NOUVELLE astuce. Contenu 100 % local. -->
-    <div id="did-you-know-banner" style="margin-bottom:10px"></div>
+    <!-- « Le saviez-tu ? » déplacé sur le bouton « ? » flottant de la carte du
+         village (renderDidYouKnowBanner no-op si l'élément est absent). -->
 
     <!-- Zone "En ce moment" -->
     <div style="font-family:'VT323',monospace;font-size:11px;color:var(--gold);opacity:.6;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">⚡ En ce moment</div>
@@ -7816,7 +7829,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.58.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.59.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8034,7 +8047,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.58.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.59.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -8243,7 +8256,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.58.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.59.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -11586,7 +11599,7 @@ function showScreen(id){
   // Thème Village : construire la carte à la première visite, rafraîchir le
   // grisage online/dev à chaque visite, et masquer le bouton flottant «⛩
   // Village» quand on EST sur la carte (via la classe village-map-open).
-  if(id==='village'){ if(typeof buildVillageMap==='function') buildVillageMap(); if(typeof villageRefreshLocks==='function') villageRefreshLocks(); if(typeof villageRefreshBanner==='function') villageRefreshBanner(); if(typeof villageRefreshBadges==='function') villageRefreshBadges(); if(typeof villageMaybeGuildInfoPopup==='function') villageMaybeGuildInfoPopup(); }
+  if(id==='village'){ if(typeof buildVillageMap==='function') buildVillageMap(); if(typeof villageRefreshLocks==='function') villageRefreshLocks(); if(typeof villageRefreshBanner==='function') villageRefreshBanner(); if(typeof villageRefreshBadges==='function') villageRefreshBadges(); if(typeof villageUpdateSumoTimer==='function') villageUpdateSumoTimer(); if(typeof villageMaybeGuildInfoPopup==='function') villageMaybeGuildInfoPopup(); }
   document.body.classList.toggle('village-map-open', id==='village');
   // On masque le retour ⛩ Village : en plein-jeu (partie/pile-ou-face) pour ne
   // pas polluer le plateau, ET sur l'accueil / l'écran de connexion — car le
@@ -11666,7 +11679,8 @@ var VILLAGE_BUILDINGS = [
       {label:'Quêtes du jour', ico:'📜', screen:'play', online:true},
       {label:'Événements & saisons', ico:'🎏', screen:'events', online:true} ] },
   { id:'soleil', label:'', cx:50, cy:16, w:9, h:16, dev:true, items:[
-      {label:'Menu DEV', ico:'🛠', screen:'dev-hub', dev:true} ] },
+      {label:'Menu DEV', ico:'🛠', screen:'dev-hub', dev:true},
+      {label:'Armée de bots', ico:'🤖', screen:'dev-bots', dev:true} ] },
   { id:'maison', label:'Maison', cx:26, cy:50, w:20, h:28, items:[
       {label:'Profil', ico:'侍', screen:'profile'},
       {label:'Options & paramètres', ico:'⚙', screen:'menu'},
@@ -11683,8 +11697,7 @@ var VILLAGE_BUILDINGS = [
       {label:'Messagerie', ico:'✉', screen:'messaging', online:true},
       {label:'Forums', ico:'💬', soon:true},
       {label:'News', ico:'📰', soon:true},
-      {label:'DevLog (mises à jour)', ico:'📓', screen:'devlog'},
-      {label:'Le saviez-vous ?', ico:'💡', fn:'openDidYouKnowPopup'} ] },
+      {label:'DevLog (mises à jour)', ico:'📓', screen:'devlog'} ] },
   { id:'archives', label:'Archives', cx:55, cy:47, w:13, h:20, items:[
       {label:'Statistiques', ico:'📊', screen:'profile-stats'},
       {label:'Records', ico:'🏅', screen:'profile-records'},
@@ -11716,6 +11729,23 @@ var VILLAGE_BUILDINGS = [
   { id:'chariot', label:'Quitter le village', cx:6, cy:53, w:14, h:20, items:[
       {label:'Quitter le village', ico:'🐴', fn:'quitVillageToHome'} ] }
 ];
+// Fin de l'événement Sumo : 31 août 2026 (cf. bannière pub « jusqu'au 31 août »).
+// Source unique du compte à rebours affiché sur le bouton Sumo de la carte.
+var SUMO_EVENT_END = Date.UTC(2026, 7, 31, 23, 59, 59);
+// Met à jour le petit timer au-dessus du bouton Sumo (temps restant), et masque
+// le raccourci quand l'événement est terminé. Appelé à l'ouverture de la carte.
+function villageUpdateSumoTimer(){
+  var tools = document.getElementById('village-corner-tools');
+  var el = document.getElementById('village-sumo-timer');
+  if(!tools || !el) return;
+  var ms = SUMO_EVENT_END - Date.now();
+  if(ms <= 0){ tools.classList.add('sumo-over'); return; }
+  tools.classList.remove('sumo-over');
+  var days = Math.floor(ms/86400000);
+  var hours = Math.floor((ms%86400000)/3600000);
+  // > 24 h : on n'affiche que les jours (J-N) ; dernier jour : Hh restantes.
+  el.textContent = days >= 1 ? ('J-'+days) : (hours+'h');
+}
 var _villageBuilt = false;
 function buildVillageMap(){
   if(_villageBuilt) return;
@@ -12040,6 +12070,13 @@ function currentUiTheme(){
   return 'classic';
 }
 function setUiTheme(v){
+  // Village = SEUL thème joueur. Sumi/Classique/Wurmz sont désormais réservés
+  // aux devs (outils de test de rendu) : un non-dev qui tente un autre thème
+  // est ramené au Village. Garde-fou défensif (les boutons sont aussi masqués
+  // par updateUiThemeButtons).
+  if(v!=='village' && !(typeof isDevUser==='function' && isDevUser())){
+    v='village';
+  }
   // Le thème Wurmz est une récompense : il faut avoir attrapé le bousier
   // de l'accueil (1 chance sur 200, connecté) pour y avoir droit.
   if(v==='wurmz' && !isWurmzThemeUnlocked()){
@@ -12072,6 +12109,8 @@ function setUiTheme(v){
 // Bascule cyclique pour le bouton unique de l'accueil : Classique → Sumi
 // → Wurmz → Classique. Un toast nomme le thème atteint (découvrabilité).
 function cycleUiTheme(){
+  // Hors dev : plus de cycle, le Village est le seul thème joueur.
+  if(!(typeof isDevUser==='function' && isDevUser())){ setUiTheme('village'); return; }
   // Wurmz sauté tant qu'il n'est pas débloqué (le bouton de l'accueil ne
   // doit jamais afficher le toast « verrouillé » : il cycle, c'est tout).
   var order = UI_THEMES.filter(function(t){ return t!=='wurmz' || isWurmzThemeUnlocked(); });
@@ -12086,7 +12125,12 @@ function updateUiThemeButtons(){
   // jour par classe pour que les deux restent synchronisés.
   var cur = currentUiTheme();
   var wurmzOk = isWurmzThemeUnlocked();
+  var dev = (typeof isDevUser==='function' && isDevUser());
   document.querySelectorAll('.uitheme-btn').forEach(function(b){
+    // Hors dev : seul le bouton Village est visible (les autres thèmes sont
+    // des outils de test réservés aux devs).
+    if(b.dataset.theme!=='village' && !dev){ b.style.display='none'; return; }
+    b.style.display='';
     b.classList.toggle('selected', b.dataset.theme===cur);
     // Wurmz verrouillé : cadenas + grisé (le clic affiche le toast
     // d'explication via setUiTheme, on ne cache pas le bouton — savoir
@@ -12996,6 +13040,18 @@ async function refreshMessagingBadge(){
     else{ badge.style.display='none'; }
   }catch(e){ badge.style.display='none'; }
 }
+// Code couleur des notifications par CATÉGORIE (barre latérale gauche) :
+//  • système / tuto (devlog, nouveau cosmétique débloqué : skins, avatars,
+//    plateaux…) → bleu ;
+//  • quêtes journalières → vert (branché quand les quêtes sortiront du chantier) ;
+//  • social (messages, demandes d'ami) → rose ;
+//  • jeu (défis, parties de tournoi, ligue, revanche) → or.
+function notifCatColor(type){
+  if(type==='devlog' || type==='system' || type==='cosmetic' || type==='tuto') return '#6db3f2';
+  if(type==='quest' || type==='daily_quest') return '#7fd18a';
+  if(type==='message' || type==='friend_request') return '#e88ac0';
+  return '#d4a017'; // challenge / tournament_game / league / rematch / défaut
+}
 async function openNotificationsModal(){
   var modal = document.getElementById('notifications-modal');
   var list = document.getElementById('notifications-list');
@@ -13012,10 +13068,11 @@ async function openNotificationsModal(){
       list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--parchment);opacity:.5;font-family:VT323,monospace">'+t('notif_empty')+'</div>';
     } else {
       list.innerHTML = data.map(function(n){
-        var icon = n.type==='challenge' ? '&#9876;' : n.type==='message' ? '&#128172;' : n.type==='friend_request' ? '&#128101;' : n.type==='rematch' ? '&#128260;' : n.type==='league' ? '&#127942;' : '&#128276;';
+        var icon = n.type==='challenge' ? '&#9876;' : n.type==='message' ? '&#128172;' : n.type==='friend_request' ? '&#128101;' : n.type==='rematch' ? '&#128260;' : n.type==='league' ? '&#127942;' : n.type==='devlog'||n.type==='cosmetic'||n.type==='system'||n.type==='tuto' ? '&#128220;' : n.type==='quest'||n.type==='daily_quest' ? '&#128221;' : '&#128276;';
+        var catColor = notifCatColor(n.type);
         var clickable = (n.type==='message' || n.type==='friend_request' || n.type==='challenge');
         var onclickAttr = clickable ? ' onclick="handleNotificationClick(\''+n.type+'\',\''+String(n.ref_id||'').replace(/'/g,"\\'")+'\',\''+String(n.title||'').replace(/'/g,"\\'")+'\')"' : '';
-        return '<div class="'+(clickable?'notif-row-clickable':'')+'"'+onclickAttr+' style="display:flex;gap:10px;padding:10px;border-bottom:1px solid rgba(200,168,110,.12)'+(n.read?'':';background:rgba(212,160,23,.08)')+'">'
+        return '<div class="'+(clickable?'notif-row-clickable':'')+'"'+onclickAttr+' style="display:flex;gap:10px;padding:10px;border-left:3px solid '+catColor+';border-bottom:1px solid rgba(200,168,110,.12)'+(n.read?'':';background:rgba(212,160,23,.08)')+'">'
           + '<span style="font-size:18px">'+icon+'</span>'
           + '<div><div style="font-family:Cinzel,serif;font-size:12px;color:var(--gold-bright)">'+escapeHtml(n.title||'')+'</div>'
           + '<div style="font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.8">'+escapeHtml(n.body||'')+'</div></div>'
@@ -24171,6 +24228,11 @@ async function onlineLoadSession(jumpToMenu){
   applyShopStateFromProfile(profile);
   _isAdmin = !!profile.is_admin;
   if(typeof updateDevButtonVisibility==='function') updateDevButtonVisibility();
+  // Le statut dev est désormais connu : (re)masquer les thèmes non-village pour
+  // les joueurs, et rapatrier au Village un non-dev dont le cache pointait
+  // encore sur un thème dev (sumi/wurmz appliqué au boot avant login).
+  if(typeof updateUiThemeButtons==='function') updateUiThemeButtons();
+  if(!_isAdmin && currentUiTheme()!=='village' && typeof setUiTheme==='function') setUiTheme('village');
   _myPseudo = profile.pseudo || '';
   // Restaure l'état du WurmzSkin depuis le cloud (persiste entre appareils).
   if(profile.wurmz_skin !== undefined && profile.wurmz_skin !== null){
@@ -26683,6 +26745,17 @@ window.addEventListener('beforeunload', () => {
       <img id="village-bg" src="assets/village/village-map.png" alt="Village">
       <!-- .village-zone injectées par buildVillageMap() -->
     </div>
+  </div>
+  <!-- Outils flottants bas-gauche : détourés (fond transparent) pour laisser
+       voir le village, et au tout premier plan cliquable (au-dessus des zones).
+       « ? » = Le saviez-tu (déplacé ici depuis l'Auberge). Sumo = raccourci vers
+       l'événement, avec le temps restant affiché au-dessus. -->
+  <div id="village-corner-tools">
+    <div id="village-sumo-tool">
+      <div id="village-sumo-timer" aria-hidden="true">—</div>
+      <button id="village-sumo-btn" onclick="goToSumoFromBanner()" aria-label="Événement Sumo" title="Événement Sumo">🤼</button>
+    </div>
+    <button id="village-dyk-btn" onclick="openDidYouKnowPopup()" aria-label="Le saviez-tu ?" title="Le saviez-tu ?">?</button>
   </div>
 </div>
 <button id="village-home-btn" onclick="showScreen('village')">⛩ Village</button>
