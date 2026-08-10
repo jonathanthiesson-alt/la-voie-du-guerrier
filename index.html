@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.54.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.55.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2229,7 +2229,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" onclick="showScreen('home')" style="margin-top:4px"><span style="font-family:Noto Serif JP,serif;font-size:16px;vertical-align:middle;margin-right:4px">家</span>&#201;cran d'accueil</button>
     <button class="btn" id="menu-logout-btn" style="display:none;margin-top:4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
-  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.54.0 &#9820;</div>
+  <div style="margin-top:6px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.35" data-i18n="version">&#9820; La Voie du Guerrier — ONLINE alpha V0.55.0 &#9820;</div>
   </div>
 </div>
 
@@ -2259,7 +2259,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
     <!-- ── Carrousel des modes en ligne ──────────────────────────────
          La carte centrale = mode sélectionné (matchmaking par défaut, puis
-         arène, ligue, tournoi, guilde, événements). « Partie rapide » lance
+         arène, ligue, tournoi, guilde, événements). « Combat simple » lance
          CE mode à la cadence choisie juste au-dessus (matchmaking/arène) ;
          cliquer la carte ouvre le MENU du mode. Position mémorisée
          (vtl_play_mode_idx). Voir renderPlayModeCarousel & co. -->
@@ -2374,7 +2374,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
            joueur qui poireaute en file. Préférence locale (want_backfill/backfill_after). -->
       <label style="display:flex;align-items:flex-start;gap:8px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);cursor:pointer;margin-bottom:6px;line-height:1.35">
         <input type="checkbox" id="mm-backfill-toggle" onchange="onBackfillToggle()" style="margin-top:2px">
-        <span>&#129302; Un bot de la Bot-Army me rejoint en <strong>Partie rapide</strong> ou <strong>Ar&egrave;ne</strong> si aucun adversaire n'est trouv&eacute; apr&egrave;s :</span>
+        <span>&#129302; Un bot de la Bot-Army me rejoint en <strong>Combat simple</strong> ou <strong>Combat 3 manches</strong> si aucun adversaire n'est trouv&eacute; apr&egrave;s :</span>
       </label>
       <div id="mm-backfill-delay-row" style="display:none;align-items:center;gap:8px;font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.8;margin:0 0 8px 24px">
         <input type="range" id="mm-backfill-delay" min="5" max="60" step="5" value="20" oninput="onBackfillDelayInput()" style="flex:1">
@@ -3686,13 +3686,15 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.54.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.55.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
     </div>
 
     <div class="devlog-entry">
-      <div class="devlog-version">ONLINE alpha V0.54.0 &mdash; 10 ao&ucirc;t 2026</div>
+      <div class="devlog-version">ONLINE alpha V0.55.0 &mdash; 10 ao&ucirc;t 2026</div>
       <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; MODES RENOMM&Eacute;S</li>
+        <li>&laquo;&nbsp;Partie rapide&nbsp;&raquo; devient <strong>Combat simple</strong>, et le mode &laquo;&nbsp;Ar&egrave;ne&nbsp;&raquo; devient <strong>Combat 3 manches</strong> (pour ne plus le confondre avec le b&acirc;timent Ar&egrave;ne).</li>
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; RETOUR = MENU PR&Eacute;C&Eacute;DENT (VILLAGE)</li>
         <li>En th&egrave;me Village, &laquo;&nbsp;retour&nbsp;&raquo; (et le bouton &#9773; Village) ram&egrave;nent au <strong>menu pr&eacute;c&eacute;dent</strong> : le <strong>panneau du b&acirc;timent</strong> d&rsquo;o&ugrave; l&rsquo;on est parti (ex. Shin-AI &rarr; panneau <strong>Dojo</strong>), et non plus vers &laquo;&nbsp;jeu local&nbsp;&raquo; ou la carte nue.</li>
         <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; ACCUEIL DU VILLAGE</li>
@@ -5541,7 +5543,7 @@ function refreshTournamentProgress(){ renderModeProgressBar('tournament-mon-fill
 // ══════════════════════════════════════════════════════════
 var MODE_INFO = {
   matchmaking: {
-    titre: '⚡ MATCHMAKING',
+    titre: '⚡ COMBAT SIMPLE',
     monnaie: '🌿 Shiso',
     sections: [
       ['But', 'Affronter un adversaire de ton niveau en partie classée. C\'est le mode principal : ton ELO et tes points de Ligue en dépendent.'],
@@ -5552,7 +5554,7 @@ var MODE_INFO = {
     ]
   },
   arena: {
-    titre: '⚔ ARÈNE',
+    titre: '⚔ COMBAT 3 MANCHES',
     monnaie: '⚔ Tamashii',
     sections: [
       ['But', 'Un affrontement en plusieurs manches contre le même adversaire. Plus exigeant qu\'une partie unique : il faut tenir la distance.'],
@@ -7908,13 +7910,13 @@ const LANGS={
     opponents_title:'ADVERSAIRES',
     opponents_sub:'Vaincs chaque maître pour gagner son sceau 🛡',
     lb_cat_elo:'⚔ ELO',
-    lb_cat_arena:'⚔ Arène',
+    lb_cat_arena:'⚔ Combat 3 manches',
     online_hub_leaderboard:'Classement',
     notif_btn:'Notifications',
     notif_empty:'Aucune notification pour le moment.',
     online_hub_title:'🌐 EN LIGNE',
-    online_hub_matchmaking:'Matchmaking',
-    online_hub_arena:'Arène',
+    online_hub_matchmaking:'Combat simple',
+    online_hub_arena:'Combat 3 manches',
     online_hub_friends:'Amis',
     currency_tamashii:'Tamashii',
     currency_shiso:'Shiso',
@@ -8113,13 +8115,13 @@ const LANGS={
     opponents_title:'OPPONENTS',
     opponents_sub:'Defeat each master to earn their seal 🛡',
     lb_cat_elo:'⚔ ELO',
-    lb_cat_arena:'⚔ Arena',
+    lb_cat_arena:'⚔ 3-round bout',
     online_hub_leaderboard:'Leaderboard',
     notif_btn:'Notifications',
     notif_empty:'No notifications yet.',
     online_hub_title:'🌐 ONLINE',
-    online_hub_matchmaking:'Matchmaking',
-    online_hub_arena:'Arena',
+    online_hub_matchmaking:'Single bout',
+    online_hub_arena:'3-round bout',
     online_hub_friends:'Friends',
     currency_tamashii:'Tamashii',
     currency_shiso:'Shiso',
@@ -8318,13 +8320,13 @@ const LANGS={
     opponents_title:'対戦相手',
     opponents_sub:'各師範を倒して印を獲得しよう 🛡',
     lb_cat_elo:'⚔ ELO',
-    lb_cat_arena:'⚔ アリーナ',
+    lb_cat_arena:'⚔ 三番勝負',
     online_hub_leaderboard:'順位表',
     notif_btn:'通知',
     notif_empty:'まだ通知はありません。',
     online_hub_title:'🌐 オンライン',
-    online_hub_matchmaking:'マッチメイキング',
-    online_hub_arena:'アリーナ',
+    online_hub_matchmaking:'一番勝負',
+    online_hub_arena:'三番勝負',
     online_hub_friends:'フレンド',
     currency_tamashii:'魂',
     currency_shiso:'紫蘇',
@@ -9486,8 +9488,8 @@ function setQuickCadence(cad){
 // (ligue, tournoi, guilde, événements) sont de simples hubs : le bouton
 // primaire les ouvre (label « Ouvrir »).
 var PLAY_MODES = [
-  { key:'matchmaking', icon:'⚡', label:'Partie rapide', sub:'Un adversaire à ton niveau', screen:null,           cadence:true },
-  { key:'arena',       icon:'⚔', label:'Arène',         sub:'Classé · manches rapides',   screen:'arena',        cadence:true },
+  { key:'matchmaking', icon:'⚡', label:'Combat simple', sub:'Un adversaire à ton niveau', screen:null,           cadence:true },
+  { key:'arena',       icon:'⚔', label:'Combat 3 manches',         sub:'Classé · 3 manches',   screen:'arena',        cadence:true },
   // Ligue retirée du carrousel : ce n'est pas un mode de jeu (pas de cadence,
   // pas de « partie rapide »). Accès via la rangée de boutons sous le carrousel.
   { key:'tournament',  icon:'🏆', label:'Tournoi',       sub:'Élimination par rondes',     screen:'tournament',   cadence:false },
@@ -9703,7 +9705,7 @@ var DID_YOU_KNOW = [
   // ── Astuces : fonctionnalités accessibles aux joueurs ──
   { t:'astuce', title:'Le Labo', body:'Le Labo se trouve dans le menu <b>Joueur</b> : un atelier où l\'on teste ses idées de modes contre l\'IA en un clic, et où l\'on peut publier ses propres formats de jeu.' },
   { t:'astuce', title:'Les Options', body:'Pour régler le son, la langue ou l\'apparence, ouvre le menu <b>Options</b> depuis l\'accueil.' },
-  { t:'astuce', title:'Partie rapide', body:'Depuis <b>Jouer en ligne</b>, lance une <b>Partie rapide</b> : le matchmaking te trouve un adversaire de niveau proche.' },
+  { t:'astuce', title:'Combat simple', body:'Depuis <b>Jouer en ligne</b>, lance une <b>Combat simple</b> : le matchmaking te trouve un adversaire de niveau proche.' },
   { t:'astuce', title:'Les cadences', body:'Chaque partie a une <b>cadence</b> (secondes par coup). Choisis-la avant de lancer : plus c\'est court, plus ça mord.' },
   { t:'astuce', title:'L\'Arène', body:'L\'<b>Arène</b> est le mode classé rapide : chaque victoire fait grimper ton Elo.' },
   { t:'astuce', title:'Les Tournois', body:'Crée ou rejoins un <b>Tournoi</b> à élimination par rondes ; le créateur clôture les inscriptions quand il le décide.' },
@@ -10512,9 +10514,9 @@ function updateDevButtonVisibility(){
 // écran Options (menu des réglages) pour les joueurs.
 function onDevNavClick(){ if(isDevUser()) navTab('dev-hub'); else showScreen('menu'); }
 var DEV_MODES = [
-  { key:'matchmaking', label:'⚡ Matchmaking', currency:'shiso',    icon:'🌿',
+  { key:'matchmaking', label:'⚡ Combat simple', currency:'shiso',    icon:'🌿',
     events:[{k:'win',label:'Victoire'},{k:'loss',label:'Défaite'}] },
-  { key:'arena',       label:'⚔ Arène',       currency:'tamashii', icon:'⚔',
+  { key:'arena',       label:'⚔ Combat 3 manches',       currency:'tamashii', icon:'⚔',
     events:[{k:'win_3s',label:'Manche gagnée (3s)'},{k:'win_5s',label:'Manche gagnée (5s)'},{k:'win_10s',label:'Manche gagnée (10s)'}] },
   { key:'tournament',  label:'🏆 Tournoi',    currency:'mon',      icon:'🏮',
     events:[{k:'win',label:'Victoire'}] },
@@ -20836,12 +20838,12 @@ function handleSecretLogoTouch(e){
 // ONLINE_ONLY_HOME_LOGO dans onHomeLogoClick.
 var HOME_LOGO_SHORTCUTS = [
   {key:'none', label:'Aucun (décoratif)'},
-  {key:'action:quick3',  label:'⚡ Partie rapide 3s'},
-  {key:'action:quick5',  label:'⚡ Partie rapide 5s'},
-  {key:'action:quick10', label:'⚡ Partie rapide 10s'},
-  {key:'action:arena3',  label:'⚔ Combat d\'Arène 3s'},
-  {key:'action:arena5',  label:'⚔ Combat d\'Arène 5s'},
-  {key:'action:arena10', label:'⚔ Combat d\'Arène 10s'},
+  {key:'action:quick3',  label:'⚡ Combat simple 3s'},
+  {key:'action:quick5',  label:'⚡ Combat simple 5s'},
+  {key:'action:quick10', label:'⚡ Combat simple 10s'},
+  {key:'action:arena3',  label:'⚔ Combat 3 manches 3s'},
+  {key:'action:arena5',  label:'⚔ Combat 3 manches 5s'},
+  {key:'action:arena10', label:'⚔ Combat 3 manches 10s'},
   {key:'action:sumo3',   label:'🀄 SUMO 3s'},
   {key:'action:sumo5',   label:'🀄 SUMO 5s'},
   {key:'action:sumo10',  label:'🀄 SUMO 10s'},
@@ -20853,7 +20855,7 @@ var HOME_LOGO_SHORTCUTS = [
   {key:'goto:clock',       label:'⏱ Pendule'},
   {key:'goto:rules',       label:'📜 Règles'},
   {key:'goto:online-menu', label:'🌐 Joueurs en ligne'},
-  {key:'goto:arena',       label:'⚔ Arène'},
+  {key:'goto:arena',       label:'⚔ Combat 3 manches'},
   {key:'goto:sumo',        label:'🀄 SUMO'},
   {key:'goto:tournament',  label:'🏆 Tournois'},
   {key:'goto:league',      label:'📊 Ligue'},
@@ -26059,7 +26061,7 @@ window.addEventListener('beforeunload', () => {
 <div id="screen-arena" class="screen">
   <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="stopArenaMatchmakingSearch();showScreen('play')" data-i18n="btn_menu_back">&#8617; MENU</button></div>
   <div class="panel" style="max-width:300px">
-    <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px">&#9876; ARÈNE</div><button onclick="showModeInfo('arena')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px">&#9876; COMBAT 3 MANCHES</div><button onclick="showModeInfo('arena')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px">
       <div class="shop-koku-badge" style="width:fit-content">&#9876; <span class="tamashii-display">0</span> <span style="font-family:'Noto Serif JP',serif;font-size:10px;opacity:.6">Tamashii</span></div>
     </div>
