@@ -1,0 +1,34 @@
+# ════════════════════════════════════════════════════════════════════════
+# Minage de défis — rejoue les parties décisives (game_history) et cherche
+# des mats forcés en 2-3 coups, insérés dans mined_puzzles. Ponctuel/manuel
+# (pas de cron) : à relancer de temps en temps quand assez de nouvelles
+# parties ont été jouées. Réutilise le secret SUPABASE_SERVICE_ROLE_KEY déjà
+# en place pour balance-worker/bot-army.
+#
+# ⚠️ PRÉ-REQUIS : sql_a_executer/mined_puzzles.sql exécuté au moins une fois
+#    (crée la table). Sans elle, l'insertion échoue proprement (le script
+#    log l'erreur et s'arrête, aucune donnée corrompue).
+# ════════════════════════════════════════════════════════════════════════
+name: Minage de défis (mats forcés)
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: "Aperçu seulement (n'insère rien) : true/false"
+        default: "false"
+
+jobs:
+  mine:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Extraction
+        run: node scripts/mine-puzzles.mjs ${{ github.event.inputs.dry == 'true' && '--dry' || '' }}
+        env:
+          SUPABASE_URL: "https://ikssbshpvpqlcgrbjldz.supabase.co"
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

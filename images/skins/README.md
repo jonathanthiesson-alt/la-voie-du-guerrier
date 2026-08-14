@@ -54,4 +54,26 @@ la traduction d'un skin existant.
 ~108 Ko par PNG, 15 poses → **~1,6 Mo par skin**. À 36 skins on dépasse 57 Mo :
 c'est pour ça que le jeu ne charge JAMAIS tout (voir le chargement paresseux
 côté client — seule la pose `13_garde_posture` alimente le carrousel).
-La conversion WebP du lot est suivie dans la tâche « pipeline d'assets ».
+
+## WebP (généré)
+
+`node scripts/convert-skins-webp.mjs` (nécessite `npm install`, dépendance
+`sharp` en devDependency uniquement — absente du runtime jeu) génère un
+`.webp` à côté de chaque `.png`, qualité 85 : **57,2 Mo → 6,1 Mo** sur les 540
+sprites actuels. Les PNG restent en place (source de vérité, pas de perte).
+À relancer après tout ajout/retrait de sprite.
+
+## Contrat de chargement paresseux (client)
+
+Le jeu ne doit JAMAIS charger les 36 skins d'un coup :
+
+- **Carrousel de sélection** (Passe 9) : seule la pose `13_garde_posture.webp`
+  de chaque skin complet (`skins_manifest.json`) est chargée — 36 images, pas
+  540.
+- **Popup skin sélectionné** (aperçu détaillé) : charge les 15 `.webp` du
+  **seul** skin cliqué, à la demande (à l'ouverture du popup, pas avant).
+- **En combat** : charge uniquement les 15 `.webp` des 2 skins réellement en
+  jeu (le sien + celui de l'adversaire), une fois la partie trouvée — jamais
+  au chargement de l'app.
+- **Fallback** : si `.webp` absent (script pas encore lancé) ou navigateur
+  sans support WebP, retomber sur le `.png` du même nom.

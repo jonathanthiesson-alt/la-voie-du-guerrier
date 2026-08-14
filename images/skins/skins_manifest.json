@@ -1,0 +1,149 @@
+{
+  "generatedAt": "2026-08-14T19:15:20.595Z",
+  "skins": [
+    {
+      "id": "aztec",
+      "label": "Aztec"
+    },
+    {
+      "id": "bousier",
+      "label": "Bousier"
+    },
+    {
+      "id": "chevalier",
+      "label": "Chevalier"
+    },
+    {
+      "id": "chevalier_2",
+      "label": "Chevalier 2"
+    },
+    {
+      "id": "cyrano",
+      "label": "Cyrano"
+    },
+    {
+      "id": "egypt",
+      "label": "Egypt"
+    },
+    {
+      "id": "geisha",
+      "label": "Geisha"
+    },
+    {
+      "id": "grandma",
+      "label": "Grandma"
+    },
+    {
+      "id": "grandpa",
+      "label": "Grandpa"
+    },
+    {
+      "id": "inca",
+      "label": "Inca"
+    },
+    {
+      "id": "mannequin_bambou",
+      "label": "Mannequin Bambou"
+    },
+    {
+      "id": "mannequin_bois",
+      "label": "Mannequin Bois"
+    },
+    {
+      "id": "mannequin_bois_feu3",
+      "label": "Mannequin Bois Feu3"
+    },
+    {
+      "id": "mannequin_bois_feu_2",
+      "label": "Mannequin Bois Feu 2"
+    },
+    {
+      "id": "mannequin_paille",
+      "label": "Mannequin Paille"
+    },
+    {
+      "id": "mousquetaire",
+      "label": "Mousquetaire"
+    },
+    {
+      "id": "musashi",
+      "label": "Musashi"
+    },
+    {
+      "id": "musashi_old",
+      "label": "Musashi Old"
+    },
+    {
+      "id": "oldman",
+      "label": "Oldman"
+    },
+    {
+      "id": "racoon",
+      "label": "Racoon"
+    },
+    {
+      "id": "racoon2",
+      "label": "Racoon2"
+    },
+    {
+      "id": "samourai-black",
+      "label": "Samourai Black"
+    },
+    {
+      "id": "samourai-brown",
+      "label": "Samourai Brown"
+    },
+    {
+      "id": "samourai-brownlight",
+      "label": "Samourai Brownlight"
+    },
+    {
+      "id": "samourai-cream",
+      "label": "Samourai Cream"
+    },
+    {
+      "id": "samourai-green",
+      "label": "Samourai Green"
+    },
+    {
+      "id": "samourai-original",
+      "label": "Samourai Original"
+    },
+    {
+      "id": "samourai-pink",
+      "label": "Samourai Pink"
+    },
+    {
+      "id": "samourai-red",
+      "label": "Samourai Red"
+    },
+    {
+      "id": "samourai-white",
+      "label": "Samourai White"
+    },
+    {
+      "id": "shinai",
+      "label": "Shinai"
+    },
+    {
+      "id": "shinai2",
+      "label": "Shinai2"
+    },
+    {
+      "id": "shinai_organic",
+      "label": "Shinai Organic"
+    },
+    {
+      "id": "turc",
+      "label": "Turc"
+    },
+    {
+      "id": "viking",
+      "label": "Viking"
+    },
+    {
+      "id": "wurmz",
+      "label": "Wurmz"
+    }
+  ]
+}
