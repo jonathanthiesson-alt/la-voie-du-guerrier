@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.63.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.64.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2324,6 +2324,12 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
          lancent directement (modes à cadence), et cliquer la carte ouvre le menu
          du mode. -->
 
+    <!-- Barre de progression du mode sélectionné : suit le mode central du
+         carrousel (monnaie, paliers réclamables, ℹ du mode + ℹ de la monnaie).
+         Remplie par refreshCarouselModeProgress ; masquée pour les modes sans
+         monnaie (champ de bataille). -->
+    <div id="play-mode-progress" style="margin-bottom:10px"></div>
+
     <!-- Ligue / Classement / Bot-Army retirés de l'Arène (Ligue & Classement →
          Archives ; Bot army → Soleil du village, réservé dev). -->
 
@@ -3726,8 +3732,19 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.63.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.64.0</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.64.0 &mdash; 13 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; JAUGE DE R&Eacute;COMPENSES SOUS LE CARROUSEL</li>
+        <li>Une <strong>barre de progression</strong> appara&icirc;t d&eacute;sormais <strong>sous le carrousel</strong> des modes et <strong>change avec le mode s&eacute;lectionn&eacute;</strong> : elle montre la <strong>monnaie du mode</strong>, son solde et ses <strong>paliers r&eacute;clamables</strong>.</li>
+        <li>Deux <strong>&laquo;&nbsp;?&nbsp;&raquo;</strong> &agrave; port&eacute;e de clic : celui du <strong>mode</strong> (ses r&egrave;gles) et celui de la <strong>monnaie</strong> (son histoire).</li>
+        <li>Le <strong>&laquo;&nbsp;?&nbsp;&raquo; de la monnaie</strong> a &eacute;t&eacute; ajout&eacute; dans les menus qui en manquaient (Combat simple, Ar&egrave;ne, Guilde, &Eacute;v&eacute;nements).</li>
+        <li>Nouvelle fiche : l'histoire du <strong>&#30707; Koku</strong> (la mesure du riz f&eacute;odal).</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -5569,6 +5586,7 @@ function refreshAllCurrencyDisplays(){
   refreshGuildProgress();
   refreshEventsProgress();
   renderModeProgressBar('play-shiitake-fill','play-shiitake-milestones',shopState.shiitake);
+  if(typeof refreshCarouselModeProgress==='function') refreshCarouselModeProgress();
   if(typeof villageRefreshBanner==='function') villageRefreshBanner();
 }
 // Barre de progression du mode Arène — maintenant basée sur Tamashii
@@ -7962,7 +7980,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.63.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.64.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8180,7 +8198,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.63.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.64.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -8389,7 +8407,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.63.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.64.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -9787,6 +9805,52 @@ function renderPlayModeCarousel(){
   }
   var cadRow=document.getElementById('play-cadence-row');
   if(cadRow) cadRow.style.display = m.cadence ? 'flex' : 'none';
+  refreshCarouselModeProgress();
+}
+// Monnaie de chaque mode du carrousel : la barre sous le carrousel suit le mode
+// central et affiche SA monnaie. Les modes sans monnaie (champ de bataille) ne
+// montrent pas de barre.
+var PLAY_MODE_CURRENCY = {
+  matchmaking:'shiso', arena:'tamashii', tournament:'mon',
+  guild:'ryu', events:'hanafuda'
+};
+// Rend la barre de progression sous le carrousel. Réutilise renderModeProgressBar
+// (paliers réclamables) via des ids dédiés, et branche dynamiquement la monnaie
+// courante dans MILESTONE_BOX_TO_CURRENCY pour que le clic de palier réclame la
+// bonne. Deux « ℹ » : celui du mode (règles) et celui de la monnaie (son histoire).
+function refreshCarouselModeProgress(){
+  var host = document.getElementById('play-mode-progress');
+  if(!host) return;
+  var m = (typeof centralPlayMode==='function') ? centralPlayMode() : null;
+  var cur = m && PLAY_MODE_CURRENCY[m.key];
+  if(!cur){ host.innerHTML=''; host.style.display='none'; return; }
+  host.style.display='';
+  var lore = (typeof CURRENCY_LORE!=='undefined' && CURRENCY_LORE[cur]) ? CURRENCY_LORE[cur] : {icon:'',name:cur};
+  var curName = String(lore.name||cur).split(' ')[0];
+  var iBtn = function(onclick, title){
+    return '<button onclick="'+onclick+'" title="'+escapeHtml(title)+'" style="background:rgba(0,0,0,.3);'
+      +'border:1px solid rgba(212,160,23,.4);border-radius:50%;width:16px;height:16px;color:var(--gold-bright);'
+      +'font-family:serif;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button>';
+  };
+  host.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin:0 4px 4px">'
+      +'<span style="display:flex;align-items:center;gap:5px;font-family:\'Cinzel\',serif;font-size:12px;color:var(--gold-bright)">'
+        + m.icon+' '+escapeHtml(m.label)
+        + iBtn('showModeInfo(\''+m.key+'\')','Comment ça marche ?')
+      +'</span>'
+      +'<span style="display:flex;align-items:center;gap:4px;font-family:VT323,monospace;font-size:13px;color:var(--gold-bright)">'
+        + lore.icon+' <span class="'+cur+'-display">'+(shopState[cur]||0)+'</span>'
+        + iBtn('showCurrencyTooltip(\''+cur+'\')', curName+' : son histoire')
+      +'</span>'
+    +'</div>'
+    +'<div style="position:relative;height:46px;margin:0 4px">'
+      +'<div style="position:absolute;top:0;left:0;right:0;height:9px;background:rgba(0,0,0,.4);border-radius:5px;overflow:hidden;border:1px solid rgba(212,160,23,.25)">'
+        +'<div id="play-modebar-fill" style="height:100%;width:0%;background:linear-gradient(90deg,#8a6a1a,#d4a017);transition:width .4s ease"></div>'
+      +'</div>'
+      +'<div id="play-modebar-milestones" style="position:absolute;top:13px;left:0;right:0;height:32px"></div>'
+    +'</div>';
+  MILESTONE_BOX_TO_CURRENCY['play-modebar-milestones'] = cur;
+  renderModeProgressBar('play-modebar-fill','play-modebar-milestones', shopState[cur]||0);
 }
 // Init à l'entrée sur l'écran Jouer : restaure la position mémorisée, cale la
 // surbrillance de cadence, et branche le swipe tactile (une seule fois).
@@ -12073,7 +12137,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.63.0';
+var DEVLOG_LATEST = 'V0.64.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -23834,6 +23898,12 @@ let currentOnlineOpponentPseudo = null; // pseudo de l'adversaire (phrase de fin
 // Dictionnaire des bulles d'explication des monnaies de mode.
 // Cliqués dans la barre de monnaies du hub en ligne.
 var CURRENCY_LORE = {
+  koku: {
+    icon: '石',
+    name: 'Koku 石',
+    mode: 'Monnaie premium',
+    lore: 'La mesure du riz. Un koku représentait la quantité de riz nourrissant un homme une année entière — l\'étalon de richesse et de puissance des seigneurs féodaux, et la solde d\'un samouraï. Ici, le Koku est la monnaie précieuse : il ne se gagne JAMAIS en jouant, seulement à la conversion de fin de saison et par achat.'
+  },
   shiso: {
     icon: '🍃',
     name: 'Shiso 紫蘇',
@@ -26594,6 +26664,7 @@ window.addEventListener('beforeunload', () => {
     <!-- Soldes monnaies du mode -->
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 8px">
       <div style="font-family:VT323,monospace;font-size:14px;color:var(--gold-bright)">🍃 <span class="shiso-display">0</span> <span style="font-size:10px;opacity:.6">Shiso</span></div>
+      <button onclick="showCurrencyTooltip('shiso')" title="Qu'est-ce que le Shiso ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:16px;height:16px;color:var(--gold-bright);font-family:serif;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button>
     </div>
     <!-- Barre de progression Shiso (paliers 30/75/150) -->
     <div style="position:relative;height:48px;margin:0 4px 10px">
@@ -26631,6 +26702,7 @@ window.addEventListener('beforeunload', () => {
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px">&#9876; COMBAT 3 MANCHES</div><button onclick="showModeInfo('arena')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:8px">
       <div class="shop-koku-badge" style="width:fit-content">&#9876; <span class="tamashii-display">0</span> <span style="font-family:'Noto Serif JP',serif;font-size:10px;opacity:.6">Tamashii</span></div>
+      <button onclick="showCurrencyTooltip('tamashii')" title="Qu'est-ce que le Tamashii ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:16px;height:16px;color:var(--gold-bright);font-family:serif;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button>
     </div>
     <!-- Barre Tamashii avec espace suffisant pour les jalons -->
     <div style="position:relative;height:50px;margin:0 4px 4px">
@@ -26762,6 +26834,7 @@ window.addEventListener('beforeunload', () => {
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0"><div class="menu-title" style="font-size:18px;flex-shrink:0">&#128737; GUILDE</div><button onclick="showModeInfo('guild')" title="Comment ça marche ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:22px;height:22px;color:var(--gold-bright);font-family:serif;font-size:13px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button></div>
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 8px;flex-shrink:0">
       <div style="font-family:VT323,monospace;font-size:14px;color:var(--gold-bright)">🐉 <span class="ryu-display">0</span> <span style="font-size:10px;opacity:.6">Ryu</span></div>
+      <button onclick="showCurrencyTooltip('ryu')" title="Qu'est-ce que le Ryu ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:16px;height:16px;color:var(--gold-bright);font-family:serif;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button>
     </div>
     <div style="position:relative;height:48px;margin:0 4px 6px;flex-shrink:0">
       <div style="position:absolute;top:0;left:0;right:0;height:10px;background:rgba(0,0,0,.4);border-radius:5px;overflow:hidden;border:1px solid rgba(80,180,80,.2)">
@@ -26782,6 +26855,7 @@ window.addEventListener('beforeunload', () => {
     <!-- Monnaie des Événements : 🌸 Hanafuda (cartes de fleurs) -->
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 8px">
       <div style="font-family:VT323,monospace;font-size:14px;color:var(--gold-bright)">🌸 <span class="hanafuda-display">0</span> <span style="font-size:10px;opacity:.6">Hanafuda</span></div>
+      <button onclick="showCurrencyTooltip('hanafuda')" title="Qu'est-ce que le Hanafuda ?" style="background:rgba(0,0,0,.3);border:1px solid rgba(212,160,23,.4);border-radius:50%;width:16px;height:16px;color:var(--gold-bright);font-family:serif;font-size:10px;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&#8505;</button>
     </div>
     <!-- Barre de progression Hanafuda (paliers 30/75/150) -->
     <div style="position:relative;height:48px;margin:0 4px 8px">
