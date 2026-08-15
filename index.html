@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.76.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.80.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2141,7 +2141,11 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
   <!-- Bascule cyclique de thème d'interface (Classique → Sumi → Wurmz),
        accessible sans entrer dans les menus. Un toast nomme le thème
-       atteint. Aussi réglable dans Apparence et Affichage. -->
+       atteint. Aussi réglable dans Apparence et Affichage.
+       RÉSERVÉ DEV : masqué une fois le statut connu (après connexion) pour
+       un non-dev — voir updateDevButtonVisibility(). Visible par défaut ici
+       (avant login le statut dev n'est pas encore connu, et un dev doit
+       pouvoir tester les thèmes dès l'accueil, hors connexion). -->
   <button id="home-theme-btn" onclick="cycleUiTheme()"
     style="position:absolute;top:max(12px,env(safe-area-inset-top,0px));left:12px;z-index:5;background:rgba(0,0,0,.35);border:1px solid rgba(200,168,110,.4);border-radius:5px;color:var(--gold-bright);font-family:'VT323',monospace;font-size:14px;letter-spacing:1px;padding:7px 11px;cursor:pointer">☯ Thème</button>
 
@@ -2441,9 +2445,6 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div class="settings-item" onclick="showScreen('language')">
       <span class="settings-label">&#127760; <span data-i18n="lang_title">Langue</span></span><span style="color:var(--gold);opacity:.6;font-size:16px">&#8250;</span>
     </div>
-    <div class="settings-item" onclick="showScreen('home-logo-cfg')">
-      <span class="settings-label">&#127968; <span data-i18n="home_logo_cfg_item">Logo d'accueil</span></span><span style="color:var(--gold);opacity:.6;font-size:16px">&#8250;</span>
-    </div>
     <div class="settings-item" onclick="toggleSetting('sound')">
       <span class="settings-label">&#128266; <span data-i18n="settings_sound">Sons</span></span>
       <div class="settings-toggle on" id="toggle-sound"></div>
@@ -2491,15 +2492,15 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       </div>
     </div>
 
-    <div class="settings-item" onclick="showScreen('citations')">
-      <span class="settings-label">&#128218; <span data-i18n="settings_citations">Biblioth&#232;que des citations</span></span>
-      <span style="color:var(--gold);opacity:.6;font-size:16px">&#8250;</span>
-    </div>
-
     <div class="settings-item" onclick="showScreen('account-privacy')">
       <span class="settings-label">&#128274; Confidentialit&#233; &amp; compte</span>
       <span style="color:var(--gold);opacity:.6;font-size:16px">&#8250;</span>
     </div>
+
+    <!-- Déconnexion relogée ici depuis screen-menu (/ui-optimiser, V0.80.0) :
+         Réglages > Compte est désormais le seul endroit où on la cherche
+         depuis la Maison. -->
+    <button class="btn" id="settings-logout-btn" style="display:none;width:100%;margin-top:14px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
   </div>
 </div>
 
@@ -2545,9 +2546,12 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <span style="color:var(--gold);opacity:.6;font-size:16px">&#8250;</span>
     </div>
 
-    <!-- Thème d'interface : Classique ou Sumi (aussi dans Apparence) -->
-    <div style="padding:13px 0;border-bottom:1px solid rgba(200,169,110,.15)">
-      <span class="settings-label">&#9775; Th&#232;me d'interface</span>
+    <!-- Thème d'interface — RÉSERVÉ DEV (classe .uitheme-section, masquée par
+         updateUiThemeButtons hors dev). Le Village est le seul thème joueur :
+         les autres sont des outils de test de rendu. Ne pas retirer la classe
+         sans quoi la section réapparaîtrait chez les joueurs. -->
+    <div class="uitheme-section" style="padding:13px 0;border-bottom:1px solid rgba(200,169,110,.15)">
+      <span class="settings-label">&#9775; Th&#232;me d'interface <span style="font-family:VT323,monospace;font-size:10px;color:#c090f0;letter-spacing:1px;margin-left:4px">DEV</span></span>
       <div style="display:flex;gap:7px;margin-top:9px">
         <div class="opt-btn selected uitheme-btn" data-theme="classic" onclick="setUiTheme('classic')">Classique</div>
         <div class="opt-btn uitheme-btn" data-theme="sumi" onclick="setUiTheme('sumi')">墨 Sumi</div>
@@ -2556,8 +2560,9 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       </div>
     </div>
 
-    <!-- Couleur d'ambiance des ciels du thème Sumi -->
-    <div id="sumi-sky-setting" style="padding:13px 0;border-bottom:1px solid rgba(200,169,110,.15)">
+    <!-- Couleur d'ambiance des ciels du thème Sumi — RÉSERVÉ DEV : ne sert
+         qu'au thème Sumi, lui-même dev-only (voir .uitheme-section). -->
+    <div id="sumi-sky-setting" class="uitheme-section" style="padding:13px 0;border-bottom:1px solid rgba(200,169,110,.15)">
       <span class="settings-label">&#9968; Ciel Sumi
         <div style="font-size:10px;opacity:.55;font-family:'VT323',monospace;margin-top:2px">Couleur d'ambiance des paysages (th&#232;me Sumi)</div>
       </span>
@@ -2591,6 +2596,17 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       </span>
       <div class="settings-toggle on" id="toggle-showCoords"></div>
     </div>
+
+    <!-- Caméra du bandeau de combat (D1 de docs/COMBAT_STAGE.md) : qui le
+         décor/l'anim de coup suit selon la tendance. 3 boutons plutôt qu'un
+         toggle (3 valeurs, pas 2) — voir renderCameraModeRow(). -->
+    <div class="settings-item" style="flex-direction:column;align-items:stretch">
+      <span class="settings-label" style="padding-right:8px;margin-bottom:6px">
+        <span data-i18n="settings_camera_mode">Caméra de combat</span>
+        <div style="font-size:10px;opacity:.55;font-family:'VT323',monospace;margin-top:2px" data-i18n="settings_camera_mode_sub">Qui la caméra du bandeau suit</div>
+      </span>
+      <div id="camera-mode-row" style="display:flex;gap:6px"></div>
+    </div>
   </div>
 </div>
 
@@ -2617,7 +2633,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
 <!-- LOGO D'ACCUEIL — raccourci configurable (refonte UI, phase C) -->
 <div id="screen-home-logo-cfg" class="screen">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('settings')" data-i18n="btn_back">&#8617; Retour</button></div>
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('piece-skins')" data-i18n="btn_back">&#8617; Retour</button></div>
   <div class="panel" style="max-width:440px">
     <div class="menu-title" style="font-size:20px">&#127968; <span data-i18n="home_logo_cfg_title">LOGO D'ACCUEIL</span></div>
     <div class="menu-divider"></div>
@@ -3376,6 +3392,16 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       </span>
       <span style="color:var(--gold);opacity:.5;font-size:18px">&#8250;</span>
     </button>
+    <!-- Identité fusionnée dans Mon Combattant (/ui-optimiser, V0.80.0) :
+         nom, titre affiché, carte de combattant. -->
+    <button class="btn" onclick="showScreen('identite')" style="width:100%;margin-bottom:12px;font-size:13px;padding:10px 14px;text-align:left;display:flex;align-items:center;gap:10px;max-width:100%;box-sizing:border-box">
+      <span style="font-size:20px">&#128100;</span>
+      <span style="flex:1">
+        <span style="font-family:'Cinzel',serif;letter-spacing:1px" data-i18n="identity_title">IDENTITÉ</span><br>
+        <span style="font-family:'VT323',monospace;font-size:13px;color:var(--gold);opacity:.7" data-i18n="identity_sub">Nom, titre, carte de combat</span>
+      </span>
+      <span style="color:var(--gold);opacity:.5;font-size:18px">&#8250;</span>
+    </button>
     <!-- Bouton message personnalisé — accès rapide avant les stats -->
     <button class="btn" onclick="showScreen('msg-composer')" style="width:100%;margin-bottom:12px;font-size:13px;padding:10px 14px;text-align:left;display:flex;align-items:center;gap:10px;max-width:100%;box-sizing:border-box">
       <span style="font-size:20px">&#9998;</span>
@@ -3736,8 +3762,40 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.76.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.80.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.80.0 &mdash; 15 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; BOT-ARMY : CASCADE SECR&Egrave;TE + M&Eacute;NAGE SOLEIL</li>
+        <li>La galerie des 16 adversaires nomm&eacute;s de la Bot-Army (jusque-l&agrave; inaccessible) s'ouvre d&eacute;sormais en cliquant dans les &eacute;claboussures de la cascade, en secret. Le r&eacute;glage du worker (Arm&eacute;e de bots, admin) est retir&eacute; du Soleil : il ne vit plus que dans Menu DEV, o&ugrave; il &eacute;tait d&eacute;j&agrave; en double.</li>
+      </ul>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.79.0 &mdash; 15 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; REFONTE DE LA MAISON</li>
+        <li>Les 10 entr&eacute;es &agrave; plat de la Maison deviennent 3 portes : Mon Combattant (profil + identit&eacute; fusionn&eacute;e), Apparence (pions, plateau, combattant, &eacute;cran d'accueil r&eacute;unis) et R&eacute;glages (jeu, son, langue, compte). L'ancien &eacute;cran-p&eacute;age &laquo; Options &amp; param&egrave;tres &raquo; dispara&icirc;t comme point d'entr&eacute;e ; la d&eacute;connexion d&eacute;m&eacute;nage dans R&eacute;glages. Le renvoi Tuto du Ch&acirc;teau vers le Dojo est retir&eacute; (le tuto ne vit plus qu'au Dojo).</li>
+      </ul>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.78.0 &mdash; 14 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; TH&Egrave;MES R&Eacute;SERV&Eacute;S DEV</li>
+        <li>Nettoyage des r&eacute;sidus visuels : le s&eacute;lecteur de th&egrave;me (les 2 exemplaires), le Ciel Sumi et le bouton &#9775; Th&egrave;me de l'accueil sont d&eacute;sormais masqu&eacute;s pour les joueurs (le Village &eacute;tait d&eacute;j&agrave; le seul thème appliqu&eacute;, mais les contr&ocirc;les restaient visibles et inutiles).</li>
+      </ul>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.77.0 &mdash; 14 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; R&Eacute;GLAGE CAM&Eacute;RA DE COMBAT</li>
+        <li>Nouveau r&eacute;glage (Affichage &gt; Cam&eacute;ra de combat) : <strong>Dominant</strong> (camp qui m&egrave;ne), <strong>Domin&eacute;</strong> (camp en difficult&eacute;) ou <strong>Moi</strong> (mon camp, quelle que soit ma couleur) &mdash; pilote le travelling du d&eacute;cor et des anims de coup (D1 de docs/COMBAT_STAGE.md). Persist&eacute; localement et sur le profil en ligne.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -4788,7 +4846,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
 <div id="screen-piece-skins" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
   <div style="width:100%;padding:10px 14px 8px;background:rgba(0,0,0,.6);border-bottom:1px solid rgba(200,168,110,.25);display:flex;align-items:center;gap:10px;flex-shrink:0">
-    <button class="tuto-nav-btn" onclick="showScreen('profile')" style="padding:5px 10px;font-size:11px">&#8617; Retour</button>
+    <button class="tuto-nav-btn" onclick="villageMenuReturn()" style="padding:5px 10px;font-size:11px">&#8617; Retour</button>
     <div>
       <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold-bright);letter-spacing:2px"><span style="font-family:Noto Serif JP,serif">観</span> APPARENCE</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment);opacity:.4">Th&#232;mes, plateau &amp; pions</div>
@@ -4805,12 +4863,30 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   </div>
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 12px 16px">
 
-    <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold);letter-spacing:3px;opacity:.7;margin-bottom:6px;padding:3px 0;border-bottom:1px solid rgba(200,168,110,.15)">⛩ TH&#200;ME D'INTERFACE</div>
-    <div style="display:flex;gap:7px;margin-bottom:12px">
-      <div class="opt-btn selected uitheme-btn" data-theme="classic" onclick="setUiTheme('classic')">Classique</div>
-      <div class="opt-btn uitheme-btn" data-theme="sumi" onclick="setUiTheme('sumi')">墨 Sumi</div>
-      <div class="opt-btn uitheme-btn" data-theme="wurmz" onclick="setUiTheme('wurmz')">🪲 Wurmz</div>
-      <div class="opt-btn uitheme-btn" data-theme="village" onclick="setUiTheme('village')">🏘 Village</div>
+    <!-- 2e exemplaire du sélecteur de thème — RÉSERVÉ DEV comme celui
+         d'Affichage (masqué par updateUiThemeButtons hors dev). -->
+    <div class="uitheme-section">
+      <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold);letter-spacing:3px;opacity:.7;margin-bottom:6px;padding:3px 0;border-bottom:1px solid rgba(200,168,110,.15)">⛩ TH&#200;ME D'INTERFACE <span style="color:#c090f0;letter-spacing:1px">DEV</span></div>
+      <div style="display:flex;gap:7px;margin-bottom:12px">
+        <div class="opt-btn selected uitheme-btn" data-theme="classic" onclick="setUiTheme('classic')">Classique</div>
+        <div class="opt-btn uitheme-btn" data-theme="sumi" onclick="setUiTheme('sumi')">墨 Sumi</div>
+        <div class="opt-btn uitheme-btn" data-theme="wurmz" onclick="setUiTheme('wurmz')">🪲 Wurmz</div>
+        <div class="opt-btn uitheme-btn" data-theme="village" onclick="setUiTheme('village')">🏘 Village</div>
+      </div>
+    </div>
+
+    <!-- Skin de combattant + écran d'accueil fusionnés dans Apparence
+         (/ui-optimiser, V0.80.0) : Apparence est l'unique porte « regarder/
+         personnaliser », plus de sous-écrans dispersés en Réglages. -->
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="btn" onclick="showScreen('fighter-skins')" style="flex:1;font-size:12px;padding:9px 10px;text-align:left;display:flex;align-items:center;gap:8px">
+        <span style="font-size:17px">&#9876;</span>
+        <span data-i18n="fighter_skins_title">SKIN DE COMBATTANT</span>
+      </button>
+      <button class="btn" onclick="showScreen('home-logo-cfg')" style="flex:1;font-size:12px;padding:9px 10px;text-align:left;display:flex;align-items:center;gap:8px">
+        <span style="font-size:17px">&#127968;</span>
+        <span data-i18n="home_logo_cfg_item">Logo d'accueil</span>
+      </button>
     </div>
 
     <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--gold);letter-spacing:3px;opacity:.7;margin-bottom:6px;padding:3px 0;border-bottom:1px solid rgba(200,168,110,.15)">⚔ PIONS</div>
@@ -5006,7 +5082,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
      décor pas encore livré, voir docs/COMBAT_STAGE.md) — ce n'est que le
      choix et sa persistance (userPrefs.fighterSkin + profiles.appearance_prefs). -->
 <div id="screen-fighter-skins" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('profile')" data-i18n="btn_prev_back">&#8617; PRÉCÉDENT</button></div>
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('piece-skins')" data-i18n="btn_prev_back">&#8617; PRÉCÉDENT</button></div>
   <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
     <div class="panel" style="max-width:460px;width:100%">
       <div class="menu-title" style="font-size:18px"><span style="font-family:Noto Serif JP,serif">合</span> <span data-i18n="fighter_skins_title">SKIN DE COMBATTANT</span></div>
@@ -5029,7 +5105,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
 <div id="screen-identite" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
   <div style="width:100%;padding:10px 14px 8px;background:rgba(0,0,0,.6);border-bottom:1px solid rgba(200,168,110,.25);display:flex;align-items:center;gap:10px;flex-shrink:0">
-    <button class="tuto-nav-btn" onclick="showScreen('settings')" style="padding:5px 10px;font-size:11px">&#8617; Retour</button>
+    <button class="tuto-nav-btn" onclick="showScreen('profile')" style="padding:5px 10px;font-size:11px">&#8617; Retour</button>
     <div>
       <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold-bright);letter-spacing:2px"><span style="font-family:Noto Serif JP,serif">名</span> IDENTIT&#201;</div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment);opacity:.4">Profil du combattant</div>
@@ -5338,7 +5414,7 @@ document.addEventListener('mousedown', function(e){
 // ══════════════════════════════════════════════════════
 // V7.0.5 — USER PREFERENCES
 // ══════════════════════════════════════════════════════
-let userPrefs={sound:true,menuMusic:true,fightMusic:true,soundVolume:1,menuMusicVolume:0.5,fightMusicVolume:0.55,haptic:true,antiretourHint:true,aldric:true,wurmzSkin:false,wurmzFlip:false,showCoords:true,fighterSkin:null,customQuickMsg:'La voie est longue et parsemée d\'embûches...'};
+let userPrefs={sound:true,menuMusic:true,fightMusic:true,soundVolume:1,menuMusicVolume:0.5,fightMusicVolume:0.55,haptic:true,antiretourHint:true,aldric:true,wurmzSkin:false,wurmzFlip:false,showCoords:true,fighterSkin:null,cameraMode:'dominant',customQuickMsg:'La voie est longue et parsemée d\'embûches...'};
 function savePrefs(){try{localStorage.setItem('vtl_prefs',JSON.stringify(userPrefs))}catch(e){}}
 function loadPrefs(){try{const s=localStorage.getItem('vtl_prefs');if(s)userPrefs=Object.assign(userPrefs,JSON.parse(s))}catch(e){}}
 // ── WurmzSkin (skin exclusif) ────────────────────────────────────
@@ -8234,7 +8310,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.76.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.80.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8359,6 +8435,11 @@ const LANGS={
     profile_customize:'観 Personnaliser l\'apparence ›',
     fighter_skins_title:'SKIN DE COMBATTANT',
     fighter_skins_sub:'Choisis l\'apparence de ton combattant en combat',
+    settings_camera_mode:'Caméra de combat',
+    settings_camera_mode_sub:'Qui la caméra du bandeau suit',
+    camera_mode_dominant:'Dominant',
+    camera_mode_dominated:'Dominé',
+    camera_mode_me:'Moi',
     profile_grades_hint:'△ Progression des grades',
     profile_custom_msg:'Mon message en combat',
     profile_elo_title:'⚔ Classement ELO',
@@ -8442,6 +8523,8 @@ const LANGS={
     local_hub_vs_2p:'2 joueurs (même appareil)',
     options_title:'OPTIONS',
     local_hub_sub_opt:'Réglages, apparence, compte',
+    identity_title:'IDENTITÉ',
+    identity_sub:'Nom, titre, carte de combat',
     home_logo_cfg_item:'Logo d\'accueil',
     home_logo_cfg_title:'LOGO D\'ACCUEIL',
     menu_shop:'Boutique',
@@ -8456,7 +8539,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.76.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.80.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -8572,6 +8655,11 @@ const LANGS={
     profile_customize:'観 Customize appearance ›',
     fighter_skins_title:'FIGHTER SKIN',
     fighter_skins_sub:'Choose your fighter\'s look in combat',
+    settings_camera_mode:'Combat camera',
+    settings_camera_mode_sub:'Who the banner camera follows',
+    camera_mode_dominant:'Dominant',
+    camera_mode_dominated:'Underdog',
+    camera_mode_me:'Me',
     profile_grades_hint:'△ Grade progression',
     profile_custom_msg:'My battle message',
     profile_elo_title:'⚔ ELO Ranking',
@@ -8655,6 +8743,8 @@ const LANGS={
     local_hub_vs_2p:'2 players (same device)',
     options_title:'OPTIONS',
     local_hub_sub_opt:'Settings, appearance, account',
+    identity_title:'IDENTITY',
+    identity_sub:'Name, title, combat card',
     home_logo_cfg_item:'Home logo',
     home_logo_cfg_title:'HOME LOGO',
     menu_shop:'Shop',
@@ -8669,7 +8759,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.76.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.80.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -8785,6 +8875,11 @@ const LANGS={
     profile_customize:'観 見た目をカスタマイズ ›',
     fighter_skins_title:'戦士のスキン',
     fighter_skins_sub:'戦闘での戦士の見た目を選ぶ',
+    settings_camera_mode:'戦闘カメラ',
+    settings_camera_mode_sub:'バナーのカメラが追うのは誰か',
+    camera_mode_dominant:'優勢な陣営',
+    camera_mode_dominated:'劣勢な陣営',
+    camera_mode_me:'自分',
     profile_grades_hint:'△ 段位の進行',
     profile_custom_msg:'戦闘中のメッセージ',
     profile_elo_title:'⚔ ELOランキング',
@@ -8868,6 +8963,8 @@ const LANGS={
     local_hub_vs_2p:'2人対戦（同じ端末）',
     options_title:'設定',
     local_hub_sub_opt:'設定・外観・アカウント',
+    identity_title:'アイデンティティ',
+    identity_sub:'名前・称号・戦闘カード',
     home_logo_cfg_item:'ホームロゴ',
     home_logo_cfg_title:'ホームロゴ',
     menu_shop:'商店',
@@ -11212,6 +11309,11 @@ function updateDevButtonVisibility(){
   // Bouton « proto » de l'accueil (banc de test avatars/bandeau) : gate admin.
   var pw = document.getElementById('home-proto-wrap');
   if(pw) pw.style.display = dev ? 'block' : 'none';
+  // ☯ Thème (accueil) : réservé dev une fois le statut connu (currentUser
+  // non-null = post-login, donc fiable). Avant login on le laisse visible
+  // (voir commentaire au-dessus du bouton).
+  var htb = document.getElementById('home-theme-btn');
+  if(htb && typeof currentUser!=='undefined' && currentUser) htb.style.display = dev ? '' : 'none';
 }
 // Destination du bouton bn-dev selon le profil : hub dev pour les admins,
 // écran Options (menu des réglages) pour les joueurs.
@@ -12368,6 +12470,7 @@ function showScreen(id){
   applyLang();
   if(typeof _pieceSkinShowHook==='function')_pieceSkinShowHook(id);
   if(id==='piece-skins' && typeof updateWurmzSkinToggle==='function') updateWurmzSkinToggle();
+  if(id==='display' && typeof renderCameraModeRow==='function') renderCameraModeRow();
   if(id==='fighter-skins' && typeof initFighterSkinScreen==='function') initFighterSkinScreen();
   if(id==='menu'){const el=document.getElementById('menu-quote');if(el)el.style.display='none';}
   if(id==='profile')renderProfile();
@@ -12392,6 +12495,10 @@ function showScreen(id){
     document.getElementById('screen-game').classList.remove('board-hidden');
     var logoutBtn = document.getElementById('menu-logout-btn');
     if(logoutBtn) logoutBtn.style.display = currentUser ? 'block' : 'none';
+  }
+  if(id==='settings'){
+    var settingsLogoutBtn = document.getElementById('settings-logout-btn');
+    if(settingsLogoutBtn) settingsLogoutBtn.style.display = currentUser ? 'block' : 'none';
   }
   if(id==='game'){ if(typeof stopMenuMusic==='function') stopMenuMusic(); }
   if(id==='home'){ if(typeof stopMenuMusic==='function') stopMenuMusic(); if(typeof stopFightMusic==='function') stopFightMusic(); if(typeof refreshHomeOnlineCount==='function') refreshHomeOnlineCount(); if(typeof applyHomeLogoAura==='function') applyHomeLogoAura(); }
@@ -12436,24 +12543,33 @@ var VILLAGE_BUILDINGS = [
   { id:'chateau', label:'Château', cx:13, cy:20, w:24, h:32, online:true, items:[
       // Campagne : en chantier (popup « bientôt »). Défi du jour a migré au Dojo.
       {label:'Campagne', ico:'📜', soon:true},
-      // Tuto : déménagé au DOJO (demande Thomas, 2026-08-14). Cette entrée
-      // redirige simplement vers le panneau du Dojo — pas de doublon d'écran.
-      {label:'Tuto (voir Dojo)', ico:'典', fn:'villageOpenBuilding', arg:'dojo'},
+      // Tuto : déménagé au DOJO (demande Thomas, 2026-08-14). L'ancien renvoi
+      // depuis le Château a été retiré (/ui-optimiser, décision Wurmz
+      // 2026-08-15) : le tuto vit UNIQUEMENT au Dojo, pas de doublon.
       {label:'Quêtes du jour', ico:'🗒', soon:true},
       {label:'Événements & saisons', ico:'🎏', screen:'events', online:true} ] },
+  // « Armée de bots (online) » (réglages du worker) retirée d'ici (V0.80.0) :
+  // c'est un doublon, le bouton existe déjà dans Menu DEV (screen-dev-hub).
   { id:'soleil', label:'', cx:50, cy:16, w:9, h:16, dev:true, items:[
-      {label:'Menu DEV', ico:'🛠', screen:'dev-hub', dev:true},
-      {label:'Armée de bots', ico:'🤖', screen:'dev-bots', dev:true} ] },
+      {label:'Menu DEV', ico:'🛠', screen:'dev-hub', dev:true} ] },
+  // Zone cachée dans les éclaboussures de la cascade (demande Wurmz,
+  // 2026-08-15) : ouvre la galerie des 16 adversaires nommés de la Bot-Army
+  // (screen-bot-gallery, jusqu'ici orpheline — showBotGallery() n'avait aucun
+  // appelant). Contenu joueur, pas dev : accessible à tous, en secret.
+  { id:'cascade', label:'', cx:94, cy:52, w:9, h:11, items:[
+      {label:'Bot-Army', ico:'🤖', fn:'showBotGallery'} ] },
+  // Refonte /ui-optimiser (V0.80.0) : 3 portes au lieu de 10 entrées à plat
+  // (proposition validée par Wurmz le 2026-08-15). screen-menu n'est plus un
+  // point d'entrée Maison (c'était un péage : son seul contenu propre était
+  // la déconnexion, relogée dans Réglages > Compte). Identité fusionnée dans
+  // Profil (bouton dédié). Skins de pièces/combattant + écran d'accueil
+  // fusionnés dans Apparence (screen-piece-skins, devenu écran à sections).
+  // Langue + Confidentialité restent chacun un item de Réglages (settings),
+  // plus d'entrée directe ici.
   { id:'maison', label:'Maison', cx:26, cy:50, w:20, h:28, items:[
-      {label:'Profil', ico:'侍', screen:'profile'},
-      {label:'Options & paramètres', ico:'⚙', screen:'menu'},
-      {label:'Identité', ico:'📇', screen:'identite'},
-      {label:'Apparence & thèmes', ico:'🎨', screen:'display'},
-      {label:'Skins de pièces', ico:'♟', screen:'piece-skins'},
-      {label:'Skin de combattant', ico:'⚔', screen:'fighter-skins'},
-      {label:'Langue', ico:'🌐', screen:'language'},
-      {label:'Écran d’accueil', ico:'🏮', screen:'home-logo-cfg'},
-      {label:'Confidentialité du compte', ico:'🔒', screen:'account-privacy'},
+      {label:'Mon Combattant', ico:'侍', screen:'profile'},
+      {label:'Apparence', ico:'観', screen:'piece-skins'},
+      {label:'Réglages', ico:'⚙', screen:'settings'},
       {label:'Menu DEV', ico:'🛠', screen:'dev-hub', dev:true} ] },
   { id:'auberge', label:'Auberge', cx:43, cy:46, w:17, h:23, items:[
       {label:'Notifications', ico:'🔔', fn:'openNotificationsModal', online:true},
@@ -12516,7 +12632,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.76.0';
+var DEVLOG_LATEST = 'V0.80.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -12908,6 +13024,10 @@ function updateUiThemeButtons(){
   var cur = currentUiTheme();
   var wurmzOk = isWurmzThemeUnlocked();
   var dev = (typeof isDevUser==='function' && isDevUser());
+  // Sections entières (titre + sélecteur, + Ciel Sumi) : réservées dev. Les
+  // boutons individuels restent masqués ci-dessous par sécurité (défense en
+  // profondeur), mais c'est ce toggle qui évite les titres/sections orphelins.
+  document.querySelectorAll('.uitheme-section').forEach(function(s){ s.style.display = dev ? '' : 'none'; });
   document.querySelectorAll('.uitheme-btn').forEach(function(b){
     // Hors dev : seul le bouton Village est visible (les autres thèmes sont
     // des outils de test réservés aux devs).
@@ -20973,7 +21093,8 @@ async function syncAppearancePrefsToCloud(){
         title_idx: PP.title||0,
         home_logo_action: getHomeLogoAction(),
         home_logo_aura: getHomeLogoAura(),
-        fighter_skin: userPrefs.fighterSkin||null
+        fighter_skin: userPrefs.fighterSkin||null,
+        camera_mode: userPrefs.cameraMode||'dominant'
       }
     }).eq('id', currentUser.id);
   }catch(e){}
@@ -22421,8 +22542,9 @@ function updateWinProbBar(){
   // sans personnages en fond (ils restent réservés au premier plan).
   var sep = document.getElementById('win-prob-separator');
   if(sep) sep.style.left = pct + '%';
-  applyCombatAnimPan(pct);
-  updateCombatStageBgPan(pct);
+  var camPct = effectiveCameraPct(pct);
+  applyCombatAnimPan(camPct);
+  updateCombatStageBgPan(camPct);
 }
 function resetWinProbBar(){
   var bgWhite = document.getElementById('win-prob-bg-white');
@@ -22431,6 +22553,47 @@ function resetWinProbBar(){
   if(sep) sep.style.left = '50%';
   applyCombatAnimPan(50);
   updateCombatStageBgPan(50);
+}
+// Caméra du bandeau (D1 de docs/COMBAT_STAGE.md) : la jauge noir/blanc
+// affiche TOUJOURS la vraie probabilité des Blancs (pct, ci-dessus) — seul le
+// travelling visuel (anim de coup + décor) suit le mode choisi.
+//   dominant  : le camp qui MÈNE (lecture brute, pct inchangé)
+//   dominated : le camp EN DIFFICULTÉ (lecture inversée)
+//   me        : MON camp (blanc ou noir selon G.bottomColor), quelle que
+//               soit ma couleur — pas de suivi littéral d'un sprite (aucun
+//               sprite individuel positionable pour l'instant, voir le
+//               damier bloquant de images/skins/), mais une lecture
+//               cohérente "j'avance / je recule" en attendant.
+function effectiveCameraPct(pctWhite){
+  var mode = userPrefs.cameraMode || 'dominant';
+  if(mode==='dominated') return 100 - pctWhite;
+  if(mode==='me'){
+    var myColor = (typeof G!=='undefined' && G && G.bottomColor) || 'white';
+    return myColor==='white' ? pctWhite : (100 - pctWhite);
+  }
+  return pctWhite; // 'dominant'
+}
+var CAMERA_MODES = [
+  {key:'dominant', icon:'⚔', labelKey:'camera_mode_dominant'},
+  {key:'dominated', icon:'🛡', labelKey:'camera_mode_dominated'},
+  {key:'me', icon:'🧍', labelKey:'camera_mode_me'}
+];
+function renderCameraModeRow(){
+  var row = document.getElementById('camera-mode-row');
+  if(!row) return;
+  var cur = userPrefs.cameraMode || 'dominant';
+  row.innerHTML = CAMERA_MODES.map(function(m){
+    var on = cur===m.key;
+    var label = t(m.labelKey) || m.key;
+    return '<button onclick="setCameraMode(\''+m.key+'\')" style="flex:1;padding:8px 4px;border-radius:6px;cursor:pointer;border:1px solid '+(on?'var(--gold-bright)':'rgba(212,160,23,.3)')+';background:'+(on?'rgba(60,45,15,.8)':'rgba(0,0,0,.25)')+';color:'+(on?'var(--gold-bright)':'var(--parchment)')+';font-family:VT323,monospace;font-size:12px;text-align:center">'+m.icon+'<br>'+escapeHtml(label)+'</button>';
+  }).join('');
+}
+function setCameraMode(mode){
+  userPrefs.cameraMode = mode;
+  savePrefs();
+  renderCameraModeRow();
+  if(typeof syncAppearancePrefsToCloud==='function') syncAppearancePrefsToCloud();
+  if(typeof updateWinProbBar==='function') updateWinProbBar();
 }
 // Travelling du décor de scène (D2/P1 de docs/COMBAT_STAGE.md) : l'image est
 // centrée (translateX(-50%)) et volontairement plus large que le bandeau
@@ -25269,6 +25432,7 @@ async function reconcileProfileWithCloud(cloud){
     if(ap.board_layout && ap.board_layout!==currentBoardLayout){ setBoardLayout(ap.board_layout); }
     if(ap.opponent_skin){ pieceSkins.opponent = ap.opponent_skin; try{ savePieceSkins(); }catch(e){} }
     if(ap.fighter_skin){ userPrefs.fighterSkin = ap.fighter_skin; try{ savePrefs(); }catch(e){} }
+    if(ap.camera_mode){ userPrefs.cameraMode = ap.camera_mode; try{ savePrefs(); }catch(e){} }
     if(ap.title_idx !== undefined && ap.title_idx !== PP.title){ PP.title = ap.title_idx; changed = true; }
     // Raccourci du logo d'accueil (le cloud fait foi entre appareils).
     if(ap.home_logo_action){ try{ localStorage.setItem('vtl_home_logo_action', ap.home_logo_action); }catch(e){} }
@@ -25298,7 +25462,8 @@ async function pushFullProfileToCloud(){
         board_theme: currentBoardTheme, pieces_theme: currentPiecesTheme, board_layout: currentBoardLayout,
         opponent_skin: pieceSkins.opponent, title_idx: PP.title||0,
         home_logo_action: getHomeLogoAction(), home_logo_aura: getHomeLogoAura(),
-        fighter_skin: userPrefs.fighterSkin||null
+        fighter_skin: userPrefs.fighterSkin||null,
+        camera_mode: userPrefs.cameraMode||'dominant'
       }
     }).eq('id', currentUser.id);
   }catch(e){}

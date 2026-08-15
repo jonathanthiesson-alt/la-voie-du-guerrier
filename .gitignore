@@ -8,6 +8,7 @@
 skills-lock.json
 # ...sauf les nôtres, qui font partie du projet et se versionnent.
 !.claude/skills/audit-audio/
+!.claude/skills/ui-optimiser/
 
 # Config locale de l'éditeur / de l'agent
 .claude/settings.local.json
