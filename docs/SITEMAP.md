@@ -26,7 +26,7 @@
 
 | Item | Cible | État |
 |---|---|---|
-| Armée des 15 | `showBotGallery()` | actif |
+| Armée des 15 | `openCascadeSecret()` | actif |
 
 ### Maison `maison`
 

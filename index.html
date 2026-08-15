@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.81.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.82.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2497,7 +2497,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <span style="color:var(--gold);opacity:.6;font-size:16px">&#8250;</span>
     </div>
 
-    <!-- Déconnexion relogée ici depuis screen-menu (/ui-optimiser, V0.81.0) :
+    <!-- Déconnexion relogée ici depuis screen-menu (/ui-optimiser, V0.82.0) :
          Réglages > Compte est désormais le seul endroit où on la cherche
          depuis la Maison. -->
     <button class="btn" id="settings-logout-btn" style="display:none;width:100%;margin-top:14px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
@@ -3392,7 +3392,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       </span>
       <span style="color:var(--gold);opacity:.5;font-size:18px">&#8250;</span>
     </button>
-    <!-- Identité fusionnée dans Mon Combattant (/ui-optimiser, V0.81.0) :
+    <!-- Identité fusionnée dans Mon Combattant (/ui-optimiser, V0.82.0) :
          nom, titre affiché, carte de combattant. -->
     <button class="btn" onclick="showScreen('identite')" style="width:100%;margin-bottom:12px;font-size:13px;padding:10px 14px;text-align:left;display:flex;align-items:center;gap:10px;max-width:100%;box-sizing:border-box">
       <span style="font-size:20px">&#128100;</span>
@@ -3762,24 +3762,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.81.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.82.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
-    </div>
-
-    <div class="devlog-entry">
-      <div class="devlog-version">ONLINE alpha V0.81.0 &mdash; 15 ao&ucirc;t 2026</div>
-      <ul class="devlog-list">
-        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; ARM&Eacute;E DES 15 &mdash; POINT SECRET R&Eacute;DUIT</li>
-        <li>La zone cach&eacute;e de la cascade &eacute;tait trop grande (large ellipse visible) : elle devient un petit point discret pos&eacute; pr&eacute;cis&eacute;ment sur l'&eacute;cume, comme les autres zones secr&egrave;tes du village. La galerie se renomme &laquo; Arm&eacute;e des 15 &raquo; (avant : Bot-Army).</li>
-      </ul>
-    </div>
-
-    <div class="devlog-entry">
-      <div class="devlog-version">ONLINE alpha V0.80.0 &mdash; 15 ao&ucirc;t 2026</div>
-      <ul class="devlog-list">
-        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; BOT-ARMY : CASCADE SECR&Egrave;TE + M&Eacute;NAGE SOLEIL</li>
-        <li>La galerie des 16 adversaires nomm&eacute;s de la Bot-Army (jusque-l&agrave; inaccessible) s'ouvre d&eacute;sormais en cliquant dans les &eacute;claboussures de la cascade, en secret. Le r&eacute;glage du worker (Arm&eacute;e de bots, admin) est retir&eacute; du Soleil : il ne vit plus que dans Menu DEV, o&ugrave; il &eacute;tait d&eacute;j&agrave; en double.</li>
-      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -4884,7 +4868,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     </div>
 
     <!-- Skin de combattant + écran d'accueil fusionnés dans Apparence
-         (/ui-optimiser, V0.81.0) : Apparence est l'unique porte « regarder/
+         (/ui-optimiser, V0.82.0) : Apparence est l'unique porte « regarder/
          personnaliser », plus de sous-écrans dispersés en Réglages. -->
     <div style="display:flex;gap:8px;margin-bottom:14px">
       <button class="btn" onclick="showScreen('fighter-skins')" style="flex:1;font-size:12px;padding:9px 10px;text-align:left;display:flex;align-items:center;gap:8px">
@@ -7867,6 +7851,7 @@ const ACH=[
   // liste des verrouillés : le trouver EST le succès). Voir buildAchievementsHtml.
   {id:'ba_ronin',name:'Mon nom est Taira no Masakado',desc:'Vaincre 0-Rōnin — l’Onryō sans nom, celui qu’on n’ose nommer',icon:'怨',xp:400,secret:true},
   {id:'find_wurmz',name:'Trouver Wurmz',desc:'Attraper le bousier qui rôde sur l’accueil',icon:'🪲',xp:100,secret:true},
+  {id:'splash_secret',name:'Splash',desc:'Trouver le point caché dans les éclaboussures de la cascade du village',icon:'💦',xp:120,secret:true},
 ];
 
 // Construit les deux cases "Blancs"/"Noirs" pour une cadence donnée —
@@ -8318,7 +8303,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.81.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.82.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8548,7 +8533,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.81.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.82.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -8769,7 +8754,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.81.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.82.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -10555,6 +10540,13 @@ function _botMedallion(b, size, dim){
     +'font-family:\'Noto Serif JP\',serif;font-size:'+Math.round(s*0.42)+'px;color:'+col+';'
     +(dim?'filter:grayscale(1) brightness(.6);opacity:.5;':'')+'">'+b.kanji+'</div>';
 }
+// Premier clic sur le point secret de la cascade → succès dédié (voir ACH),
+// silencieux dans le code au-delà de ce commentaire : rien ne doit fuiter
+// dans le devlog ni ailleurs, trouver la zone EST le secret.
+function openCascadeSecret(){
+  if(typeof unlockAch==='function') unlockAch('splash_secret');
+  showBotGallery();
+}
 async function showBotGallery(){
   showScreen('bot-gallery');
   applyBackfillPrefUI();       // réglages de la bot army déplacés en tête de ce menu
@@ -10582,7 +10574,7 @@ function renderBotGallery(){
   grid.innerHTML = visible.map(function(b){
     if(!botArmyUnlocked(b)){
       // Grisé : médaillon éteint, nom masqué, message au clic (déblocage en chaîne).
-      return '<div onclick="showToast(\'Bats le bot précédent pour le débloquer.\', false)" '
+      return '<div onclick="showToast(\'Bats le bot précédent EN LIGNE pour le débloquer.\', false)" '
         +'style="display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(0,0,0,.28);border:1px dashed rgba(160,170,190,.3);border-radius:10px;padding:10px 6px;cursor:pointer">'
         +_botMedallion(b,50,true)
         +'<div style="font-family:VT323,monospace;font-size:12px;color:#8aa0c0;opacity:.7">🔒 №'+b.num+'</div>'
@@ -10616,6 +10608,9 @@ function openBotProfile(key){
   var b=botById(key);
   if(!b) return;
   var col=_botTierColor(b.tier);
+  // Le duel amical (revanche) n'est offert qu'APRÈS une victoire EN LIGNE
+  // contre ce bot précis (demande Wurmz, 2026-08-15) — voir checkOnlineBotArmyWin.
+  var beatenOnline = hasDefeatedBot(b.num);
   var ov=document.createElement('div');
   ov.id='bot-profile-overlay';
   ov.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;padding:24px';
@@ -10635,8 +10630,10 @@ function openBotProfile(key){
       +'<b style="font-family:\'Noto Serif JP\',serif">'+b.rankKanji+'</b> (<i>'+escapeHtml(b.rank)+'</i>) : '+escapeHtml(b.meaning)+'.'
     +'</div>'
     +'<div style="font-family:VT323,monospace;font-size:14px;line-height:1.45;color:var(--parchment);opacity:.78;margin-top:10px;border-left:2px solid '+col+'55;padding-left:10px">'+escapeHtml(b.lore)+'</div>'
-    +'<button class="btn" style="width:100%;margin-top:18px;font-size:13px;padding:11px;border-color:'+col+'88;color:'+col+'" onclick="challengeBot(\''+b.key+'\')">&#9876; D&eacute;fier '+escapeHtml(b.rank)+'</button>'
-    +'<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.45;text-align:center;margin-top:5px">Combat amical &middot; aucun gain (ni XP, ni monnaie)</div>'
+    +(beatenOnline
+      ? '<button class="btn" style="width:100%;margin-top:18px;font-size:13px;padding:11px;border-color:'+col+'88;color:'+col+'" onclick="challengeBot(\''+b.key+'\')">&#9876; D&eacute;fier '+escapeHtml(b.rank)+'</button>'
+        +'<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.45;text-align:center;margin-top:5px">Revanche amicale &middot; aucun gain (ni XP, ni monnaie)</div>'
+      : '<div style="width:100%;margin-top:18px;font-size:12px;padding:11px;text-align:center;border:1px dashed rgba(160,170,190,.35);border-radius:8px;color:#8aa0c0;font-family:VT323,monospace">&#128274; Bats-le d&rsquo;abord EN LIGNE (matchmaking) pour d&eacute;bloquer ce duel.</div>')
     +'<button class="btn" style="width:100%;margin-top:8px;font-size:12px;padding:9px" onclick="closeBotProfile()">Fermer</button>'
   +'</div>';
   document.body.appendChild(ov);
@@ -10677,16 +10674,20 @@ function challengeBot(key){
   confirmLaunch();
 }
 // Fin d'un défi amical (appelé depuis endGame quand G._friendlyBotArmy est posé).
+// Le défi amical NE COMPTE PLUS pour la progression (demande Wurmz,
+// 2026-08-15) : ce n'est qu'une revanche symbolique, déjà réservée aux bots
+// battus EN LIGNE (voir openBotProfile). Ni déblocage du suivant, ni marquage
+// « vaincu » ici — uniquement checkOnlineBotArmyWin() fait foi désormais.
 function handleBotArmyEnd(bc, playerWon){
   var b = botById(bc.key) || bc;
   if(playerWon){
-    markBotDefeated(bc.num); // vaincu + rencontré + vérif succès
-    setTimeout(function(){ showToast('⚔ №'+bc.num+' · '+b.rank+' vaincu !', false); }, 1000);
+    setTimeout(function(){ showToast('⚔ №'+bc.num+' · '+b.rank+' rebattu en duel amical.', false); }, 1000);
   }else{
     setTimeout(function(){ showToast('« '+b.rank+' garde l\'avantage… reviens plus fort. »', false); }, 1000);
   }
 }
-// ── Bots vaincus (défis amicaux) — suivi local + succès dédiés ─────────
+// ── Bots vaincus EN LIGNE (matchmaking réel contre un compte bot_roster) —
+// suivi local + succès dédiés. Seule source d'écriture : checkOnlineBotArmyWin.
 function _defeatedBots(){ try{ return JSON.parse(localStorage.getItem('vtl_bots_defeated')||'[]'); }catch(e){ return []; } }
 function hasDefeatedBot(num){ return _defeatedBots().indexOf(num)!==-1; }
 function markBotDefeated(num){
@@ -10697,9 +10698,30 @@ function markBotDefeated(num){
   checkBotArmyAchievements();
 }
 function botById2ByNum(num){ for(var i=0;i<_botRoster.length;i++){ if(_botRoster[i].num===num) return _botRoster[i]; } return null; }
-// Déblocage EN CHAÎNE : au départ seul le 01 est jouable ; vaincre un bot (en
-// défi amical OU en partie en ligne) débloque le numéro suivant, jusqu'au Rōnin
-// (00), qui n'apparaît qu'une fois le 15 vaincu. Tout le reste reste grisé.
+// Victoire EN LIGNE (matchmaking réel) contre un compte de l'Armée des 15 —
+// détectée en comparant l'adversaire de la partie à bot_roster.profile_id
+// (RLS lecture publique, voir sql_a_executer/bot_team15.sql). SEULE source qui
+// fasse progresser la chaîne et débloque le défi amical (rebattre) sur ce bot.
+// Best-effort, appelée depuis endGame() sans bloquer la fin de partie.
+async function checkOnlineBotArmyWin(){
+  if(!G.onlineGameId || typeof supa==='undefined' || !supa || !currentUser) return;
+  try{
+    var g = await supa.from('online_games').select('white_player_id,black_player_id').eq('id', G.onlineGameId).single();
+    if(!g || !g.data) return;
+    var oppId = (g.data.white_player_id===currentUser.id) ? g.data.black_player_id : g.data.white_player_id;
+    if(!oppId) return;
+    var r = await supa.from('bot_roster').select('num,rank').eq('profile_id', oppId).single();
+    if(!r || !r.data || !r.data.num) return;
+    var num = r.data.num;
+    if(hasDefeatedBot(num)) return; // déjà comptabilisé
+    markBotDefeated(num);
+    setTimeout(function(){ showToast('⚔ №'+num+' · '+(r.data.rank||'')+' vaincu en ligne — défi amical débloqué !', false); }, 1200);
+  }catch(e){}
+}
+// Déblocage EN CHAÎNE : au départ seul le 01 est jouable ; SEULE une victoire
+// EN LIGNE (checkOnlineBotArmyWin) débloque le numéro suivant — le défi amical
+// depuis la galerie ne compte plus (demande Wurmz, 2026-08-15). Le Rōnin (00)
+// n'apparaît qu'une fois le 15 vaincu en ligne. Tout le reste reste grisé.
 function botArmyUnlocked(b){
   if(!b) return false;
   if(b.num==='01') return true;
@@ -12559,7 +12581,7 @@ var VILLAGE_BUILDINGS = [
       // 2026-08-15) : le tuto vit UNIQUEMENT au Dojo, pas de doublon.
       {label:'Quêtes du jour', ico:'🗒', soon:true},
       {label:'Événements & saisons', ico:'🎏', screen:'events', online:true} ] },
-  // « Armée de bots (online) » (réglages du worker) retirée d'ici (V0.81.0) :
+  // « Armée de bots (online) » (réglages du worker) retirée d'ici (V0.82.0) :
   // c'est un doublon, le bouton existe déjà dans Menu DEV (screen-dev-hub).
   { id:'soleil', label:'', cx:50, cy:16, w:9, h:16, dev:true, items:[
       {label:'Menu DEV', ico:'🛠', screen:'dev-hub', dev:true} ] },
@@ -12570,8 +12592,8 @@ var VILLAGE_BUILDINGS = [
   // Volontairement PETITE (contrairement aux bâtiments) : un point discret sur
   // l'écume blanche, pas une large ellipse repérable au premier coup d'œil.
   { id:'cascade', label:'', cx:94, cy:52, w:3.5, h:4.5, items:[
-      {label:'Armée des 15', ico:'🤖', fn:'showBotGallery'} ] },
-  // Refonte /ui-optimiser (V0.81.0) : 3 portes au lieu de 10 entrées à plat
+      {label:'Armée des 15', ico:'🤖', fn:'openCascadeSecret'} ] },
+  // Refonte /ui-optimiser (V0.82.0) : 3 portes au lieu de 10 entrées à plat
   // (proposition validée par Wurmz le 2026-08-15). screen-menu n'est plus un
   // point d'entrée Maison (c'était un péage : son seul contenu propre était
   // la déconnexion, relogée dans Réglages > Compte). Identité fusionnée dans
@@ -12645,7 +12667,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.81.0';
+var DEVLOG_LATEST = 'V0.79.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -16370,6 +16392,7 @@ function endGame(winner,reason){
   var playerWon=(winner===G.bottomColor);
   // Quête "Gagner 1 partie" — uniquement sur une vraie victoire en ligne.
   if(playerWon && G.onlineGameId && typeof reportQuestProgress==='function'){ reportQuestProgress('win_game'); }
+  if(playerWon && G.onlineGameId && typeof checkOnlineBotArmyWin==='function') checkOnlineBotArmyWin();
   // 1re victoire du jour (en ligne OU contre un bot) → 1 🍄 Shiitake.
   // Le serveur ne crédite qu'une fois par jour, quel que soit le nombre d'appels.
   if(playerWon && (G.onlineGameId || vsAI) && typeof recordDailyFirstWin==='function'){ recordDailyFirstWin(); }
