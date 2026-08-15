@@ -26,7 +26,7 @@
 
 | Item | Cible | État |
 |---|---|---|
-| Bot-Army | `showBotGallery()` | actif |
+| Armée des 15 | `showBotGallery()` | actif |
 
 ### Maison `maison`
 
