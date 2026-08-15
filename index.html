@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.82.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.83.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2497,7 +2497,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <span style="color:var(--gold);opacity:.6;font-size:16px">&#8250;</span>
     </div>
 
-    <!-- Déconnexion relogée ici depuis screen-menu (/ui-optimiser, V0.82.0) :
+    <!-- Déconnexion relogée ici depuis screen-menu (/ui-optimiser, V0.83.0) :
          Réglages > Compte est désormais le seul endroit où on la cherche
          depuis la Maison. -->
     <button class="btn" id="settings-logout-btn" style="display:none;width:100%;margin-top:14px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="onlineLogOut()">Se d&#233;connecter</button>
@@ -3392,7 +3392,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       </span>
       <span style="color:var(--gold);opacity:.5;font-size:18px">&#8250;</span>
     </button>
-    <!-- Identité fusionnée dans Mon Combattant (/ui-optimiser, V0.82.0) :
+    <!-- Identité fusionnée dans Mon Combattant (/ui-optimiser, V0.83.0) :
          nom, titre affiché, carte de combattant. -->
     <button class="btn" onclick="showScreen('identite')" style="width:100%;margin-bottom:12px;font-size:13px;padding:10px 14px;text-align:left;display:flex;align-items:center;gap:10px;max-width:100%;box-sizing:border-box">
       <span style="font-size:20px">&#128100;</span>
@@ -3762,8 +3762,16 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.82.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.83.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.83.0 &mdash; 15 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; NOUVELLE CARTE DU VILLAGE</li>
+        <li>Nouveau d&eacute;cor pixel-art pour la carte du village (fourni par Thomas). Tous les b&acirc;timents recal&eacute;s sur la nouvelle image ; le chariot dispara&icirc;t du d&eacute;cor, la sortie &laquo;&nbsp;Quitter le village&nbsp;&raquo; d&eacute;m&eacute;nage tout &agrave; droite, sur le chemin pr&egrave;s de la cascade.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -4868,7 +4876,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     </div>
 
     <!-- Skin de combattant + écran d'accueil fusionnés dans Apparence
-         (/ui-optimiser, V0.82.0) : Apparence est l'unique porte « regarder/
+         (/ui-optimiser, V0.83.0) : Apparence est l'unique porte « regarder/
          personnaliser », plus de sous-écrans dispersés en Réglages. -->
     <div style="display:flex;gap:8px;margin-bottom:14px">
       <button class="btn" onclick="showScreen('fighter-skins')" style="flex:1;font-size:12px;padding:9px 10px;text-align:left;display:flex;align-items:center;gap:8px">
@@ -8303,7 +8311,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.82.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.83.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8533,7 +8541,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.82.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.83.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -8754,7 +8762,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.82.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.83.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -12572,8 +12580,12 @@ function showScreen(id){
 //   bâtiment : {online?} = tout entier verrouillé hors-ligne (grisé) ;
 //              {dev?}    = visible/cliquable par les seuls comptes dev.
 // ══════════════════════════════════════════════════════════════════════
+// Coordonnées recalées le 2026-08-15 sur la nouvelle image pixel-art
+// (assets/village/village-map.png, remplace l'ancienne — archivée dans
+// assets/village/archive/). Repérées par recadrage/échantillonnage de
+// l'image (scripts/_crop*.png, jetables) plutôt qu'à l'estimation.
 var VILLAGE_BUILDINGS = [
-  { id:'chateau', label:'Château', cx:13, cy:20, w:24, h:32, online:true, items:[
+  { id:'chateau', label:'Château', cx:14, cy:18, w:24, h:30, online:true, items:[
       // Campagne : en chantier (popup « bientôt »). Défi du jour a migré au Dojo.
       {label:'Campagne', ico:'📜', soon:true},
       // Tuto : déménagé au DOJO (demande Thomas, 2026-08-14). L'ancien renvoi
@@ -12581,9 +12593,9 @@ var VILLAGE_BUILDINGS = [
       // 2026-08-15) : le tuto vit UNIQUEMENT au Dojo, pas de doublon.
       {label:'Quêtes du jour', ico:'🗒', soon:true},
       {label:'Événements & saisons', ico:'🎏', screen:'events', online:true} ] },
-  // « Armée de bots (online) » (réglages du worker) retirée d'ici (V0.82.0) :
+  // « Armée de bots (online) » (réglages du worker) retirée d'ici (V0.83.0) :
   // c'est un doublon, le bouton existe déjà dans Menu DEV (screen-dev-hub).
-  { id:'soleil', label:'', cx:50, cy:16, w:9, h:16, dev:true, items:[
+  { id:'soleil', label:'', cx:51, cy:14, w:9, h:16, dev:true, items:[
       {label:'Menu DEV', ico:'🛠', screen:'dev-hub', dev:true} ] },
   // Zone cachée dans les éclaboussures de la cascade (demande Wurmz,
   // 2026-08-15) : ouvre la galerie des 16 adversaires nommés (l'Armée des 15,
@@ -12591,9 +12603,9 @@ var VILLAGE_BUILDINGS = [
   // appelant). Contenu joueur, pas dev : accessible à tous, en secret.
   // Volontairement PETITE (contrairement aux bâtiments) : un point discret sur
   // l'écume blanche, pas une large ellipse repérable au premier coup d'œil.
-  { id:'cascade', label:'', cx:94, cy:52, w:3.5, h:4.5, items:[
+  { id:'cascade', label:'', cx:93, cy:50, w:3.5, h:4.5, items:[
       {label:'Armée des 15', ico:'🤖', fn:'openCascadeSecret'} ] },
-  // Refonte /ui-optimiser (V0.82.0) : 3 portes au lieu de 10 entrées à plat
+  // Refonte /ui-optimiser (V0.83.0) : 3 portes au lieu de 10 entrées à plat
   // (proposition validée par Wurmz le 2026-08-15). screen-menu n'est plus un
   // point d'entrée Maison (c'était un péage : son seul contenu propre était
   // la déconnexion, relogée dans Réglages > Compte). Identité fusionnée dans
@@ -12601,19 +12613,19 @@ var VILLAGE_BUILDINGS = [
   // fusionnés dans Apparence (screen-piece-skins, devenu écran à sections).
   // Langue + Confidentialité restent chacun un item de Réglages (settings),
   // plus d'entrée directe ici.
-  { id:'maison', label:'Maison', cx:26, cy:50, w:20, h:28, items:[
+  { id:'maison', label:'Maison', cx:27, cy:50, w:18, h:22, items:[
       {label:'Mon Combattant', ico:'侍', screen:'profile'},
       {label:'Apparence', ico:'観', screen:'piece-skins'},
       {label:'Réglages', ico:'⚙', screen:'settings'},
       {label:'Menu DEV', ico:'🛠', screen:'dev-hub', dev:true} ] },
-  { id:'auberge', label:'Auberge', cx:43, cy:46, w:17, h:23, items:[
+  { id:'auberge', label:'Auberge', cx:47, cy:50, w:20, h:24, items:[
       {label:'Notifications', ico:'🔔', fn:'openNotificationsModal', online:true},
       {label:'Amis', ico:'👥', screen:'amis', online:true},
       {label:'Messagerie', ico:'✉', screen:'messaging', online:true},
       {label:'Forums', ico:'💬', soon:true},
       {label:'News', ico:'📰', soon:true},
       {label:'DevLog (mises à jour)', ico:'📓', screen:'devlog'} ] },
-  { id:'archives', label:'Archives', cx:55, cy:47, w:13, h:20, items:[
+  { id:'archives', label:'Archives', cx:70, cy:58, w:16, h:20, items:[
       {label:'Statistiques', ico:'📊', screen:'profile-stats'},
       {label:'Records', ico:'🏅', screen:'profile-records'},
       {label:'Succès', ico:'🎖', screen:'profile-achievements'},
@@ -12621,7 +12633,7 @@ var VILLAGE_BUILDINGS = [
       {label:'Lore & citations', ico:'📖', screen:'citations'},
       {label:'Série de connexion', ico:'🔥', screen:'play', online:true},
       {label:'Journal d’activité', ico:'📜', screen:'play', online:true} ] },
-  { id:'dojo', label:'Dojo', cx:73, cy:41, w:20, h:24, online:true, items:[
+  { id:'dojo', label:'Dojo', cx:78, cy:38, w:20, h:22, online:true, items:[
       // Défi du jour rapatrié depuis le Château (a aussi son icône dédiée sur
       // la carte, voir #village-daily-btn). « IA » retiré ; « Maîtres IA »
       // renommé « Adversaires ». Shin-AI retiré (déjà dans Adversaires notables).
@@ -12633,20 +12645,23 @@ var VILLAGE_BUILDINGS = [
       {label:'Adversaires notables', ico:'★', fn:'openLocalMode', arg:'ai-notable'},
       {label:'Tuto (règles & La Voie du Bousier)', ico:'典', screen:'rules'},
       {label:'Karakuri (entraînement)', ico:'傀', screen:'training-bot'} ] },
-  { id:'arene', label:'Arène', cx:12, cy:76, w:20, h:26, online:true, items:[
+  { id:'arene', label:'Arène', cx:13, cy:73, w:20, h:26, online:true, items:[
       // Ligue / Classement / Bot army retirés de l'Arène (Bot army → Soleil).
       {label:'Modes de combat', ico:'⚔', screen:'play', online:true},
       {label:'Joueurs en ligne', ico:'🟢', screen:'online-menu', online:true} ] },
-  { id:'guilde', label:'Guilde', cx:38, cy:75, w:24, h:30, online:true, items:[
+  { id:'guilde', label:'Guilde', cx:39, cy:73, w:22, h:26, online:true, items:[
       {label:'Guilde', ico:'🏯', screen:'guild', online:true} ] },
-  { id:'marche', label:'Marché', cx:68, cy:65, w:20, h:22, online:true, items:[
+  { id:'marche', label:'Marché', cx:58, cy:67, w:20, h:20, online:true, items:[
       {label:'Boutique', ico:'🏪', screen:'shop', online:true} ] },
-  { id:'port', label:'Port', cx:88, cy:76, w:15, h:22, items:[
+  { id:'port', label:'Port', cx:89, cy:85, w:14, h:18, items:[
       {label:'Changer de village', ico:'⚓', soon:true} ] },
-  // Chariot (décor en bas à gauche de la carte) = sortie du village vers
-  // l'écran d'accueil. Mono-item → clic direct, pas de panneau.
-  { id:'chariot', label:'Quitter le village', cx:6, cy:53, w:14, h:20, items:[
-      {label:'Quitter le village', ico:'🐴', fn:'quitVillageToHome'} ] }
+  // Sortie du village vers l'écran d'accueil. Repositionnée le 2026-08-15 :
+  // la nouvelle image n'a plus de chariot (décor) — placée tout à droite,
+  // sur le chemin qui longe la cascade, entre elle et le Port. Mono-item →
+  // clic direct, pas de panneau. id/fn conservés (aucune autre référence à
+  // toucher : quitVillageToHome, tuto, etc.).
+  { id:'chariot', label:'Quitter le village', cx:96, cy:62, w:8, h:11, items:[
+      {label:'Quitter le village', ico:'🚪', fn:'quitVillageToHome'} ] }
 ];
 // Fin de l'événement Sumo : 31 août 2026 (cf. bannière pub « jusqu'au 31 août »).
 // Source unique du compte à rebours affiché sur le bouton Sumo de la carte.
@@ -12667,7 +12682,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.79.0';
+var DEVLOG_LATEST = 'V0.83.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -27912,7 +27927,7 @@ window.addEventListener('beforeunload', () => {
      Carte panoramique défilable ; chaque bâtiment cerclé ouvre un sous-panneau
      de raccourcis vers les écrans existants. Les zones et les panneaux sont
      générés par buildVillageMap() à partir de VILLAGE_BUILDINGS. Voir
-     docs/UI_VILLAGE.md. Le reste (torii, chariot, cascade…) est décor. -->
+     docs/UI_VILLAGE.md. Le reste (torii, ponts, bateaux…) est décor. -->
 <div id="screen-village" class="screen">
   <div id="village-topbar">
     <div class="vtb-currencies" id="vtb-currencies"></div>
