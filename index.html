@@ -284,7 +284,7 @@ body.ui-village.village-nofab #village-home-btn{display:none}
    l'image 1024×572 (aspect 1024/240 → top ~42%), soleil à ~48%/40% de la bande. */
 body.ui-village #home-logo,
 body.ui-village #wurmz-home-emblem{display:none!important}
-#village-home-art{display:none;position:relative;width:100%;max-width:340px;aspect-ratio:1024/240;margin:0 auto 6px;border-radius:10px;overflow:hidden;background-image:url('assets/village/village-map.png');background-size:100% auto;background-position:top center;box-shadow:0 6px 22px rgba(0,0,0,.5);border:1px solid rgba(200,168,110,.3)}
+#village-home-art{display:none;position:relative;width:100%;max-width:340px;aspect-ratio:1024/240;margin:0 auto 6px;border-radius:10px;overflow:hidden;background-image:url('assets/village/village-map.png?v=0.83.0');background-size:100% auto;background-position:top center;box-shadow:0 6px 22px rgba(0,0,0,.5);border:1px solid rgba(200,168,110,.3)}
 body.ui-village #village-home-art{display:block}
 #village-home-sun{position:absolute;left:48%;top:40%;width:20%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:transparent;border:none;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}
 #village-home-sun::before{content:'';position:absolute;inset:-35%;border-radius:50%;background:radial-gradient(circle,rgba(255,180,70,.6),rgba(255,140,30,0) 70%);animation:villageSunPulse 3s ease-in-out infinite;pointer-events:none}
@@ -27937,7 +27937,7 @@ window.addEventListener('beforeunload', () => {
   <button id="village-login" onclick="showScreen('online-auth')">🔑 Se connecter</button>
   <div id="village-scroll">
     <div id="village-canvas">
-      <img id="village-bg" src="assets/village/village-map.png" alt="Village">
+      <img id="village-bg" src="assets/village/village-map.png?v=0.83.0" alt="Village">
       <!-- .village-zone injectées par buildVillageMap() -->
     </div>
   </div>
