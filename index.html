@@ -2410,8 +2410,10 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       <div class="menu-title" style="font-size:18px;margin-top:6px">&#129302; <span data-i18n="bot_gallery_title">ARM&#201;E DES 15</span></div>
       <div style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment);opacity:.6;text-align:center;margin-bottom:10px">Les seize adversaires de la Voie. Affrontez-les pour d&eacute;voiler les plus grands&hellip;</div>
       <!-- Réglages de l'armée de bots (compagnon de jeu) — déplacés du matchmaking
-           ici, en tête du menu Bot-Army : un bot online d'Elo proche rejoint le
-           joueur qui poireaute en file. Préférence locale (want_backfill/backfill_after). -->
+           ici, en tête du menu Bot-Army : le PROCHAIN bot non vaincu de la chaîne
+           (01→15→00) rejoint le joueur qui poireaute en file (demande Wurmz,
+           2026-08-15 : on progresse en battant, plus au fil de l'Elo). Préférence
+           locale (want_backfill/backfill_after). -->
       <label style="display:flex;align-items:flex-start;gap:8px;font-family:VT323,monospace;font-size:13px;color:var(--parchment);cursor:pointer;margin-bottom:6px;line-height:1.35">
         <input type="checkbox" id="mm-backfill-toggle" onchange="onBackfillToggle()" style="margin-top:2px">
         <span>&#129302; Un bot de la Bot-Army me rejoint en <strong>Combat simple</strong> ou <strong>Combat 3 manches</strong> si aucun adversaire n'est trouv&eacute; apr&egrave;s :</span>
@@ -2422,7 +2424,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       </div>
       <label id="mm-backfill-random-row" style="display:none;align-items:flex-start;gap:8px;font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.85;cursor:pointer;margin:0 0 10px 24px;line-height:1.35">
         <input type="checkbox" id="mm-backfill-random" onchange="onBackfillRandomInput()" style="margin-top:2px">
-        <span>&#127922; <strong>Al&eacute;atoire</strong> &mdash; un bot au hasard plut&ocirc;t que le plus proche de mon Elo</span>
+        <span>&#127922; <strong>Al&eacute;atoire</strong> &mdash; un bot au hasard plut&ocirc;t que le prochain de la cha&icirc;ne</span>
       </label>
       <div class="menu-divider"></div>
       <div id="bot-gallery-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
@@ -2691,21 +2693,12 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="openDevParam()">🤖 Bots (IA locale)</button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-bots')">🤖 Armée de bots (online)</button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-lab')">🔬 Laboratoire (équilibre · ouvertures · tactiques · modes)</button>
-    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('dev-lore')">巻 Lore (bible narrative)</button>
     <button class="btn btn-devtest" style="width:100%;margin-bottom:8px" onclick="showScreen('devlog')">録 DevLog</button>
     <!-- Les options « joueur » (mêmes réglages que le bouton Options des
          joueurs) restent accessibles aux admins, sous les outils dev. -->
     <div class="menu-divider"></div>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('menu')">⚙ Options</button>
   </div>
-  </div>
-</div>
-
-<!-- ═══════════ LORE (bible narrative) — dev only ═══════════ -->
-<div id="screen-dev-lore" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
-  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('dev-hub')">↩ RETOUR</button></div>
-  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
-    <div class="panel" style="max-width:560px;width:100%" id="dev-lore-body">Chargement…</div>
   </div>
 </div>
 
@@ -3646,8 +3639,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;padding:10px 14px 6px;background:rgba(0,0,0,.5);border-bottom:1px solid var(--parchment-dark);display:flex;align-items:center;gap:10px;flex-shrink:0">
     <button class="tuto-nav-btn" onclick="showScreen('settings')" style="padding:5px 10px;font-size:11px">&#8617; Retour</button>
     <div>
-      <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold-bright);letter-spacing:2px">&#128218; BIBLIOTH&#200;QUE</div>
-      <div style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment);opacity:.4">Cris de guerre &amp; citations</div>
+      <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold-bright);letter-spacing:2px">&#24070; LORE</div>
+      <div style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment);opacity:.4">Bible narrative &amp; citations</div>
     </div>
   </div>
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 14px">
@@ -10076,7 +10069,7 @@ var NAV_TAB_MAP = {
   // updateDevButtonVisibility). L'écran 'menu' EST l'écran Options.
   'bot-gallery':'bn-play',
   menu:'bn-dev',
-  'dev-hub':'bn-dev', 'dev-lore':'bn-dev', devrewards:'bn-dev', 'dev-repertoire':'bn-dev', 'dev-openings':'bn-dev', 'dev-tactics':'bn-dev', 'dev-balance':'bn-dev', 'dev-lab':'bn-dev'
+  'dev-hub':'bn-dev', devrewards:'bn-dev', 'dev-repertoire':'bn-dev', 'dev-openings':'bn-dev', 'dev-tactics':'bn-dev', 'dev-balance':'bn-dev', 'dev-lab':'bn-dev'
 };
 function updateBottomNav(id){
   var visible = NAV_HIDDEN_SCREENS.indexOf(id)===-1;
@@ -10752,6 +10745,15 @@ function botArmyUnlocked(b){
   if(b.num==='00') return hasDefeatedBot('15');
   var prev=('0'+(parseInt(b.num,10)-1)).slice(-2); // 02→01, 10→09, 15→14
   return hasDefeatedBot(prev);
+}
+// Prochain adversaire de la chaîne (demande Wurmz, 2026-08-15) : le backfill
+// matchmaking ne cible plus le bot d'Elo le plus proche mais le PROCHAIN non
+// vaincu dans l'ordre 01→15→00 — on progresse en battant, pas en rattrapant
+// leur Elo. _botRoster est déjà trié par `sort` (ordre 01…15,00, voir requête
+// bot_roster). Renvoie null si les 16 sont vaincus (chaîne terminée).
+function nextBotArmyTarget(){
+  for(var i=0;i<_botRoster.length;i++){ if(!hasDefeatedBot(_botRoster[i].num)) return _botRoster[i]; }
+  return null;
 }
 function checkBotArmyAchievements(){
   var d=_defeatedBots();
@@ -12570,7 +12572,6 @@ function showScreen(id){
   if(id==='devrewards'){ refreshDevRewardsScreen(); }
   if(id==='menu'||id==='local-hub'||id==='home'){ updateDevButtonVisibility(); }
   if(id==='proto-rig'){ var _prf=document.getElementById('proto-rig-frame'); if(_prf && !_prf.getAttribute('src')) _prf.setAttribute('src','avatars/proto.html'); }
-  if(id==='dev-lore') renderDevLore();
   if(id==='dev-openings') renderDevOpeningsList();
   if(id==='dev-tactics') renderDevTacticsList();
   if(id==='dev-balance'){ renderDevBalanceList(); renderDevBalanceEstimates(); }
@@ -12642,7 +12643,7 @@ var VILLAGE_BUILDINGS = [
       {label:'Records', ico:'🏅', screen:'profile-records'},
       {label:'Succès', ico:'🎖', screen:'profile-achievements'},
       {label:'Classements', ico:'📈', screen:'leaderboard', online:true},
-      {label:'Lore & citations', ico:'📖', screen:'citations'},
+      {label:'Lore', ico:'📖', screen:'citations'},
       {label:'Série de connexion', ico:'🔥', screen:'play', online:true},
       {label:'Journal d’activité', ico:'📜', screen:'play', online:true} ] },
   { id:'dojo', label:'Dojo', cx:73, cy:41, w:20, h:24, online:true, items:[
@@ -13298,20 +13299,28 @@ async function startMatchmakingSearch(timerSeconds){
   // Plafond de déblocage : Elo du plus haut bot débloqué sur CET appareil (état
   // local). Le déblocage étant croissant en Elo, le worker n'affrontera que les
   // bots base_elo <= ce plafond → exactement mes bots débloqués. 0 = pas de filtre.
+  // Reste envoyé comme garde-fou/repli si backfill_target_bot est absent.
   var _maxUnlockedElo = 0;
   try{ _botRoster.forEach(function(b){ if(botArmyUnlocked(b) && b.elo>_maxUnlockedElo) _maxUnlockedElo=b.elo; }); }catch(e){}
+  // Cible précise : le prochain non vaincu de la chaîne (demande Wurmz,
+  // 2026-08-15) — on rencontre les bots dans l'ordre où on les bat, pas au
+  // fil de son Elo. null si les 16 sont vaincus (le worker retombe alors sur
+  // le plafond/Elo ci-dessus).
+  var _nextBot = (typeof nextBotArmyTarget==='function') ? nextBotArmyTarget() : null;
   var _mmPayload = {
     player_id: currentUser.id, pseudo: currentUser.pseudo, elo: myElo, timer_seconds: timerSeconds,
     want_backfill: _bf.enabled, backfill_after: _bf.delay,
-    backfill_random: _bf.random, backfill_max_elo: _maxUnlockedElo
+    backfill_random: _bf.random, backfill_max_elo: _maxUnlockedElo,
+    backfill_target_bot: _nextBot ? _nextBot.key : null
   };
   let { error } = await supa.from('matchmaking_queue').insert(_mmPayload);
-  // Résilience : backfill_random/backfill_max_elo sont des colonnes récentes
-  // (add_backfill_random.sql). Tant qu'elles ne sont pas migrées, on retire ces
-  // champs et on réinsère — le matchmaking ne doit JAMAIS casser pour une
-  // préférence (cf. CLAUDE.md, chemin critique).
-  if(error && /backfill_(random|max_elo)/.test((error.message||'')+(error.details||''))){
-    delete _mmPayload.backfill_random; delete _mmPayload.backfill_max_elo;
+  // Résilience : backfill_random/backfill_max_elo/backfill_target_bot sont des
+  // colonnes récentes (add_backfill_random.sql / add_backfill_target_bot.sql).
+  // Tant qu'elles ne sont pas migrées, on retire ces champs et on réinsère —
+  // le matchmaking ne doit JAMAIS casser pour une préférence (cf. CLAUDE.md,
+  // chemin critique).
+  if(error && /backfill_(random|max_elo|target_bot)/.test((error.message||'')+(error.details||''))){
+    delete _mmPayload.backfill_random; delete _mmPayload.backfill_max_elo; delete _mmPayload.backfill_target_bot;
     ({ error } = await supa.from('matchmaking_queue').insert(_mmPayload));
   }
   if(error){
@@ -13428,16 +13437,21 @@ async function startArenaMatchmakingSearch(timerSeconds){
   var _abf = (typeof getBackfillPref==='function') ? getBackfillPref() : {enabled:false,delay:20,random:false};
   var _aMaxElo = 0;
   try{ _botRoster.forEach(function(b){ if(botArmyUnlocked(b) && b.elo>_aMaxElo) _aMaxElo=b.elo; }); }catch(e){}
+  // Cible précise : le prochain non vaincu de la chaîne (voir Partie rapide
+  // ci-dessus, même logique).
+  var _aNextBot = (typeof nextBotArmyTarget==='function') ? nextBotArmyTarget() : null;
   var _aPayload = {
     player_id: currentUser.id, pseudo: currentUser.pseudo, timer_seconds: timerSeconds, elo: _aMyElo,
-    want_backfill: _abf.enabled, backfill_after: _abf.delay, backfill_random: _abf.random, backfill_max_elo: _aMaxElo
+    want_backfill: _abf.enabled, backfill_after: _abf.delay, backfill_random: _abf.random, backfill_max_elo: _aMaxElo,
+    backfill_target_bot: _aNextBot ? _aNextBot.key : null
   };
   let { error } = await supa.from('arena_matchmaking_queue').insert(_aPayload);
   // Résilience (chemin critique) : les colonnes de backfill sont récentes
-  // (bots_arena_tournament.sql). Tant qu'elles ne sont pas migrées, on les
-  // retire et on réinsère — l'Arène ne doit JAMAIS casser pour une préférence.
-  if(error && /want_backfill|backfill_(after|random|max_elo)/.test((error.message||'')+(error.details||''))){
-    delete _aPayload.want_backfill; delete _aPayload.backfill_after; delete _aPayload.backfill_random; delete _aPayload.backfill_max_elo;
+  // (bots_arena_tournament.sql / add_backfill_target_bot.sql). Tant qu'elles ne
+  // sont pas migrées, on les retire et on réinsère — l'Arène ne doit JAMAIS
+  // casser pour une préférence.
+  if(error && /want_backfill|backfill_(after|random|max_elo|target_bot)/.test((error.message||'')+(error.details||''))){
+    delete _aPayload.want_backfill; delete _aPayload.backfill_after; delete _aPayload.backfill_random; delete _aPayload.backfill_max_elo; delete _aPayload.backfill_target_bot;
     ({ error } = await supa.from('arena_matchmaking_queue').insert(_aPayload));
   }
   if(error){
@@ -20706,24 +20720,21 @@ function labApplyChallengePreFormat(fmt){
   if(typeof selectChallengeCustomFormat==='function') selectChallengeCustomFormat(key);
 }
 
-// ── LORE (bible narrative) — écran dev, synthèse de docs/LORE.md ──────
-// Le mythe est statique ; le roster + les haïkus sont lus en base
+// ── LORE (bible narrative) — fusionnée dans Archives > Lore (joueurs) avec
+// les citations (/ui-optimiser, 2026-08-15) : c'était en double, une version
+// dev-only (screen-dev-lore) et une entrée joueur qui n'affichait que les
+// citations. Le mythe est statique ; le roster + les haïkus sont lus en base
 // (bot_roster.haiku) pour rester synchrones avec le trigger de réponse auto.
-async function renderDevLore(){
-  var body = document.getElementById('dev-lore-body');
-  if(!body) return;
+async function buildLoreHtml(){
   var sec = function(t){ return `<div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold-bright);margin:16px 0 6px;letter-spacing:1px">${t}</div>`; };
   var p   = function(t){ return `<div style="font-family:VT323,monospace;font-size:14px;color:var(--parchment);line-height:1.55;margin-bottom:8px">${t}</div>`; };
-  var H = `<div class="menu-title" style="font-size:18px;margin-top:6px">巻 LORE</div>`
-    + `<div style="font-family:VT323,monospace;font-size:11px;opacity:.55;text-align:center;margin-bottom:6px">Bible narrative — synthèse (dev). Détail complet : docs/LORE.md</div>`
-    + `<div class="menu-divider"></div>`;
-  H += sec("① L'univers");
-  H += p("Japon féodal teinté de cyberpunk. Un abstrait 5×5 où se rejoue une guerre plus vieille que les joueurs : celle de la <strong>Voie du Guerrier</strong> (bushidō) et de ce qu'un homme sacrifie pour ne jamais la quitter. Inspirations assumées : <em>Fate</em> (puissance incarnée en archétypes) et <em>Star Wars</em> (maître / disciple, et la chute).");
-  H += sec("② Le mythe des Seize — l'âme scindée");
+  var H = sec("L'univers");
+  H += p("Japon féodal teinté de cyberpunk. Un abstrait 5×5 où se rejoue une guerre plus vieille que les joueurs : celle de la <strong>Voie du Guerrier</strong> (bushidō) et de ce qu'un homme sacrifie pour ne jamais la quitter.");
+  H += sec("Le mythe des Seize — l'âme scindée");
   H += p("Un maître de combat unique s'entraîna auprès des <strong>dieux eux-mêmes</strong> — dont certains peu recommandables. Il y gagna de grandes connaissances, mais aussi de <strong>terribles savoirs</strong>. L'orgueil le mena à vouloir vaincre la mort : un rituel d'<strong>immortalité</strong> qui, au lieu de l'éterniser, le <strong>brisa</strong>.");
   H += p("Son être se <strong>scinda en quinze</strong>, chaque fragment héritant d'une part de son pouvoir : ce sont <strong>les Quinze</strong> (bots 01→15). Lui, l'originel, resta — mais <strong>dépossédé</strong> et à moitié fou : <strong>0-Rōnin</strong>, le samouraï sans maître et sans lui-même, qui <strong>erre</strong> pour reprendre les morceaux perdus de son âme.");
   H += p("Paradoxe : chaque fragment n'a qu'un éclat de puissance, mais le Rōnin garde intactes la <strong>technique</strong> et les <strong>arts interdits des dieux</strong> — diminué, morcelé, fou, et pourtant le plus redoutable. <strong>Force : 1 &lt; 2 &lt; … &lt; 15 &lt; 0.</strong> Le haïku est la voix de chaque fragment : écrire à un bot le fait répondre par son haïku.");
-  H += sec("③ Le roster & les haïkus");
+  H += sec("Le roster & les haïkus");
   try{
     const { data } = await supa.from('bot_roster').select('num,kanji,reading,rank_kanji,meaning,haiku').order('sort');
     (data||[]).forEach(function(b){
@@ -20733,11 +20744,9 @@ async function renderDevLore(){
         + `</div>`;
     });
   }catch(e){ H += p("(roster indisponible — base non jointe)"); }
-  H += sec("④ Les figures (AXE 3)");
-  H += p("<strong>Musashi</strong> — le maître, figure tutélaire de la Voie. <strong>Shinai</strong> — l'ancien disciple passé du côté sombre, le « Vador » du récit. <strong>0-Rōnin</strong> — le maître des Seize (voir ②), écho en miroir de la chute de Shinai.");
-  H += sec("⑤ Règles d'or du lore");
-  H += p("1. Les 16 bots = une seule âme (fragments 01→15 + origine 0). 2. 0-Rōnin est diminué mais le plus fort (technique & savoirs interdits, pas puissance brute). 3. Le haïku est la voix du fragment : bref, imagé, hanté. 4. Ne pas contredire docs/EQUIPE_DES_15.md.");
-  body.innerHTML = H;
+  H += sec("Les figures");
+  H += p("<strong>Musashi</strong> — le maître, figure tutélaire de la Voie. <strong>Shinai</strong> — l'ancien disciple passé du côté sombre. <strong>0-Rōnin</strong> — le maître des Seize (voir ci-dessus), écho en miroir de la chute de Shinai.");
+  return H;
 }
 
 // Rempli par renderDevOpeningsList/renderDevTacticsList, consommé par
@@ -23828,16 +23837,25 @@ function playSound(n) {
 
 // ══════════════════════════════════════════════════════
 // V7.0.5 — CITATIONS LIBRARY
+// Fusionnée avec le Lore (bible narrative, ex-écran dev) le 2026-08-15 :
+// Archives n'a plus qu'une seule entrée « Lore » au lieu de deux doublons
+// (« Lore » dans Menu DEV + « Lore & citations » dans Archives).
 // ══════════════════════════════════════════════════════
-function renderCitations() {
+async function renderCitations() {
   var el = document.getElementById('cite-list-content');
   if (!el) return;
-  el.innerHTML = QUOTES.map(function(q) {
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--parchment);opacity:.5;font-family:VT323,monospace">'+t('history_loading')+'</div>';
+  var loreHtml = await buildLoreHtml();
+  var quotesHtml = QUOTES.map(function(q) {
     return '<div class="cite-item">'
       + '<div class="cite-quote">&ldquo;' + q.t + '&rdquo;</div>'
       + '<div class="cite-author">' + q.a + '</div>'
       + '</div>';
   }).join('');
+  el.innerHTML = loreHtml
+    + '<div class="menu-divider"></div>'
+    + '<div style="font-family:\'Cinzel\',serif;font-size:14px;color:var(--gold-bright);margin:16px 0 6px;letter-spacing:1px">Cris de guerre & citations</div>'
+    + quotesHtml;
 }
 
 // ══════════════════════════════════════════════════════
