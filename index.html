@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.83.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.84.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -255,11 +255,11 @@ body.ui-village.village-nofab #village-home-btn{display:none}
 #village-corner-tools>*{pointer-events:auto}
 #village-sumo-tool{display:flex;flex-direction:column;align-items:center;gap:3px}
 #village-sumo-timer{font-family:'VT323',monospace;font-size:11px;line-height:1;color:#ff9dbf;text-shadow:0 1px 3px rgba(0,0,0,.9);white-space:nowrap}
-#village-sumo-btn,#village-dyk-btn,#village-daily-btn{width:44px;height:44px;border-radius:50%;background:transparent;border:none;cursor:pointer;padding:0;font-size:24px;line-height:1;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 4px rgba(0,0,0,.85));-webkit-tap-highlight-color:transparent;transition:transform .12s}
+#village-sumo-btn,#village-dyk-btn,#village-daily-btn,#village-notif-btn{width:44px;height:44px;border-radius:50%;background:transparent;border:none;cursor:pointer;padding:0;font-size:24px;line-height:1;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 4px rgba(0,0,0,.85));-webkit-tap-highlight-color:transparent;transition:transform .12s}
 #village-dyk-btn{font-family:'Cinzel',serif;font-weight:700;color:var(--gold-bright);font-size:26px}
-#village-sumo-btn:active,#village-dyk-btn:active,#village-daily-btn:active{transform:scale(.9)}
-#village-sumo-btn::before,#village-dyk-btn::before,#village-daily-btn::before{content:'';position:absolute;inset:-4px;border-radius:50%;background:radial-gradient(circle,rgba(0,0,0,.35),rgba(0,0,0,0) 72%);z-index:-1;pointer-events:none}
-#village-sumo-btn{position:relative}#village-dyk-btn{position:relative}#village-daily-btn{position:relative}
+#village-sumo-btn:active,#village-dyk-btn:active,#village-daily-btn:active,#village-notif-btn:active{transform:scale(.9)}
+#village-sumo-btn::before,#village-dyk-btn::before,#village-daily-btn::before,#village-notif-btn::before{content:'';position:absolute;inset:-4px;border-radius:50%;background:radial-gradient(circle,rgba(0,0,0,.35),rgba(0,0,0,0) 72%);z-index:-1;pointer-events:none}
+#village-sumo-btn{position:relative}#village-dyk-btn{position:relative}#village-daily-btn{position:relative}#village-notif-btn{position:relative}
 /* Sumo terminé : on masque le raccourci et son timer. */
 #village-corner-tools.sumo-over #village-sumo-tool{display:none}
 /* Bandeau pub de l'Arène (écran Jouer) : pleine largeur, collé aux bords de
@@ -293,21 +293,29 @@ body.ui-village #village-home-art{display:block}
 #village-scroll{position:absolute;inset:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;display:flex}
 #village-canvas{position:relative;height:100%;aspect-ratio:1024/572;margin:auto;flex:0 0 auto}
 #village-canvas img#village-bg{display:block;height:100%;width:auto;user-select:none;-webkit-user-drag:none;pointer-events:none}
-/* Un bâtiment = un bouton elliptique transparent posé en % sur la carte.
-   Halo doré au survol/tap = signal « c'est cliquable ». */
-.village-zone{position:absolute;transform:translate(-50%,-50%);border:none;background:transparent;cursor:pointer;border-radius:50%;padding:0}
-/* Halo PERMANENT (léger, pulsé) : on voit en continu quels bâtiments sont
-   cliquables. Intensifié au survol/focus. */
-.village-zone::before{content:'';position:absolute;inset:0;border-radius:50%;background:radial-gradient(closest-side,rgba(255,214,90,.16),rgba(255,214,90,.03) 68%,transparent);box-shadow:0 0 0 1px rgba(255,220,120,.28),0 0 14px rgba(255,210,110,.18);pointer-events:none;animation:villageHalo 3.2s ease-in-out infinite;transition:box-shadow .18s,background .18s}
+/* Un bâtiment = un bouton transparent posé en % sur la carte. Demande Wurmz
+   (2026-08-15) : plus AUCUN cercle/halo cliquable sur les bâtiments nommés —
+   seul le CARTOUCHE DE TEXTE (::after, le nom) est la cible de clic. Le
+   bouton lui-même passe en pointer-events:none (il ne capte plus rien sur
+   l'illustration) ; c'est le pseudo-élément ::after qui redevient cliquable
+   et fait remonter l'événement (bubbling normal malgré pointer-events:none
+   sur le parent). Exception : les zones SANS nom (cascade, Soleil) restent
+   elles-mêmes la cible — pas de texte à cliquer, donc pas d'autre choix. */
+.village-zone{position:absolute;transform:translate(-50%,-50%);border:none;background:transparent;border-radius:50%;padding:0;pointer-events:none}
+.village-zone:not([data-label]){pointer-events:auto;cursor:pointer}
+/* Halo doré : réservé aux zones secrètes sans texte (seul indice visuel qu'il
+   y a quelque chose à cliquer là). Les bâtiments nommés n'en ont plus. */
+.village-zone:not([data-label])::before{content:'';position:absolute;inset:0;border-radius:50%;background:radial-gradient(closest-side,rgba(255,214,90,.16),rgba(255,214,90,.03) 68%,transparent);box-shadow:0 0 0 1px rgba(255,220,120,.28),0 0 14px rgba(255,210,110,.18);pointer-events:none;animation:villageHalo 3.2s ease-in-out infinite;transition:box-shadow .18s,background .18s}
 @keyframes villageHalo{0%,100%{opacity:.55}50%{opacity:1}}
-.village-zone:hover::before,.village-zone:focus-visible::before{background:radial-gradient(closest-side,rgba(255,214,90,.32),rgba(255,214,90,.08) 70%,transparent);box-shadow:0 0 0 2px rgba(255,214,90,.6),0 0 24px rgba(255,214,90,.5);animation:none;opacity:1}
+.village-zone:not([data-label]):hover::before,.village-zone:not([data-label]):focus-visible::before{background:radial-gradient(closest-side,rgba(255,214,90,.32),rgba(255,214,90,.08) 70%,transparent);box-shadow:0 0 0 2px rgba(255,214,90,.6),0 0 24px rgba(255,214,90,.5);animation:none;opacity:1}
 .village-zone:focus-visible{outline:none}
-/* Nom du bâtiment, TOUJOURS visible sous la zone (pastille lisible). */
-.village-zone::after{content:attr(data-label);position:absolute;left:50%;bottom:-2px;transform:translate(-50%,100%);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;color:#ffe9a8;text-shadow:0 1px 3px rgba(0,0,0,.9);white-space:nowrap;background:rgba(10,8,6,.55);padding:1px 7px;border-radius:8px;border:1px solid rgba(212,160,23,.3);pointer-events:none}
+/* Nom du bâtiment : la vraie cible de clic pour les bâtiments nommés. */
+.village-zone::after{content:attr(data-label);position:absolute;left:50%;bottom:-2px;transform:translate(-50%,100%);font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;color:#ffe9a8;text-shadow:0 1px 3px rgba(0,0,0,.9);white-space:nowrap;background:rgba(10,8,6,.55);padding:1px 7px;border-radius:8px;border:1px solid rgba(212,160,23,.3);pointer-events:auto;cursor:pointer;transition:background .18s,border-color .18s}
 .village-zone:not([data-label])::after{display:none}
+.village-zone[data-label]:hover::after,.village-zone[data-label]:focus-visible::after{background:rgba(212,160,23,.28);border-color:rgba(255,214,90,.75)}
 .village-zone.locked{cursor:not-allowed}
-.village-zone.locked::before{background:radial-gradient(closest-side,rgba(170,170,170,.14),transparent 70%);box-shadow:0 0 0 1px rgba(150,150,150,.35);animation:none}
-.village-zone.locked::after{color:#b9b2a2;border-color:rgba(150,150,150,.3)}
+.village-zone.locked::after{cursor:not-allowed;color:#b9b2a2;border-color:rgba(150,150,150,.3)}
+.village-zone:not([data-label]).locked::before{background:radial-gradient(closest-side,rgba(170,170,170,.14),transparent 70%);box-shadow:0 0 0 1px rgba(150,150,150,.35);animation:none}
 .village-zone.vhidden{display:none}
 /* Pastille de notif posée sur un bâtiment (Arène = jeu, Auberge = social). */
 .village-zone .village-badge{position:absolute;top:6%;right:8%;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#e74c3c;box-shadow:0 0 6px rgba(231,76,60,.9);font-family:'VT323',monospace;font-size:13px;line-height:18px;color:#fff;text-align:center;pointer-events:none;display:none;z-index:2}
@@ -3762,8 +3770,16 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.83.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.84.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.84.0 &mdash; 15 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; ZONES CLIQUABLES SIMPLIFI&Eacute;ES + NOTIFICATIONS AU VILLAGE</li>
+        <li>Les zones cliquables du village se limitent d&eacute;sormais au cartouche de texte sous chaque b&acirc;timent (plus simple &agrave; comprendre qu'une grande ellipse invisible). Archives recal&eacute;e sur le bon b&acirc;timent (elle chevauchait le March&eacute;). Nouveau raccourci &#128276; Notifications &agrave; c&ocirc;t&eacute; du D&eacute;fi du jour.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -8311,7 +8327,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.83.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.84.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8541,7 +8557,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.83.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.84.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -8762,7 +8778,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.83.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.84.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -12500,7 +12516,7 @@ function showScreen(id){
   // Thème Village : construire la carte à la première visite, rafraîchir le
   // grisage online/dev à chaque visite, et masquer le bouton flottant «⛩
   // Village» quand on EST sur la carte (via la classe village-map-open).
-  if(id==='village'){ if(typeof buildVillageMap==='function') buildVillageMap(); if(typeof villageRefreshLocks==='function') villageRefreshLocks(); if(typeof villageRefreshBanner==='function') villageRefreshBanner(); if(typeof villageRefreshBadges==='function') villageRefreshBadges(); if(typeof villageUpdateSumoTimer==='function') villageUpdateSumoTimer(); if(typeof villageMaybeGuildInfoPopup==='function') villageMaybeGuildInfoPopup(); if(typeof villageMaybeShowDevlog==='function') villageMaybeShowDevlog(); }
+  if(id==='village'){ if(typeof buildVillageMap==='function') buildVillageMap(); if(typeof villageRefreshLocks==='function') villageRefreshLocks(); if(typeof villageRefreshBanner==='function') villageRefreshBanner(); if(typeof villageRefreshBadges==='function') villageRefreshBadges(); if(typeof villageUpdateSumoTimer==='function') villageUpdateSumoTimer(); if(typeof villageMaybeGuildInfoPopup==='function') villageMaybeGuildInfoPopup(); if(typeof villageMaybeShowDevlog==='function') villageMaybeShowDevlog(); if(typeof refreshNotificationBadge==='function') refreshNotificationBadge(); }
   document.body.classList.toggle('village-map-open', id==='village');
   // On masque le retour ⛩ Village : en plein-jeu (partie/pile-ou-face) pour ne
   // pas polluer le plateau, ET sur l'accueil / l'écran de connexion — car le
@@ -12584,8 +12600,14 @@ function showScreen(id){
 // (assets/village/village-map.png, remplace l'ancienne — archivée dans
 // assets/village/archive/). Repérées par recadrage/échantillonnage de
 // l'image (scripts/_crop*.png, jetables) plutôt qu'à l'estimation.
+// Zones cliquables réduites à un petit bouton précis SUR chaque bâtiment
+// (demande Wurmz, 2026-08-15, positions données par captures d'écran
+// annotées) : fini les grandes ellipses invisibles couvrant tout le
+// bâtiment. Le nom (cartouche) continue de s'afficher juste en dessous du
+// bouton via ::after (CSS), inchangé. Exception : la cascade et le Soleil
+// (zone dev) restent des zones pleines sans texte — ce sont des secrets.
 var VILLAGE_BUILDINGS = [
-  { id:'chateau', label:'Château', cx:14, cy:18, w:24, h:30, online:true, items:[
+  { id:'chateau', label:'Château', cx:20, cy:29, w:5, h:6, online:true, items:[
       // Campagne : en chantier (popup « bientôt »). Défi du jour a migré au Dojo.
       {label:'Campagne', ico:'📜', soon:true},
       // Tuto : déménagé au DOJO (demande Thomas, 2026-08-14). L'ancien renvoi
@@ -12613,19 +12635,22 @@ var VILLAGE_BUILDINGS = [
   // fusionnés dans Apparence (screen-piece-skins, devenu écran à sections).
   // Langue + Confidentialité restent chacun un item de Réglages (settings),
   // plus d'entrée directe ici.
-  { id:'maison', label:'Maison', cx:27, cy:50, w:18, h:22, items:[
+  { id:'maison', label:'Maison', cx:27, cy:43, w:5, h:6, items:[
       {label:'Mon Combattant', ico:'侍', screen:'profile'},
       {label:'Apparence', ico:'観', screen:'piece-skins'},
       {label:'Réglages', ico:'⚙', screen:'settings'},
       {label:'Menu DEV', ico:'🛠', screen:'dev-hub', dev:true} ] },
-  { id:'auberge', label:'Auberge', cx:47, cy:50, w:20, h:24, items:[
+  { id:'auberge', label:'Auberge', cx:44, cy:40, w:5, h:6, items:[
       {label:'Notifications', ico:'🔔', fn:'openNotificationsModal', online:true},
       {label:'Amis', ico:'👥', screen:'amis', online:true},
       {label:'Messagerie', ico:'✉', screen:'messaging', online:true},
       {label:'Forums', ico:'💬', soon:true},
       {label:'News', ico:'📰', soon:true},
       {label:'DevLog (mises à jour)', ico:'📓', screen:'devlog'} ] },
-  { id:'archives', label:'Archives', cx:70, cy:58, w:16, h:20, items:[
+  // Recalée (2026-08-15) : le bâtiment Archives (toit de chaume, entrepôt) est
+  // à droite de l'Auberge, PAS sur le Marché — l'ancienne position (70,58)
+  // chevauchait le cartouche Marché sur la nouvelle carte.
+  { id:'archives', label:'Archives', cx:55, cy:41, w:5, h:6, items:[
       {label:'Statistiques', ico:'📊', screen:'profile-stats'},
       {label:'Records', ico:'🏅', screen:'profile-records'},
       {label:'Succès', ico:'🎖', screen:'profile-achievements'},
@@ -12633,7 +12658,7 @@ var VILLAGE_BUILDINGS = [
       {label:'Lore & citations', ico:'📖', screen:'citations'},
       {label:'Série de connexion', ico:'🔥', screen:'play', online:true},
       {label:'Journal d’activité', ico:'📜', screen:'play', online:true} ] },
-  { id:'dojo', label:'Dojo', cx:78, cy:38, w:20, h:22, online:true, items:[
+  { id:'dojo', label:'Dojo', cx:78, cy:37, w:5, h:6, online:true, items:[
       // Défi du jour rapatrié depuis le Château (a aussi son icône dédiée sur
       // la carte, voir #village-daily-btn). « IA » retiré ; « Maîtres IA »
       // renommé « Adversaires ». Shin-AI retiré (déjà dans Adversaires notables).
@@ -12645,22 +12670,22 @@ var VILLAGE_BUILDINGS = [
       {label:'Adversaires notables', ico:'★', fn:'openLocalMode', arg:'ai-notable'},
       {label:'Tuto (règles & La Voie du Bousier)', ico:'典', screen:'rules'},
       {label:'Karakuri (entraînement)', ico:'傀', screen:'training-bot'} ] },
-  { id:'arene', label:'Arène', cx:13, cy:73, w:20, h:26, online:true, items:[
+  { id:'arene', label:'Arène', cx:12, cy:69, w:5, h:6, online:true, items:[
       // Ligue / Classement / Bot army retirés de l'Arène (Bot army → Soleil).
       {label:'Modes de combat', ico:'⚔', screen:'play', online:true},
       {label:'Joueurs en ligne', ico:'🟢', screen:'online-menu', online:true} ] },
-  { id:'guilde', label:'Guilde', cx:39, cy:73, w:22, h:26, online:true, items:[
+  { id:'guilde', label:'Guilde', cx:37, cy:62, w:5, h:6, online:true, items:[
       {label:'Guilde', ico:'🏯', screen:'guild', online:true} ] },
-  { id:'marche', label:'Marché', cx:58, cy:67, w:20, h:20, online:true, items:[
+  { id:'marche', label:'Marché', cx:57, cy:60, w:5, h:6, online:true, items:[
       {label:'Boutique', ico:'🏪', screen:'shop', online:true} ] },
-  { id:'port', label:'Port', cx:89, cy:85, w:14, h:18, items:[
+  { id:'port', label:'Port', cx:90, cy:85, w:5, h:6, items:[
       {label:'Changer de village', ico:'⚓', soon:true} ] },
   // Sortie du village vers l'écran d'accueil. Repositionnée le 2026-08-15 :
   // la nouvelle image n'a plus de chariot (décor) — placée tout à droite,
   // sur le chemin qui longe la cascade, entre elle et le Port. Mono-item →
   // clic direct, pas de panneau. id/fn conservés (aucune autre référence à
   // toucher : quitVillageToHome, tuto, etc.).
-  { id:'chariot', label:'Quitter le village', cx:96, cy:62, w:8, h:11, items:[
+  { id:'chariot', label:'Quitter le village', cx:96, cy:67, w:22, h:7, items:[
       {label:'Quitter le village', ico:'🚪', fn:'quitVillageToHome'} ] }
 ];
 // Fin de l'événement Sumo : 31 août 2026 (cf. bannière pub « jusqu'au 31 août »).
@@ -12682,7 +12707,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.83.0';
+var DEVLOG_LATEST = 'V0.84.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -13961,8 +13986,16 @@ function exitArenaMatch(){
 async function refreshNotificationBadge(){
   var badge = document.getElementById('notif-badge');
   var btn = document.getElementById('notif-btn');
-  if(!badge) return;
-  if(!currentUser || typeof supa==='undefined' || !supa){ badge.style.display='none'; return; }
+  // Pastille jumelle sur le bouton village 🔔 (village-corner-tools) : même
+  // compteur, deux boutons (menu classique + village) selon le thème actif.
+  var vBadge = document.getElementById('village-notif-badge');
+  var vBtn = document.getElementById('village-notif-btn');
+  if(!badge && !vBadge) return;
+  if(!currentUser || typeof supa==='undefined' || !supa){
+    if(badge) badge.style.display='none';
+    if(vBadge) vBadge.style.display='none';
+    return;
+  }
   var unreadCount = 0;
   try{
     const { count } = await supa.from('notifications').select('id', {count:'exact', head:true}).eq('user_id', currentUser.id).eq('read', false);
@@ -13971,14 +14004,14 @@ async function refreshNotificationBadge(){
   // Une revanche proposée par l'adversaire compte aussi comme notification.
   var rematchPending = (typeof opponentRematchStatus!=='undefined' && opponentRematchStatus==='wants');
   if(rematchPending) unreadCount += 1;
-  if(unreadCount > 0){
-    badge.textContent = unreadCount > 9 ? '9+' : String(unreadCount);
-    badge.style.display = 'block';
-    if(btn) btn.title = unreadCount + (unreadCount>1 ? ' notifications non lues' : ' notification non lue');
-  } else {
-    badge.style.display = 'none';
-    if(btn) btn.title = '';
-  }
+  var txt = unreadCount > 9 ? '9+' : String(unreadCount);
+  var title = unreadCount>0 ? (unreadCount + (unreadCount>1 ? ' notifications non lues' : ' notification non lue')) : '';
+  [[badge,btn],[vBadge,vBtn]].forEach(function(pair){
+    var b=pair[0], bt=pair[1];
+    if(!b) return;
+    if(unreadCount > 0){ b.textContent = txt; b.style.display = 'block'; if(bt) bt.title = title; }
+    else { b.style.display = 'none'; if(bt) bt.title = 'Notifications'; }
+  });
 }
 // Pastille sur le bouton "Messagerie" du menu principal : nombre total de
 // messages privés non lus, tous amis confondus.
@@ -27952,6 +27985,13 @@ window.addEventListener('beforeunload', () => {
     </div>
     <button id="village-dyk-btn" onclick="openDidYouKnowPopup()" aria-label="Le saviez-tu ?" title="Le saviez-tu ?">?</button>
     <button id="village-daily-btn" onclick="openDailyPopup()" aria-label="Défi du jour" title="Défi du jour">🎯</button>
+    <!-- Accès rapide aux notifications depuis le village (demande Wurmz,
+         2026-08-15), à côté du Défi du jour. Réutilise openNotificationsModal
+         (déjà câblé pour rouvrir directement le défi/message/demande d'ami
+         concerné au clic sur une notif, voir handleNotificationClick). -->
+    <button id="village-notif-btn" onclick="openNotificationsModal()" aria-label="Notifications" title="Notifications">
+      🔔 <span id="village-notif-badge" style="display:none;position:absolute;top:-4px;right:-6px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:#e74c3c;box-shadow:0 0 4px rgba(231,76,60,.8);font-family:VT323,monospace;font-size:11px;line-height:16px;color:#fff;text-align:center"></span>
+    </button>
   </div>
 </div>
 <!-- Popup Défi du jour / série / quêtes — même contenu qu'avant sur l'écran
