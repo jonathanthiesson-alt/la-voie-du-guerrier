@@ -126,18 +126,15 @@ une bannière + devise). Additif et idempotent.
 Tant que non exécuté : le bouton ✕ « retirer » et le 👁 « voir le roster » se
 dégradent proprement (toast d'erreur, aucun crash).
 
-### ⏳ À exécuter par Jonathan (Bot-Army : rencontre en chaîne — V0.85.0)
+### ✅ Exécuté (Bot-Army : rencontre en chaîne — V0.85.0)
 
-`add_backfill_target_bot.sql` — additif et idempotent (1 colonne texte sur 2
-tables). Contrôle en fin de script.
+`add_backfill_target_bot.sql` — **déployé** (vérifié 2026-08-15 : colonne
+`backfill_target_bot` présente sur `matchmaking_queue` et
+`arena_matchmaking_queue`). Additif et idempotent.
 
 | # | Script | Contenu |
 |---|---|---|
-| — | `add_backfill_target_bot.sql` | Colonne `backfill_target_bot` sur `matchmaking_queue` et `arena_matchmaking_queue` : le client y envoie la clé du **prochain bot non vaincu** de la chaîne 01→15→00 (au lieu du plafond d'Elo seul) ; le worker (`bot-army.mjs`) fait rejoindre CE bot précis plutôt que le plus proche d'Elo — sauf « aléatoire » coché. |
-
-Tant que non exécuté : l'app réinsère sans ce champ (résiliente, comme
-`backfill_random`/`backfill_max_elo`) et le worker retombe sur l'ancien
-comportement (bot le plus proche d'Elo).
+| ✅ | `add_backfill_target_bot.sql` | Colonne `backfill_target_bot` sur `matchmaking_queue` et `arena_matchmaking_queue` : le client y envoie la clé du **prochain bot non vaincu** de la chaîne 01→15→00 (au lieu du plafond d'Elo seul) ; le worker (`bot-army.mjs`) fait rejoindre CE bot précis plutôt que le plus proche d'Elo — sauf « aléatoire » coché. |
 
 ---
 
