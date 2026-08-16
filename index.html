@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.85.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.87.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -255,23 +255,21 @@ body.ui-village.village-nofab #village-home-btn{display:none}
 #village-corner-tools>*{pointer-events:auto}
 #village-sumo-tool{display:flex;flex-direction:column;align-items:center;gap:3px}
 #village-sumo-timer{font-family:'VT323',monospace;font-size:11px;line-height:1;color:#ff9dbf;text-shadow:0 1px 3px rgba(0,0,0,.9);white-space:nowrap}
-#village-sumo-btn,#village-dyk-btn,#village-daily-btn,#village-notif-btn{width:44px;height:44px;border-radius:50%;background:transparent;border:none;cursor:pointer;padding:0;font-size:24px;line-height:1;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 4px rgba(0,0,0,.85));-webkit-tap-highlight-color:transparent;transition:transform .12s}
+#village-sumo-btn,#village-dyk-btn,#village-daily-btn,#village-notif-btn,#village-msg-btn{width:44px;height:44px;border-radius:50%;background:transparent;border:none;cursor:pointer;padding:0;font-size:24px;line-height:1;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 2px 4px rgba(0,0,0,.85));-webkit-tap-highlight-color:transparent;transition:transform .12s}
 #village-dyk-btn{font-family:'Cinzel',serif;font-weight:700;color:var(--gold-bright);font-size:26px}
-#village-sumo-btn:active,#village-dyk-btn:active,#village-daily-btn:active,#village-notif-btn:active{transform:scale(.9)}
-#village-sumo-btn::before,#village-dyk-btn::before,#village-daily-btn::before,#village-notif-btn::before{content:'';position:absolute;inset:-4px;border-radius:50%;background:radial-gradient(circle,rgba(0,0,0,.35),rgba(0,0,0,0) 72%);z-index:-1;pointer-events:none}
-#village-sumo-btn{position:relative}#village-dyk-btn{position:relative}#village-daily-btn{position:relative}#village-notif-btn{position:relative}
+#village-sumo-btn:active,#village-dyk-btn:active,#village-daily-btn:active,#village-notif-btn:active,#village-msg-btn:active{transform:scale(.9)}
+#village-sumo-btn::before,#village-dyk-btn::before,#village-daily-btn::before,#village-notif-btn::before,#village-msg-btn::before{content:'';position:absolute;inset:-4px;border-radius:50%;background:radial-gradient(circle,rgba(0,0,0,.35),rgba(0,0,0,0) 72%);z-index:-1;pointer-events:none}
+#village-sumo-btn{position:relative}#village-dyk-btn{position:relative}#village-daily-btn{position:relative}#village-notif-btn{position:relative}#village-msg-btn{position:relative}
 /* Sumo terminé : on masque le raccourci et son timer. */
 #village-corner-tools.sumo-over #village-sumo-tool{display:none}
-/* Bandeau pub de l'Arène (écran Jouer) : pleine largeur, collé aux bords de
-   l'écran — il déborde le panneau (max-width 370px) via la technique full-bleed
-   (width:100vw + marges négatives calc(50% - 50vw)). Coins carrés et pas de
-   bordure latérale pour un vrai bord-à-bord. Le bandeau de fin de partie
-   (#endgame-ad-banner) n'est pas concerné. */
-#play-ad-banner{width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw)}
-/* Fond pleine largeur, mais CONTENU recentré dans la colonne centrale (~370px,
-   comme le panneau) via un padding latéral calculé — reste lisible et aligné
-   avec le reste de l'écran au lieu de coller au bord gauche. */
-#play-ad-banner>div{border-radius:0!important;border-left:none!important;border-right:none!important;margin:0!important;padding-left:max(14px,calc(50vw - 185px))!important;padding-right:max(14px,calc(50vw - 185px))!important}
+/* Bandeau pub de l'Arène (écran Jouer) : remis à sa taille d'origine, contenu
+   dans le panneau (demande Wurmz, 2026-08-15) — le full-bleed (100vw + marges
+   négatives) débordait de l'écran par endroits : `vw` compte la largeur de la
+   scrollbar, donc 100vw peut dépasser la zone visible et déclencher un
+   scroll horizontal. La carte garde son propre style (voir
+   renderSumoAdBannerHtml : fond, bordure, coins arrondis, léger débord
+   margin:0 -8px). Le bandeau de fin de partie (#endgame-ad-banner) n'est pas
+   concerné. */
 /* Même bandeau pub Sumo, même traitement, à la fin de partie (#endgame-ad-banner)
    — il n'avait jamais reçu le full-bleed : largeur du panneau (338px), donc pas
    « exactement la largeur de l'écran », le fade du dégradé s'arrêtait dans le vide.
@@ -3755,8 +3753,24 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.85.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.87.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.87.0 &mdash; 16 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; LE JOURNAL DU JOUEUR</li>
+        <li>Le vrai journal personnel annonc&eacute; le mois dernier arrive : un panneau en bas d'Archives, ouvert par d&eacute;faut, consigne victoires/d&eacute;faites en ligne, succ&egrave;s d&eacute;bloqu&eacute;s, adh&eacute;sions de guilde et packs de skins obtenus &mdash; filtrable par cases &agrave; cocher. N&eacute;cessite l'ex&eacute;cution d'un script SQL c&ocirc;t&eacute; serveur.</li>
+      </ul>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.86.0 &mdash; 16 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; ARCHIVES COMPACT&Eacute;ES</li>
+        <li>« S&eacute;rie de connexion » et « Journal d'activit&eacute; » retir&eacute;es des Archives : les deux mataient vers l'&eacute;cran Jouer sans y afficher le contenu promis. La s&eacute;rie reste accessible via le bouton &#127919; du village ; un vrai journal personnel (victoires/d&eacute;faites/succ&egrave;s/guilde/skins/achats, filtrable) est pr&eacute;vu dans un lot s&eacute;par&eacute;.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -7252,7 +7266,7 @@ async function joinGuild(id){
   try{
     const { data } = await supa.rpc('guild_join', { p_guild_id:id });
     _myGuildIdCache = null; // l'appartenance change : le chat doit re-résoudre la guilde
-    if(data && data.joined){ showToast('Bienvenue dans la guilde !', false); _guildView='auto'; refreshGuildScreen(); }
+    if(data && data.joined){ showToast('Bienvenue dans la guilde !', false); _guildView='auto'; refreshGuildScreen(); logJournalEvent('guild_join', 'A rejoint une guilde.'); }
     else if(data && data.requested){ showToast('Demande envoyée au chef.', false); }
     else if(data && data.reason==='full'){ showToast('Guilde complète (20 max).', true); }
     else if(data && data.reason==='already_in_guild'){ showToast('Tu es déjà dans une guilde.', true); }
@@ -8147,6 +8161,18 @@ function unlockAch(id){
   syncMyAchievementsToCloud();
   addXP(def.xp);showAchPopup(def.icon,'Succes debloque !',def.name+' +'+def.xp+' XP');
   playSound('ach');haptic('victory');
+  logJournalEvent('achievement', 'Succès débloqué : '+def.name);
+}
+
+// ── Journal personnel du joueur (Archives) ──────────────────────
+// Best-effort : ne doit jamais interrompre le flux qui l'appelle (fin de
+// partie, succès, guilde, skin) — cf. règle audio "le son ne doit jamais
+// casser la chaîne d'un coup", même logique ici.
+function logJournalEvent(eventType, message){
+  if(!currentUser || typeof supa==='undefined' || !supa) return;
+  try{
+    supa.from('player_journal').insert({ user_id: currentUser.id, event_type: eventType, message: message }).then(function(){}, function(){});
+  }catch(e){}
 }
 function showAchPopup(icon,title,sub){
   const p=document.getElementById('ach-popup');if(!p)return;
@@ -8320,7 +8346,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.85.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.87.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8550,7 +8576,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.85.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.87.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -8771,7 +8797,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.85.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.87.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -12518,7 +12544,7 @@ function showScreen(id){
   // Thème Village : construire la carte à la première visite, rafraîchir le
   // grisage online/dev à chaque visite, et masquer le bouton flottant «⛩
   // Village» quand on EST sur la carte (via la classe village-map-open).
-  if(id==='village'){ if(typeof buildVillageMap==='function') buildVillageMap(); if(typeof villageRefreshLocks==='function') villageRefreshLocks(); if(typeof villageRefreshBanner==='function') villageRefreshBanner(); if(typeof villageRefreshBadges==='function') villageRefreshBadges(); if(typeof villageUpdateSumoTimer==='function') villageUpdateSumoTimer(); if(typeof villageMaybeGuildInfoPopup==='function') villageMaybeGuildInfoPopup(); if(typeof villageMaybeShowDevlog==='function') villageMaybeShowDevlog(); if(typeof refreshNotificationBadge==='function') refreshNotificationBadge(); }
+  if(id==='village'){ if(typeof buildVillageMap==='function') buildVillageMap(); if(typeof villageRefreshLocks==='function') villageRefreshLocks(); if(typeof villageRefreshBanner==='function') villageRefreshBanner(); if(typeof villageRefreshBadges==='function') villageRefreshBadges(); if(typeof villageUpdateSumoTimer==='function') villageUpdateSumoTimer(); if(typeof villageMaybeGuildInfoPopup==='function') villageMaybeGuildInfoPopup(); if(typeof villageMaybeShowDevlog==='function') villageMaybeShowDevlog(); if(typeof refreshNotificationBadge==='function') refreshNotificationBadge(); if(typeof refreshMessagingBadge==='function') refreshMessagingBadge(); }
   document.body.classList.toggle('village-map-open', id==='village');
   // On masque le retour ⛩ Village : en plein-jeu (partie/pile-ou-face) pour ne
   // pas polluer le plateau, ET sur l'accueil / l'écran de connexion — car le
@@ -12638,14 +12664,23 @@ var VILLAGE_BUILDINGS = [
       {label:'Forums', ico:'💬', soon:true},
       {label:'News', ico:'📰', soon:true},
       {label:'DevLog (mises à jour)', ico:'📓', screen:'devlog'} ] },
+  // Compaction /lvdg-ui-optimiser (2026-08-16) : « Série de connexion » et
+  // « Journal d'activité » retirées — toutes deux routaient vers screen:'play'
+  // sans y afficher le contenu promis (le widget de série vit ailleurs, déjà
+  // accessible en 0 clic via le bouton 🎯 du village ; le journal affiché sur
+  // 'play' est un fil GLOBAL du serveur mal étiqueté « Journal des tournois »,
+  // pas le journal personnel du joueur que Wurmz veut). Le vrai journal
+  // personnel (victoires/défaites/succès/guilde/skins/achats, filtrable par
+  // cases à cocher, replié par défaut, affiché en direct en bas d'Archives)
+  // est un chantier à part — nouvelle table + points d'écriture dans
+  // plusieurs systèmes, pas un simple lien de menu. Décidé avec Wurmz :
+  // « d'abord on compacte », le journal personnel viendra dans un lot séparé.
   { id:'archives', label:'Archives', cx:55, cy:47, w:13, h:20, items:[
       {label:'Statistiques', ico:'📊', screen:'profile-stats'},
       {label:'Records', ico:'🏅', screen:'profile-records'},
       {label:'Succès', ico:'🎖', screen:'profile-achievements'},
       {label:'Classements', ico:'📈', screen:'leaderboard', online:true},
-      {label:'Lore', ico:'📖', screen:'citations'},
-      {label:'Série de connexion', ico:'🔥', screen:'play', online:true},
-      {label:'Journal d’activité', ico:'📜', screen:'play', online:true} ] },
+      {label:'Lore', ico:'📖', screen:'citations'} ] },
   { id:'dojo', label:'Dojo', cx:73, cy:41, w:20, h:24, online:true, items:[
       // Défi du jour rapatrié depuis le Château (a aussi son icône dédiée sur
       // la carte, voir #village-daily-btn). « IA » retiré ; « Maîtres IA »
@@ -12692,7 +12727,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.85.0';
+var DEVLOG_LATEST = 'V0.87.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -12900,6 +12935,7 @@ function villageOpenBuilding(id){
     var suffix = it.soon ? ' <span style="opacity:.6;font-size:11px">· bientôt</span>' : (locked ? ' 🔒' : '');
     html += '<button class="'+cls+'" data-idx="'+idx+'"><span class="vp-ico">'+(it.ico||'▸')+'</span><span>'+it.label+suffix+'</span></button>';
   });
+  if(id==='archives' && currentUser) html += renderJournalPanelHtml();
   html += '<button class="vp-close" onclick="closeVillagePanel()">⛩ Village</button>';
   box.innerHTML = html;
   // On rebranche les clics par index (évite d'injecter des handlers inline
@@ -12908,6 +12944,48 @@ function villageOpenBuilding(id){
     btn.onclick = function(){ villageDoItem(items[parseInt(btn.getAttribute('data-idx'),10)]); };
   });
   document.getElementById('village-panel').classList.add('open');
+  if(id==='archives' && currentUser) refreshJournalPanel();
+}
+
+// ── Panneau « Journal » — bas du bâtiment Archives ──────────────
+// Ouvert par défaut (pas de repli), filtrable par cases à cocher. Ne couvre
+// QUE les événements que Wurmz a demandés : victoires/défaites en ligne,
+// succès, adhésion de guilde, déblocage de skins — pas les connexions.
+var JOURNAL_FILTERS = { victory:true, defeat:true, achievement:true, guild_join:true, skin_unlock:true };
+var JOURNAL_LABELS = { victory:'🏆 Victoires', defeat:'💀 Défaites', achievement:'🎖 Succès', guild_join:'🛡 Guilde', skin_unlock:'🎨 Skins' };
+function renderJournalPanelHtml(){
+  var html = '<div class="vp-sub" style="margin-top:14px">Journal du joueur</div>';
+  html += '<div id="vp-journal-filters" style="display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px;font-family:VT323,monospace;font-size:12px">';
+  Object.keys(JOURNAL_LABELS).forEach(function(k){
+    html += '<label style="display:flex;align-items:center;gap:3px;cursor:pointer;opacity:'+(JOURNAL_FILTERS[k]?1:.5)+'">'
+      + '<input type="checkbox" data-jf="'+k+'" '+(JOURNAL_FILTERS[k]?'checked':'')+' style="accent-color:var(--gold)"> '+JOURNAL_LABELS[k]+'</label>';
+  });
+  html += '</div><div id="vp-journal-list" style="max-height:180px;overflow-y:auto;font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.85">Chargement…</div>';
+  return html;
+}
+async function refreshJournalPanel(){
+  var box = document.getElementById('vp-journal-filters');
+  if(box) box.querySelectorAll('input[data-jf]').forEach(function(cb){
+    cb.onchange = function(){ JOURNAL_FILTERS[cb.getAttribute('data-jf')] = cb.checked; cb.parentNode.style.opacity = cb.checked?1:.5; refreshJournalPanel(); };
+  });
+  var list = document.getElementById('vp-journal-list');
+  if(!list || !currentUser || typeof supa==='undefined' || !supa) return;
+  var types = Object.keys(JOURNAL_FILTERS).filter(function(k){ return JOURNAL_FILTERS[k]; });
+  if(types.length===0){ list.innerHTML = '<div style="opacity:.6">Aucune catégorie cochée.</div>'; return; }
+  try{
+    const { data, error } = await supa.from('player_journal').select('event_type,message,created_at')
+      .eq('user_id', currentUser.id).in('event_type', types).order('created_at', {ascending:false}).limit(30);
+    if(error) throw error;
+    if(!data || data.length===0){ list.innerHTML = '<div style="opacity:.6">Rien à afficher pour l\'instant.</div>'; return; }
+    list.innerHTML = data.map(function(e){
+      var d = new Date(e.created_at);
+      var ds = d.toLocaleDateString()+' '+d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+      return '<div style="padding:3px 0;border-bottom:1px solid rgba(212,175,55,.15)">'+e.message+' <span style="opacity:.5;font-size:11px">— '+ds+'</span></div>';
+    }).join('');
+  }catch(e){
+    // Message le plus probable : sql_a_executer/player_journal.sql pas encore exécuté.
+    list.innerHTML = '<div style="opacity:.6">Journal indisponible (script SQL exécuté ?).</div>';
+  }
 }
 
 // ══ QUICK PLAY ══
@@ -14015,13 +14093,23 @@ async function refreshNotificationBadge(){
 // messages privés non lus, tous amis confondus.
 async function refreshMessagingBadge(){
   var badge = document.getElementById('messaging-badge');
-  if(!badge) return;
-  if(!currentUser || typeof supa==='undefined' || !supa){ badge.style.display='none'; return; }
+  // Pastille jumelle sur le bouton village ✉ (village-corner-tools) — même
+  // compteur, deux boutons selon le thème actif (menu classique + village).
+  var vBadge = document.getElementById('village-msg-badge');
+  if(!badge && !vBadge) return;
+  if(!currentUser || typeof supa==='undefined' || !supa){
+    if(badge) badge.style.display='none';
+    if(vBadge) vBadge.style.display='none';
+    return;
+  }
   try{
     const { count } = await supa.from('direct_messages').select('id', {count:'exact', head:true}).eq('recipient_id', currentUser.id).eq('read', false);
-    if(count>0){ badge.textContent = count>9?'9+':String(count); badge.style.display='block'; }
-    else{ badge.style.display='none'; }
-  }catch(e){ badge.style.display='none'; }
+    var txt = count>9?'9+':String(count);
+    [badge, vBadge].forEach(function(b){
+      if(!b) return;
+      if(count>0){ b.textContent = txt; b.style.display='block'; } else { b.style.display='none'; }
+    });
+  }catch(e){ if(badge) badge.style.display='none'; if(vBadge) vBadge.style.display='none'; }
 }
 // Code couleur des notifications par CATÉGORIE (barre latérale gauche) :
 //  • système / tuto (devlog, nouveau cosmétique débloqué : skins, avatars,
@@ -14683,6 +14771,7 @@ async function unlockSkinPack(packId, price){
     renderShopTab();
     showToast(price>0 ? 'Pack d&#233;bloqu&#233; !' : 'Pack ajout&#233; &#224; ta collection !');
     logTelemetryEvent('shop_purchase', { pack: packId, price: price });
+    logJournalEvent('skin_unlock', price>0 ? 'Achat d\'un pack de skins ('+price+' 石).' : 'Nouveau pack de skins débloqué.');
   }catch(e){
     // Le message le plus fréquent en cas d'échec sera "function
     // unlock_skin_pack does not exist" tant que shop_koku_and_skin_packs.sql
@@ -16472,6 +16561,11 @@ function endGame(winner,reason){
     haptic('defeat');
   }
   playEndgameSfx(_reasonIsTimeoutOrCapture);
+  // Journal personnel : uniquement les vraies parties en ligne (pas l'IA
+  // locale ni l'entraînement) — c'est ce que Wurmz a demandé de consigner.
+  if(G.onlineGameId){
+    logJournalEvent(playerWon?'victory':'defeat', playerWon?'Victoire en ligne !':'Défaite en ligne.');
+  }
 
   // Statistiques par cadence de jeu (3s/5s/10s) et par couleur — c'est
   // la vraie notion de "mode de jeu" pour ce jeu (alignée sur les 3
@@ -27993,6 +28087,11 @@ window.addEventListener('beforeunload', () => {
          concerné au clic sur une notif, voir handleNotificationClick). -->
     <button id="village-notif-btn" onclick="openNotificationsModal()" aria-label="Notifications" title="Notifications">
       🔔 <span id="village-notif-badge" style="display:none;position:absolute;top:-4px;right:-6px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:#e74c3c;box-shadow:0 0 4px rgba(231,76,60,.8);font-family:VT323,monospace;font-size:11px;line-height:16px;color:#fff;text-align:center"></span>
+    </button>
+    <!-- Raccourci Messagerie depuis le village (demande Wurmz, 2026-08-15),
+         à côté du Défi du jour, même style que le bouton Notifications. -->
+    <button id="village-msg-btn" onclick="showScreen('messaging')" aria-label="Messagerie" title="Messagerie">
+      ✉ <span id="village-msg-badge" style="display:none;position:absolute;top:-4px;right:-6px;min-width:16px;height:16px;padding:0 3px;border-radius:8px;background:#e74c3c;box-shadow:0 0 4px rgba(231,76,60,.8);font-family:VT323,monospace;font-size:11px;line-height:16px;color:#fff;text-align:center"></span>
     </button>
   </div>
 </div>

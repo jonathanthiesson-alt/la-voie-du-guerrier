@@ -1,5 +1,5 @@
 ---
-name: ui-optimiser
+name: lvdg-ui-optimiser
 description: Refonte et vérification des menus de La Voie du Guerrier — carte du site, chasse aux doublons d'écrans, ergonomie mobile, cohérence des retours. À lancer avant de refaire un menu (Maison, Dojo, Archives…), après l'ajout d'un écran, ou pour un audit UX complet du jeu.
 ---
 
@@ -161,3 +161,15 @@ ci-dessous.
 6. **Le contrôle mort mais visible** — les joueurs n'ont plus qu'un thème,
    mais le sélecteur restait affiché. Retirer une fonctionnalité, c'est aussi
    retirer son bouton.
+7. **Le libellé qui pointe vers un hub sans le contenu promis** — Archives
+   « Série de connexion » routait vers `screen:'play'`, qui n'affichait
+   AUCUNE série (le vrai widget vivait sur un écran inatteignable en thème
+   village). Un item qui route vers un écran-hub partagé (play/menu/settings)
+   doit être vérifié : le contenu promis par le libellé est-il vraiment
+   VISIBLE sur cet écran, ou juste vaguement à proximité thématique ?
+8. **Le titre à l'écran contredit le libellé du menu** — Archives « Journal
+   d'activité » menait à une section titrée à l'écran « Journal des
+   tournois », plus étroite que le contenu réel (comprend aussi connexions et
+   PvP). Trois noms différents pour la même chose (menu / titre affiché /
+   commentaire code) = signal d'alarme Q3 direct. Toujours lire le titre
+   RENDU à l'écran, pas seulement le libellé du menu qui y mène.

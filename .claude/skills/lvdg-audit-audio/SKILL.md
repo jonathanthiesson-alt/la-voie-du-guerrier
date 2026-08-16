@@ -1,5 +1,5 @@
 ---
-name: audit-audio
+name: lvdg-audit-audio
 description: Audit complet du son de La Voie du Guerrier (musiques, SFX, déclencheurs, fuites). À lancer quand un son se déclenche au mauvais moment, ne part pas, ou se superpose.
 ---
 

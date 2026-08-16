@@ -4,7 +4,7 @@
 > `node scripts/sitemap.mjs` le régénère depuis `index.html`.
 > Le skill `ui-optimiser` le régénère à chaque modification de menu.
 
-Écrans : **62** · bâtiments : **12** · orphelins : **2** · entrées multiples : **16**
+Écrans : **61** · bâtiments : **12** · orphelins : **2** · entrées multiples : **16**
 
 ## 1. Le village (entrées joueur)
 
@@ -56,9 +56,7 @@
 | Records | `screen-profile-records` | actif |
 | Succès | `screen-profile-achievements` | actif |
 | Classements | `screen-leaderboard` | online |
-| Lore & citations | `screen-citations` | actif |
-| Série de connexion | `screen-play` | online |
-| Journal d’activité | `screen-play` | online |
+| Lore | `screen-citations` | actif |
 
 ### Dojo `dojo` — *online*
 
@@ -120,7 +118,6 @@
 | `dev-hub` | village/soleil, village/maison, code | `menu` |
 | `dev-lab` | dev-hub | `dev-hub` |
 | `dev-learn` | code | — |
-| `dev-lore` | dev-hub | `dev-hub` |
 | `dev-openings` | dev-repertoire | `dev-repertoire` |
 | `dev-repertoire` | **—** | `dev-hub` |
 | `dev-tactics` | dev-repertoire | `dev-repertoire` |
@@ -144,13 +141,13 @@
 | `local-hub` | code | — |
 | `matchmaking` | code | — |
 | `menu` | game, profile, code | `home` |
-| `messaging` | village/auberge, code | `menu` |
+| `messaging` | village/auberge, village, code | `menu` |
 | `msg-composer` | profile | `profile` |
 | `online-auth` | village, code | `home` |
 | `online-menu` | village/arene, code | `play` |
 | `opponents` | village/dojo, local-hub | — |
 | `piece-skins` | village/maison, profile | — |
-| `play` | village/archives, village/arene, code | — |
+| `play` | village/arene, code | — |
 | `profile` | village/maison, home, play, code | — |
 | `profile-achievements` | village/archives, profile | `profile` |
 | `profile-records` | village/archives, profile | `profile` |
@@ -185,9 +182,9 @@ volontaire), mais chacun doit être justifié.
 - `events` ← village/chateau, menu
 - `leaderboard` ← village/archives, online-menu
 - `menu` ← game, profile
+- `messaging` ← village/auberge, village
 - `opponents` ← village/dojo, local-hub
 - `piece-skins` ← village/maison, profile
-- `play` ← village/archives, village/arene
 - `profile` ← village/maison, home, play
 - `profile-achievements` ← village/archives, profile
 - `profile-records` ← village/archives, profile

@@ -4,6 +4,20 @@ Tous les scripts sont **idempotents** : on peut les rejouer sans risque.
 
 ---
 
+### ⏳ À exécuter par Jonathan (Journal du joueur — V0.87.0)
+
+`player_journal.sql` — nouvelle table `player_journal` (id, user_id, created_at,
+event_type, message) + RLS (lecture/écriture limitées à `auth.uid()=user_id`).
+Additive, aucun impact sur les tables existantes. Tant que ce script n'est pas
+exécuté, le panneau « Journal » en bas d'Archives affiche simplement
+« Journal indisponible » (même filet de sécurité que les autres features
+dépendantes d'un script non lancé) et les écritures (`logJournalEvent`) échouent
+silencieusement sans casser le flux de jeu (fin de partie, succès, guilde, skin).
+
+| # | Script | Contenu |
+|---|---|---|
+| A | `player_journal.sql` | Table `player_journal` + index `(user_id, created_at desc)` + RLS select/insert own. |
+
 ## ⚠️ Pièges Supabase à connaître avant de toucher au SQL
 
 ### L'éditeur exécute tout dans UNE transaction
