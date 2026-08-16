@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.90.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.91.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3753,8 +3753,16 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.90.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.91.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.91.0 &mdash; 16 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; BOT-ARMY : D&Eacute;BLOCAGE PAR RENCONTRE CORRIG&Eacute;</li>
+        <li>Le retour &laquo;&nbsp;par Elo&nbsp;&raquo; du 16 ao&ucirc;t comparait l'Elo r&eacute;el au seuil du bot, mais les combats Bot-Army sont amicaux et ne font jamais bouger l'Elo &mdash; plus personne ne d&eacute;bloquait rien. D&eacute;blocage restaur&eacute; sur la vraie rencontre en matchmaking, ind&eacute;pendant de l'Elo.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -8370,7 +8378,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.90.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.91.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8600,7 +8608,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.90.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.91.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -8821,7 +8829,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.90.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.91.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -10600,17 +10608,6 @@ async function loadBotRosterFromDB(){
       if(Array.isArray(enc)) _botEnc = enc;
     }
   }catch(e){}
-  // Déblocage à nouveau indexé sur l'Elo (retour arrière du chaînage
-  // séquentiel — demande Thomas + Wurmz, 2026-08-16 : « tu débloques les
-  // rencontres suivantes en fonction de ton niveau », le chaînage bloquait
-  // un joueur ayant déjà un Elo élevé sur les premiers bots non battus).
-  // On prend le meilleur Elo des 3 cadences (select('*') = règle CLAUDE.md).
-  try{
-    if(currentUser && typeof supa!=='undefined' && supa){
-      const { data: me } = await supa.from('profiles').select('*').eq('id', currentUser.id).single();
-      if(me) _myBotArmyElo = Math.max(me.elo_3s||0, me.elo_5s||0, me.elo_10s||0) || 1200;
-    }
-  }catch(e){}
 }
 // Un « médaillon » : le kanji du numéro dans un cercle coloré par le rang.
 function _botMedallion(b, size, dim){
@@ -10655,7 +10652,7 @@ function renderBotGallery(){
   grid.innerHTML = visible.map(function(b){
     if(!botArmyUnlocked(b)){
       // Grisé : médaillon éteint, nom masqué, message au clic (déblocage en chaîne).
-      return '<div onclick="showToast(\'Atteins Elo '+b.elo+' (une cadence) pour le débloquer.\', false)" '
+      return '<div onclick="showToast(\'Active le compagnon Bot-Army pour le rencontrer en matchmaking.\', false)" '
         +'style="display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(0,0,0,.28);border:1px dashed rgba(160,170,190,.3);border-radius:10px;padding:10px 6px;cursor:pointer">'
         +_botMedallion(b,50,true)
         +'<div style="font-family:VT323,monospace;font-size:12px;color:#8aa0c0;opacity:.7">🔒 №'+b.num+'</div>'
@@ -10799,16 +10796,22 @@ async function checkOnlineBotArmyWin(){
     setTimeout(function(){ showToast('⚔ №'+num+' · '+(r.data.rank||'')+' vaincu en ligne — défi amical débloqué !', false); }, 1200);
   }catch(e){}
 }
-// Déblocage indexé sur l'Elo (retour arrière du chaînage séquentiel,
-// 2026-08-16 — voir loadBotRosterFromDB). Un bot est débloqué dès que le
-// meilleur Elo du joueur (toutes cadences) atteint son Elo de base ; le
-// Rōnin (00) reste réservé à ceux qui ont vaincu le 15 (aucun Elo ne le
-// dévoile, c'est le secret de fin de chaîne).
-var _myBotArmyElo = 1200;
+// Déblocage par RENCONTRE (mécanisme d'origine, restauré 2026-08-16 après
+// un bug introduit par un premier « retour à l'Elo » trop littéral) : un bot
+// est débloqué dès qu'il a été RENCONTRÉ en matchmaking (hasEncounteredBot,
+// table bot_encounters) — l'appariement par Elo proximité (backfill) fait
+// naturellement se croiser le joueur et les bots de son niveau, c'est là
+// qu'est l'indexation sur l'Elo décrite par Thomas, pas une comparaison
+// directe. Comparer l'Elo du joueur au seuil du bot était FAUX : les combats
+// Bot-Army sont amicaux/non classés (ranked:false), donc l'Elo du joueur ne
+// bouge jamais en les affrontant — plus personne ne débloquait rien.
+// hasDefeatedBot en garde-fou (un bot vaincu est forcément rencontré, mais
+// on ne veut jamais qu'une victoire déjà acquise se re-verrouille). Le Rōnin
+// (00) reste réservé à ceux qui ont vaincu le 15.
 function botArmyUnlocked(b){
   if(!b) return false;
   if(b.num==='00') return hasDefeatedBot('15');
-  return _myBotArmyElo >= b.elo;
+  return hasEncounteredBot(b.key) || hasDefeatedBot(b.num);
 }
 function checkBotArmyAchievements(){
   var d=_defeatedBots();
@@ -12760,7 +12763,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.90.0';
+var DEVLOG_LATEST = 'V0.91.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
