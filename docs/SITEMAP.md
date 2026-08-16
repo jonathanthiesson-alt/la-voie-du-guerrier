@@ -52,10 +52,10 @@
 
 | Item | Cible | État |
 |---|---|---|
-| Statistiques | `screen-profile-stats` | actif |
-| Records | `screen-profile-records` | actif |
-| Succès | `screen-profile-achievements` | actif |
 | Classements | `screen-leaderboard` | online |
+| Statistiques | `screen-profile-stats` | actif |
+| Succès | `screen-profile-achievements` | actif |
+| Records | `screen-profile-records` | actif |
 | Lore | `screen-citations` | actif |
 
 ### Dojo `dojo` — *online*

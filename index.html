@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.88.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.89.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3753,8 +3753,16 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.88.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.89.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.89.0 &mdash; 16 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; ARCHIVES R&Eacute;ORDONN&Eacute;ES</li>
+        <li>Ordre des Archives revu par fr&eacute;quence d&eacute;croissante : Classements &rarr; Statistiques &rarr; Succ&egrave;s &rarr; Records &rarr; Lore.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -8354,7 +8362,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.88.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.89.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8584,7 +8592,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.88.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.89.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -8805,7 +8813,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.88.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.89.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -12688,11 +12696,15 @@ var VILLAGE_BUILDINGS = [
   // est un chantier à part — nouvelle table + points d'écriture dans
   // plusieurs systèmes, pas un simple lien de menu. Décidé avec Wurmz :
   // « d'abord on compacte », le journal personnel viendra dans un lot séparé.
+  // Ordre par fréquence décroissante (/lvdg-ui-optimiser, 2026-08-16, validé
+  // Wurmz) : Classements (compétitif, le plus consulté) → Statistiques (bilan
+  // régulier) → Succès (progression) → Records (extrêmes personnels, rare) →
+  // Lore (flavor, le plus rare).
   { id:'archives', label:'Archives', cx:55, cy:47, w:13, h:20, items:[
-      {label:'Statistiques', ico:'📊', screen:'profile-stats'},
-      {label:'Records', ico:'🏅', screen:'profile-records'},
-      {label:'Succès', ico:'🎖', screen:'profile-achievements'},
       {label:'Classements', ico:'📈', screen:'leaderboard', online:true},
+      {label:'Statistiques', ico:'📊', screen:'profile-stats'},
+      {label:'Succès', ico:'🎖', screen:'profile-achievements'},
+      {label:'Records', ico:'🏅', screen:'profile-records'},
       {label:'Lore', ico:'📖', screen:'citations'} ] },
   { id:'dojo', label:'Dojo', cx:73, cy:41, w:20, h:24, online:true, items:[
       // Défi du jour rapatrié depuis le Château (a aussi son icône dédiée sur
@@ -12740,7 +12752,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.88.0';
+var DEVLOG_LATEST = 'V0.89.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
