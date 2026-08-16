@@ -479,16 +479,13 @@ async function backfillTick(mover, roster, busyPids, stats) {
       }
       if (!free.length) break;
       // Choix du bot : au HASARD si « aléatoire » coché (backfill_random) ;
-      // sinon la CIBLE PRÉCISE envoyée par le client (backfill_target_bot =
-      // le prochain non vaincu de la chaîne 01→15→00, demande Wurmz 2026-08-15 —
-      // on rencontre les bots dans l'ordre où on les bat, plus au fil de l'Elo) ;
-      // repli sur le plus proche de son Elo si la cible est absente/introuvable
-      // (colonne pas encore migrée, ou bot cible occupé/filtré par le plafond).
+      // sinon le plus proche de l'Elo du joueur (retour arrière du ciblage
+      // séquentiel du 2026-08-15, abandonné le 2026-08-16 — demande Thomas +
+      // Wurmz : le déblocage redevient indexé sur l'Elo, pas sur l'ordre de
+      // victoire).
       let bot;
       if (q.backfill_random) {
         bot = free[Math.floor(Math.random() * free.length)];
-      } else if (q.backfill_target_bot && free.some((b) => b.key === q.backfill_target_bot)) {
-        bot = free.find((b) => b.key === q.backfill_target_bot);
       } else {
         free.sort((a, b) => Math.abs(a.base_elo - q.elo) - Math.abs(b.base_elo - q.elo));
         bot = free[0];
@@ -581,11 +578,9 @@ async function arenaBackfillTick(mover, roster, stats) {
       }
       if (!free.length) break;
       const myElo = q.elo || 1200;
-      // Même règle que backfillTick : cible précise (backfill_target_bot) avant
-      // repli sur le plus proche d'Elo.
+      // Même règle que backfillTick : plus proche d'Elo (retour arrière, 2026-08-16).
       let bot;
       if (q.backfill_random) bot = free[Math.floor(Math.random() * free.length)];
-      else if (q.backfill_target_bot && free.some((b) => b.key === q.backfill_target_bot)) bot = free.find((b) => b.key === q.backfill_target_bot);
       else { free.sort((a, b) => Math.abs(a.base_elo - myElo) - Math.abs(b.base_elo - myElo)); bot = free[0]; }
       // Match d'arène AMICAL (ranked=false) + manche 1. Couleurs = slots du match
       // (createArenaRound côté client fait pareil en manche impaire).

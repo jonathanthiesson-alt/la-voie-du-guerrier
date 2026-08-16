@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.87.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.88.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3261,7 +3261,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <button onclick="restartCampaignLesson()">&#8635; Recommencer</button>
   </div>
   <div class="player-bar" id="bar-top">
-    <div class="player-name-label"><span class="turn-dot" id="dot-top"></span><span class="player-piece-badge" id="badge-top"></span><span id="name-top"><span data-i18n="color_black">NOIRS</span></span><span class="turn-label">&#9654; JOUE</span><span id="karakuri-click" style="display:none;margin-left:8px;font-family:'VT323',monospace;font-size:11px;color:var(--gold);opacity:.75"></span></div>
+    <div class="player-name-label"><span class="turn-dot" id="dot-top"></span><span class="player-piece-badge" id="badge-top"></span><span id="name-top"><span data-i18n="color_black">NOIRS</span></span><span class="turn-label">&#9654; JOUE</span><span id="karakuri-click" style="display:none;margin-left:8px;font-family:'VT323',monospace;font-size:11px;color:var(--gold);opacity:.75"></span><button id="karakuri-undo-btn" onclick="karakuriUndo()" style="display:none;margin-left:8px;font-family:'VT323',monospace;font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid var(--gold);background:rgba(0,0,0,.35);color:var(--gold);cursor:pointer" title="Reprendre le dernier coup">&#8617; Reprendre</button></div>
     <div class="timer-display" id="timer-top">--</div>
   </div>
   <div id="arena-round-picker" style="display:none;width:100%;gap:5px;padding:4px 8px;box-sizing:border-box;background:rgba(0,0,0,.4)"></div>
@@ -3753,8 +3753,16 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.87.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.88.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.88.0 &mdash; 16 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; BOT-ARMY PAR ELO, KARAKURI SANS MINUTEUR</li>
+        <li>Retour du d&eacute;blocage de l'Arm&eacute;e des 15 index&eacute; sur l'Elo (le cha&icirc;nage s&eacute;quentiel du 15 ao&ucirc;t bloquait un joueur ayant d&eacute;j&agrave; un bon niveau). Karakuri repasse sans minuteur (le temps de lire les conseils de Musashi) avec un bouton &#8617; Reprendre ; les Adversaires notables restent chronom&eacute;tr&eacute;s.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -8346,7 +8354,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.87.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.88.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8576,7 +8584,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.87.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.88.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -8797,7 +8805,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.87.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.88.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -9938,7 +9946,10 @@ function startTrainingBotMatch(level){
   settings.vsAI = true;
   selectedAdvId = 9 + level; // 10, 11, 12
   settings.gameMode = 'rempart-v2';
-  settings.timerSeconds = settings.timerSeconds || 10;
+  // Toujours sans minuteur (demande Thomas, 2026-08-16) : le temps de lire
+  // les conseils de Musashi affichés pendant la partie, contrairement aux
+  // Adversaires notables qui restent chronométrés.
+  settings.timerSeconds = 0;
   confirmLaunch();
 }
 // Cliquetis mecanique de Karakuri : purement decoratif, affiche brievement
@@ -10573,6 +10584,17 @@ async function loadBotRosterFromDB(){
       if(Array.isArray(enc)) _botEnc = enc;
     }
   }catch(e){}
+  // Déblocage à nouveau indexé sur l'Elo (retour arrière du chaînage
+  // séquentiel — demande Thomas + Wurmz, 2026-08-16 : « tu débloques les
+  // rencontres suivantes en fonction de ton niveau », le chaînage bloquait
+  // un joueur ayant déjà un Elo élevé sur les premiers bots non battus).
+  // On prend le meilleur Elo des 3 cadences (select('*') = règle CLAUDE.md).
+  try{
+    if(currentUser && typeof supa!=='undefined' && supa){
+      const { data: me } = await supa.from('profiles').select('*').eq('id', currentUser.id).single();
+      if(me) _myBotArmyElo = Math.max(me.elo_3s||0, me.elo_5s||0, me.elo_10s||0) || 1200;
+    }
+  }catch(e){}
 }
 // Un « médaillon » : le kanji du numéro dans un cercle coloré par le rang.
 function _botMedallion(b, size, dim){
@@ -10617,7 +10639,7 @@ function renderBotGallery(){
   grid.innerHTML = visible.map(function(b){
     if(!botArmyUnlocked(b)){
       // Grisé : médaillon éteint, nom masqué, message au clic (déblocage en chaîne).
-      return '<div onclick="showToast(\'Bats le bot précédent EN LIGNE pour le débloquer.\', false)" '
+      return '<div onclick="showToast(\'Atteins Elo '+b.elo+' (une cadence) pour le débloquer.\', false)" '
         +'style="display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(0,0,0,.28);border:1px dashed rgba(160,170,190,.3);border-radius:10px;padding:10px 6px;cursor:pointer">'
         +_botMedallion(b,50,true)
         +'<div style="font-family:VT323,monospace;font-size:12px;color:#8aa0c0;opacity:.7">🔒 №'+b.num+'</div>'
@@ -10761,25 +10783,16 @@ async function checkOnlineBotArmyWin(){
     setTimeout(function(){ showToast('⚔ №'+num+' · '+(r.data.rank||'')+' vaincu en ligne — défi amical débloqué !', false); }, 1200);
   }catch(e){}
 }
-// Déblocage EN CHAÎNE : au départ seul le 01 est jouable ; SEULE une victoire
-// EN LIGNE (checkOnlineBotArmyWin) débloque le numéro suivant — le défi amical
-// depuis la galerie ne compte plus (demande Wurmz, 2026-08-15). Le Rōnin (00)
-// n'apparaît qu'une fois le 15 vaincu en ligne. Tout le reste reste grisé.
+// Déblocage indexé sur l'Elo (retour arrière du chaînage séquentiel,
+// 2026-08-16 — voir loadBotRosterFromDB). Un bot est débloqué dès que le
+// meilleur Elo du joueur (toutes cadences) atteint son Elo de base ; le
+// Rōnin (00) reste réservé à ceux qui ont vaincu le 15 (aucun Elo ne le
+// dévoile, c'est le secret de fin de chaîne).
+var _myBotArmyElo = 1200;
 function botArmyUnlocked(b){
   if(!b) return false;
-  if(b.num==='01') return true;
   if(b.num==='00') return hasDefeatedBot('15');
-  var prev=('0'+(parseInt(b.num,10)-1)).slice(-2); // 02→01, 10→09, 15→14
-  return hasDefeatedBot(prev);
-}
-// Prochain adversaire de la chaîne (demande Wurmz, 2026-08-15) : le backfill
-// matchmaking ne cible plus le bot d'Elo le plus proche mais le PROCHAIN non
-// vaincu dans l'ordre 01→15→00 — on progresse en battant, pas en rattrapant
-// leur Elo. _botRoster est déjà trié par `sort` (ordre 01…15,00, voir requête
-// bot_roster). Renvoie null si les 16 sont vaincus (chaîne terminée).
-function nextBotArmyTarget(){
-  for(var i=0;i<_botRoster.length;i++){ if(!hasDefeatedBot(_botRoster[i].num)) return _botRoster[i]; }
-  return null;
+  return _myBotArmyElo >= b.elo;
 }
 function checkBotArmyAchievements(){
   var d=_defeatedBots();
@@ -12727,7 +12740,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.87.0';
+var DEVLOG_LATEST = 'V0.88.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -13068,6 +13081,13 @@ function selectLocalMode(mode){
   if(ap)  ap.style.display=isAiMode?'block':'none';
   if(btn) btn.style.display='block'; // toujours visible, IA ou JvJ
   if(isAiMode) buildAdvGridAuto();
+  // Adversaires notables : toujours chronométré (demande Thomas, 2026-08-16),
+  // contrairement à Karakuri qui reste sans minuteur. On masque l'option ∞
+  // et on retombe sur 5s si elle était sélectionnée (héritée d'un mode local
+  // précédent, ex. bac à sable JvJ).
+  var timerZeroBtn = document.getElementById('timer-0');
+  if(timerZeroBtn) timerZeroBtn.style.display = (mode==='ai-notable') ? 'none' : '';
+  if(mode==='ai-notable' && settings.timerSeconds===0) selectTimer(5);
 }
 
 var _localNotableMode = false;
@@ -13377,28 +13397,22 @@ async function startMatchmakingSearch(timerSeconds){
   // Plafond de déblocage : Elo du plus haut bot débloqué sur CET appareil (état
   // local). Le déblocage étant croissant en Elo, le worker n'affrontera que les
   // bots base_elo <= ce plafond → exactement mes bots débloqués. 0 = pas de filtre.
-  // Reste envoyé comme garde-fou/repli si backfill_target_bot est absent.
+  // Retour à l'appariement par Elo le plus proche (demande Thomas + Wurmz,
+  // 2026-08-16) : le ciblage séquentiel du 2026-08-15 est abandonné.
   var _maxUnlockedElo = 0;
   try{ _botRoster.forEach(function(b){ if(botArmyUnlocked(b) && b.elo>_maxUnlockedElo) _maxUnlockedElo=b.elo; }); }catch(e){}
-  // Cible précise : le prochain non vaincu de la chaîne (demande Wurmz,
-  // 2026-08-15) — on rencontre les bots dans l'ordre où on les bat, pas au
-  // fil de son Elo. null si les 16 sont vaincus (le worker retombe alors sur
-  // le plafond/Elo ci-dessus).
-  var _nextBot = (typeof nextBotArmyTarget==='function') ? nextBotArmyTarget() : null;
   var _mmPayload = {
     player_id: currentUser.id, pseudo: currentUser.pseudo, elo: myElo, timer_seconds: timerSeconds,
     want_backfill: _bf.enabled, backfill_after: _bf.delay,
-    backfill_random: _bf.random, backfill_max_elo: _maxUnlockedElo,
-    backfill_target_bot: _nextBot ? _nextBot.key : null
+    backfill_random: _bf.random, backfill_max_elo: _maxUnlockedElo
   };
   let { error } = await supa.from('matchmaking_queue').insert(_mmPayload);
-  // Résilience : backfill_random/backfill_max_elo/backfill_target_bot sont des
-  // colonnes récentes (add_backfill_random.sql / add_backfill_target_bot.sql).
-  // Tant qu'elles ne sont pas migrées, on retire ces champs et on réinsère —
-  // le matchmaking ne doit JAMAIS casser pour une préférence (cf. CLAUDE.md,
-  // chemin critique).
-  if(error && /backfill_(random|max_elo|target_bot)/.test((error.message||'')+(error.details||''))){
-    delete _mmPayload.backfill_random; delete _mmPayload.backfill_max_elo; delete _mmPayload.backfill_target_bot;
+  // Résilience : backfill_random/backfill_max_elo sont des colonnes récentes
+  // (add_backfill_random.sql). Tant qu'elles ne sont pas migrées, on retire ces
+  // champs et on réinsère — le matchmaking ne doit JAMAIS casser pour une
+  // préférence (cf. CLAUDE.md, chemin critique).
+  if(error && /backfill_(random|max_elo)/.test((error.message||'')+(error.details||''))){
+    delete _mmPayload.backfill_random; delete _mmPayload.backfill_max_elo;
     ({ error } = await supa.from('matchmaking_queue').insert(_mmPayload));
   }
   if(error){
@@ -13515,21 +13529,16 @@ async function startArenaMatchmakingSearch(timerSeconds){
   var _abf = (typeof getBackfillPref==='function') ? getBackfillPref() : {enabled:false,delay:20,random:false};
   var _aMaxElo = 0;
   try{ _botRoster.forEach(function(b){ if(botArmyUnlocked(b) && b.elo>_aMaxElo) _aMaxElo=b.elo; }); }catch(e){}
-  // Cible précise : le prochain non vaincu de la chaîne (voir Partie rapide
-  // ci-dessus, même logique).
-  var _aNextBot = (typeof nextBotArmyTarget==='function') ? nextBotArmyTarget() : null;
   var _aPayload = {
     player_id: currentUser.id, pseudo: currentUser.pseudo, timer_seconds: timerSeconds, elo: _aMyElo,
-    want_backfill: _abf.enabled, backfill_after: _abf.delay, backfill_random: _abf.random, backfill_max_elo: _aMaxElo,
-    backfill_target_bot: _aNextBot ? _aNextBot.key : null
+    want_backfill: _abf.enabled, backfill_after: _abf.delay, backfill_random: _abf.random, backfill_max_elo: _aMaxElo
   };
   let { error } = await supa.from('arena_matchmaking_queue').insert(_aPayload);
   // Résilience (chemin critique) : les colonnes de backfill sont récentes
-  // (bots_arena_tournament.sql / add_backfill_target_bot.sql). Tant qu'elles ne
-  // sont pas migrées, on les retire et on réinsère — l'Arène ne doit JAMAIS
-  // casser pour une préférence.
-  if(error && /want_backfill|backfill_(after|random|max_elo|target_bot)/.test((error.message||'')+(error.details||''))){
-    delete _aPayload.want_backfill; delete _aPayload.backfill_after; delete _aPayload.backfill_random; delete _aPayload.backfill_max_elo; delete _aPayload.backfill_target_bot;
+  // (bots_arena_tournament.sql). Tant qu'elles ne sont pas migrées, on les
+  // retire et on réinsère — l'Arène ne doit JAMAIS casser pour une préférence.
+  if(error && /want_backfill|backfill_(after|random|max_elo)/.test((error.message||'')+(error.details||''))){
+    delete _aPayload.want_backfill; delete _aPayload.backfill_after; delete _aPayload.backfill_random; delete _aPayload.backfill_max_elo;
     ({ error } = await supa.from('arena_matchmaking_queue').insert(_aPayload));
   }
   if(error){
@@ -16012,6 +16021,7 @@ function initGame(){
   initQuickMsgBar();
   document.getElementById('status-bar').textContent=t('msg_draw')+(fc==='white'?t('color_white'):t('color_black'))+t('msg_start');
   pushHistory();
+  if(typeof updateKarakuriUndoBtn==='function') updateKarakuriUndoBtn();
   // Start the game (coin flip was already shown before initGame was called)
   // Sauf si cet appel à initGame() sert uniquement à construire le plateau
   // de départ pour une partie en ligne/Arène (voir createOnlineGame /
@@ -16515,6 +16525,7 @@ function endGame(winner,reason){
   if(typeof stopFightMusic==='function') stopFightMusic();
   if(G.arenaMatchId){ handleArenaEndGame(winner, reason); return; }
   G.gameOver=true;G.winner=winner;stopTimer();
+  if(typeof updateKarakuriUndoBtn==='function') updateKarakuriUndoBtn();
   document.getElementById('timer-bottom').className='timer-display';
   document.getElementById('timer-top').className='timer-display';
   var ab=document.getElementById('aldric-bubble');if(ab)ab.style.display='none';
@@ -16810,6 +16821,40 @@ function switchTurn(){
   document.getElementById('status-bar').textContent=(G.turn==='white'?t('color_white'):t('color_black'))+t('msg_select_piece');
   startTurnTimer();
   if(G.vsAI&&G.turn===G.topColor&&!G.gameOver)scheduleAI();
+  updateKarakuriUndoBtn();
+}
+// Bouton « Reprendre » (Karakuri uniquement, demande Thomas 2026-08-16) :
+// visible seulement au tour du joueur, pas pendant que le bot « réfléchit »
+// (scheduleAI n'expose pas son setTimeout, donc on évite toute course en
+// n'autorisant la reprise QUE quand ce n'est plus à Karakuri de jouer).
+function updateKarakuriUndoBtn(){
+  var btn = document.getElementById('karakuri-undo-btn');
+  if(!btn) return;
+  var show = !G.gameOver && !G.aiThinking && G.vsAI && typeof isTrainingBotAdv==='function'
+    && isTrainingBotAdv(G.advId) && G.turn===G.bottomColor && HISTORY.length>1;
+  btn.style.display = show ? 'inline-block' : 'none';
+}
+// Reprend le dernier coup joué (le tien + la réplique de Karakuri) en
+// revenant à l'état du plateau juste avant, via les instantanés de HISTORY
+// (voir pushHistory) — pas de logique de moteur dupliquée.
+function karakuriUndo(){
+  if(G.gameOver || G.aiThinking || !G.vsAI || !isTrainingBotAdv(G.advId)) return;
+  if(HISTORY.length<=1){ showToast('Rien à reprendre.', false); return; }
+  HISTORY.pop();
+  while(HISTORY.length>1 && HISTORY[HISTORY.length-1].turn!==G.bottomColor){ HISTORY.pop(); }
+  var snap = HISTORY[HISTORY.length-1];
+  G.board = snap.board.map(function(r){ return r.map(function(p){ return p?Object.assign({},p):null; }); });
+  G.stacks = snap.stacks.map(function(r){ return r.map(function(p){ return p?Object.assign({},p):null; }); });
+  G.lastMoved = snap.lastMoved ? Object.assign({}, snap.lastMoved) : null;
+  G.lastMovedByColor = snap.lastMovedByColor ? {white: snap.lastMovedByColor.white?Object.assign({},snap.lastMovedByColor.white):null, black: snap.lastMovedByColor.black?Object.assign({},snap.lastMovedByColor.black):null} : {white:null,black:null};
+  G.turn = snap.turn;
+  G.selected = null; G.validMoves = [];
+  renderBoard(G.lastMoved, true);
+  if(typeof updateWinProbBar==='function') updateWinProbBar();
+  if(typeof hideCombatAnim==='function') hideCombatAnim();
+  document.getElementById('status-bar').textContent=(G.turn==='white'?t('color_white'):t('color_black'))+t('msg_select_piece');
+  updateKarakuriUndoBtn();
+  showToast('↩ Coup repris.', false);
 }
 
 // ══════════════════════════════════════════════════════

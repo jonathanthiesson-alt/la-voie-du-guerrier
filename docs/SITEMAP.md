@@ -208,4 +208,4 @@ ancien hub (`menu`, `play`, `settings`, `local-hub`, `online-menu`, `events-mode
 
 - soleil › Menu DEV · maison › Menu DEV
 
-_Généré le 2026-08-15._
+_Généré le 2026-08-16._
