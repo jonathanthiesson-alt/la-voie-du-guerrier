@@ -4,7 +4,7 @@
 > `node scripts/sitemap.mjs` le régénère depuis `index.html`.
 > Le skill `ui-optimiser` le régénère à chaque modification de menu.
 
-Écrans : **61** · bâtiments : **12** · orphelins : **2** · entrées multiples : **16**
+Écrans : **66** · bâtiments : **12** · orphelins : **2** · entrées multiples : **16**
 
 ## 1. Le village (entrées joueur)
 
@@ -62,11 +62,13 @@
 
 | Item | Cible | État |
 |---|---|---|
-| Défi du jour | `startDailyChallenge()` | actif |
+| Karakuri (entraînement) | `screen-training-bot` | actif |
 | Adversaires | `screen-opponents` | actif |
 | Adversaires notables | `openLocalMode('ai-notable')` | actif |
 | Tuto (règles & La Voie du Bousier) | `screen-rules` | actif |
-| Karakuri (entraînement) | `screen-training-bot` | actif |
+| Puzzle | `screen-puzzle-hub` | actif |
+| Monban | `screen-monban-hub` | actif |
+| Invasion | `screen-invasion` | actif |
 
 ### Arène `arene` — *online*
 
@@ -134,6 +136,7 @@
 | `home` | devlog, code | — |
 | `home-logo-cfg` | piece-skins | `piece-skins` |
 | `identite` | profile | `profile` |
+| `invasion` | village/dojo | `menu` |
 | `language` | settings | `settings` |
 | `leaderboard` | village/archives, online-menu | `play` |
 | `league` | village | `play` |
@@ -142,6 +145,7 @@
 | `matchmaking` | code | — |
 | `menu` | game, profile, code | `home` |
 | `messaging` | village/auberge, village, code | `menu` |
+| `monban-hub` | village/dojo | `menu` |
 | `msg-composer` | profile | `profile` |
 | `online-auth` | village, code | `home` |
 | `online-menu` | village/arene, code | `play` |
@@ -155,6 +159,9 @@
 | `proto` | home | `home` |
 | `proto-rig` | proto | `proto` |
 | `public-profile` | code | `online-menu` |
+| `puzzle-browse` | puzzle-hub, code | `puzzle-hub` |
+| `puzzle-editor` | puzzle-hub, code | `puzzle-hub` |
+| `puzzle-hub` | village/dojo | `menu` |
 | `reset-password` | code | — |
 | `rules` | village/dojo, local-hub, code | `local-hub` |
 | `settings` | village/maison, menu | `menu` |

@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.92.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.97.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -2983,13 +2983,7 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <!-- ═══ CRÉER : forger un mode à la souris (onglet d'accueil) ═══ -->
     <div class="lab-tab-panel" data-tab="creer" style="display:none">
       <div class="lab-note">Construis ton mode à la souris. Choisis un <strong>outil</strong>, puis clique sur le plateau : poser une pièce, tracer des cases mortes, effacer, ou voir les <strong>coups</strong> d'une pièce (vert = déplacement, rouge = capture, orange = poussée). Règle les types de pièces plus bas. Puis <strong>▶ Tester</strong> pour l'essayer, ou <strong>✓ Charger</strong> pour le retrouver dans Jouer et Analyser.</div>
-      <div id="lab-ed-dims"></div>
-      <div id="lab-ed-toolbar" style="margin:8px 0"></div>
-      <div id="lab-ed-board" style="margin:4px auto;max-width:320px"></div>
-      <div id="lab-ed-info" style="font-family:'VT323',monospace;font-size:11px;color:var(--gold-bright);min-height:16px;margin:6px 0;text-align:center;line-height:1.3"></div>
-      <div class="menu-divider"></div>
-      <div id="lab-ed-types"></div>
-      <div id="lab-ed-typeform" style="display:none"></div>
+      <div id="lab-ed-widget-anchor"></div>
       <div style="display:flex;gap:6px;margin-top:12px">
         <button class="btn" style="flex:1;padding:7px;font-size:12px" onclick="labEdToJson()">→ JSON</button>
         <button class="btn" style="flex:1;padding:7px;font-size:12px" onclick="labEdFromJson()">← JSON</button>
@@ -3084,6 +3078,138 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
       </div>
       <button class="adm-btn" style="width:100%;padding:9px;margin-top:10px" onclick="labWorkerSaveConfig()">✓ Enregistrer la config du worker</button>
     </details>
+  </div>
+  </div>
+</div>
+
+<!-- ═══ ÉDITEUR DE FORMAT — widget PARTAGÉ (Labo dev ET Puzzle joueur) ═══
+     Une SEULE instance des ids lab-ed-*, déplacée d'un écran à l'autre via
+     labEdMountWidget() (appendChild — pas de duplication de markup). Le
+     mode Puzzle (Dojo > Créer) réutilise ainsi l'éditeur du Labo tel quel :
+     aucune fonction labEd* n'est dupliquée ni réécrite. Vit ici, hors de
+     tout écran, entre deux montages. -->
+<div id="lab-ed-widget" style="display:none">
+  <div id="lab-ed-dims"></div>
+  <div id="lab-ed-toolbar" style="margin:8px 0"></div>
+  <div id="lab-ed-board" style="margin:4px auto;max-width:320px"></div>
+  <div id="lab-ed-info" style="font-family:'VT323',monospace;font-size:11px;color:var(--gold-bright);min-height:16px;margin:6px 0;text-align:center;line-height:1.3"></div>
+  <div class="menu-divider"></div>
+  <div id="lab-ed-types"></div>
+  <div id="lab-ed-typeform" style="display:none"></div>
+</div>
+
+<!-- ═══ PUZZLE — hub joueur (Dojo > Créer) ═══════════════════════════ -->
+<div id="screen-puzzle-hub" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('menu')">↩ RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+  <div class="panel" style="max-width:460px;width:100%">
+    <div class="menu-title" style="font-size:20px">🧩 PUZZLE</div>
+    <div class="menu-divider"></div>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('puzzle-browse')">🎮 Jouer des puzzles</button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('puzzle-editor')">🛠 Créer un puzzle</button>
+  </div>
+  </div>
+</div>
+
+<!-- ═══ PUZZLE — liste des puzzles publiés (Dojo > Créer > Jouer) ═══════
+     Rejoue directement contre l'IA déterministe du créateur — pas de PvP
+     ici. Voir pzLoadBrowseList/pzPlayPuzzle. -->
+<div id="screen-puzzle-browse" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('puzzle-hub')">↩ RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+  <div class="panel" style="max-width:460px;width:100%">
+    <div class="menu-title" style="font-size:20px">🎮 PUZZLES</div>
+    <div class="menu-divider"></div>
+    <div id="pz-browse-list"></div>
+  </div>
+  </div>
+</div>
+
+<!-- ═══ PUZZLE — éditeur joueur (Créer/Modifier · Tester · Mettre en ligne) ═══
+     3 sous-onglets comme demandé par Wurmz. Réutilise l'éditeur du Labo
+     (lab-ed-widget) monté dans #pz-ed-anchor — voir labEdMountWidget(). -->
+<div id="screen-puzzle-editor" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('puzzle-hub')">↩ RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+  <div class="panel" style="max-width:460px;width:100%">
+    <div class="menu-title" style="font-size:18px">🧩 CRÉER UN PUZZLE</div>
+    <div class="lab-tabs" style="margin:8px 0 12px">
+      <div class="lab-tab-btn active" data-pztab="edit" onclick="pzShowTab('edit')">✏️ Créer/Modifier</div>
+      <div class="lab-tab-btn" data-pztab="test" onclick="pzShowTab('test')">▶ Tester</div>
+      <div class="lab-tab-btn" data-pztab="publish" onclick="pzShowTab('publish')">📤 Mettre en ligne</div>
+    </div>
+
+    <div class="pz-tab-panel" data-pztab="edit">
+      <input id="pz-title" type="text" maxlength="60" placeholder="Titre du puzzle" style="width:100%;box-sizing:border-box;padding:8px;margin-bottom:8px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px;font-family:VT323,monospace;font-size:14px">
+      <div id="pz-ed-anchor"></div>
+      <div class="menu-divider"></div>
+      <div class="option-label" style="margin-bottom:4px">Objectif</div>
+      <select id="pz-objective-type" style="width:100%;padding:7px;margin-bottom:8px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px;font-family:VT323,monospace;font-size:13px">
+        <option value="eliminate">Éliminer l'adversaire</option>
+        <option value="survive_turns">Survivre N tours</option>
+        <option value="reach_cell">Atteindre une case</option>
+      </select>
+      <div class="option-label" style="margin-bottom:4px">Cadence</div>
+      <div class="option-row" id="pz-timer-row" style="margin-bottom:8px">
+        <div class="opt-btn" data-t="0" onclick="pzSelectTimer(0)">∞</div>
+        <div class="opt-btn selected" data-t="3" onclick="pzSelectTimer(3)">3s</div>
+        <div class="opt-btn" data-t="5" onclick="pzSelectTimer(5)">5s</div>
+        <div class="opt-btn" data-t="10" onclick="pzSelectTimer(10)">10s</div>
+      </div>
+      <button class="adm-btn" style="width:100%;padding:9px" onclick="pzSaveDraft()">💾 Enregistrer le brouillon</button>
+      <div id="pz-ed-status" style="font-family:VT323,monospace;font-size:11px;color:var(--gold-bright);text-align:center;margin-top:6px;min-height:14px"></div>
+    </div>
+
+    <div class="pz-tab-panel" data-pztab="test" style="display:none">
+      <div class="lab-note">Joue ton puzzle comme le fera un autre joueur. Une victoire l'enregistre comme <strong>preuve de réussite</strong> — obligatoire avant de pouvoir le publier.</div>
+      <div id="pz-test-status" style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);text-align:center;margin:8px 0"></div>
+      <button class="btn" style="width:100%;padding:9px" onclick="pzTestPuzzle()">▶ Tester ce puzzle</button>
+    </div>
+
+    <div class="pz-tab-panel" data-pztab="publish" style="display:none">
+      <div id="pz-publish-status" style="font-family:VT323,monospace;font-size:13px;color:var(--parchment);text-align:center;margin-bottom:10px"></div>
+      <button class="adm-btn" id="pz-publish-btn" style="width:100%;padding:9px" onclick="pzPublish()">📤 Mettre en ligne</button>
+      <button class="btn" id="pz-unpublish-btn" style="width:100%;padding:9px;margin-top:6px;display:none;border-color:rgba(200,60,60,.4);color:#e0706a" onclick="pzUnpublish()">Dépublier</button>
+    </div>
+  </div>
+  </div>
+</div>
+
+<!-- ═══ MONBAN — écran de consultation/entraînement (Dojo > Défendre) ═══
+     Décision M : PAS d'Elo indépendant, on affiche le mien (buildEloGridHtml,
+     déjà utilisé pour mon profil). Voir monbanOnShowScreen/monbanTrainToday. -->
+<div id="screen-monban-hub" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('menu')">↩ RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+  <div class="panel" style="max-width:460px;width:100%;text-align:center">
+    <div class="menu-title" style="font-size:20px"><span style="font-family:'Noto Serif JP',serif;margin-right:6px">門</span>MONBAN</div>
+    <div style="font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.6;margin-bottom:10px">Le gardien qui défend ton dojo en ton absence — il apprend en te regardant jouer en ligne.</div>
+    <div class="menu-divider"></div>
+    <div class="elo-grid" id="monban-elo-grid" style="margin-bottom:10px"></div>
+    <div id="monban-stats-line" style="font-family:VT323,monospace;font-size:13px;color:var(--parchment);margin-bottom:14px">—</div>
+    <button class="adm-btn" style="width:100%;padding:9px" onclick="monbanTrainToday()">⚔ Entraîner Monban aujourd'hui</button>
+    <div id="monban-train-status" style="font-family:VT323,monospace;font-size:11px;color:var(--gold-bright);margin-top:6px;min-height:14px"></div>
+  </div>
+  </div>
+</div>
+
+<!-- ═══ INVASION — sélection de cible (Dojo > Défendre > Invasion) ═══
+     Décision K : tranche d'Elo explicite. L'envahisseur joue TOUJOURS Blanc,
+     le défenseur TOUJOURS Noir (simplification V1, voir invasion_engine.sql).
+     Voir invasionOnShowScreen/invasionLoadCandidates/invasionAttack. -->
+<div id="screen-invasion" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('menu')">↩ RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+  <div class="panel" style="max-width:460px;width:100%">
+    <div class="menu-title" style="font-size:20px">⚔ INVASION</div>
+    <div style="font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.6;margin-bottom:10px;text-align:center">1 invasion par jour. Le vainqueur pille 1 unité de la monnaie la mieux fournie du perdant (jamais de 石).</div>
+    <div class="menu-divider"></div>
+    <div class="option-row" id="invasion-tranche-row" style="margin-bottom:10px">
+      <div class="opt-btn" data-tr="near" onclick="invasionSelectTranche('near')">Ma tranche</div>
+      <div class="opt-btn selected" data-tr="up" onclick="invasionSelectTranche('up')">Plus fort</div>
+      <div class="opt-btn" data-tr="down" onclick="invasionSelectTranche('down')">Plus faible</div>
+    </div>
+    <div id="invasion-candidates-list"></div>
   </div>
   </div>
 </div>
@@ -3775,8 +3901,48 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.92.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.97.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.97.0 &mdash; 16 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; INVASION</li>
+        <li>Dojo &gt; D&eacute;fendre &gt; Invasion : choisis une cible par tranche d'Elo, envahis son dojo. Le d&eacute;fenseur a 15 s pour se d&eacute;fendre en personne, sinon Monban prend le relais. Le vainqueur pille 1 unit&eacute; de monnaie (jamais de 石).</li>
+      </ul>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.96.0 &mdash; 16 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; MONBAN (CONSULTER)</li>
+        <li>Dojo &gt; D&eacute;fendre &gt; Monban : ton gardien apprend de tes parties en ligne, consulte son Elo (le tien) et ses stats de d&eacute;fense.</li>
+      </ul>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.95.0 &mdash; 16 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; JOUER LES PUZZLES DES AUTRES</li>
+        <li>Dojo &gt; Cr&eacute;er &gt; Puzzle &gt; Jouer des puzzles : liste des puzzles publi&eacute;s, notation 5 &eacute;toiles apr&egrave;s une victoire.</li>
+      </ul>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.94.0 &mdash; 16 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; MODE PUZZLE (SOCLE)</li>
+        <li>Dojo &gt; Cr&eacute;er &gt; Puzzle : cr&eacute;e ton plateau avec l'&eacute;diteur du Labo, teste-le contre une IA d&eacute;terministe, publie-le une fois r&eacute;ussi. Jouer les puzzles des autres joueurs arrive dans un prochain lot.</li>
+      </ul>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.93.0 &mdash; 16 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; DOJO R&Eacute;ORGANIS&Eacute; (3 PORTES)</li>
+        <li>Pr&eacute;paration des modes PUZZLE et INVASION (Monban) &agrave; venir : le Dojo passe &agrave; 3 portes &mdash; S'entra&icirc;ner, Cr&eacute;er, D&eacute;fendre. &laquo;&nbsp;D&eacute;fi du jour&nbsp;&raquo; retir&eacute; (doublon du raccourci village &#127919;). Voir docs/ROADMAP_PUZZLE_INVASION.md.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -8409,7 +8575,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.92.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.97.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8641,7 +8807,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.92.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.97.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -8864,7 +9030,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.92.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.97.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -12671,6 +12837,10 @@ function showScreen(id){
   if(id==='dev-tactics') renderDevTacticsList();
   if(id==='dev-balance'){ renderDevBalanceList(); renderDevBalanceEstimates(); }
   if(id==='dev-lab'){ labOnShowScreen(); }
+  if(id==='puzzle-editor'){ if(typeof pzOnShowScreen==='function') pzOnShowScreen(); }
+  if(id==='puzzle-browse'){ if(typeof pzLoadBrowseList==='function') pzLoadBrowseList(); }
+  if(id==='monban-hub'){ if(typeof monbanRefreshHub==='function') monbanRefreshHub(); }
+  if(id==='invasion'){ if(typeof invasionOnShowScreen==='function') invasionOnShowScreen(); }
   if(id==='dev-bots'){ botArmyLoad(); startBotArmyPoll(); } else if(typeof stopBotArmyPoll==='function'){ stopBotArmyPoll(); }
   if(id==='opponents'){ refreshOpponentsScreen(); }
   if(id==='messaging'||id==='online-menu'){ restoreAmisAdoptedPanels(); }
@@ -12754,18 +12924,24 @@ var VILLAGE_BUILDINGS = [
       {label:'Succès', ico:'🎖', screen:'profile-achievements'},
       {label:'Records', ico:'🏅', screen:'profile-records'},
       {label:'Lore', ico:'📖', screen:'citations'} ] },
+  // Restructuré en 3 portes d'intention (/lvdg-ui-optimiser, 2026-08-16,
+  // préparation PUZZLE + INVASION/Monban — docs/ROADMAP_PUZZLE_INVASION.md
+  // décision E). « Défi du jour » retiré : doublon du raccourci village 🎯
+  // (#village-daily-btn), qui est le vrai chemin utilisé. Karakuri/
+  // Adversaires/Notables/Tuto passent de 2 à 3 clics (regroupés sous
+  // « S'entraîner ») — coût accepté par Wurmz, aucune de ces 4 entrées
+  // n'est une action quotidienne critique.
   { id:'dojo', label:'Dojo', cx:73, cy:41, w:20, h:24, online:true, items:[
-      // Défi du jour rapatrié depuis le Château (a aussi son icône dédiée sur
-      // la carte, voir #village-daily-btn). « IA » retiré ; « Maîtres IA »
-      // renommé « Adversaires ». Shin-AI retiré (déjà dans Adversaires notables).
-      // Règles & tuto RAPATRIÉS ICI depuis le Château (demande Thomas,
-      // 2026-08-14) : le Dojo est le lieu du tuto. Placé juste au-dessus de
-      // Karakuri comme demandé.
-      {label:'Défi du jour', ico:'🎯', fn:'startDailyChallenge'},
-      {label:'Adversaires', ico:'⚔', screen:'opponents'},
-      {label:'Adversaires notables', ico:'★', fn:'openLocalMode', arg:'ai-notable'},
-      {label:'Tuto (règles & La Voie du Bousier)', ico:'典', screen:'rules'},
-      {label:'Karakuri (entraînement)', ico:'傀', screen:'training-bot'} ] },
+      { label:'S\'entraîner', ico:'⚔', door:true, items:[
+          {label:'Karakuri (entraînement)', ico:'傀', screen:'training-bot'},
+          {label:'Adversaires', ico:'⚔', screen:'opponents'},
+          {label:'Adversaires notables', ico:'★', fn:'openLocalMode', arg:'ai-notable'},
+          {label:'Tuto (règles & La Voie du Bousier)', ico:'典', screen:'rules'} ] },
+      { label:'Créer', ico:'🧩', door:true, items:[
+          {label:'Puzzle', ico:'🧩', screen:'puzzle-hub'} ] },
+      { label:'Défendre', ico:'🛡', door:true, items:[
+          {label:'Monban', ico:'門', screen:'monban-hub'},
+          {label:'Invasion', ico:'⚔', screen:'invasion'} ] } ] },
   { id:'arene', label:'Arène', cx:12, cy:76, w:20, h:26, online:true, items:[
       // Ligue / Classement / Bot army retirés de l'Arène (Bot army → Soleil).
       {label:'Modes de combat', ico:'⚔', screen:'play', online:true},
@@ -12800,7 +12976,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.92.0';
+var DEVLOG_LATEST = 'V0.97.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -12878,7 +13054,7 @@ async function villageRefreshBadges(){
   // (messages privés + demandes d'ami). Un MP crée une notif type 'message'
   // (trigger trg_notify_new_message) → on compte les notifs, PAS direct_messages,
   // sinon on double-compterait chaque MP.
-  try{ var r = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false).in('type',['challenge','tournament_game']); setB('arene', r.count||0); }catch(e){ setB('arene',0); }
+  try{ var r = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false).in('type',['challenge','tournament_game','invasion_incoming','invasion_won','invasion_lost','invasion_defended','invasion_repelled']); setB('arene', r.count||0); }catch(e){ setB('arene',0); }
   try{ var m = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false).in('type',['message','friend_request']); setB('auberge', m.count||0); }catch(e){ setB('auberge',0); }
 }
 // Aiguillage central : en thème Village, un « retour » d'écran ne doit JAMAIS
@@ -13017,19 +13193,60 @@ function villageOpenBuilding(id){
     if(locked) cls += ' locked';
     if(it.dev) cls += ' dev';
     if(it.soon) cls += ' soon';
-    var suffix = it.soon ? ' <span style="opacity:.6;font-size:11px">· bientôt</span>' : (locked ? ' 🔒' : '');
+    var suffix = it.door ? ' <span style="opacity:.6;font-size:11px">▸</span>' : (it.soon ? ' <span style="opacity:.6;font-size:11px">· bientôt</span>' : (locked ? ' 🔒' : ''));
     html += '<button class="'+cls+'" data-idx="'+idx+'"><span class="vp-ico">'+(it.ico||'▸')+'</span><span>'+it.label+suffix+'</span></button>';
   });
   if(id==='archives' && currentUser) html += renderJournalPanelHtml();
   html += '<button class="vp-close" onclick="closeVillagePanel()">⛩ Village</button>';
   box.innerHTML = html;
   // On rebranche les clics par index (évite d'injecter des handlers inline
-  // et de sérialiser les items dans le HTML).
+  // et de sérialiser les items dans le HTML). Un item « porte » (door:true)
+  // ouvre un 2e niveau de panneau (villageOpenDoor) au lieu d'exécuter une
+  // action — préparation PUZZLE + INVASION (voir doc ci-dessus).
+  box.querySelectorAll('.vp-item').forEach(function(btn){
+    var idx = parseInt(btn.getAttribute('data-idx'),10);
+    btn.onclick = function(){
+      var it = items[idx];
+      if(it.door){ villageOpenDoor(id, idx); } else { villageDoItem(it); }
+    };
+  });
+  document.getElementById('village-panel').classList.add('open');
+  if(id==='archives' && currentUser) refreshJournalPanel();
+}
+// 2e niveau de panneau (« porte » d'un bâtiment, ex. Dojo > S'entraîner).
+// Même rendu que villageOpenBuilding, mais le bouton de fermeture revient au
+// panneau du bâtiment plutôt qu'à la carte nue. Un seul item dans la porte →
+// on saute directement dessus (même règle que le mono-item de bâtiment).
+function villageOpenDoor(buildingId, doorIdx){
+  var b = null;
+  for(var i=0;i<VILLAGE_BUILDINGS.length;i++){ if(VILLAGE_BUILDINGS[i].id===buildingId){ b=VILLAGE_BUILDINGS[i]; break; } }
+  if(!b) return;
+  var isDev = (typeof isDevUser==='function' && isDevUser());
+  var doors = (b.items||[]).filter(function(it){ return !(it.dev && !isDev); });
+  var door = doors[doorIdx];
+  if(!door) return;
+  var items = (door.items||[]).filter(function(it){ return !(it.dev && !isDev); });
+  if(items.length===1){ _villageReturnBuilding = buildingId; villageDoItem(items[0]); return; }
+  var box = document.getElementById('village-panel-box');
+  if(!box) return;
+  var html = '<div class="vp-title">'+(door.label||'')+'</div>';
+  html += '<div class="vp-sub">Choisis une destination</div>';
+  items.forEach(function(it, idx){
+    var cls = 'vp-item';
+    var locked = (it.online && !currentUser);
+    if(locked) cls += ' locked';
+    if(it.dev) cls += ' dev';
+    if(it.soon) cls += ' soon';
+    var suffix = it.soon ? ' <span style="opacity:.6;font-size:11px">· bientôt</span>' : (locked ? ' 🔒' : '');
+    html += '<button class="'+cls+'" data-idx="'+idx+'"><span class="vp-ico">'+(it.ico||'▸')+'</span><span>'+it.label+suffix+'</span></button>';
+  });
+  html += '<button class="vp-close" onclick="villageOpenBuilding(\''+buildingId+'\')">↩ '+(b.label||'')+'</button>';
+  html += '<button class="vp-close" onclick="closeVillagePanel()">⛩ Village</button>';
+  box.innerHTML = html;
   box.querySelectorAll('.vp-item').forEach(function(btn){
     btn.onclick = function(){ villageDoItem(items[parseInt(btn.getAttribute('data-idx'),10)]); };
   });
   document.getElementById('village-panel').classList.add('open');
-  if(id==='archives' && currentUser) refreshJournalPanel();
 }
 
 // ── Panneau « Journal » — bas du bâtiment Archives ──────────────
@@ -13372,7 +13589,11 @@ async function quitOnlineGame(destScreen){
   var gameId = G.onlineGameId;
   var winnerColor = (G.onlineMyColor==='white') ? 'black' : 'white';
   try{
-    await supa.from('online_games').update({ status:'finished', winner: winnerColor }).eq('id', gameId);
+    // Décision S : quitter une invasion = défaite, arbitrée serveur (transfert
+    // de monnaie/notifs/stats) — pas un simple update de statut comme une
+    // partie normale.
+    if(G.isInvasion){ await supa.rpc('invasion_forfeit', { p_game_id: gameId }); }
+    else{ await supa.from('online_games').update({ status:'finished', winner: winnerColor }).eq('id', gameId); }
   }catch(e){}
   stopTimer();
   G.onlineGameId = null;
@@ -14220,7 +14441,7 @@ async function openNotificationsModal(){
       list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--parchment);opacity:.5;font-family:VT323,monospace">'+t('notif_empty')+'</div>';
     } else {
       list.innerHTML = data.map(function(n){
-        var icon = n.type==='challenge' ? '&#9876;' : n.type==='message' ? '&#128172;' : n.type==='friend_request' ? '&#128101;' : n.type==='rematch' ? '&#128260;' : n.type==='league' ? '&#127942;' : n.type==='devlog'||n.type==='cosmetic'||n.type==='system'||n.type==='tuto' ? '&#128220;' : n.type==='quest'||n.type==='daily_quest' ? '&#128221;' : '&#128276;';
+        var icon = n.type==='challenge' ? '&#9876;' : n.type==='message' ? '&#128172;' : n.type==='friend_request' ? '&#128101;' : n.type==='rematch' ? '&#128260;' : n.type==='league' ? '&#127942;' : n.type==='devlog'||n.type==='cosmetic'||n.type==='system'||n.type==='tuto' ? '&#128220;' : n.type==='quest'||n.type==='daily_quest' ? '&#128221;' : n.type==='invasion_incoming'||n.type==='invasion_won'||n.type==='invasion_lost' ? '&#9876;' : n.type==='invasion_defended'||n.type==='invasion_repelled' ? '&#128737;' : '&#128276;';
         var catColor = notifCatColor(n.type);
         var clickable = (n.type==='message' || n.type==='friend_request' || n.type==='challenge');
         var onclickAttr = clickable ? ' onclick="handleNotificationClick(\''+n.type+'\',\''+String(n.ref_id||'').replace(/'/g,"\\'")+'\',\''+String(n.title||'').replace(/'/g,"\\'")+'\')"' : '';
@@ -16610,6 +16831,11 @@ function endGame(winner,reason){
   if(G.gameOver) return;
   if(typeof stopFightMusic==='function') stopFightMusic();
   if(G.arenaMatchId){ handleArenaEndGame(winner, reason); return; }
+  // Test d'un puzzle (Dojo > Créer > Puzzle) : partie locale isolée, ne doit
+  // JAMAIS toucher aux stats/XP/succès du joueur — court-circuite comme
+  // l'Arène ci-dessus, gère son propre G.gameOver.
+  if(G._puzzleTestActive){ if(typeof pzHandleTestEnd==='function') pzHandleTestEnd(winner); return; }
+  if(G._pzPlayId){ if(typeof pzHandlePlayEnd==='function') pzHandlePlayEnd(winner); return; }
   G.gameOver=true;G.winner=winner;stopTimer();
   if(typeof updateKarakuriUndoBtn==='function') updateKarakuriUndoBtn();
   document.getElementById('timer-bottom').className='timer-display';
@@ -16662,6 +16888,9 @@ function endGame(winner,reason){
   // locale ni l'entraînement) — c'est ce que Wurmz a demandé de consigner.
   if(G.onlineGameId){
     logJournalEvent(playerWon?'victory':'defeat', playerWon?'Victoire en ligne !':'Défaite en ligne.');
+    // Décision O : Monban apprend de TOUTES mes parties en ligne, pas
+    // seulement de l'entraînement quotidien (qui reste un rituel bonus).
+    if(typeof monbanRecordGameResult==='function') monbanRecordGameResult(playerWon);
   }
 
   // Statistiques par cadence de jeu (3s/5s/10s) et par couleur — c'est
@@ -20035,7 +20264,7 @@ function labShowTab(name){
   }
   TABS.forEach(function(t){ var b=document.getElementById('lab-tabbtn-'+t); if(b) b.classList.toggle('active', t===name); });
   try{ localStorage.setItem('vdg_lab_tab', name); }catch(e){}
-  if(name==='creer'){ if(typeof labEdInit==='function') labEdInit(); if(typeof labEdFillPresetSelect==='function') labEdFillPresetSelect(); }
+  if(name==='creer'){ if(typeof labEdMountWidget==='function') labEdMountWidget('lab-ed-widget-anchor'); if(typeof labEdInit==='function') labEdInit(); if(typeof labEdFillPresetSelect==='function') labEdFillPresetSelect(); }
   else if(name==='jouer'){ if(typeof labRenderModesManager==='function') labRenderModesManager(); }
   else if(name==='analyser'){ if(typeof labLoadAccumStats==='function') labLoadAccumStats(); if(typeof labWorkerLoadConfig==='function') labWorkerLoadConfig(); }
   else if(name==='partager'){ if(typeof labLoadPublishedList==='function') labLoadPublishedList(); }
@@ -20461,6 +20690,14 @@ function labMakePreviewEngine(format){
   return (new Function(prelude+'\n\n'+body+'\n\nreturn {legalMoves:legalMoves};'))();
 }
 
+// Déplace le widget d'édition PARTAGÉ (#lab-ed-widget, ids lab-ed-*) dans
+// l'ancre demandée (Labo dev OU écran joueur Puzzle) — appendChild déplace
+// le nœud existant, ne le duplique pas. Zéro fonction labEd* modifiée.
+function labEdMountWidget(targetId){
+  var w=document.getElementById('lab-ed-widget'); var t=document.getElementById(targetId);
+  if(!w||!t) return;
+  t.appendChild(w); w.style.display='';
+}
 function labEdInit(){
   if(_labEd){ labEdRender(); return; }
   _labEd=labEdDefaultState();
@@ -20842,6 +21079,462 @@ function labPlayCurrentModeVsAI(){
   else if(LAB_FORMATS.custom) fmt=LAB_FORMATS.custom;
   if(!fmt){ if(typeof showToast==='function') showToast('Construis un mode dans l\'éditeur d\'abord.', true); return; }
   labPlayModeVsAI(fmt);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// PUZZLE — hub joueur (Dojo > Créer). Réutilise l'éditeur du Labo
+// (labEd*, lab-ed-widget) SANS EN MODIFIER une ligne — voir labEdMountWidget.
+// docs/ROADMAP_PUZZLE_INVASION.md, lots P1/P2/P3 (socle).
+// ══════════════════════════════════════════════════════════════════════
+var _pzCurrentId = null;   // id du puzzle en cours d'édition (null = nouveau)
+var _pzTimer = 3;          // cadence choisie (0 = illimité)
+
+function pzOnShowScreen(){
+  if(typeof labEdMountWidget==='function') labEdMountWidget('pz-ed-anchor');
+  if(typeof labEdInit==='function') labEdInit();
+  pzShowTab('edit');
+}
+function pzShowTab(name){
+  var TABS=['edit','test','publish'];
+  if(TABS.indexOf(name)<0) name='edit';
+  document.querySelectorAll('#screen-puzzle-editor .pz-tab-panel').forEach(function(p){
+    p.style.display = (p.getAttribute('data-pztab')===name) ? 'block' : 'none';
+  });
+  document.querySelectorAll('#screen-puzzle-editor .lab-tab-btn').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-pztab')===name);
+  });
+  if(name==='publish' && typeof pzRefreshPublishTab==='function') pzRefreshPublishTab();
+}
+function pzSelectTimer(sec){
+  _pzTimer = sec;
+  document.querySelectorAll('#pz-timer-row .opt-btn').forEach(function(b){
+    b.classList.toggle('selected', parseInt(b.getAttribute('data-t'),10)===sec);
+  });
+}
+// Enregistre un brouillon (jamais publié tant que puzzle_publish n'a pas été
+// appelé — décision N : le slot n'est consommé qu'à la publication). L'IA
+// est TOUJOURS déterministe (décision A) : profondeur fixe, aucun hasard —
+// c'est ce qui rend la preuve de réussite (mode Tester) valable pour tous.
+function pzSaveDraft(){
+  var statusEl = document.getElementById('pz-ed-status');
+  var titleEl = document.getElementById('pz-title');
+  var title = titleEl ? titleEl.value.trim() : '';
+  if(!title){ if(statusEl) statusEl.textContent = 'Titre requis.'; return; }
+  if(typeof _labEd==='undefined' || !_labEd){ if(statusEl) statusEl.textContent = 'Construis d\'abord ton plateau.'; return; }
+  var fmt = labEdCurrentFormat(); fmt.v = 1;
+  var v = labValidateFormat(fmt);
+  if(!v.ok){ if(statusEl) statusEl.textContent = 'Format invalide : '+v.err; return; }
+  var objSel = document.getElementById('pz-objective-type');
+  var objective = { type: objSel ? objSel.value : 'eliminate' };
+  var ai = { depth: 3, luck: 0 };
+  if(typeof supa==='undefined' || !supa || typeof currentUser==='undefined' || !currentUser){
+    if(statusEl) statusEl.textContent = 'Connecte-toi pour enregistrer.'; return;
+  }
+  supa.rpc('puzzle_upsert', { p_id:_pzCurrentId, p_title:title, p_format:v.format, p_objective:objective, p_ai:ai, p_timer:_pzTimer })
+    .then(function(res){
+      if(res.error){ if(statusEl) statusEl.textContent = 'Erreur : '+res.error.message; return; }
+      _pzCurrentId = res.data.id;
+      if(statusEl) statusEl.textContent = 'Brouillon enregistré.';
+    });
+}
+// Lance une VRAIE partie locale (comme labPlayModeVsAI, mais accessible à
+// tout joueur — pas dev-gaté) contre l'IA déterministe du puzzle. La
+// victoire est captée par endGame() via G._puzzleTestActive → pzHandleTestEnd.
+function pzTestPuzzle(){
+  var statusEl = document.getElementById('pz-test-status');
+  if(!_pzCurrentId){ if(statusEl) statusEl.textContent = 'Enregistre d\'abord un brouillon (onglet Créer/Modifier).'; return; }
+  if(typeof _labEd==='undefined' || !_labEd){ if(statusEl) statusEl.textContent = 'Construis d\'abord ton plateau.'; return; }
+  var fmt = labEdCurrentFormat();
+  var v = labValidateFormat(fmt);
+  if(!v.ok){ if(statusEl) statusEl.textContent = 'Format invalide : '+v.err; return; }
+  // Slot 98 : IA de test de puzzle, jamais de hasard (décision A).
+  ADVERSARIES[98] = { id:98, icon:'🧩', isPuzzleTest:true,
+    play:function(moves,board,stacks,lm,lp){ return minimaxPlay(moves,board,stacks,lm,lp,3,evalTrainer,G.topColor); } };
+  settings.vsAI = true;
+  settings.gameMode = 'labtest';
+  settings.timerSeconds = _pzTimer;
+  selectedAdvId = 98;
+  settings._playerColor = 'white';
+  settings._forcedStart = 'white';
+  settings._onlineBottomColor = null;
+  settings._customFormat = v.format;
+  showScreen('game');
+  initGame();
+  // Posé APRÈS initGame() : la fonction réinitialise G en un objet neuf
+  // (G={...}), tout drapeau posé avant serait perdu silencieusement.
+  G._puzzleTestActive = true;
+}
+// Appelée depuis endGame() — court-circuite tout le flux normal (stats/XP/
+// succès), une partie de test ne doit rien affecter d'autre que le puzzle
+// lui-même.
+function pzHandleTestEnd(winner){
+  G._puzzleTestActive = false;
+  G.gameOver = true; stopTimer();
+  var tb=document.getElementById('timer-bottom'); if(tb) tb.className='timer-display';
+  var tt=document.getElementById('timer-top'); if(tt) tt.className='timer-display';
+  var playerWon = (winner === G.bottomColor);
+  if(typeof haptic==='function') haptic(playerWon?'victory':'defeat');
+  if(!playerWon){
+    showScreen('puzzle-editor'); pzShowTab('test');
+    var st=document.getElementById('pz-test-status'); if(st) st.textContent = '❌ Perdu — retente, ou ajuste ton puzzle.';
+    return;
+  }
+  // Solution = la séquence de coups joués, reconstruite depuis les
+  // instantanés HISTORY (voir pushHistory) — aucune logique dupliquée.
+  var solution = [];
+  for(var i=1;i<HISTORY.length;i++){ if(HISTORY[i].lastMoved) solution.push(HISTORY[i].lastMoved); }
+  showScreen('puzzle-editor'); pzShowTab('test');
+  var statusEl = document.getElementById('pz-test-status');
+  if(typeof supa==='undefined' || !supa || !_pzCurrentId){
+    if(statusEl) statusEl.textContent = '✅ Réussi ! (Enregistre un brouillon pour sauver la preuve.)';
+    return;
+  }
+  supa.rpc('puzzle_set_solution', { p_id:_pzCurrentId, p_solution:solution }).then(function(res){
+    if(res.error){ if(statusEl) statusEl.textContent = '✅ Réussi, mais l\'enregistrement a échoué — réessaie.'; return; }
+    if(statusEl) statusEl.textContent = '✅ Réussi ! Solution enregistrée — tu peux publier.';
+  });
+}
+// ── Publication (décision N : slot consommé seulement si published=true) ─
+function pzRefreshPublishTab(){
+  var statusEl = document.getElementById('pz-publish-status');
+  var pubBtn = document.getElementById('pz-publish-btn');
+  var unpubBtn = document.getElementById('pz-unpublish-btn');
+  if(!statusEl) return;
+  if(!_pzCurrentId){ statusEl.textContent = 'Enregistre d\'abord un brouillon.'; if(pubBtn) pubBtn.style.display='none'; if(unpubBtn) unpubBtn.style.display='none'; return; }
+  if(typeof supa==='undefined' || !supa) return;
+  supa.from('puzzles').select('published,solution').eq('id',_pzCurrentId).single().then(function(res){
+    if(res.error || !res.data) return;
+    var published = res.data.published, hasSolution = !!res.data.solution;
+    if(published){
+      statusEl.textContent = '📤 Publié — visible des autres joueurs.';
+      if(pubBtn) pubBtn.style.display='none';
+      if(unpubBtn) unpubBtn.style.display='block';
+    } else if(!hasSolution){
+      statusEl.textContent = '🔒 Réussis d\'abord ce puzzle en mode Tester pour pouvoir le publier.';
+      if(pubBtn) pubBtn.style.display='block';
+      if(unpubBtn) unpubBtn.style.display='none';
+    } else {
+      statusEl.textContent = 'Prêt à publier.';
+      if(pubBtn) pubBtn.style.display='block';
+      if(unpubBtn) unpubBtn.style.display='none';
+    }
+  });
+}
+function pzPublish(){
+  var statusEl = document.getElementById('pz-publish-status');
+  if(!_pzCurrentId || typeof supa==='undefined' || !supa) return;
+  supa.rpc('puzzle_publish', { p_id:_pzCurrentId }).then(function(res){
+    if(res.error){ if(statusEl) statusEl.textContent = res.error.message; return; }
+    showToast('📤 Puzzle publié !', false);
+    pzRefreshPublishTab();
+  });
+}
+function pzUnpublish(){
+  if(!_pzCurrentId || typeof supa==='undefined' || !supa) return;
+  supa.rpc('puzzle_unpublish', { p_id:_pzCurrentId }).then(function(res){
+    if(res.error){ showToast(res.error.message, true); return; }
+    showToast('Puzzle dépublié — le slot est libéré.', false);
+    pzRefreshPublishTab();
+  });
+}
+// ── Liste des puzzles publiés (P3) ──────────────────────────────────────
+function pzLoadBrowseList(){
+  var el = document.getElementById('pz-browse-list');
+  if(!el) return;
+  el.innerHTML = '<div class="lab-note">Chargement…</div>';
+  if(typeof supa==='undefined' || !supa) return;
+  supa.from('puzzles').select('id,title,rating,play_count,success_count,star_sum,star_count')
+    .eq('published',true).eq('status','active').order('play_count',{ascending:false}).limit(30)
+    .then(function(res){
+      if(res.error || !res.data || !res.data.length){ el.innerHTML = '<div class="lab-note">Aucun puzzle publié pour l\'instant.</div>'; return; }
+      el.innerHTML = res.data.map(function(p){
+        var stars = p.star_count>=3 ? ('⭐ '+(p.star_sum/p.star_count).toFixed(1)) : '';
+        return '<div style="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid rgba(212,160,23,.15)">'
+          + '<div style="flex:1;min-width:0">'
+          +   '<div style="font-family:VT323,monospace;font-size:15px;color:var(--parchment);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHtml(p.title)+'</div>'
+          +   '<div style="font-family:VT323,monospace;font-size:11px;opacity:.6">'+stars+' · '+(p.success_count||0)+'/'+(p.play_count||0)+' réussites</div>'
+          + '</div>'
+          + '<button class="btn" style="padding:6px 12px;flex-shrink:0" onclick="pzPlayPuzzle(\''+p.id+'\')">▶ Jouer</button>'
+          + '</div>';
+      }).join('');
+    });
+}
+// Lance une VRAIE partie locale contre l'IA déterministe DU CRÉATEUR (profondeur
+// stockée dans puzzles.ai). La fin est captée par endGame() via G._pzPlayId →
+// pzHandlePlayEnd, qui compte l'essai côté serveur (puzzle_record_attempt).
+function pzPlayPuzzle(id){
+  if(typeof supa==='undefined' || !supa) return;
+  supa.from('puzzles').select('format,ai,timer_seconds').eq('id',id).single().then(function(res){
+    if(res.error || !res.data){ if(typeof showToast==='function') showToast('Puzzle introuvable — rafraîchis la liste.', true); return; }
+    var row = res.data;
+    var v = labValidateFormat(row.format);
+    if(!v.ok){ if(typeof showToast==='function') showToast('Format invalide.', true); return; }
+    var depth = (row.ai && row.ai.depth) || 3;
+    ADVERSARIES[98] = { id:98, icon:'🧩', isPuzzleTest:true,
+      play:function(moves,board,stacks,lm,lp){ return minimaxPlay(moves,board,stacks,lm,lp,depth,evalTrainer,G.topColor); } };
+    settings.vsAI = true;
+    settings.gameMode = 'labtest';
+    settings.timerSeconds = row.timer_seconds || 0;
+    selectedAdvId = 98;
+    settings._playerColor = 'white';
+    settings._forcedStart = 'white';
+    settings._onlineBottomColor = null;
+    settings._customFormat = v.format;
+    showScreen('game');
+    initGame();
+    // Posé APRÈS initGame() : voir la même remarque sur pzTestPuzzle.
+    G._pzPlayId = id;
+  });
+}
+// Appelée depuis endGame() — une partie de puzzle joué (pas testé par son
+// créateur) compte comme un essai côté serveur, gagné ou perdu.
+function pzHandlePlayEnd(winner){
+  var id = G._pzPlayId; G._pzPlayId = null;
+  var myTimerSeconds = settings.timerSeconds;
+  G.gameOver = true; stopTimer();
+  var tb=document.getElementById('timer-bottom'); if(tb) tb.className='timer-display';
+  var tt=document.getElementById('timer-top'); if(tt) tt.className='timer-display';
+  var playerWon = (winner === G.bottomColor);
+  if(typeof haptic==='function') haptic(playerWon?'victory':'defeat');
+  showScreen('puzzle-browse');
+  if(typeof supa==='undefined' || !supa || !id) return;
+  var finishAttempt = function(elo){
+    supa.rpc('puzzle_record_attempt', { p_id:id, p_success:playerWon, p_player_elo:elo }).then(function(){
+      pzLoadBrowseList();
+      if(playerWon) pzOfferRating(id);
+    });
+  };
+  // currentUser ne porte que {id,pseudo} (voir onlineLoadSession) — l'Elo se
+  // relit depuis profiles, dans la cadence du puzzle (décision F).
+  if(typeof currentUser!=='undefined' && currentUser && currentUser.id){
+    var eloCol = (typeof ELO_TIMER_COLUMN!=='undefined' && ELO_TIMER_COLUMN[myTimerSeconds]) || 'elo_5s';
+    supa.from('profiles').select(eloCol).eq('id',currentUser.id).single().then(function(res){
+      finishAttempt((res.data && res.data[eloCol]) || 1200);
+    });
+  } else { finishAttempt(1200); }
+}
+// ── Notation 5 étoiles (décision U), proposée après une victoire ────────
+var _pzRatingPuzzleId = null;
+function pzOfferRating(id){
+  _pzRatingPuzzleId = id;
+  var starsEl = document.getElementById('pz-rate-stars');
+  if(starsEl){
+    starsEl.innerHTML = [1,2,3,4,5].map(function(n){
+      return '<span onclick="pzSubmitRating('+n+')" style="color:var(--gold-bright)">★</span>';
+    }).join('');
+  }
+  var popup = document.getElementById('pz-rate-popup');
+  if(popup) popup.style.display = 'flex';
+}
+function pzSubmitRating(stars){
+  var id = _pzRatingPuzzleId;
+  pzSkipRating();
+  if(typeof supa==='undefined' || !supa || !id) return;
+  supa.rpc('puzzle_rate', { p_id:id, p_stars:stars }).then(function(res){
+    if(!res.error && typeof showToast==='function') showToast('Merci pour la note !', false);
+  });
+}
+function pzSkipRating(){
+  _pzRatingPuzzleId = null;
+  var popup = document.getElementById('pz-rate-popup');
+  if(popup) popup.style.display = 'none';
+}
+// ══════════════════════════════════════════════════════════════════════
+// MONBAN — profil serveur (I0) + écran de consultation (I1).
+// docs/ROADMAP_PUZZLE_INVASION.md, lot I0/I1. Décision M : PAS d'Elo
+// indépendant — l'écran affiche mon propre Elo (buildEloGridHtml).
+// Décision O, V1 minimale (voir commentaire de monbanRecordGameResult) :
+// pas de suivi fin coup par coup pour les parties en ligne, contrairement à
+// NT2_PROFILE qui ne tourne qu'en local — chantier futur, pas cette passe.
+// ══════════════════════════════════════════════════════════════════════
+var _monbanProfileCache = null;
+function monbanLoadProfile(force){
+  var fallback = { profile:{skillRating:50,weaknesses:{exposure:0,missedWin:0,passivity:0},openings:{}}, games_learned:0, last_trained_at:null };
+  if(_monbanProfileCache && !force) return Promise.resolve(_monbanProfileCache);
+  if(typeof supa==='undefined' || !supa || typeof currentUser==='undefined' || !currentUser) return Promise.resolve(fallback);
+  return supa.from('monban_profiles').select('profile,games_learned,last_trained_at').eq('user_id',currentUser.id).single().then(function(res){
+    _monbanProfileCache = (res.error || !res.data) ? fallback : res.data;
+    return _monbanProfileCache;
+  });
+}
+// Appelée depuis endGame() pour chaque partie EN LIGNE, en best-effort (sur
+// le modèle de logJournalEvent : ne doit jamais interrompre le flux de jeu).
+// V1 minimale : un léger ajustement de skillRating (+3 victoire / -1 défaite,
+// plus prudent que NT2 car le signal est plus grossier) + la première case
+// atteinte par mon Combattant, pour amorcer un petit répertoire d'ouvertures.
+function monbanRecordGameResult(playerWon){
+  if(typeof supa==='undefined' || !supa) return;
+  monbanLoadProfile().then(function(cur){
+    var p = (cur && cur.profile) || {skillRating:50,weaknesses:{exposure:0,missedWin:0,passivity:0},openings:{}};
+    var sr = Math.max(0, Math.min(100, (p.skillRating||50) + (playerWon ? 3 : -1)));
+    var openings = p.openings || {};
+    var myFirstMove = null;
+    if(typeof HISTORY!=='undefined' && HISTORY){
+      for(var hi=1; hi<HISTORY.length; hi++){
+        if(HISTORY[hi].lastMoved && HISTORY[hi].lastMoved.color===G.bottomColor){ myFirstMove = HISTORY[hi].lastMoved; break; }
+      }
+    }
+    if(myFirstMove){
+      var key = myFirstMove.type+'@'+myFirstMove.toR+','+myFirstMove.toC;
+      openings[key] = (openings[key]||0) + 1;
+    }
+    supa.rpc('monban_learn_from_game', { p_delta: { skillRating: sr, openings: openings } }).then(function(){
+      _monbanProfileCache = null; // se rafraîchit à la prochaine lecture (écran Monban)
+    });
+  });
+}
+function monbanRefreshHub(){
+  var eloEl = document.getElementById('monban-elo-grid');
+  var statsEl = document.getElementById('monban-stats-line');
+  if(typeof supa==='undefined' || !supa || typeof currentUser==='undefined' || !currentUser) return;
+  // currentUser ne porte que {id,pseudo} (voir onlineLoadSession) — l'Elo se
+  // relit depuis profiles, comme le fait déjà loadAndShowMyElo() pour l'écran Profil.
+  supa.from('profiles').select('elo_3s,elo_5s,elo_10s').eq('id',currentUser.id).single().then(function(res){
+    if(eloEl && typeof buildEloGridHtml==='function') eloEl.innerHTML = buildEloGridHtml(res.data||{});
+  });
+  supa.from('monban_stats').select('defends_won,defends_lost').eq('user_id',currentUser.id).single().then(function(res){
+    var won = (res.data && res.data.defends_won) || 0, lost = (res.data && res.data.defends_lost) || 0;
+    monbanLoadProfile(true).then(function(prof){
+      if(!statsEl) return;
+      var lastTrained = prof.last_trained_at ? new Date(prof.last_trained_at).toLocaleDateString() : 'jamais';
+      statsEl.textContent = '🛡 Défenses : '+won+' gagnées / '+lost+' perdues · '+(prof.games_learned||0)+' parties apprises · dernier entraînement : '+lastTrained;
+    });
+  });
+}
+function monbanTrainToday(){
+  var st = document.getElementById('monban-train-status');
+  if(typeof supa==='undefined' || !supa){ if(st) st.textContent = 'Connecte-toi pour entraîner Monban.'; return; }
+  supa.rpc('monban_mark_trained').then(function(res){
+    if(res.error){ if(st) st.textContent = res.error.message; return; }
+    if(st) st.textContent = '✅ Monban s\'est entraîné aujourd\'hui.';
+    monbanRefreshHub();
+  });
+}
+// ══════════════════════════════════════════════════════════════════════
+// INVASION — sélection de cible + attaque (I3), acceptation en direct (I4).
+// docs/ROADMAP_PUZZLE_INVASION.md. L'envahisseur joue TOUJOURS Blanc, le
+// défenseur TOUJOURS Noir (simplification V1) — une invasion EST une partie
+// online_games normale, taguée is_invasion (voir invasion_engine.sql),
+// jouée/rejointe via les MÊMES enterOnlineGame/subscribeToOnlineGame que
+// n'importe quelle autre partie en ligne.
+// ══════════════════════════════════════════════════════════════════════
+var _invasionTranche = 'up';
+function invasionOnShowScreen(){ invasionLoadCandidates(); }
+function invasionSelectTranche(tr){
+  _invasionTranche = tr;
+  document.querySelectorAll('#invasion-tranche-row .opt-btn').forEach(function(b){ b.classList.toggle('selected', b.getAttribute('data-tr')===tr); });
+  invasionLoadCandidates();
+}
+// Décision V : aucune cible trouvée → on s'arrête, la tentative du jour
+// n'est PAS consommée (invasion_authorize n'est appelée qu'au clic « Envahir »,
+// jamais ici).
+function invasionLoadCandidates(){
+  var el = document.getElementById('invasion-candidates-list');
+  if(!el) return;
+  el.innerHTML = '<div class="lab-note">Chargement…</div>';
+  if(typeof supa==='undefined' || !supa || typeof currentUser==='undefined' || !currentUser) return;
+  supa.from('profiles').select('elo_5s').eq('id',currentUser.id).single().then(function(res){
+    var myElo = (res.data && res.data.elo_5s) || 1200;
+    var min, max;
+    if(_invasionTranche==='near'){ min = myElo-100; max = myElo+100; }
+    else if(_invasionTranche==='up'){ min = myElo+100; max = myElo+300; }
+    else { min = myElo-300; max = myElo-100; }
+    supa.rpc('invasion_candidates', { p_elo_min: min, p_elo_max: max }).then(function(r){
+      if(r.error || !r.data || !r.data.length){
+        el.innerHTML = '<div class="lab-note">Aucune cible trouvée dans cette tranche — essaie une autre tranche, ou reviens plus tard.</div>';
+        return;
+      }
+      el.innerHTML = r.data.map(function(c){
+        return '<div style="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid rgba(212,160,23,.15)">'
+          + '<div style="flex:1"><div style="font-family:VT323,monospace;font-size:15px;color:var(--parchment)">'+escapeHtml(c.pseudo||'?')+'</div>'
+          + '<div style="font-family:VT323,monospace;font-size:11px;opacity:.6">Elo '+c.elo_5s+'</div></div>'
+          + '<button class="btn" style="padding:6px 12px" onclick="invasionAttack(\''+c.id+'\')">⚔ Envahir</button>'
+          + '</div>';
+      }).join('');
+    });
+  });
+}
+async function invasionAttack(defenderId){
+  if(typeof supa==='undefined' || !supa || typeof currentUser==='undefined' || !currentUser){ showToast('Connecte-toi.', true); return; }
+  try{
+    var res = await supa.rpc('invasion_authorize', { p_defender_id: defenderId });
+    if(res.error){ showToast(res.error.message, true); return; }
+    await invasionCreateAndEnter(res.data.request_id, defenderId, 5);
+  }catch(e){ showToast('Erreur : '+(e.message||e), true); }
+}
+// Construit la partie EXACTEMENT comme createOnlineGame (même moteur local
+// via initGame()), en ajoutant les colonnes is_invasion/invasion_*.
+async function invasionCreateAndEnter(requestId, defenderId, timerSeconds){
+  settings.timerSeconds = timerSeconds || 5;
+  settings._onlineBottomColor = 'white';
+  settings._buildingOnlineGame = true;
+  pieceInputLocked = true;
+  initGame();
+  var _gs = { board: G.board, stacks: G.stacks, lastMoved: G.lastMoved, lastMovedByColor: G.lastMovedByColor };
+  const { data, error } = await supa.from('online_games').insert({
+    white_player_id: currentUser.id, black_player_id: defenderId,
+    game_state: _gs, turn: G.turn, timer_seconds: settings.timerSeconds, ranked: false,
+    is_invasion: true, invasion_attacker_id: currentUser.id, invasion_defender_id: defenderId
+  }).select().single();
+  if(error){ pieceInputLocked = false; showToast('Impossible de lancer l\'invasion : '+error.message, true); return; }
+  try{ await supa.rpc('invasion_attach_game', { p_request_id: requestId, p_game_id: data.id }); }catch(e){}
+  await enterOnlineGame(data.id, currentUser.id, _gs, G.turn, settings.timerSeconds, false);
+  // Posé APRÈS enterOnlineGame() : comme initGame(), elle réassigne G={...}.
+  G.isInvasion = true;
+  showToast('⚔ Invasion lancée !', false);
+}
+
+// ── Défense en direct (décision D : 15 s pour accepter, sinon Monban) ───
+var _invasionPending = null; // {request_id, expires_at}
+function subscribeToInvasions(){
+  if(!currentUser) return;
+  const channel = supa.channel('invasions-incoming')
+    .on('postgres_changes', {
+      event: 'INSERT', schema: 'public', table: 'invasion_requests',
+      filter: `defender_id=eq.${currentUser.id}`
+    }, payload => { showInvasionPopup(payload.new); })
+    .subscribe();
+  onlineSubscriptions.push(channel);
+}
+function showInvasionPopup(req){
+  _invasionPending = { request_id: req.id, expires_at: req.expires_at };
+  var popup = document.getElementById('invasion-popup');
+  if(popup) popup.style.display = 'flex';
+  tickInvasionPopupTimer();
+  try{ if(typeof playSound==='function') playSound('notify'); }catch(e){}
+}
+function tickInvasionPopupTimer(){
+  if(!_invasionPending) return;
+  var el = document.getElementById('invasion-popup-timer');
+  var remainMs = new Date(_invasionPending.expires_at).getTime() - Date.now();
+  if(remainMs<=0){ if(el) el.textContent = 'Trop tard — Monban a pris le relais.'; setTimeout(closeInvasionPopup, 1500); return; }
+  if(el) el.textContent = Math.ceil(remainMs/1000)+' s';
+  setTimeout(tickInvasionPopupTimer, 500);
+}
+function closeInvasionPopup(){
+  var popup = document.getElementById('invasion-popup');
+  if(popup) popup.style.display = 'none';
+  _invasionPending = null;
+}
+async function invasionAccept(){
+  if(!_invasionPending) return;
+  var reqId = _invasionPending.request_id;
+  closeInvasionPopup();
+  try{
+    var res = await supa.rpc('invasion_respond', { p_request_id: reqId, p_accept: true });
+    if(res.error){ showToast(res.error.message, true); return; }
+    var d = res.data;
+    if(!d || !d.accepted){ showToast('Trop tard — Monban a pris le relais.', true); return; }
+    await enterOnlineGame(d.game_id, d.white_player_id, d.game_state, d.turn, d.timer_seconds, d.ranked);
+    G.isInvasion = true;
+    showToast('⚔ Tu défends ton dojo !', false);
+  }catch(e){ showToast('Erreur : '+(e.message||e), true); }
+}
+function invasionDecline(){
+  if(!_invasionPending) return;
+  var reqId = _invasionPending.request_id;
+  closeInvasionPopup();
+  supa.rpc('invasion_respond', { p_request_id: reqId, p_accept: false }).then(function(){}, function(){});
 }
 function labPlayPublishedMode(id){
   var r=(_labPublishedCache||[]).find(function(x){ return x.id===id; });
@@ -25667,6 +26360,7 @@ async function onlineLoadSession(jumpToMenu){
   subscribeToChallenges();
   subscribeToTournamentGames();
   subscribeToDirectMessages();
+  if(typeof subscribeToInvasions==='function') subscribeToInvasions();
   // Réconcilie le profil local (cet appareil) avec le profil cloud,
   // sans jamais perdre de progrès d'un côté ou de l'autre — remplace
   // l'ancien comportement qui écrasait aveuglément le cloud avec l'état
@@ -28155,6 +28849,33 @@ window.addEventListener('beforeunload', () => {
 </div>
 
 <div id="online-toast"></div>
+<!-- PUZZLE — notation 5 étoiles, proposée après une victoire (décision U :
+     réservée aux joueurs ayant réussi, cachée sous 3 votes côté affichage
+     public). Voir pzOfferRating/pzSubmitRating. -->
+<div id="pz-rate-popup" class="overlay">
+  <div class="modal-box">
+    <div class="modal-title">Puzzle réussi !</div>
+    <div class="modal-reason">Une note à laisser au créateur ?</div>
+    <div id="pz-rate-stars" style="font-size:32px;letter-spacing:6px;margin:14px 0;cursor:pointer"></div>
+    <button class="btn" style="opacity:.7" onclick="pzSkipRating()">Pas maintenant</button>
+  </div>
+</div>
+
+<!-- INVASION — popup d'acceptation en direct (décision D : 15 s, sinon Monban
+     prend le relais). Voir subscribeToInvasions/invasionAccept/invasionDecline. -->
+<div id="invasion-popup" class="overlay">
+  <div class="modal-box">
+    <div class="crown-icon">&#9876;</div>
+    <div class="modal-title">INVASION !</div>
+    <div class="modal-reason">Ton dojo est attaqué — défends-toi en personne, ou Monban prendra le relais.</div>
+    <div class="challenge-timer-label" id="invasion-popup-timer"></div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn" style="flex:1" onclick="invasionAccept()">Défendre</button>
+      <button class="btn" style="flex:1;opacity:.7" onclick="invasionDecline()">Laisser Monban</button>
+    </div>
+  </div>
+</div>
+
 <div id="challenge-popup" class="overlay">
   <div class="modal-box">
     <button class="popup-close-x" onclick="closeChallengePopupOnly()" title="Fermer (le défi reste en attente)">&#10005;</button>

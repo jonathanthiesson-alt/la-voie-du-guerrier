@@ -818,6 +818,83 @@ async function battlefieldSoloFill(stats){
   } catch (e) { /* RPC/table absents tant que le SQL n'est pas exécuté */ }
 }
 
+// ── MONBAN — défense serveur des invasions (I2, docs/ROADMAP_PUZZLE_INVASION.md) ──
+// Appelée EN DEHORS de la directive bot_army_control (voir main()) : une
+// invasion est une fonctionnalité JOUEUR permanente, pas un test — elle doit
+// être arbitrée que l'armée de bots soit "déployée" ou non. Trois passes :
+//  1) les demandes "awaiting_accept" expirées (15 s, décision D) basculent
+//     en "monban" ;
+//  2) les parties d'invasion actives où c'est au tour du défenseur (TOUJOURS
+//     Noir — l'envahisseur est TOUJOURS Blanc, simplification V1) ET dont la
+//     requête est passée en "monban" sont jouées par le moteur déterministe,
+//     profondeur dérivée de monban_profiles.profile.skillRating (même patron
+//     que NT2 côté client : clamp(2,5,round(2+sr/27))). Partie finie → RPC
+//     invasion_resolve (service_role only — transfert de monnaie, notifs,
+//     stats, journal, tout dans une seule transaction serveur) ;
+//  3) les invasions EN DIRECT (deux humains) terminées par le chemin normal
+//     (jamais passées par Monban) sont balayées séparément et résolues pareil.
+async function driveInvasions(mover) {
+  try {
+    await sbAdmin("invasion_requests?status=eq.awaiting_accept&expires_at=lt." + new Date().toISOString(), {
+      method: "PATCH", headers: { "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ status: "monban" }),
+    });
+  } catch (e) { console.warn("driveInvasions expire", e.message); }
+
+  let games;
+  try {
+    games = await (await sbAdmin("online_games?is_invasion=eq.true&status=eq.active&turn=eq.black&select=id,game_state,invasion_defender_id")).json();
+  } catch (e) { console.warn("driveInvasions fetch", e.message); return; }
+  if (!Array.isArray(games) || !games.length) return;
+
+  for (const g of games) {
+    try {
+      // La requête doit être passée en "monban" (défenseur absent/a décliné/a
+      // laissé expirer) — sinon un humain est peut-être en train de jouer
+      // côté client, on ne touche pas à sa partie.
+      const reqs = await (await sbAdmin("invasion_requests?game_id=eq." + g.id + "&select=status&order=created_at.desc&limit=1")).json();
+      const st = Array.isArray(reqs) && reqs[0] ? reqs[0].status : null;
+      if (st !== "monban") continue;
+
+      let sr = 50;
+      try {
+        const profs = await (await sbAdmin("monban_profiles?user_id=eq." + g.invasion_defender_id + "&select=profile")).json();
+        if (Array.isArray(profs) && profs[0] && profs[0].profile && typeof profs[0].profile.skillRating === "number") sr = profs[0].profile.skillRating;
+      } catch (e) {}
+      const depth = Math.min(5, Math.max(2, Math.round(2 + sr / 27)));
+
+      let out;
+      try { out = JSON.parse(mover.botChooseAndApply(JSON.stringify(g.game_state), "black", depth)); }
+      catch (e) { console.warn("driveInvasions botChooseAndApply", e.message); continue; }
+      const upd = out.noMove
+        ? { status: "finished", winner: "white" }
+        : { game_state: out.state, turn: out.turn, ...(out.won ? { status: "finished", winner: "black" } : {}) };
+      await sbAdmin("online_games?id=eq." + g.id, { method: "PATCH", headers: { "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify(upd) });
+      if (upd.status === "finished") {
+        await sbAdmin("rpc/invasion_resolve", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ p_game_id: g.id }) });
+      }
+    } catch (e) { console.warn("driveInvasions", e.message); }
+  }
+
+  // 3) Invasions EN DIRECT (les deux joueurs humains) : la partie s'est
+  //    terminée par le chemin normal (endGame() côté client, comme toute
+  //    partie en ligne) sans jamais passer par Monban — personne n'a encore
+  //    appelé invasion_resolve pour elles. On les balaie séparément : même
+  //    modèle de confiance que le reste du online_games (winner écrit par le
+  //    client gagnant, RLS "Mettre à jour sa propre partie" déjà permissive
+  //    pour TOUTE partie en ligne, pas spécifique à l'invasion).
+  let finished;
+  try {
+    finished = await (await sbAdmin("online_games?is_invasion=eq.true&status=eq.finished&invasion_resolved=eq.false&winner=not.is.null&select=id")).json();
+  } catch (e) { console.warn("driveInvasions fetch finished", e.message); return; }
+  if (!Array.isArray(finished) || !finished.length) return;
+  for (const g of finished) {
+    try {
+      await sbAdmin("rpc/invasion_resolve", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ p_game_id: g.id }) });
+    } catch (e) { console.warn("driveInvasions resolve finished", e.message); }
+  }
+}
+
 async function runBackfill(mover, t0) {
   const roster = await provisionRosterBots();
   if (!roster.length) { console.log("✗ Aucun bot du roster provisionné — abandon."); return; }
@@ -836,6 +913,8 @@ async function runBackfill(mover, t0) {
       // 1) piloter TOUTES les parties en cours des bots (partie rapide, arène,
       //    tournoi — driveRosterGames balaie tout online_games contenant un bot)
       const busy = await driveRosterGames(mover, byPid, stats);
+      // 1bis) Monban : arbitrer les invasions en cours (indépendant des bots)
+      await driveInvasions(mover);
       // 2) apparier les joueurs en attente avec un bot (partie rapide + arène)
       await backfillTick(mover, roster, busy, stats);
       await arenaBackfillTick(mover, roster, stats);
@@ -868,9 +947,19 @@ async function main() {
   if (!SUPABASE_URL || !SERVICE_KEY) { console.log("⏸ Secret SUPABASE_SERVICE_ROLE_KEY absent → veille."); return; }
   if (!ANON_KEY) { console.log("✗ Clé anon introuvable dans index.html."); return; }
 
+  // 🛡 MONBAN (invasions) : TOUJOURS actif, INDÉPENDAMMENT de la directive
+  // bot_army_control (qui ne pilote que les bots de TEST). Décision B de
+  // docs/ROADMAP_PUZZLE_INVASION.md : le serveur arbitre les invasions en
+  // permanence, ce n'est pas une fonctionnalité de test qu'on peut couper.
+  // Latence ≈ l'intervalle du cron (10 min, .github/workflows/bot-army.yml)
+  // quand enabled=false ; beaucoup plus réactif (quelques secondes) pendant
+  // un run backfill actif, où driveInvasions est aussi appelée à chaque tick.
+  const moverInv = makeMover(getFormat(html, "standard"));
+  try { await driveInvasions(moverInv); } catch (e) { console.warn("driveInvasions (top-level)", e.message); }
+
   const ctrl0 = await readControl();
   if (!ctrl0) { console.log("⚠ bot_army_control introuvable — dev_bot_army.sql exécuté ?"); return; }
-  if (!ctrl0.enabled) { console.log("⏸ Directive désactivée (enabled=false) — rien à faire."); return; }
+  if (!ctrl0.enabled) { console.log("⏸ Directive désactivée (enabled=false) — rien d'autre à faire."); return; }
 
   // BOT_ARMY_MODE (input du workflow) peut surcharger la directive : permet de
   // lancer le backfill sans changer la directive (dont le RPC ne connaît pas

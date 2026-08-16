@@ -4,19 +4,29 @@ Tous les scripts sont **idempotents** : on peut les rejouer sans risque.
 
 ---
 
-### ⏳ À exécuter par Jonathan (Journal du joueur — V0.87.0)
+### ✅ Exécuté (Modes PUZZLE + INVASION/Monban — socle V0.93.0)
 
-`player_journal.sql` — nouvelle table `player_journal` (id, user_id, created_at,
-event_type, message) + RLS (lecture/écriture limitées à `auth.uid()=user_id`).
-Additive, aucun impact sur les tables existantes. Tant que ce script n'est pas
-exécuté, le panneau « Journal » en bas d'Archives affiche simplement
-« Journal indisponible » (même filet de sécurité que les autres features
-dépendantes d'un script non lancé) et les écritures (`logJournalEvent`) échouent
-silencieusement sans casser le flux de jeu (fin de partie, succès, guilde, skin).
+**Exécutés via MCP le 2026-08-16.** Vérifié : 8 tables créées avec le bon
+nombre de colonnes (`puzzles` 19, `puzzle_attempts` 6, `puzzle_completions` 5,
+`puzzle_creator_daily` 3, `puzzle_reports` 6, `monban_profiles` 5,
+`monban_stats` 4, `invasion_history` 8). Voir `docs/ROADMAP_PUZZLE_INVASION.md`
+pour le cadrage complet.
 
 | # | Script | Contenu |
 |---|---|---|
-| A | `player_journal.sql` | Table `player_journal` + index `(user_id, created_at desc)` + RLS select/insert own. |
+| ✅ | `puzzles_core.sql` | Tables `puzzles`, `puzzle_attempts`, `puzzle_completions`, `puzzle_creator_daily`, `puzzle_reports` + colonnes `profiles.puzzle_coin_balance`/`puzzle_slots` + RLS + RPC `puzzle_upsert`/`puzzle_set_solution`/`puzzle_publish`/`puzzle_unpublish`/`puzzle_record_attempt`/`puzzle_rate`/`puzzle_report`/`puzzle_admin_hide`. |
+| ✅ | `monban_core.sql` | Tables `monban_profiles`, `monban_stats`, `invasion_history` + colonnes `profiles.shield_until`/`last_invasion_at` + RLS + RPC `monban_learn_from_game`/`monban_mark_trained`/`monban_buy_shield`. |
+| ✅ | `invasion_engine.sql` | Colonnes `online_games.is_invasion`/`invasion_attacker_id`/`invasion_defender_id`/`invasion_resolved` + `invasion_history.game_id` + table `invasion_requests` (file d'acceptation 15s) + RLS + RPC `invasion_authorize`/`invasion_attach_game`/`invasion_respond`/`invasion_resolve` (service_role only)/`invasion_resolve_internal` (interne, EXECUTE révoqué pour authenticated)/`invasion_forfeit`/`invasion_candidates`. Pilotage serveur (Monban + résolution) dans `scripts/bot-army.mjs` (`driveInvasions`), toujours actif indépendamment de la directive `bot_army_control`. |
+
+### ✅ Exécuté (Journal du joueur — V0.87.0)
+
+`player_journal.sql` — **confirmé par Jonathan le 2026-08-16.** Table
+`player_journal` (id, user_id, created_at, event_type, message) + RLS
+(lecture/écriture limitées à `auth.uid()=user_id`).
+
+| # | Script | Contenu |
+|---|---|---|
+| ✅ | `player_journal.sql` | Table `player_journal` + index `(user_id, created_at desc)` + RLS select/insert own. |
 
 ## ⚠️ Pièges Supabase à connaître avant de toucher au SQL
 
