@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.97.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.98.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3104,23 +3104,50 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
   <div class="panel" style="max-width:460px;width:100%">
     <div class="menu-title" style="font-size:20px">🧩 PUZZLE</div>
+    <div id="pz-hub-economy" style="font-family:VT323,monospace;font-size:12px;color:var(--gold-bright);text-align:center;margin-bottom:6px">—</div>
+    <button class="btn" id="pz-buy-slot-btn" style="width:100%;margin-bottom:8px;font-size:12px" onclick="pzBuySlot()">🪙 Acheter un emplacement</button>
     <div class="menu-divider"></div>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('puzzle-browse')">🎮 Jouer des puzzles</button>
     <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('puzzle-editor')">🛠 Créer un puzzle</button>
+    <button class="btn" style="width:100%;margin-bottom:8px" onclick="showScreen('puzzle-mine')">📊 Mes puzzles</button>
   </div>
   </div>
 </div>
 
 <!-- ═══ PUZZLE — liste des puzzles publiés (Dojo > Créer > Jouer) ═══════
      Rejoue directement contre l'IA déterministe du créateur — pas de PvP
-     ici. Voir pzLoadBrowseList/pzPlayPuzzle. -->
+     ici. Voir pzLoadBrowseList/pzPlayPuzzle/pzRenderThumb. -->
 <div id="screen-puzzle-browse" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
   <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('puzzle-hub')">↩ RETOUR</button></div>
   <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
   <div class="panel" style="max-width:460px;width:100%">
     <div class="menu-title" style="font-size:20px">🎮 PUZZLES</div>
     <div class="menu-divider"></div>
+    <div class="option-row" id="pz-browse-sort-row" style="margin-bottom:8px">
+      <div class="opt-btn selected" data-s="popular" onclick="pzSetSort('popular')">🔥 Populaires</div>
+      <div class="opt-btn" data-s="recent" onclick="pzSetSort('recent')">🆕 Récents</div>
+      <div class="opt-btn" data-s="rated" onclick="pzSetSort('rated')">⭐ Notés</div>
+    </div>
+    <select id="pz-browse-filter-obj" onchange="pzSetFilterObj(this.value)" style="width:100%;padding:7px;margin-bottom:10px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px;font-family:VT323,monospace;font-size:13px">
+      <option value="all">Tous les objectifs</option>
+      <option value="eliminate">Éliminer l'adversaire</option>
+      <option value="survive_turns">Survivre N tours</option>
+      <option value="reach_cell">Atteindre une case</option>
+    </select>
     <div id="pz-browse-list"></div>
+  </div>
+  </div>
+</div>
+
+<!-- ═══ PUZZLE — vue créateur : mes puzzles + stats publiques (P5) ═══════
+     Voir pzLoadMineList/pzUnpublishFromMine. -->
+<div id="screen-puzzle-mine" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('puzzle-hub')">↩ RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+  <div class="panel" style="max-width:460px;width:100%">
+    <div class="menu-title" style="font-size:20px">📊 MES PUZZLES</div>
+    <div class="menu-divider"></div>
+    <div id="pz-mine-list"></div>
   </div>
   </div>
 </div>
@@ -3204,12 +3231,27 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div class="menu-title" style="font-size:20px">⚔ INVASION</div>
     <div style="font-family:VT323,monospace;font-size:13px;color:var(--parchment);opacity:.6;margin-bottom:10px;text-align:center">1 invasion par jour. Le vainqueur pille 1 unité de la monnaie la mieux fournie du perdant (jamais de 石).</div>
     <div class="menu-divider"></div>
+    <button class="btn" style="width:100%;margin-bottom:6px;font-size:12px" onclick="invasionBuyShield()">🛡 Acheter un bouclier (50 石, 24h)</button>
+    <button class="btn" style="width:100%;margin-bottom:10px;font-size:12px" onclick="showScreen('invasion-history')">📜 Historique</button>
     <div class="option-row" id="invasion-tranche-row" style="margin-bottom:10px">
       <div class="opt-btn" data-tr="near" onclick="invasionSelectTranche('near')">Ma tranche</div>
       <div class="opt-btn selected" data-tr="up" onclick="invasionSelectTranche('up')">Plus fort</div>
       <div class="opt-btn" data-tr="down" onclick="invasionSelectTranche('down')">Plus faible</div>
     </div>
     <div id="invasion-candidates-list"></div>
+  </div>
+  </div>
+</div>
+
+<!-- ═══ INVASION — historique (subies/menées) ═══════════════════════════
+     Voir invasionHistoryOnShowScreen. -->
+<div id="screen-invasion-history" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="showScreen('invasion')">↩ RETOUR</button></div>
+  <div style="position:absolute;top:48px;left:0;right:0;bottom:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center">
+  <div class="panel" style="max-width:460px;width:100%">
+    <div class="menu-title" style="font-size:18px">📜 HISTORIQUE DES INVASIONS</div>
+    <div class="menu-divider"></div>
+    <div id="invasion-history-list"></div>
   </div>
   </div>
 </div>
@@ -3901,8 +3943,19 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.97.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.98.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.98.0 &mdash; 16 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; PUZZLE &amp; INVASION (compl&eacute;ments)</li>
+        <li>Puzzle : tri (populaires/r&eacute;cents/not&eacute;s) et filtre par objectif, miniature du plateau dans la liste, signalement, &eacute;cran &laquo; Mes puzzles &raquo; (stats, d&eacute;publication), solde de la monnaie puzzle affich&eacute; au hub.</li>
+        <li>Invasion : bouclier achetable (石), historique des invasions subies/men&eacute;es.</li>
+        <li>&Eacute;conomie puzzle : achat d'un emplacement de publication suppl&eacute;mentaire (co&ucirc;t croissant) &mdash; premier d&eacute;blocable de cr&eacute;ation concret.</li>
+        <li>Mod&eacute;ration : les signalements de puzzles rejoignent l'onglet Mod&eacute;ration du panneau admin (d&eacute;publier / rejeter).</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -8575,7 +8628,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.97.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.98.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8807,7 +8860,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.97.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.98.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -9030,7 +9083,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.97.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.98.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -12392,7 +12445,50 @@ async function renderAdminModeration(){
         + '<button class="adm-btn" style="flex:1" onclick="resolveReport('+r.id+',\'dismissed\')">✕ Rejeter</button>'
       + '</div></div>';
   });
+  html += '<div id="admin-puzzle-reports" style="margin-top:14px">Chargement des signalements de puzzles…</div>';
   body.innerHTML = html;
+  renderAdminPuzzleReports();
+}
+// ── P8 : signalements de PUZZLES (table distincte, voir puzzles_core.sql
+// + puzzle_moderation_economy.sql) — même patron visuel que les
+// signalements de joueurs ci-dessus, section séparée dans le même onglet.
+async function renderAdminPuzzleReports(){
+  var el = document.getElementById('admin-puzzle-reports');
+  if(!el) return;
+  try{
+    const { data } = await supa.rpc('admin_get_puzzle_reports');
+    if(!data || !data.ok){ el.innerHTML = ''; return; }
+    var reports = data.reports || [];
+    var html = '<div class="adm-h">🧩 SIGNALEMENTS DE PUZZLES ('+reports.length+')</div>';
+    if(!reports.length){
+      html += '<div style="padding:14px;text-align:center;opacity:.5;font-family:VT323,monospace">Aucun signalement en attente. 👍</div>';
+    }
+    reports.forEach(function(r){
+      html += '<div class="adm-card">'
+        + '<div style="font-family:\'Cinzel\',serif;font-size:12px;color:#f08080;margin-bottom:2px">🧩 '+escapeHtml(r.puzzle_title||'?')+'</div>'
+        + '<div style="font-family:VT323,monospace;font-size:10px;opacity:.55;margin-bottom:4px">créé par '+escapeHtml(r.creator||'?')+' · signalé par '+escapeHtml(r.reporter||'?')+' · '+(r.created_at||'').slice(0,10)+'</div>'
+        + '<div style="font-family:VT323,monospace;font-size:11px;opacity:.8;margin-bottom:6px">'+escapeHtml(r.reason||'(aucun motif)')+'</div>'
+        + '<div style="display:flex;gap:5px">'
+          + '<button class="adm-btn" style="flex:1;border-color:rgba(220,80,80,.5);color:#f08080" onclick="adminHidePuzzle(\''+r.puzzle_id+'\')">🚫 Dépublier</button>'
+          + '<button class="adm-btn" style="flex:1" onclick="adminDismissPuzzleReport('+r.id+')">✕ Rejeter</button>'
+        + '</div></div>';
+    });
+    el.innerHTML = html;
+  }catch(e){ el.innerHTML = ''; }
+}
+async function adminHidePuzzle(puzzleId){
+  try{
+    await supa.rpc('puzzle_admin_hide', { p_id: puzzleId });
+    showToast('Puzzle dépublié.', false);
+    renderAdminModeration();
+  }catch(e){ showToast('Erreur.', true); }
+}
+async function adminDismissPuzzleReport(reportId){
+  try{
+    await supa.rpc('puzzle_admin_dismiss_report', { p_report_id: reportId });
+    showToast('Signalement rejeté.', false);
+    renderAdminPuzzleReports();
+  }catch(e){ showToast('Erreur.', true); }
 }
 async function openPlayerAdminById(pid){
   _adminSection = 'players';
@@ -12837,10 +12933,13 @@ function showScreen(id){
   if(id==='dev-tactics') renderDevTacticsList();
   if(id==='dev-balance'){ renderDevBalanceList(); renderDevBalanceEstimates(); }
   if(id==='dev-lab'){ labOnShowScreen(); }
+  if(id==='puzzle-hub'){ if(typeof pzHubOnShow==='function') pzHubOnShow(); }
   if(id==='puzzle-editor'){ if(typeof pzOnShowScreen==='function') pzOnShowScreen(); }
   if(id==='puzzle-browse'){ if(typeof pzLoadBrowseList==='function') pzLoadBrowseList(); }
+  if(id==='puzzle-mine'){ if(typeof pzLoadMineList==='function') pzLoadMineList(); }
   if(id==='monban-hub'){ if(typeof monbanRefreshHub==='function') monbanRefreshHub(); }
   if(id==='invasion'){ if(typeof invasionOnShowScreen==='function') invasionOnShowScreen(); }
+  if(id==='invasion-history'){ if(typeof invasionHistoryOnShowScreen==='function') invasionHistoryOnShowScreen(); }
   if(id==='dev-bots'){ botArmyLoad(); startBotArmyPoll(); } else if(typeof stopBotArmyPoll==='function'){ stopBotArmyPoll(); }
   if(id==='opponents'){ refreshOpponentsScreen(); }
   if(id==='messaging'||id==='online-menu'){ restoreAmisAdoptedPanels(); }
@@ -12976,7 +13075,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.97.0';
+var DEVLOG_LATEST = 'V0.98.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -21237,27 +21336,129 @@ function pzUnpublish(){
     pzRefreshPublishTab();
   });
 }
-// ── Liste des puzzles publiés (P3) ──────────────────────────────────────
+// ── Économie (P6) : solde de la monnaie puzzle + emplacements publiés ──
+// Nom de colonne encore provisoire côté SQL (voir puzzles_core.sql) — le
+// libellé d'affichage définitif reste à figer avec Thomas.
+function pzHubOnShow(){
+  var el = document.getElementById('pz-hub-economy');
+  var buyBtn = document.getElementById('pz-buy-slot-btn');
+  if(!el || typeof supa==='undefined' || !supa || typeof currentUser==='undefined' || !currentUser) return;
+  supa.from('profiles').select('puzzle_coin_balance,puzzle_slots').eq('id',currentUser.id).single().then(function(res){
+    var d = res.data || {};
+    var slots = d.puzzle_slots || 1;
+    var cost = slots * 15;
+    supa.from('puzzles').select('id',{count:'exact',head:true}).eq('creator_id',currentUser.id).eq('published',true).then(function(cres){
+      el.textContent = '🪙 '+(d.puzzle_coin_balance||0)+' · '+(cres.count||0)+'/'+slots+' emplacements publiés';
+      if(buyBtn) buyBtn.textContent = '🪙 Acheter un emplacement ('+cost+' pièces)';
+    });
+  });
+}
+// ── P6/P7 : achat d'un emplacement supplémentaire — le seul déblocable de
+// création concret et décidé à ce jour (voir puzzle_moderation_economy.sql
+// pour la raison : pas de catalogue plus large sans nouveau cadrage).
+function pzBuySlot(){
+  if(typeof supa==='undefined' || !supa){ showToast('Connecte-toi.', true); return; }
+  supa.rpc('puzzle_buy_slot').then(function(res){
+    if(res.error){ showToast(res.error.message, true); return; }
+    showToast('✅ Nouvel emplacement débloqué ('+res.data+' au total).', false);
+    pzHubOnShow();
+  });
+}
+// ── Miniature rendue à la volée (P3) : simple aperçu géométrique du setup,
+// zéro image stockée. Volontairement plus léger qu'un labMakePreviewEngine
+// complet (new Function + moteur de coups) — une carte de liste n'a besoin
+// que d'un instantané statique, pas d'un moteur jouable.
+function pzRenderThumb(format){
+  if(!format || !format.rows || !format.cols) return '';
+  var rows=format.rows, cols=format.cols, voids=format.voids||[], setup=format.setup||[];
+  var cellPx = Math.max(5, Math.floor(84/Math.max(rows,cols)));
+  var voidSet={}; voids.forEach(function(v){ voidSet[v.r+','+v.c]=true; });
+  var pieceMap={}; setup.forEach(function(p){ pieceMap[p.r+','+p.c]=p; });
+  var rowsHtml=[];
+  for(var r=rows-1;r>=0;r--){
+    var cells=[];
+    for(var c=0;c<cols;c++){
+      var key=r+','+c, isVoid=voidSet[key], p=pieceMap[key];
+      var bg = isVoid ? 'transparent' : ((r+c)%2===0?'rgba(255,255,255,.05)':'rgba(0,0,0,.2)');
+      var dot = (p && !isVoid) ? ('<div style="width:70%;height:70%;border-radius:50%;background:'+(p.color==='white'?'#e8dfc8':'#3a2f22')+';border:1px solid '+(p.color==='white'?'#c9a86a':'#8a7550')+'"></div>') : '';
+      cells.push('<div style="width:'+cellPx+'px;height:'+cellPx+'px;box-sizing:border-box;background:'+bg+';display:flex;align-items:center;justify-content:center">'+dot+'</div>');
+    }
+    rowsHtml.push('<div style="display:flex">'+cells.join('')+'</div>');
+  }
+  return '<div style="display:inline-flex;flex-direction:column;border:1px solid rgba(212,160,23,.3);flex-shrink:0">'+rowsHtml.join('')+'</div>';
+}
+// ── Liste des puzzles publiés (P3), triable/filtrable ──────────────────
+var _pzSort = 'popular', _pzFilterObj = 'all';
+function pzSetSort(s){
+  _pzSort = s;
+  document.querySelectorAll('#pz-browse-sort-row .opt-btn').forEach(function(b){ b.classList.toggle('selected', b.getAttribute('data-s')===s); });
+  pzLoadBrowseList();
+}
+function pzSetFilterObj(v){ _pzFilterObj = v; pzLoadBrowseList(); }
 function pzLoadBrowseList(){
   var el = document.getElementById('pz-browse-list');
   if(!el) return;
   el.innerHTML = '<div class="lab-note">Chargement…</div>';
   if(typeof supa==='undefined' || !supa) return;
-  supa.from('puzzles').select('id,title,rating,play_count,success_count,star_sum,star_count')
-    .eq('published',true).eq('status','active').order('play_count',{ascending:false}).limit(30)
-    .then(function(res){
+  var q = supa.from('puzzles').select('id,title,rating,play_count,success_count,star_sum,star_count,format')
+    .eq('published',true).eq('status','active');
+  if(_pzFilterObj!=='all') q = q.eq('objective->>type', _pzFilterObj);
+  var orderCol = _pzSort==='recent' ? 'created_at' : (_pzSort==='rated' ? 'rating' : 'play_count');
+  q.order(orderCol,{ascending:false}).limit(30).then(function(res){
       if(res.error || !res.data || !res.data.length){ el.innerHTML = '<div class="lab-note">Aucun puzzle publié pour l\'instant.</div>'; return; }
       el.innerHTML = res.data.map(function(p){
         var stars = p.star_count>=3 ? ('⭐ '+(p.star_sum/p.star_count).toFixed(1)) : '';
         return '<div style="display:flex;align-items:center;gap:8px;padding:8px 4px;border-bottom:1px solid rgba(212,160,23,.15)">'
+          + pzRenderThumb(p.format)
           + '<div style="flex:1;min-width:0">'
           +   '<div style="font-family:VT323,monospace;font-size:15px;color:var(--parchment);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHtml(p.title)+'</div>'
           +   '<div style="font-family:VT323,monospace;font-size:11px;opacity:.6">'+stars+' · '+(p.success_count||0)+'/'+(p.play_count||0)+' réussites</div>'
           + '</div>'
-          + '<button class="btn" style="padding:6px 12px;flex-shrink:0" onclick="pzPlayPuzzle(\''+p.id+'\')">▶ Jouer</button>'
+          + '<button class="btn" style="padding:6px 10px;flex-shrink:0" onclick="pzPlayPuzzle(\''+p.id+'\')">▶</button>'
+          + '<button class="btn" style="padding:6px 8px;flex-shrink:0;opacity:.55;border-color:rgba(200,80,80,.3);color:#e08080" title="Signaler" onclick="pzReportPuzzle(\''+p.id+'\')">🚩</button>'
           + '</div>';
       }).join('');
     });
+}
+// ── Signalement (P8, décision H) — même patron que reportCurrentPlayer :
+// motif libre via prompt(), pas de popup dédiée pour un geste aussi rare.
+function pzReportPuzzle(id){
+  var reason = prompt('Motif du signalement ? (contenu inapproprié, bug, etc.)');
+  if(reason===null) return;
+  if(typeof supa==='undefined' || !supa) return;
+  supa.rpc('puzzle_report', { p_id:id, p_reason:(reason||'').trim() }).then(function(res){
+    if(!res.error && typeof showToast==='function') showToast('Signalement envoyé — merci.', false);
+  });
+}
+// ── Vue créateur : mes puzzles + stats publiques (P5) ───────────────────
+function pzLoadMineList(){
+  var el = document.getElementById('pz-mine-list');
+  if(!el) return;
+  el.innerHTML = '<div class="lab-note">Chargement…</div>';
+  if(typeof supa==='undefined' || !supa || typeof currentUser==='undefined' || !currentUser) return;
+  supa.from('puzzles').select('id,title,published,status,play_count,success_count,star_sum,star_count,rating')
+    .eq('creator_id',currentUser.id).order('created_at',{ascending:false}).then(function(res){
+      if(res.error || !res.data || !res.data.length){ el.innerHTML = '<div class="lab-note">Tu n\'as encore rien créé.</div>'; return; }
+      el.innerHTML = res.data.map(function(p){
+        var stars = p.star_count>=3 ? ('⭐ '+(p.star_sum/p.star_count).toFixed(1)) : (p.star_count>0 ? '⭐ (moins de 3 avis)' : '');
+        var stateLabel = p.status==='hidden' ? '🚫 dépublié (modération)' : (p.published ? '📤 publié' : '📝 brouillon');
+        return '<div style="padding:8px 4px;border-bottom:1px solid rgba(212,160,23,.15)">'
+          + '<div style="display:flex;justify-content:space-between;align-items:center;gap:6px">'
+          +   '<div style="font-family:VT323,monospace;font-size:15px;color:var(--parchment);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHtml(p.title)+'</div>'
+          +   (p.published && p.status==='active' ? '<button class="btn" style="padding:4px 8px;font-size:11px;flex-shrink:0" onclick="pzUnpublishFromMine(\''+p.id+'\')">Dépublier</button>' : '')
+          + '</div>'
+          + '<div style="font-family:VT323,monospace;font-size:11px;opacity:.6">'+stateLabel+' · '+(p.play_count||0)+' parties · '+(p.success_count||0)+' réussites · '+stars+' · Elo puzzle '+Math.round(p.rating)+'</div>'
+          + '</div>';
+      }).join('');
+    });
+}
+function pzUnpublishFromMine(id){
+  if(typeof supa==='undefined' || !supa) return;
+  supa.rpc('puzzle_unpublish', { p_id:id }).then(function(res){
+    if(res.error){ showToast(res.error.message, true); return; }
+    showToast('Puzzle dépublié — le slot est libéré.', false);
+    pzLoadMineList();
+  });
 }
 // Lance une VRAIE partie locale contre l'IA déterministe DU CRÉATEUR (profondeur
 // stockée dans puzzles.ai). La fin est captée par endGame() via G._pzPlayId →
@@ -21535,6 +21736,45 @@ function invasionDecline(){
   var reqId = _invasionPending.request_id;
   closeInvasionPopup();
   supa.rpc('invasion_respond', { p_request_id: reqId, p_accept: false }).then(function(){}, function(){});
+}
+// ── Bouclier (décision C) — tarif fixe V1, à recalibrer après mesure réelle
+// du vivier d'invasion (§ 6 risques ouverts de la roadmap).
+function invasionBuyShield(){
+  if(typeof supa==='undefined' || !supa){ showToast('Connecte-toi.', true); return; }
+  supa.rpc('monban_buy_shield', { p_koku_cost:50, p_hours:24 }).then(function(res){
+    if(res.error){ showToast(res.error.message, true); return; }
+    showToast('🛡 Bouclier actif jusqu\'au '+new Date(res.data).toLocaleString()+'.', false);
+  });
+}
+// ── Historique (invasions subies/menées, table invasion_history) ───────
+function invasionHistoryOnShowScreen(){
+  var el = document.getElementById('invasion-history-list');
+  if(!el) return;
+  el.innerHTML = '<div class="lab-note">Chargement…</div>';
+  if(typeof supa==='undefined' || !supa || typeof currentUser==='undefined' || !currentUser) return;
+  supa.from('invasion_history').select('attacker_id,defender_id,winner_id,currency,live,created_at')
+    .or('attacker_id.eq.'+currentUser.id+',defender_id.eq.'+currentUser.id)
+    .order('created_at',{ascending:false}).limit(30).then(function(res){
+      if(res.error || !res.data || !res.data.length){ el.innerHTML = '<div class="lab-note">Aucune invasion pour l\'instant.</div>'; return; }
+      var ids = [];
+      res.data.forEach(function(h){ ids.push(h.attacker_id, h.defender_id); });
+      supa.from('profiles').select('id,pseudo').in('id', ids).then(function(pres){
+        var names = {};
+        (pres.data||[]).forEach(function(p){ names[p.id] = p.pseudo; });
+        el.innerHTML = res.data.map(function(h){
+          var iAmAttacker = h.attacker_id === currentUser.id;
+          var won = h.winner_id === currentUser.id;
+          var otherName = escapeHtml(names[iAmAttacker ? h.defender_id : h.attacker_id] || '?');
+          var role = iAmAttacker ? 'Attaque contre ' : 'Défense contre ';
+          var outcome = won ? ('✅ Gagné (+1 '+escapeHtml(h.currency||'')+')') : ('❌ Perdu (-1 '+escapeHtml(h.currency||'')+')');
+          var mode = h.live ? '⚔ en direct' : '🏯 Monban';
+          return '<div style="padding:8px 4px;border-bottom:1px solid rgba(212,160,23,.15);font-family:VT323,monospace;font-size:13px;color:var(--parchment)">'
+            + role + otherName + ' — ' + outcome + ' · ' + mode
+            + '<div style="font-size:10px;opacity:.5">'+new Date(h.created_at).toLocaleString()+'</div>'
+            + '</div>';
+        }).join('');
+      });
+    });
 }
 function labPlayPublishedMode(id){
   var r=(_labPublishedCache||[]).find(function(x){ return x.id===id; });

@@ -4,7 +4,7 @@
 > `node scripts/sitemap.mjs` le régénère depuis `index.html`.
 > Le skill `ui-optimiser` le régénère à chaque modification de menu.
 
-Écrans : **66** · bâtiments : **12** · orphelins : **2** · entrées multiples : **16**
+Écrans : **68** · bâtiments : **12** · orphelins : **2** · entrées multiples : **16**
 
 ## 1. Le village (entrées joueur)
 
@@ -137,6 +137,7 @@
 | `home-logo-cfg` | piece-skins | `piece-skins` |
 | `identite` | profile | `profile` |
 | `invasion` | village/dojo | `menu` |
+| `invasion-history` | invasion | `invasion` |
 | `language` | settings | `settings` |
 | `leaderboard` | village/archives, online-menu | `play` |
 | `league` | village | `play` |
@@ -162,6 +163,7 @@
 | `puzzle-browse` | puzzle-hub, code | `puzzle-hub` |
 | `puzzle-editor` | puzzle-hub, code | `puzzle-hub` |
 | `puzzle-hub` | village/dojo | `menu` |
+| `puzzle-mine` | puzzle-hub | `puzzle-hub` |
 | `reset-password` | code | — |
 | `rules` | village/dojo, local-hub, code | `local-hub` |
 | `settings` | village/maison, menu | `menu` |
