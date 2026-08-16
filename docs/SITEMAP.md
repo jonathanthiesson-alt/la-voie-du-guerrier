@@ -149,9 +149,9 @@
 | `piece-skins` | village/maison, profile | — |
 | `play` | village/arene, code | — |
 | `profile` | village/maison, home, play, code | — |
-| `profile-achievements` | village/archives, profile | `profile` |
-| `profile-records` | village/archives, profile | `profile` |
-| `profile-stats` | village/archives, profile | `profile` |
+| `profile-achievements` | village/archives, profile | — |
+| `profile-records` | village/archives, profile | — |
+| `profile-stats` | village/archives, profile | — |
 | `proto` | home | `home` |
 | `proto-rig` | proto | `proto` |
 | `public-profile` | code | `online-menu` |

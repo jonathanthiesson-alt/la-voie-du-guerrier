@@ -173,3 +173,20 @@ ci-dessous.
    PvP). Trois noms différents pour la même chose (menu / titre affiché /
    commentaire code) = signal d'alarme Q3 direct. Toujours lire le titre
    RENDU à l'écran, pas seulement le libellé du menu qui y mène.
+9. **Le retour codé en dur sur un écran à entrées multiples** — les 3
+   sous-écrans de profil (Statistiques/Records/Succès) sont atteignables
+   depuis Archives ET depuis Profil (§ entrées multiples de la carte), mais
+   leur bouton retour appelait `showScreen('profile')` en dur : venu
+   d'Archives, on atterrissait quand même dans Profil au lieu de rouvrir le
+   panneau Archives. C'est le défaut #4 (« retour contextuel oublié »)
+   *récidivant* sur un cas que la Q5 aurait dû attraper — il n'avait pas été
+   audité parce que ces écrans étaient dans le périmètre d'une passe
+   Statistiques/Profil, pas de la passe Archives qui les a rendus
+   multi-entrées. **Réflexe à ajouter à la Q5** : dès qu'un écran apparaît
+   dans « entrées multiples » de `docs/SITEMAP.md`, vérifier SON bouton
+   retour, pas seulement les menus qui y mènent — le nombre d'entrées doit
+   égaler le nombre de comportements de retour possibles, sinon c'est un
+   retour codé en dur qui ne l'a pas remarqué. Fixé via `_screenHistory`
+   (dernier écran réellement quitté) plutôt qu'une origine mémorisée
+   manuellement — un seul point de vérité, réutilisable pour tout futur écran
+   à entrées multiples.
