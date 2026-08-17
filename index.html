@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.103.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.104.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3943,8 +3943,18 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.103.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.104.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.104.0 &mdash; 17 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; GUILDE — le Tournoi interne se joue enfin (combat en cha&icirc;ne)</li>
+        <li>Les duels s'encha&icirc;nent automatiquement façon Tekken : le vainqueur reste, le perdant est &eacute;limin&eacute;, jusqu'&agrave; ce qu'une &eacute;quipe soit vid&eacute;e. Notification pour rejoindre son duel d&egrave;s qu'il commence.</li>
+        <li>Historique des duels jou&eacute;s visible dans l'&eacute;cran du tournoi, avec le r&eacute;sultat final annonc&eacute; &agrave; toute la guilde.</li>
+        <li>Cinqui&egrave;me brique (lot G4, le c&oelig;ur du mode) du chantier Combat de guilde — voir docs/ROADMAP_GUILD_BATTLE.md.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -7945,6 +7955,19 @@ async function openGuildEventRoster(eventId, myGuildId, isLeader){
       html += '<div style="text-align:center;font-family:VT323,monospace;font-size:11px;color:#9be89b;margin-bottom:10px">✅ Présence confirmée — en attente du lancement.</div>';
     }
 
+    // ── Combat en cours (lot G4) ──────────────────────────────────────
+    if(ev.status==='running' && data.current_match){
+      var cm = data.current_match;
+      var iPlay = currentUser.id===cm.player_a || currentUser.id===cm.player_b;
+      html += '<div style="background:rgba(212,160,23,.1);border:1px solid rgba(212,160,23,.35);border-radius:8px;padding:10px 12px;margin-bottom:10px;text-align:center">'
+        + '<div style="font-family:VT323,monospace;font-size:10px;color:var(--gold);opacity:.7;letter-spacing:1px;margin-bottom:4px">⚔ DUEL EN COURS'+(ev.streak_count>1?' · série de '+ev.streak_count:'')+'</div>'
+        + '<div style="font-family:\'Cinzel\',serif;font-size:14px;color:var(--gold-bright)">'+escapeHtml(cm.player_a_pseudo)+' <span style="opacity:.5">vs</span> '+escapeHtml(cm.player_b_pseudo)+'</div>'
+        + (iPlay ? '<button class="btn" style="width:100%;font-size:12px;padding:8px;margin-top:8px" onclick="joinGuildEventDuel(\''+cm.game_id+'\')">▶ Rejoindre mon duel</button>' : '')
+      + '</div>';
+    } else if(ev.status==='finished' && ev.winner_team){
+      html += '<div style="text-align:center;background:rgba(120,200,120,.1);border:1px solid rgba(120,200,120,.35);border-radius:8px;padding:10px;margin-bottom:10px;font-family:\'Cinzel\',serif;font-size:14px;color:#9be89b">🏆 Équipe '+ev.winner_team+' victorieuse !</div>';
+    }
+
     function teamBlock(label, list, otherLetter){
       var h = '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.7;margin:8px 0 5px;letter-spacing:1px">'+label+'</div>';
       if(!list.length){ h += '<div style="opacity:.4;font-family:VT323,monospace;font-size:11px;padding:4px">Vide.</div>'; return h; }
@@ -7967,8 +7990,30 @@ async function openGuildEventRoster(eventId, myGuildId, isLeader){
     html += teamBlock('⚔ ÉQUIPE B', teamB, 'A');
     if(unassigned.length){ html += teamBlock('❓ NON RÉPARTIS', unassigned, ''); }
 
+    var matches = data.matches||[];
+    if(matches.length){
+      html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;margin:10px 0 5px;letter-spacing:1px">HISTORIQUE DES DUELS</div>';
+      html += matches.map(function(m){
+        var winnerName = m.winner==='A' ? m.player_a_pseudo : m.player_b_pseudo;
+        var loserName = m.winner==='A' ? m.player_b_pseudo : m.player_a_pseudo;
+        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:5px 8px;background:rgba(0,0,0,.18);border-radius:5px;margin-bottom:3px;font-family:VT323,monospace;font-size:11px;color:var(--parchment)">'
+          + '<span>'+m.seq+'. '+escapeHtml(winnerName)+' <span style="opacity:.5">bat</span> '+escapeHtml(loserName)+'</span>'
+          + '<span style="opacity:.5;flex-shrink:0">équipe '+m.winner+'</span>'
+        + '</div>';
+      }).join('');
+    }
+
     body.innerHTML = html;
   }catch(e){ body.innerHTML='<div style="text-align:center;padding:14px;opacity:.6;font-family:VT323,monospace">Composition indisponible (guild_events_g3.sql exécuté ?).</div>'; }
+}
+// Rejoint son propre duel de tournoi interne — même patron que joinTournamentGame().
+async function joinGuildEventDuel(gameId){
+  try{
+    const { data: game } = await supa.from('online_games').select('*').eq('id', gameId).single();
+    if(!game){ showToast('Duel introuvable.', true); return; }
+    await enterOnlineGame(game.id, game.white_player_id, game.game_state, game.turn, game.timer_seconds, game.ranked);
+    G.isGuildEvent = true;
+  }catch(e){ showToast('Impossible de rejoindre le duel.', true); }
 }
 async function autobalanceGuildEvent(eventId, myGuildId, isLeader){
   try{
@@ -8937,7 +8982,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.103.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.104.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -9169,7 +9214,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.103.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.104.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -9392,7 +9437,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.103.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.104.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -13384,7 +13429,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.103.0';
+var DEVLOG_LATEST = 'V0.104.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -13463,7 +13508,7 @@ async function villageRefreshBadges(){
   // Un MP crée une notif type 'message' (trigger trg_notify_new_message) →
   // on compte les notifs, PAS direct_messages, sinon on double-compterait
   // chaque MP.
-  try{ var r = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false).in('type',['challenge','tournament_game','invasion_incoming','invasion_won','invasion_lost','invasion_defended','invasion_repelled','guild_war_accepted','guild_war_won','guild_war_lost','guild_war_draw','guild_event_announced','guild_event_registration_closed','guild_event_starting']); setB('arene', r.count||0); }catch(e){ setB('arene',0); }
+  try{ var r = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false).in('type',['challenge','tournament_game','invasion_incoming','invasion_won','invasion_lost','invasion_defended','invasion_repelled','guild_war_accepted','guild_war_won','guild_war_lost','guild_war_draw','guild_event_announced','guild_event_registration_closed','guild_event_starting','guild_event_your_turn','guild_event_result']); setB('arene', r.count||0); }catch(e){ setB('arene',0); }
   try{ var m = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false).in('type',['message','friend_request']); setB('auberge', m.count||0); }catch(e){ setB('auberge',0); }
 }
 // Aiguillage central : en thème Village, un « retour » d'écran ne doit JAMAIS
@@ -14850,9 +14895,9 @@ async function openNotificationsModal(){
       list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--parchment);opacity:.5;font-family:VT323,monospace">'+t('notif_empty')+'</div>';
     } else {
       list.innerHTML = data.map(function(n){
-        var icon = n.type==='challenge' ? '&#9876;' : n.type==='message' ? '&#128172;' : n.type==='friend_request' ? '&#128101;' : n.type==='rematch' ? '&#128260;' : n.type==='league' ? '&#127942;' : n.type==='devlog'||n.type==='cosmetic'||n.type==='system'||n.type==='tuto' ? '&#128220;' : n.type==='quest'||n.type==='daily_quest' ? '&#128221;' : n.type==='invasion_incoming'||n.type==='invasion_won'||n.type==='invasion_lost' ? '&#9876;' : n.type==='invasion_defended'||n.type==='invasion_repelled' ? '&#128737;' : n.type==='guild_war_accepted' ? '&#9876;' : n.type==='guild_war_won' ? '&#127942;' : n.type==='guild_war_lost'||n.type==='guild_war_draw' ? '&#128737;' : n.type==='guild_event_announced'||n.type==='guild_event_registration_closed' ? '&#128197;' : n.type==='guild_event_starting' ? '&#128682;' : '&#128276;';
+        var icon = n.type==='challenge' ? '&#9876;' : n.type==='message' ? '&#128172;' : n.type==='friend_request' ? '&#128101;' : n.type==='rematch' ? '&#128260;' : n.type==='league' ? '&#127942;' : n.type==='devlog'||n.type==='cosmetic'||n.type==='system'||n.type==='tuto' ? '&#128220;' : n.type==='quest'||n.type==='daily_quest' ? '&#128221;' : n.type==='invasion_incoming'||n.type==='invasion_won'||n.type==='invasion_lost' ? '&#9876;' : n.type==='invasion_defended'||n.type==='invasion_repelled' ? '&#128737;' : n.type==='guild_war_accepted' ? '&#9876;' : n.type==='guild_war_won' ? '&#127942;' : n.type==='guild_war_lost'||n.type==='guild_war_draw' ? '&#128737;' : n.type==='guild_event_announced'||n.type==='guild_event_registration_closed' ? '&#128197;' : n.type==='guild_event_starting' ? '&#128682;' : n.type==='guild_event_your_turn' ? '&#9876;' : n.type==='guild_event_result' ? '&#127942;' : '&#128276;';
         var catColor = notifCatColor(n.type);
-        var clickable = (n.type==='message' || n.type==='friend_request' || n.type==='challenge' || n.type==='guild_war_accepted' || n.type==='guild_war_won' || n.type==='guild_war_lost' || n.type==='guild_war_draw' || n.type==='guild_event_announced' || n.type==='guild_event_registration_closed' || n.type==='guild_event_starting');
+        var clickable = (n.type==='message' || n.type==='friend_request' || n.type==='challenge' || n.type==='guild_war_accepted' || n.type==='guild_war_won' || n.type==='guild_war_lost' || n.type==='guild_war_draw' || n.type==='guild_event_announced' || n.type==='guild_event_registration_closed' || n.type==='guild_event_starting' || n.type==='guild_event_your_turn' || n.type==='guild_event_result');
         var onclickAttr = clickable ? ' onclick="handleNotificationClick(\''+n.type+'\',\''+String(n.ref_id||'').replace(/'/g,"\\'")+'\',\''+String(n.title||'').replace(/'/g,"\\'")+'\')"' : '';
         return '<div class="'+(clickable?'notif-row-clickable':'')+'"'+onclickAttr+' style="display:flex;gap:10px;padding:10px;border-left:3px solid '+catColor+';border-bottom:1px solid rgba(200,168,110,.12)'+(n.read?'':';background:rgba(212,160,23,.08)')+'">'
           + '<span style="font-size:18px">'+icon+'</span>'
@@ -14895,9 +14940,12 @@ async function handleNotificationClick(type, refId, title){
   } else if(type==='guild_war_accepted' || type==='guild_war_won' || type==='guild_war_lost' || type==='guild_war_draw'){
     showScreen('guild');
     if(typeof guildOpenWarFromNotification==='function') guildOpenWarFromNotification();
-  } else if(type==='guild_event_announced' || type==='guild_event_registration_closed' || type==='guild_event_starting'){
+  } else if(type==='guild_event_announced' || type==='guild_event_registration_closed' || type==='guild_event_starting' || type==='guild_event_result'){
     showScreen('guild');
     if(typeof guildOpenInternalTournamentFromNotification==='function') guildOpenInternalTournamentFromNotification();
+  } else if(type==='guild_event_your_turn'){
+    if(!refId){ showToast('Ce duel n\'est plus disponible.', true); return; }
+    if(typeof joinGuildEventDuel==='function') joinGuildEventDuel(refId);
   }
 }
 // Routage depuis une notif de Tournoi interne : rouvre directement l'écran
