@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.98.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.99.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3943,8 +3943,18 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.98.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.99.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.99.0 &mdash; 17 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; GUILDE — notifications, points info, tournoi de guilde r&eacute;par&eacute;</li>
+        <li>Tous les membres des deux guildes sont pr&eacute;venus quand un d&eacute;fi qu'ils ont lanc&eacute; est accept&eacute; (la guerre commence), et quand il se conclut (victoire, d&eacute;faite ou &eacute;galit&eacute; apr&egrave;s les 48 h).</li>
+        <li>Point info d&eacute;taill&eacute; (comment jouer, comment les points sont calcul&eacute;s) sur les D&eacute;fis inter-guildes ET sur le Tournoi de guilde officiel — les deux modes ne se confondent plus.</li>
+        <li>Le Tournoi de guilde &eacute;tait une coquille vide depuis toujours (inscription bloqu&eacute;e c&ocirc;t&eacute; serveur, aucune autre porte d'entr&eacute;e) — l'inscription fonctionne enfin, r&eacute;serv&eacute;e aux membres d'une guilde.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -6292,6 +6302,29 @@ var MODE_INFO = {
       ['À savoir', 'Un joueur ne peut appartenir qu\'à UNE seule guilde à la fois.']
     ]
   },
+  guild_tournament: {
+    titre: '🏆 TOURNOI DE GUILDE (officiel)',
+    monnaie: '🏮 Mon',
+    sections: [
+      ['But', 'Un tournoi classique programmé par l\'administration, réservé aux membres d\'une guilde — n\'importe laquelle, il n\'y a pas d\'équipe adverse imposée. Différent des Défis inter-guildes (lancés par un chef contre une guilde précise) : ici, chacun joue pour SOI, comme dans un tournoi individuel.'],
+      ['Inscription', 'Il faut appartenir à une guilde pour t\'inscrire. Rejoins-en une (ou crée la tienne) depuis 🛡 Guilde si ce n\'est pas déjà fait.'],
+      ['Format & score', 'Exactement comme un tournoi individuel : système suisse, personne n\'est éliminé, appariement par score à chaque ronde. Victoire : 1 pt · Défaite : 0 pt · Bye : 1 pt offert.'],
+      ['Récompenses', 'Identiques au tournoi individuel : +2 🏮 par victoire, puis une récompense finale selon le classement — même le dernier repart avec un peu.'],
+      ['À savoir', 'Le Ryu collectif de ta guilde n\'est PAS affecté par ce tournoi — c\'est un gain personnel. Pour faire progresser ta guilde, vise plutôt les Défis inter-guildes.']
+    ]
+  },
+  guild_war: {
+    titre: '⚔ DÉFIS INTER-GUILDES',
+    monnaie: '🐉 Ryu',
+    sections: [
+      ['But', 'Le chef de ta guilde défie le chef d\'une autre. Une fois accepté, c\'est une guerre de 48 h entre les deux clans.'],
+      ['Lancer un défi', 'Réservé au chef 👑 (ou à un membre avec la permission dédiée). Une seule guilde peut être défiée à la fois par ta guilde, et le chef adverse doit ACCEPTER avant que quoi que ce soit ne compte.'],
+      ['Comment ça se joue', 'Il n\'y a PAS d\'écran de combat dédié : pendant les 48 h, chaque victoire classée en ligne (matchmaking, Arène, tournoi…) de N\'IMPORTE QUEL membre de ta guilde compte pour le score du défi.'],
+      ['Score', 'Chaque victoire classée d\'un membre = +1 point au score du défi (et rapporte toujours +2 🐉 comme d\'habitude, défi ou pas).'],
+      ['Résolution', 'À la fin des 48 h, la guilde au score le plus haut gagne +30 🐉 collectif. Égalité = personne ne touche rien. Tous les membres des deux guildes sont prévenus par notification.'],
+      ['À savoir', 'Différent du « Tournoi de guilde » (officiel, programmé par l\'administration) — ici c\'est un défi joueur contre joueur, sans inscription ni bracket.']
+    ]
+  },
   battlefield: {
     titre: '🏯 CHAMP DE BATAILLE',
     monnaie: '—',
@@ -6449,7 +6482,11 @@ async function refreshTournamentScreen(){
       var act = _tourneyKindFilter===k;
       return '<button onclick="setTourneyKindFilter(\''+k+'\')" style="flex:1;background:'+(act?'rgba(212,160,23,.22)':'rgba(0,0,0,.25)')+';border:1px solid '+(act?'rgba(212,160,23,.6)':'rgba(200,168,110,.2)')+';border-radius:6px;padding:7px 3px;font-family:VT323,monospace;font-size:12px;color:'+(act?'var(--gold-bright)':'var(--parchment)')+';cursor:pointer">'+lbl+'</button>';
     };
-    var html = '<div style="display:flex;gap:6px;margin-bottom:12px">'+tabBtn('individual','⚔ Individuel')+tabBtn('guild','🛡 Guilde')+'</div>';
+    var html = '<div style="display:flex;gap:6px;margin-bottom:12px">'+tabBtn('individual','⚔ Individuel')+tabBtn('guild','🏆 Guilde (officiel)')+'</div>';
+    if(_tourneyKindFilter==='guild'){
+      html += '<button class="btn" style="width:100%;font-size:11px;padding:6px;opacity:.7;margin-bottom:6px" onclick="showModeInfo(\'guild_tournament\')">ℹ Comment fonctionne ce mode ?</button>';
+      html += '<div style="font-family:VT323,monospace;font-size:10px;opacity:.55;text-align:center;margin:-2px 0 10px">Ceci n\'est PAS le défi entre guildes lancé par un chef — voir 🛡 Guilde > ⚔ Défis inter-guildes.</div>';
+    }
     if(!filtered.length){
       html += '<div style="text-align:center;padding:18px;font-family:VT323,monospace;color:var(--parchment);opacity:.5">Aucun tournoi '+(_tourneyKindFilter==='guild'?'de guilde':'individuel')+' pour l\'instant.<br><span style="opacity:.7">Les tournois sont programmés par l\'administration.</span></div>';
     } else {
@@ -6944,6 +6981,7 @@ async function registerTournament(id){
     const { data } = await supa.rpc('tournament_register', { p_tournament_id: id });
     if(data && data.ok){ showToast('Inscrit au tournoi !', false); }
     else if(data && data.reason==='full'){ showToast('🔒 Tournoi complet ('+(data.max_players||'?')+' joueurs).', true); }
+    else if(data && data.reason==='not_in_guild'){ showToast('🛡 Réservé aux membres d\'une guilde — rejoins-en une d\'abord.', true); }
     else showToast('Inscriptions fermées (le tournoi a déjà commencé).', true);
     renderTournamentDetail(id);
   }catch(e){ showToast('Erreur d\'inscription.', true); }
@@ -7584,11 +7622,14 @@ async function openGuildTournaments(myGuildId, isLeader){
     const { data: guilds } = await supa.from('v_guild_leaderboard').select('*');
     var gmap = {}; (guilds||[]).forEach(function(g){ gmap[g.id]=g; });
     var html = '<button class="btn" style="width:100%;font-size:11px;padding:6px;opacity:.7;margin-bottom:8px" onclick="_guildView=\'auto\';refreshGuildScreen()">↩ Ma guilde</button>';
-    // Comment ça marche — sans cette explication, un défi accepté semble
-    // ne « rien faire » : il n'y a PAS d'écran de combat dédié, ce sont
-    // les victoires classées normales des membres qui marquent les points.
+    html += '<button class="btn" style="width:100%;font-size:11px;padding:6px;opacity:.7;margin-bottom:8px" onclick="showModeInfo(\'guild_war\')">ℹ Comment fonctionne ce mode ?</button>';
+    // Rappel court — sans lui, un défi accepté semble ne « rien faire » :
+    // il n'y a PAS d'écran de combat dédié, ce sont les victoires classées
+    // normales des membres qui marquent les points. Détail complet dans le
+    // point info ci-dessus (showModeInfo('guild_war')).
     html += '<div style="background:rgba(212,160,23,.07);border:1px solid rgba(212,160,23,.2);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.85;line-height:1.4">'
-      + '⚔ Un défi dure <b>48 h</b> une fois accepté par le chef adverse. Pendant ce temps, <b>chaque victoire classée en ligne</b> (matchmaking, tournoi…) d\'un membre rapporte <b>+1 point</b> à sa guilde (et toujours +2 🐉). À la fin : <b>+30 🐉</b> pour la guilde gagnante.</div>';
+      + '⚔ Un défi dure <b>48 h</b> une fois accepté par le chef adverse. Pendant ce temps, <b>chaque victoire classée en ligne</b> (matchmaking, tournoi…) d\'un membre rapporte <b>+1 point</b> à sa guilde (et toujours +2 🐉). À la fin : <b>+30 🐉</b> pour la guilde gagnante.'
+      + '<br><span style="opacity:.6">(Différent des « Tournois de guilde » programmés par l\'administration, dans l\'écran Tournois.)</span></div>';
     var pendings = (gt||[]).filter(function(t){ return t.status==='pending'; });
     var recus   = pendings.filter(function(t){ return t.guild_b===myGuildId; });
     var envoyes = pendings.filter(function(t){ return t.guild_a===myGuildId; });
@@ -8628,7 +8669,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.98.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.99.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8860,7 +8901,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.98.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.99.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -9083,7 +9124,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.98.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.99.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -13075,7 +13116,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.98.0';
+var DEVLOG_LATEST = 'V0.99.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -13149,11 +13190,12 @@ async function villageRefreshBadges(){
   if(!document.body.classList.contains('ui-village')) return;
   var setB = function(id,n){ var el=document.getElementById('village-badge-'+id); if(!el) return; if(n>0){ el.textContent = n>9?'9+':String(n); el.style.display='block'; } else { el.style.display='none'; } };
   if(!currentUser || typeof supa==='undefined' || !supa){ setB('arene',0); setB('auberge',0); return; }
-  // Arène = notifs de JEU (défis reçus, parties de tournoi). Auberge = SOCIAL
-  // (messages privés + demandes d'ami). Un MP crée une notif type 'message'
-  // (trigger trg_notify_new_message) → on compte les notifs, PAS direct_messages,
-  // sinon on double-compterait chaque MP.
-  try{ var r = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false).in('type',['challenge','tournament_game','invasion_incoming','invasion_won','invasion_lost','invasion_defended','invasion_repelled']); setB('arene', r.count||0); }catch(e){ setB('arene',0); }
+  // Arène = notifs de JEU (défis reçus, parties de tournoi, invasions,
+  // guerres de guilde). Auberge = SOCIAL (messages privés + demandes d'ami).
+  // Un MP crée une notif type 'message' (trigger trg_notify_new_message) →
+  // on compte les notifs, PAS direct_messages, sinon on double-compterait
+  // chaque MP.
+  try{ var r = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false).in('type',['challenge','tournament_game','invasion_incoming','invasion_won','invasion_lost','invasion_defended','invasion_repelled','guild_war_accepted','guild_war_won','guild_war_lost','guild_war_draw']); setB('arene', r.count||0); }catch(e){ setB('arene',0); }
   try{ var m = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false).in('type',['message','friend_request']); setB('auberge', m.count||0); }catch(e){ setB('auberge',0); }
 }
 // Aiguillage central : en thème Village, un « retour » d'écran ne doit JAMAIS
@@ -14540,9 +14582,9 @@ async function openNotificationsModal(){
       list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--parchment);opacity:.5;font-family:VT323,monospace">'+t('notif_empty')+'</div>';
     } else {
       list.innerHTML = data.map(function(n){
-        var icon = n.type==='challenge' ? '&#9876;' : n.type==='message' ? '&#128172;' : n.type==='friend_request' ? '&#128101;' : n.type==='rematch' ? '&#128260;' : n.type==='league' ? '&#127942;' : n.type==='devlog'||n.type==='cosmetic'||n.type==='system'||n.type==='tuto' ? '&#128220;' : n.type==='quest'||n.type==='daily_quest' ? '&#128221;' : n.type==='invasion_incoming'||n.type==='invasion_won'||n.type==='invasion_lost' ? '&#9876;' : n.type==='invasion_defended'||n.type==='invasion_repelled' ? '&#128737;' : '&#128276;';
+        var icon = n.type==='challenge' ? '&#9876;' : n.type==='message' ? '&#128172;' : n.type==='friend_request' ? '&#128101;' : n.type==='rematch' ? '&#128260;' : n.type==='league' ? '&#127942;' : n.type==='devlog'||n.type==='cosmetic'||n.type==='system'||n.type==='tuto' ? '&#128220;' : n.type==='quest'||n.type==='daily_quest' ? '&#128221;' : n.type==='invasion_incoming'||n.type==='invasion_won'||n.type==='invasion_lost' ? '&#9876;' : n.type==='invasion_defended'||n.type==='invasion_repelled' ? '&#128737;' : n.type==='guild_war_accepted' ? '&#9876;' : n.type==='guild_war_won' ? '&#127942;' : n.type==='guild_war_lost'||n.type==='guild_war_draw' ? '&#128737;' : '&#128276;';
         var catColor = notifCatColor(n.type);
-        var clickable = (n.type==='message' || n.type==='friend_request' || n.type==='challenge');
+        var clickable = (n.type==='message' || n.type==='friend_request' || n.type==='challenge' || n.type==='guild_war_accepted' || n.type==='guild_war_won' || n.type==='guild_war_lost' || n.type==='guild_war_draw');
         var onclickAttr = clickable ? ' onclick="handleNotificationClick(\''+n.type+'\',\''+String(n.ref_id||'').replace(/'/g,"\\'")+'\',\''+String(n.title||'').replace(/'/g,"\\'")+'\')"' : '';
         return '<div class="'+(clickable?'notif-row-clickable':'')+'"'+onclickAttr+' style="display:flex;gap:10px;padding:10px;border-left:3px solid '+catColor+';border-bottom:1px solid rgba(200,168,110,.12)'+(n.read?'':';background:rgba(212,160,23,.08)')+'">'
           + '<span style="font-size:18px">'+icon+'</span>'
@@ -14582,7 +14624,20 @@ async function handleNotificationClick(type, refId, title){
   } else if(type==='challenge'){
     if(!refId){ showToast('Ce défi n\'est plus disponible.', true); return; }
     await reopenChallengePopupFromBanner(refId);
+  } else if(type==='guild_war_accepted' || type==='guild_war_won' || type==='guild_war_lost' || type==='guild_war_draw'){
+    showScreen('guild');
+    if(typeof guildOpenWarFromNotification==='function') guildOpenWarFromNotification();
   }
+}
+// Routage depuis une notif de guerre de guilde : rouvre directement l'écran
+// Défis inter-guildes (pas juste « ma guilde ») — sinon le joueur doit encore
+// chercher le bon bouton après avoir cliqué la notif.
+async function guildOpenWarFromNotification(){
+  if(typeof supa==='undefined' || !supa || !currentUser) return;
+  try{
+    const { data } = await supa.rpc('get_my_guild');
+    if(data && data.in_guild && data.guild){ openGuildTournaments(data.guild.id, data.my_role==='leader'); }
+  }catch(e){}
 }
 
 // ══════════════════════════════════════════════════════

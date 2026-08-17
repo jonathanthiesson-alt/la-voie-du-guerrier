@@ -132,7 +132,7 @@
 | `events-mode` | code | `menu` |
 | `fighter-skins` | piece-skins | `piece-skins` |
 | `game` | code | — |
-| `guild` | village/guilde | `menu` |
+| `guild` | village/guilde, code | `menu` |
 | `home` | devlog, code | — |
 | `home-logo-cfg` | piece-skins | `piece-skins` |
 | `identite` | profile | `profile` |
@@ -217,4 +217,4 @@ ancien hub (`menu`, `play`, `settings`, `local-hub`, `online-menu`, `events-mode
 
 - soleil › Menu DEV · maison › Menu DEV
 
-_Généré le 2026-08-16._
+_Généré le 2026-08-17._
