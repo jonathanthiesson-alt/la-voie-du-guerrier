@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.104.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.105.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3943,8 +3943,17 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.104.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.105.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.105.0 &mdash; 17 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; GUILDE — arbre du Tournoi interne (façon Tekken)</li>
+        <li>Le combat en cha&icirc;ne s'affiche d&eacute;sormais en arbre visuel : chaque victoire dessine une fl&egrave;che du vaincu vers le champion, la s&eacute;rie de victoires devient visible d'un coup d'œil. Le duel en cours est mis en &eacute;vidence et cliquable pour le regarder en direct.</li>
+        <li>Septi&egrave;me brique (lot G5) du chantier Combat de guilde — voir docs/ROADMAP_GUILD_BATTLE.md.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -7925,6 +7934,53 @@ async function cancelGuildEvent(eventId, myGuildId, isLeader){
   }catch(e){ showToast('Erreur.', true); }
   openGuildInternalTournament(myGuildId, isLeader);
 }
+// ── Arbre Tekken (lot G5, docs/ROADMAP_GUILD_BATTLE.md décisions B/C) ──
+// Chaque joueur occupe une position FIXE (équipe+siège, jamais réattribuée
+// pendant le combat) : une flèche par duel joué, du perdant vers le
+// vainqueur — un champion qui enchaîne les victoires accumule donc
+// naturellement plusieurs flèches entrantes, ce qui rend la série visible
+// sans calcul supplémentaire côté client. Noms de joueurs (pas de portrait,
+// aucune image de profil dans le jeu pour l'instant — décision B).
+function buildGuildEventTreeSvg(teamA, teamB, matches, currentMatch){
+  var rowH = 58, topPad = 46, xA = 90, xB = 410, w = 500;
+  var maxSeats = Math.max(teamA.length, teamB.length, 1);
+  var h = topPad + maxSeats*rowH + 20;
+  var pos = {}; // player_id -> {x,y}
+  teamA.forEach(function(p,i){ pos[p.player_id] = { x:xA, y: topPad + i*rowH }; });
+  teamB.forEach(function(p,i){ pos[p.player_id] = { x:xB, y: topPad + i*rowH }; });
+
+  function nodeSvg(p, x, y){
+    var eliminated = !!p.eliminated_at;
+    var isFighting = currentMatch && (p.player_id===currentMatch.player_a || p.player_id===currentMatch.player_b);
+    var ring = isFighting ? '#ffd85c' : eliminated ? 'rgba(200,80,80,.5)' : 'rgba(200,168,110,.35)';
+    var textColor = eliminated ? 'rgba(220,200,180,.4)' : isFighting ? '#ffe9a8' : 'var(--parchment,#e8dcc0)';
+    var label = escapeHtml(p.pseudo||'?') + (eliminated ? ' ✕' : isFighting ? ' ⚔' : '');
+    var onclick = isFighting ? ' style="cursor:pointer" onclick="spectateGame(\''+currentMatch.game_id+'\')"' : '';
+    return '<g'+onclick+'>'
+      + '<rect x="'+(x-78)+'" y="'+(y-16)+'" width="156" height="32" rx="7" fill="rgba(0,0,0,.35)" stroke="'+ring+'" stroke-width="'+(isFighting?2:1)+'"/>'
+      + '<text x="'+x+'" y="'+(y+4)+'" text-anchor="middle" font-family="VT323,monospace" font-size="12" fill="'+textColor+'">'+label+'</text>'
+    + '</g>';
+  }
+  var nodesSvg = teamA.map(function(p){ return nodeSvg(p, pos[p.player_id].x, pos[p.player_id].y); }).join('')
+    + teamB.map(function(p){ return nodeSvg(p, pos[p.player_id].x, pos[p.player_id].y); }).join('');
+
+  var arrowsSvg = matches.filter(function(m){ return m.winner; }).map(function(m){
+    var winnerId = m.winner==='A' ? m.player_a : m.player_b;
+    var loserId  = m.winner==='A' ? m.player_b : m.player_a;
+    var a = pos[loserId], b = pos[winnerId];
+    if(!a || !b) return '';
+    var midX = (a.x+b.x)/2, midY = (a.y+b.y)/2 - 18; // légère courbe vers le haut
+    return '<path d="M'+a.x+','+a.y+' Q'+midX+','+midY+' '+b.x+','+b.y+'" fill="none" stroke="rgba(212,160,23,.4)" stroke-width="1.5" marker-end="url(#gevArrow)"/>';
+  }).join('');
+
+  var teamLabels = '<text x="'+xA+'" y="20" text-anchor="middle" font-family=\'Cinzel,serif\' font-size="12" fill="var(--gold-bright,#e8c060)">ÉQUIPE A</text>'
+    + '<text x="'+xB+'" y="20" text-anchor="middle" font-family=\'Cinzel,serif\' font-size="12" fill="var(--gold-bright,#e8c060)">ÉQUIPE B</text>';
+
+  return '<div style="overflow-x:auto;margin-bottom:10px"><svg viewBox="0 0 '+w+' '+h+'" width="100%" style="min-width:420px;max-width:520px;display:block;margin:0 auto">'
+    + '<defs><marker id="gevArrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(212,160,23,.6)"/></marker></defs>'
+    + teamLabels + arrowsSvg + nodesSvg
+  + '</svg></div>';
+}
 // ── Composition d'équipe + salle d'attente (lot G3) ─────────────────────
 // Pas de vrai glisser-déposer tactile (peu fiable sur mobile, cf. conventions
 // du projet) : le chef déplace un joueur avec un bouton « → Équipe X ». Le
@@ -7973,9 +8029,7 @@ async function openGuildEventRoster(eventId, myGuildId, isLeader){
       if(!list.length){ h += '<div style="opacity:.4;font-family:VT323,monospace;font-size:11px;padding:4px">Vide.</div>'; return h; }
       h += list.map(function(p){
         var boss = (p.seat===list.length && list.length>1) ? ' 👑' : '';
-        var checkMark = ev.status==='checkin' || ev.status==='running'
-          ? (p.checked_in || ev.status==='running' ? ' ✅' : ' ⏳')
-          : '';
+        var checkMark = ev.status==='checkin' ? (p.checked_in ? ' ✅' : ' ⏳') : '';
         var moveBtn = (isLeader && ev.status==='registration_closed')
           ? '<button class="btn" style="font-size:9px;padding:3px 6px;width:auto;flex-shrink:0;margin:0;opacity:.7" onclick="moveGuildEventPlayer('+eventId+',\''+p.player_id+'\',\''+otherLetter+'\','+myGuildId+','+isLeader+')">→ '+otherLetter+'</button>'
           : '';
@@ -7986,21 +8040,16 @@ async function openGuildEventRoster(eventId, myGuildId, isLeader){
       }).join('');
       return h;
     }
-    html += teamBlock('⚔ ÉQUIPE A', teamA, 'B');
-    html += teamBlock('⚔ ÉQUIPE B', teamB, 'A');
-    if(unassigned.length){ html += teamBlock('❓ NON RÉPARTIS', unassigned, ''); }
 
-    var matches = data.matches||[];
-    if(matches.length){
-      html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;margin:10px 0 5px;letter-spacing:1px">HISTORIQUE DES DUELS</div>';
-      html += matches.map(function(m){
-        var winnerName = m.winner==='A' ? m.player_a_pseudo : m.player_b_pseudo;
-        var loserName = m.winner==='A' ? m.player_b_pseudo : m.player_a_pseudo;
-        return '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:5px 8px;background:rgba(0,0,0,.18);border-radius:5px;margin-bottom:3px;font-family:VT323,monospace;font-size:11px;color:var(--parchment)">'
-          + '<span>'+m.seq+'. '+escapeHtml(winnerName)+' <span style="opacity:.5">bat</span> '+escapeHtml(loserName)+'</span>'
-          + '<span style="opacity:.5;flex-shrink:0">équipe '+m.winner+'</span>'
-        + '</div>';
-      }).join('');
+    // ── Arbre Tekken (lot G5) : une fois les équipes verrouillées et le
+    // combat commencé, le rendu SVG (nœuds + flèches vainqueur←perdant)
+    // remplace la liste simple — décision B, arbre complet dès la V1.
+    if(ev.status==='running' || ev.status==='finished'){
+      html += buildGuildEventTreeSvg(teamA, teamB, data.matches||[], data.current_match||null);
+    } else {
+      html += teamBlock('⚔ ÉQUIPE A', teamA, 'B');
+      html += teamBlock('⚔ ÉQUIPE B', teamB, 'A');
+      if(unassigned.length){ html += teamBlock('❓ NON RÉPARTIS', unassigned, ''); }
     }
 
     body.innerHTML = html;
@@ -8982,7 +9031,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.104.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.105.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -9214,7 +9263,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.104.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.105.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -9437,7 +9486,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.104.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.105.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -13429,7 +13478,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.104.0';
+var DEVLOG_LATEST = 'V0.105.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
