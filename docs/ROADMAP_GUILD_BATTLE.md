@@ -330,7 +330,7 @@ défendables et n'ont rien à voir en termes de travail :
 | **G0** | 🔴 **Monban réactif** (Edge Function + trigger), **validé sur le mode Invasion existant** + **débridage des invasions pour les administrateurs** (prérequis du test, décision AD). Rien d'autre ne démarre avant. | E, AD |
 | **G1** | ✅ **LIVRÉ 2026-08-17.** **Journal de guilde** : table, RLS, écran, et branchement sur les événements de guilde DÉJÀ existants (arrivées, départs, grades, défis). **Livrable et utile seul.** | U |
 | **G2** | ✅ **LIVRÉ 2026-08-17.** **Planification + inscriptions** : le GM crée un Tournoi interne (date, heure, cadence, clôture), les membres s'inscrivent. Notifications d'annonce et de clôture. Pas encore de combat. | G1, N, S |
-| **G3** | **Constitution des équipes** : répartition automatique par Elo (serpentin + ordre de passage), glisser-déposer du GM, salle d'attente et check-in. | G2, A, K |
+| **G3** | ✅ **LIVRÉ 2026-08-17.** **Constitution des équipes** : répartition automatique par Elo (serpentin + ordre de passage), glisser-déposer du GM, salle d'attente et check-in. | G2, A, K |
 | **G4** | **Moteur de combat en chaîne** : enchaînement séquentiel, pause 30 s, création des parties, élimination, délai de grâce, victoire d'équipe. **Le cœur du mode.** | G3, G0, I, J, M |
 | **G5** | **Arbre Tekken + spectateur** : rendu SVG complet avec flèches, bandeau de série, combat en cours cliquable. | G4, B, C |
 | **G6** | **Confrontation amicale** : réutilise G2→G5 avec deux guildes. Déclaration, acceptation du GM adverse, planification à 48 h max. Aucun enjeu. | G5, T |
@@ -421,3 +421,11 @@ clic, pastille du menu classique, **pastilles village**).
 - Notifications `guild_event_announced`/`guild_event_registration_closed` câblées aux 6 points (icône 📅, couleur par défaut = or/jeu, routage clic → `guildOpenInternalTournamentFromNotification()`, pastille Arène).
 - Testé de bout en bout : création, contrainte « un seul tournoi interne à la fois » (`busy`), inscription, clôture automatique par le cron (vérifiée en attendant 60s), nettoyage — sur une guilde jetable créée/détruite pour l'occasion.
 - Ce que ce lot NE fait PAS encore : pas de répartition en équipes, pas de salle d'attente/check-in, pas de combat — un événement reste bloqué en `registration_closed` après la clôture, en attente du lot G3.
+
+### G3 — Constitution des équipes + salle d'attente (2026-08-17)
+- `sql_a_executer/guild_events_g3.sql` — `guild_event_autobalance_teams` (serpentin par Elo, 4 emplacements A,B,B,A répétés), `guild_event_move_player`, `guild_event_checkin`, `guild_event_state`, tick `guild_events_checkin_tick`.
+- `index.html` : bouton « Voir » sur un tournoi non-`scheduled` (dans `openGuildInternalTournament`) → `openGuildEventRoster()` (~ligne 7908, après `cancelGuildEvent`) + `autobalanceGuildEvent`/`moveGuildEventPlayer`/`checkinGuildEvent`.
+- Pas de vrai glisser-déposer tactile : un bouton « → Équipe X » par joueur (peu fiable sur mobile en HTML5 DnD, cohérent avec le reste du projet). L'ordre de passage n'est JAMAIS éditable côté client — toujours recalculé serveur depuis l'Elo.
+- Notification `guild_event_starting` câblée aux 6 points (icône 🚧, routage → écran Tournoi interne, pastille Arène).
+- Testé de bout en bout avec 6 bots jetables (Elo 1000-1500 assignés temporairement) : répartition serpentin vérifiée (écart 100 points entre équipes), ordre de passage croissant confirmé, check-in partiel (4/6), retrait automatique des 2 absents à `starts_at`, renumérotation des sièges sans trou, statut final `running`. Cas limite vérifié en passant : si PERSONNE ne confirme sa présence, les deux équipes se vident et l'événement passe en `cancelled` plutôt que de rester bloqué.
+- Ce que ce lot NE fait PAS encore : `running` est un état terminal pour l'instant — rien ne joue les duels. C'est tout l'objet du lot G4.
