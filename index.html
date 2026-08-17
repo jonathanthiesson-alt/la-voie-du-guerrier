@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.105.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.106.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3943,8 +3943,17 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.105.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.106.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.106.0 &mdash; 17 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; GUILDE — Confrontation amicale (deux guildes, aucun enjeu)</li>
+        <li>Le chef propose une date &agrave; une guilde rivale (48h max), leur chef accepte ou d&eacute;cline, puis les deux camps s'inscrivent et s'affrontent en combat d'&eacute;quipe façon Tekken — m&ecirc;me moteur que le Tournoi interne, sans le moindre enjeu (ni Ryu, ni classement).</li>
+        <li>Huiti&egrave;me brique (lot G6) du chantier Combat de guilde — voir docs/ROADMAP_GUILD_BATTLE.md.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -7492,6 +7501,7 @@ function renderMyGuild(data){
     + '</div>';
   html += '<button class="btn" style="width:100%;font-size:11px;padding:7px;margin-bottom:10px" onclick="openGuildJournal()">📜 Journal de guilde</button>';
   html += '<button class="btn" style="width:100%;font-size:11px;padding:7px;margin-bottom:10px" onclick="openGuildInternalTournament('+g.id+','+isLeader+')">🥋 Tournoi interne</button>';
+  html += '<button class="btn" style="width:100%;font-size:11px;padding:7px;margin-bottom:10px" onclick="openGuildFriendlyMatches('+g.id+','+isLeader+')">🤝 Confrontation amicale</button>';
   if(isLeader){
     html += '<button class="btn" style="width:100%;font-size:11px;padding:7px;margin-bottom:10px" onclick="openGuildRanksEditor()">⚙ Gérer les grades</button>';
   }
@@ -7934,6 +7944,144 @@ async function cancelGuildEvent(eventId, myGuildId, isLeader){
   }catch(e){ showToast('Erreur.', true); }
   openGuildInternalTournament(myGuildId, isLeader);
 }
+// ── Confrontation amicale (lot G6, docs/ROADMAP_GUILD_BATTLE.md § 7) ───
+// Réutilise le moteur du Tournoi interne (G2→G5) avec deux guildes : le
+// chef propose une date (48h max), le chef adverse accepte ou décline,
+// puis inscriptions/équipes/combat/arbre suivent le même parcours — seule
+// l'équipe n'est plus répartie par le chef, elle est fixée par la guilde
+// d'origine de chacun (décision D : écran séparé du Tournoi interne, pour
+// ne jamais confondre les deux malgré le mot « guilde » commun aux deux).
+async function openGuildFriendlyMatches(myGuildId, isLeader){
+  var body = document.getElementById('guild-body');
+  if(!body) return;
+  body.innerHTML='<div style="text-align:center;padding:14px;opacity:.5;font-family:VT323,monospace">Chargement…</div>';
+  try{
+    const [{ data: events }, { data: pending }, { data: guilds }] = await Promise.all([
+      supa.rpc('guild_event_list_mine'),
+      isLeader ? supa.rpc('guild_event_pending_for_me') : Promise.resolve({data:[]}),
+      isLeader ? supa.from('v_guild_leaderboard').select('*') : Promise.resolve({data:[]})
+    ]);
+    var html = '<button class="btn" style="width:100%;font-size:11px;padding:6px;opacity:.7;margin-bottom:8px" onclick="_guildView=\'auto\';refreshGuildScreen()">↩ Ma guilde</button>';
+    html += '<div style="background:rgba(140,180,255,.07);border:1px solid rgba(140,180,255,.2);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.85;line-height:1.4">'
+      + '🤝 Deux guildes s\'affrontent en combat d\'équipe façon Tekken, comme le Tournoi interne — mais <b>sans aucun enjeu</b> (ni Ryu, ni classement). Le chef adverse doit accepter la date proposée (48 h max).</div>';
+
+    var friendlies = (events||[]).filter(function(e){ return e.kind==='friendly'; });
+
+    if(isLeader && (pending||[]).length){
+      html += '<div style="font-family:VT323,monospace;font-size:11px;color:#ffb85c;opacity:.9;margin-bottom:5px;letter-spacing:1px">📥 PROPOSITIONS REÇUES</div>';
+      html += pending.map(function(p){
+        var d = new Date(p.starts_at);
+        var dstr = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}) + ' à ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+        return '<div style="display:flex;align-items:center;gap:8px;background:rgba(255,160,60,.08);border:1px solid rgba(255,160,60,.25);border-radius:6px;padding:7px 10px;margin-bottom:4px">'
+          + '<span style="flex:1;min-width:0;font-family:VT323,monospace;font-size:12px;color:var(--parchment)">'+escapeHtml(p.from_guild_name||'?')+' propose le '+dstr+' ('+p.cadence+'s)</span>'
+          + '<button class="btn" style="font-size:10px;padding:4px 10px;width:auto;flex-shrink:0;margin:0" onclick="respondFriendlyMatch('+p.id+',true,'+myGuildId+','+isLeader+')">✓</button>'
+          + '<button class="btn" style="font-size:10px;padding:4px 10px;width:auto;flex-shrink:0;margin:0;border-color:rgba(200,80,80,.4);color:#f08080" onclick="respondFriendlyMatch('+p.id+',false,'+myGuildId+','+isLeader+')">✕</button>'
+        + '</div>';
+      }).join('');
+    }
+
+    if(isLeader){
+      html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.7;margin-bottom:5px;letter-spacing:1px">🤝 PROPOSER</div>';
+      var others = (guilds||[]).filter(function(g){ return g.id!==myGuildId; });
+      if(!others.length){ html += '<div style="opacity:.5;font-family:VT323,monospace;font-size:11px;padding:6px">Aucune autre guilde à défier.</div>'; }
+      else {
+        html += '<select id="gfr-target" style="width:100%;box-sizing:border-box;background:rgba(0,0,0,.3);border:1px solid rgba(200,168,110,.3);border-radius:4px;color:var(--parchment);padding:7px;font-family:VT323,monospace;font-size:12px;margin-bottom:6px">'
+          + others.slice(0,30).map(function(g){ return '<option value="'+g.id+'">'+escapeHtml(g.name)+' ['+escapeHtml(g.tag||'')+']</option>'; }).join('')
+          + '</select>';
+        html += '<div style="display:flex;gap:6px;margin-bottom:8px">'
+          +   '<input type="datetime-local" id="gfr-starts" style="flex:1;background:rgba(0,0,0,.3);border:1px solid rgba(200,168,110,.3);border-radius:4px;color:var(--parchment);padding:7px;font-family:VT323,monospace;font-size:12px">'
+          +   '<select id="gfr-cadence" style="background:rgba(0,0,0,.3);border:1px solid rgba(200,168,110,.3);border-radius:4px;color:var(--parchment);padding:7px;font-family:VT323,monospace;font-size:12px">'
+          +     '<option value="3">3s</option><option value="5" selected>5s</option><option value="10">10s</option>'
+          +   '</select>'
+          + '</div>';
+        html += '<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.5;margin-bottom:8px">Au plus tôt dans 15 min, au plus tard dans 48 h.</div>';
+        html += '<button class="btn" style="width:100%;font-size:11px;padding:7px;margin-bottom:12px" onclick="proposeFriendlyMatch('+myGuildId+','+isLeader+')">Proposer la confrontation</button>';
+      }
+    }
+
+    html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;margin-bottom:5px;letter-spacing:1px">CONFRONTATIONS</div>';
+    if(!friendlies.length){ html += '<div style="text-align:center;padding:12px;opacity:.5;font-family:VT323,monospace">Aucune confrontation amicale en cours.</div>'; }
+    else {
+      html += friendlies.map(function(ev){
+        var d = new Date(ev.starts_at);
+        var dstr = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}) + ' à ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+        var statusLabel = ev.status==='pending_acceptance' ? '🤝 en attente de réponse du chef adverse' : guildEventStatusLabel(ev.status);
+        var action = '';
+        if(ev.status==='scheduled'){
+          action = ev.i_am_registered
+            ? '<button class="btn" style="font-size:10px;padding:4px 10px;width:auto;flex-shrink:0;margin:0;opacity:.8" onclick="unregisterFriendlyEvent('+ev.id+','+myGuildId+','+isLeader+')">Se désinscrire</button>'
+            : '<button class="btn" style="font-size:10px;padding:4px 10px;width:auto;flex-shrink:0;margin:0" onclick="registerFriendlyEvent('+ev.id+','+myGuildId+','+isLeader+')">S\'inscrire</button>';
+        } else if(ev.status!=='pending_acceptance'){
+          action = '<button class="btn" style="font-size:10px;padding:4px 10px;width:auto;flex-shrink:0;margin:0" onclick="openGuildEventRoster('+ev.id+','+myGuildId+','+isLeader+')">Voir</button>';
+        }
+        var cancelBtn = (isLeader && ev.status!=='running')
+          ? '<button class="btn" style="font-size:10px;padding:4px 8px;width:auto;flex-shrink:0;margin:0 0 0 4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="cancelFriendlyEvent('+ev.id+','+myGuildId+','+isLeader+')" title="Annuler">✕</button>'
+          : '';
+        return '<div style="background:rgba(0,0,0,.22);border-radius:6px;padding:8px 10px;margin-bottom:6px">'
+          + '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px">'
+          +   '<span style="font-family:\'Cinzel\',serif;font-size:12px;color:var(--gold-bright)">vs '+escapeHtml(ev.opponent_guild_name||'?')+' · '+dstr+' · '+ev.cadence+'s</span>'
+          + '</div>'
+          + '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px">'
+          +   '<span style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.7">'+statusLabel+'</span>'
+          +   '<span style="flex-shrink:0">'+action+cancelBtn+'</span>'
+          + '</div>'
+        + '</div>';
+      }).join('');
+    }
+    body.innerHTML = html;
+  }catch(e){ body.innerHTML='<div style="text-align:center;padding:14px;opacity:.6;font-family:VT323,monospace">Confrontation amicale indisponible (guild_events_g6_friendly.sql exécuté ?).</div>'; }
+}
+async function proposeFriendlyMatch(myGuildId, isLeader){
+  var targetEl = document.getElementById('gfr-target'), startsEl = document.getElementById('gfr-starts'), cadEl = document.getElementById('gfr-cadence');
+  if(!targetEl || !targetEl.value){ showToast('Choisis une guilde à défier.', true); return; }
+  if(!startsEl || !startsEl.value){ showToast('Choisis une date de début.', true); return; }
+  var starts = new Date(startsEl.value).toISOString();
+  var cadence = parseInt(cadEl.value, 10) || 5;
+  try{
+    const { data } = await supa.rpc('guild_event_propose_friendly', { p_target_guild_id: parseInt(targetEl.value,10), p_cadence: cadence, p_starts_at: starts });
+    if(data && data.ok){ showToast('🤝 Proposition envoyée — en attente du chef adverse.', false); }
+    else {
+      var why = (data && data.reason) || '?';
+      var msg = why==='busy' ? 'Une confrontation amicale est déjà en cours (ou en attente) pour l\'une des deux guildes.'
+        : why==='too_soon' ? 'La date doit être au moins dans 15 minutes.'
+        : why==='too_far' ? 'La date ne peut pas dépasser 48 h.'
+        : why==='self' ? 'Impossible de se défier soi-même.'
+        : 'Proposition impossible ('+why+').';
+      showToast(msg, true);
+    }
+  }catch(e){ showToast('Erreur (guild_events_g6_friendly.sql exécuté ?).', true); }
+  openGuildFriendlyMatches(myGuildId, isLeader);
+}
+async function respondFriendlyMatch(eventId, accept, myGuildId, isLeader){
+  try{
+    const { data } = await supa.rpc('guild_event_respond_friendly', { p_event_id: eventId, p_accept: !!accept });
+    if(data && data.ok){ showToast(accept ? '🤝 Confrontation confirmée — inscrivez vos combattants !' : 'Proposition déclinée.', false); }
+    else if(data && data.reason==='too_late'){ showToast('Trop tard pour accepter (délai d\'inscription déjà écoulé).', true); }
+    else showToast('Impossible de répondre.', true);
+  }catch(e){ showToast('Erreur.', true); }
+  openGuildFriendlyMatches(myGuildId, isLeader);
+}
+async function registerFriendlyEvent(eventId, myGuildId, isLeader){
+  try{
+    const { data } = await supa.rpc('guild_event_register', { p_event_id: eventId });
+    if(data && data.ok){ showToast('Inscrit à la confrontation amicale !', false); }
+    else showToast('Inscription impossible.', true);
+  }catch(e){ showToast('Erreur.', true); }
+  openGuildFriendlyMatches(myGuildId, isLeader);
+}
+async function unregisterFriendlyEvent(eventId, myGuildId, isLeader){
+  try{ await supa.rpc('guild_event_unregister', { p_event_id: eventId }); }catch(e){}
+  openGuildFriendlyMatches(myGuildId, isLeader);
+}
+async function cancelFriendlyEvent(eventId, myGuildId, isLeader){
+  if(!confirm('Annuler cette confrontation amicale ?')) return;
+  try{
+    const { data } = await supa.rpc('guild_event_cancel', { p_event_id: eventId });
+    if(data && data.ok){ showToast('Confrontation amicale annulée.', false); }
+    else showToast('Annulation impossible.', true);
+  }catch(e){ showToast('Erreur.', true); }
+  openGuildFriendlyMatches(myGuildId, isLeader);
+}
 // ── Arbre Tekken (lot G5, docs/ROADMAP_GUILD_BATTLE.md décisions B/C) ──
 // Chaque joueur occupe une position FIXE (équipe+siège, jamais réattribuée
 // pendant le combat) : une flèche par duel joué, du perdant vers le
@@ -7941,7 +8089,8 @@ async function cancelGuildEvent(eventId, myGuildId, isLeader){
 // naturellement plusieurs flèches entrantes, ce qui rend la série visible
 // sans calcul supplémentaire côté client. Noms de joueurs (pas de portrait,
 // aucune image de profil dans le jeu pour l'instant — décision B).
-function buildGuildEventTreeSvg(teamA, teamB, matches, currentMatch){
+function buildGuildEventTreeSvg(teamA, teamB, matches, currentMatch, labelA, labelB){
+  labelA = labelA || 'ÉQUIPE A'; labelB = labelB || 'ÉQUIPE B';
   var rowH = 58, topPad = 46, xA = 90, xB = 410, w = 500;
   var maxSeats = Math.max(teamA.length, teamB.length, 1);
   var h = topPad + maxSeats*rowH + 20;
@@ -7973,8 +8122,8 @@ function buildGuildEventTreeSvg(teamA, teamB, matches, currentMatch){
     return '<path d="M'+a.x+','+a.y+' Q'+midX+','+midY+' '+b.x+','+b.y+'" fill="none" stroke="rgba(212,160,23,.4)" stroke-width="1.5" marker-end="url(#gevArrow)"/>';
   }).join('');
 
-  var teamLabels = '<text x="'+xA+'" y="20" text-anchor="middle" font-family=\'Cinzel,serif\' font-size="12" fill="var(--gold-bright,#e8c060)">ÉQUIPE A</text>'
-    + '<text x="'+xB+'" y="20" text-anchor="middle" font-family=\'Cinzel,serif\' font-size="12" fill="var(--gold-bright,#e8c060)">ÉQUIPE B</text>';
+  var teamLabels = '<text x="'+xA+'" y="20" text-anchor="middle" font-family=\'Cinzel,serif\' font-size="12" fill="var(--gold-bright,#e8c060)">'+escapeHtml(labelA)+'</text>'
+    + '<text x="'+xB+'" y="20" text-anchor="middle" font-family=\'Cinzel,serif\' font-size="12" fill="var(--gold-bright,#e8c060)">'+escapeHtml(labelB)+'</text>';
 
   return '<div style="overflow-x:auto;margin-bottom:10px"><svg viewBox="0 0 '+w+' '+h+'" width="100%" style="min-width:420px;max-width:520px;display:block;margin:0 auto">'
     + '<defs><marker id="gevArrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(212,160,23,.6)"/></marker></defs>'
@@ -7999,7 +8148,14 @@ async function openGuildEventRoster(eventId, myGuildId, isLeader){
     var unassigned = parts.filter(function(p){ return !p.team; });
     var myRow = parts.find(function(p){ return p.player_id===currentUser.id; });
 
-    var html = '<button class="btn" style="width:100%;font-size:11px;padding:6px;opacity:.7;margin-bottom:8px" onclick="openGuildInternalTournament('+myGuildId+','+isLeader+')">↩ Tournoi interne</button>';
+    var isInternal = ev.kind==='internal';
+    var backFn = isInternal ? 'openGuildInternalTournament('+myGuildId+','+isLeader+')' : 'openGuildFriendlyMatches('+myGuildId+','+isLeader+')';
+    var backLabel = isInternal ? '↩ Tournoi interne' : '↩ Confrontation amicale';
+    var labelA = isInternal ? '⚔ ÉQUIPE A' : '⚔ '+(ev.guild_a_name||'Équipe A');
+    var labelB = isInternal ? '⚔ ÉQUIPE B' : '⚔ '+(ev.guild_b_name||'Équipe B');
+    var svgLabelA = isInternal ? 'ÉQUIPE A' : (ev.guild_a_name||'ÉQUIPE A');
+    var svgLabelB = isInternal ? 'ÉQUIPE B' : (ev.guild_b_name||'ÉQUIPE B');
+    var html = '<button class="btn" style="width:100%;font-size:11px;padding:6px;opacity:.7;margin-bottom:8px" onclick="'+backFn+'">'+backLabel+'</button>';
     html += '<div style="text-align:center;font-family:VT323,monospace;font-size:12px;color:var(--gold-bright);margin-bottom:10px">'+guildEventStatusLabel(ev.status)+'</div>';
 
     if(isLeader && ev.status==='registration_closed' && !parts.some(function(p){return p.team;})){
@@ -8045,10 +8201,10 @@ async function openGuildEventRoster(eventId, myGuildId, isLeader){
     // combat commencé, le rendu SVG (nœuds + flèches vainqueur←perdant)
     // remplace la liste simple — décision B, arbre complet dès la V1.
     if(ev.status==='running' || ev.status==='finished'){
-      html += buildGuildEventTreeSvg(teamA, teamB, data.matches||[], data.current_match||null);
+      html += buildGuildEventTreeSvg(teamA, teamB, data.matches||[], data.current_match||null, svgLabelA, svgLabelB);
     } else {
-      html += teamBlock('⚔ ÉQUIPE A', teamA, 'B');
-      html += teamBlock('⚔ ÉQUIPE B', teamB, 'A');
+      html += teamBlock(labelA, teamA, 'B');
+      html += teamBlock(labelB, teamB, 'A');
       if(unassigned.length){ html += teamBlock('❓ NON RÉPARTIS', unassigned, ''); }
     }
 
@@ -9031,7 +9187,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.105.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.106.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -9263,7 +9419,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.105.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.106.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -9486,7 +9642,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.105.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.106.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -13478,7 +13634,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.105.0';
+var DEVLOG_LATEST = 'V0.106.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -13557,7 +13713,7 @@ async function villageRefreshBadges(){
   // Un MP crée une notif type 'message' (trigger trg_notify_new_message) →
   // on compte les notifs, PAS direct_messages, sinon on double-compterait
   // chaque MP.
-  try{ var r = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false).in('type',['challenge','tournament_game','invasion_incoming','invasion_won','invasion_lost','invasion_defended','invasion_repelled','guild_war_accepted','guild_war_won','guild_war_lost','guild_war_draw','guild_event_announced','guild_event_registration_closed','guild_event_starting','guild_event_your_turn','guild_event_result']); setB('arene', r.count||0); }catch(e){ setB('arene',0); }
+  try{ var r = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false).in('type',['challenge','tournament_game','invasion_incoming','invasion_won','invasion_lost','invasion_defended','invasion_repelled','guild_war_accepted','guild_war_won','guild_war_lost','guild_war_draw','guild_event_announced','guild_event_registration_closed','guild_event_starting','guild_event_your_turn','guild_event_result','guild_event_challenge_received','guild_event_challenge_declined']); setB('arene', r.count||0); }catch(e){ setB('arene',0); }
   try{ var m = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false).in('type',['message','friend_request']); setB('auberge', m.count||0); }catch(e){ setB('auberge',0); }
 }
 // Aiguillage central : en thème Village, un « retour » d'écran ne doit JAMAIS
@@ -14944,9 +15100,9 @@ async function openNotificationsModal(){
       list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--parchment);opacity:.5;font-family:VT323,monospace">'+t('notif_empty')+'</div>';
     } else {
       list.innerHTML = data.map(function(n){
-        var icon = n.type==='challenge' ? '&#9876;' : n.type==='message' ? '&#128172;' : n.type==='friend_request' ? '&#128101;' : n.type==='rematch' ? '&#128260;' : n.type==='league' ? '&#127942;' : n.type==='devlog'||n.type==='cosmetic'||n.type==='system'||n.type==='tuto' ? '&#128220;' : n.type==='quest'||n.type==='daily_quest' ? '&#128221;' : n.type==='invasion_incoming'||n.type==='invasion_won'||n.type==='invasion_lost' ? '&#9876;' : n.type==='invasion_defended'||n.type==='invasion_repelled' ? '&#128737;' : n.type==='guild_war_accepted' ? '&#9876;' : n.type==='guild_war_won' ? '&#127942;' : n.type==='guild_war_lost'||n.type==='guild_war_draw' ? '&#128737;' : n.type==='guild_event_announced'||n.type==='guild_event_registration_closed' ? '&#128197;' : n.type==='guild_event_starting' ? '&#128682;' : n.type==='guild_event_your_turn' ? '&#9876;' : n.type==='guild_event_result' ? '&#127942;' : '&#128276;';
+        var icon = n.type==='challenge' ? '&#9876;' : n.type==='message' ? '&#128172;' : n.type==='friend_request' ? '&#128101;' : n.type==='rematch' ? '&#128260;' : n.type==='league' ? '&#127942;' : n.type==='devlog'||n.type==='cosmetic'||n.type==='system'||n.type==='tuto' ? '&#128220;' : n.type==='quest'||n.type==='daily_quest' ? '&#128221;' : n.type==='invasion_incoming'||n.type==='invasion_won'||n.type==='invasion_lost' ? '&#9876;' : n.type==='invasion_defended'||n.type==='invasion_repelled' ? '&#128737;' : n.type==='guild_war_accepted' ? '&#9876;' : n.type==='guild_war_won' ? '&#127942;' : n.type==='guild_war_lost'||n.type==='guild_war_draw' ? '&#128737;' : n.type==='guild_event_announced'||n.type==='guild_event_registration_closed' ? '&#128197;' : n.type==='guild_event_starting' ? '&#128682;' : n.type==='guild_event_your_turn' ? '&#9876;' : n.type==='guild_event_result' ? '&#127942;' : n.type==='guild_event_challenge_received' ? '&#129309;' : n.type==='guild_event_challenge_declined' ? '&#128683;' : '&#128276;';
         var catColor = notifCatColor(n.type);
-        var clickable = (n.type==='message' || n.type==='friend_request' || n.type==='challenge' || n.type==='guild_war_accepted' || n.type==='guild_war_won' || n.type==='guild_war_lost' || n.type==='guild_war_draw' || n.type==='guild_event_announced' || n.type==='guild_event_registration_closed' || n.type==='guild_event_starting' || n.type==='guild_event_your_turn' || n.type==='guild_event_result');
+        var clickable = (n.type==='message' || n.type==='friend_request' || n.type==='challenge' || n.type==='guild_war_accepted' || n.type==='guild_war_won' || n.type==='guild_war_lost' || n.type==='guild_war_draw' || n.type==='guild_event_announced' || n.type==='guild_event_registration_closed' || n.type==='guild_event_starting' || n.type==='guild_event_your_turn' || n.type==='guild_event_result' || n.type==='guild_event_challenge_received' || n.type==='guild_event_challenge_declined');
         var onclickAttr = clickable ? ' onclick="handleNotificationClick(\''+n.type+'\',\''+String(n.ref_id||'').replace(/'/g,"\\'")+'\',\''+String(n.title||'').replace(/'/g,"\\'")+'\')"' : '';
         return '<div class="'+(clickable?'notif-row-clickable':'')+'"'+onclickAttr+' style="display:flex;gap:10px;padding:10px;border-left:3px solid '+catColor+';border-bottom:1px solid rgba(200,168,110,.12)'+(n.read?'':';background:rgba(212,160,23,.08)')+'">'
           + '<span style="font-size:18px">'+icon+'</span>'
@@ -14995,6 +15151,9 @@ async function handleNotificationClick(type, refId, title){
   } else if(type==='guild_event_your_turn'){
     if(!refId){ showToast('Ce duel n\'est plus disponible.', true); return; }
     if(typeof joinGuildEventDuel==='function') joinGuildEventDuel(refId);
+  } else if(type==='guild_event_challenge_received' || type==='guild_event_challenge_declined'){
+    showScreen('guild');
+    if(typeof guildOpenFriendlyMatchesFromNotification==='function') guildOpenFriendlyMatchesFromNotification();
   }
 }
 // Routage depuis une notif de Tournoi interne : rouvre directement l'écran
@@ -15004,6 +15163,15 @@ async function guildOpenInternalTournamentFromNotification(){
   try{
     const { data } = await supa.rpc('get_my_guild');
     if(data && data.in_guild && data.guild){ openGuildInternalTournament(data.guild.id, data.my_role==='leader'); }
+  }catch(e){}
+}
+// Routage depuis une notif de Confrontation amicale (proposition reçue,
+// proposition déclinée) — même patron que guildOpenInternalTournamentFromNotification.
+async function guildOpenFriendlyMatchesFromNotification(){
+  if(typeof supa==='undefined' || !supa || !currentUser) return;
+  try{
+    const { data } = await supa.rpc('get_my_guild');
+    if(data && data.in_guild && data.guild){ openGuildFriendlyMatches(data.guild.id, data.my_role==='leader'); }
   }catch(e){}
 }
 // Routage depuis une notif de guerre de guilde : rouvre directement l'écran
