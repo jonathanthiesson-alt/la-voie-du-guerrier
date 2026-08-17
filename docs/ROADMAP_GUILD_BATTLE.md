@@ -329,7 +329,7 @@ défendables et n'ont rien à voir en termes de travail :
 |---|---|---|
 | **G0** | 🔴 **Monban réactif** (Edge Function + trigger), **validé sur le mode Invasion existant** + **débridage des invasions pour les administrateurs** (prérequis du test, décision AD). Rien d'autre ne démarre avant. | E, AD |
 | **G1** | ✅ **LIVRÉ 2026-08-17.** **Journal de guilde** : table, RLS, écran, et branchement sur les événements de guilde DÉJÀ existants (arrivées, départs, grades, défis). **Livrable et utile seul.** | U |
-| **G2** | **Planification + inscriptions** : le GM crée un Tournoi interne (date, heure, cadence, clôture), les membres s'inscrivent. Notifications d'annonce et de clôture. Pas encore de combat. | G1, N, S |
+| **G2** | ✅ **LIVRÉ 2026-08-17.** **Planification + inscriptions** : le GM crée un Tournoi interne (date, heure, cadence, clôture), les membres s'inscrivent. Notifications d'annonce et de clôture. Pas encore de combat. | G1, N, S |
 | **G3** | **Constitution des équipes** : répartition automatique par Elo (serpentin + ordre de passage), glisser-déposer du GM, salle d'attente et check-in. | G2, A, K |
 | **G4** | **Moteur de combat en chaîne** : enchaînement séquentiel, pause 30 s, création des parties, élimination, délai de grâce, victoire d'équipe. **Le cœur du mode.** | G3, G0, I, J, M |
 | **G5** | **Arbre Tekken + spectateur** : rendu SVG complet avec flèches, bandeau de série, combat en cours cliquable. | G4, B, C |
@@ -414,3 +414,10 @@ clic, pastille du menu classique, **pastilles village**).
 - 🔴 Piège rencontré en testant : ne jamais nommer une variable PL/pgSQL comme la colonne qu'elle reçoit (`select pseudo into pseudo from profiles` → `column reference "pseudo" is ambiguous`). Toujours qualifier la source (`select p.pseudo into v_pseudo from profiles p`).
 - 🔴 Bug de production trouvé (indépendant du journal, corrigé au passage) : `guild_join`/`guild_approve` inséraient `role='member'`, rejeté par une contrainte plus récente (`guild_ranks.sql`) qui n'autorise que `leader/g1/g2/g3/g4`. Personne ne pouvait plus rejoindre une guilde. Corrigé en `role='g4'`.
 - Méthode de test utile pour la suite : impersonation directe en SQL (`select set_config('request.jwt.claims', json_build_object('sub','<uuid>')::text, true)`) sur un compte bot jamais affecté à une guilde — permet de tester les RPC `SECURITY DEFINER` de bout en bout sans navigateur ni compte réel, en restant sans risque pour les données de Wurmz/Musashi.
+
+### G2 — Planification + inscriptions du Tournoi interne (2026-08-17)
+- `sql_a_executer/guild_events_g2.sql` — tables `guild_events`/`guild_event_participants` (schéma partagé avec les futurs `friendly`/`attack`, § 4), RPC `guild_event_create`/`_register`/`_unregister`/`_cancel`/`_list_mine`, tick cron `guild_events_registration_tick` (20s).
+- `index.html` : bouton « 🥋 Tournoi interne » dans `renderMyGuild()`, écran `openGuildInternalTournament()` (~ligne 7793, juste après `guildChallengeRespond`) + `createGuildInternalEvent`/`registerGuildEvent`/`unregisterGuildEvent`/`cancelGuildEvent`.
+- Notifications `guild_event_announced`/`guild_event_registration_closed` câblées aux 6 points (icône 📅, couleur par défaut = or/jeu, routage clic → `guildOpenInternalTournamentFromNotification()`, pastille Arène).
+- Testé de bout en bout : création, contrainte « un seul tournoi interne à la fois » (`busy`), inscription, clôture automatique par le cron (vérifiée en attendant 60s), nettoyage — sur une guilde jetable créée/détruite pour l'occasion.
+- Ce que ce lot NE fait PAS encore : pas de répartition en équipes, pas de salle d'attente/check-in, pas de combat — un événement reste bloqué en `registration_closed` après la clôture, en attente du lot G3.
