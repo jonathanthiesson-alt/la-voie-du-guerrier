@@ -328,7 +328,7 @@ défendables et n'ont rien à voir en termes de travail :
 | Lot | Contenu | Dépend de |
 |---|---|---|
 | **G0** | 🔴 **Monban réactif** (Edge Function + trigger), **validé sur le mode Invasion existant** + **débridage des invasions pour les administrateurs** (prérequis du test, décision AD). Rien d'autre ne démarre avant. | E, AD |
-| **G1** | **Journal de guilde** : table, RLS, écran, et branchement sur les événements de guilde DÉJÀ existants (arrivées, départs, grades, défis). **Livrable et utile seul.** | U |
+| **G1** | ✅ **LIVRÉ 2026-08-17.** **Journal de guilde** : table, RLS, écran, et branchement sur les événements de guilde DÉJÀ existants (arrivées, départs, grades, défis). **Livrable et utile seul.** | U |
 | **G2** | **Planification + inscriptions** : le GM crée un Tournoi interne (date, heure, cadence, clôture), les membres s'inscrivent. Notifications d'annonce et de clôture. Pas encore de combat. | G1, N, S |
 | **G3** | **Constitution des équipes** : répartition automatique par Elo (serpentin + ordre de passage), glisser-déposer du GM, salle d'attente et check-in. | G2, A, K |
 | **G4** | **Moteur de combat en chaîne** : enchaînement séquentiel, pause 30 s, création des parties, élimination, délai de grâce, victoire d'équipe. **Le cœur du mode.** | G3, G0, I, J, M |
@@ -402,6 +402,15 @@ clic, pastille du menu classique, **pastilles village**).
 
 ## 10. Points d'entrée (à remplir au fil des lots)
 
-_(vide — chaque lot livré complète cette section : fonctions, écrans, RPC,
-pièges rencontrés. C'est ce qui évite de refouiller `index.html` à la session
-suivante.)_
+### G0 — Monban réactif (2026-08-17)
+- `sql_a_executer/invasion_admin_unlimited.sql` — `invasion_authorize` (bypass admin).
+- `sql_a_executer/invasion_reactive_monban.sql` — extension `pg_net`, trigger `invasion_dispatch_monban_trg` sur `online_games`.
+- Edge Function `monban-move` (dashboard Supabase, pas dans le dépôt git — le code source vit uniquement côté Supabase). Fonction de diagnostic jetable `monban-move-test` encore déployée (inoffensive, à supprimer un jour).
+- Piège : `new Function` fonctionne en Edge Runtime Deno, mais `fetch()` d'un gros fichier a un coût — cache 5 min en mémoire dans la fonction.
+
+### G1 — Journal de guilde (2026-08-17)
+- `sql_a_executer/guild_journal.sql` — table `guild_journal`, `guild_journal_log()` (interne), `guild_journal_list()` (RPC lecture).
+- `index.html` : bouton « 📜 Journal de guilde » dans `renderMyGuild()`, fonction `openGuildJournal()` + `journalAgoText()` (~ligne 7375).
+- 🔴 Piège rencontré en testant : ne jamais nommer une variable PL/pgSQL comme la colonne qu'elle reçoit (`select pseudo into pseudo from profiles` → `column reference "pseudo" is ambiguous`). Toujours qualifier la source (`select p.pseudo into v_pseudo from profiles p`).
+- 🔴 Bug de production trouvé (indépendant du journal, corrigé au passage) : `guild_join`/`guild_approve` inséraient `role='member'`, rejeté par une contrainte plus récente (`guild_ranks.sql`) qui n'autorise que `leader/g1/g2/g3/g4`. Personne ne pouvait plus rejoindre une guilde. Corrigé en `role='g4'`.
+- Méthode de test utile pour la suite : impersonation directe en SQL (`select set_config('request.jwt.claims', json_build_object('sub','<uuid>')::text, true)`) sur un compte bot jamais affecté à une guilde — permet de tester les RPC `SECURITY DEFINER` de bout en bout sans navigateur ni compte réel, en restant sans risque pour les données de Wurmz/Musashi.

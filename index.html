@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.100.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.101.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3943,8 +3943,18 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.100.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.101.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.101.0 &mdash; 17 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; GUILDE — journal collectif + r&eacute;paration d'un bug d'inscription</li>
+        <li>Nouvel &eacute;cran &#171;&#160;Journal de guilde&#160;&#187; : fondation, arriv&eacute;es, d&eacute;parts, exclusions, changements de grade et D&eacute;fis inter-guildes sont d&eacute;sormais trac&eacute;s et consultables par tous les membres.</li>
+        <li>Bug corrig&eacute; au passage : depuis la mise en place des grades personnalis&eacute;s, rejoindre une guilde (en direct ou via validation du chef) &eacute;chouait toujours c&ocirc;t&eacute; serveur — plus personne ne pouvait int&eacute;grer de guilde. R&eacute;par&eacute;.</li>
+        <li>Premi&egrave;re brique utile ind&eacute;pendamment (lot G1) du futur mode Combat de guilde — voir docs/ROADMAP_GUILD_BATTLE.md.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -7372,6 +7382,48 @@ async function openGuildRoster(gid){
     document.getElementById('guild-roster-box').innerHTML = h;
   }catch(e){ var box=document.getElementById('guild-roster-box'); if(box) box.innerHTML='<div style="text-align:center;opacity:.6;font-family:VT323,monospace;padding:14px">Roster indisponible (guild_admin.sql exécuté ?).</div>'; }
 }
+// Horodatage relatif court, même échelle que lastSeenText (min/h/j).
+function journalAgoText(iso){
+  var min = (Date.now() - new Date(iso).getTime())/60000;
+  if(min < 1) return 'à l\'instant';
+  if(min < 60) return 'il y a '+Math.max(1,Math.round(min))+' min';
+  var h = min/60;
+  if(h < 24) return 'il y a '+Math.round(h)+' h';
+  return 'il y a '+Math.round(h/24)+' j';
+}
+// Journal de guilde (lot G1, docs/ROADMAP_GUILD_BATTLE.md) : historique
+// collectif en lecture seule — toute écriture passe par guild_journal_log()
+// côté serveur (jamais depuis le client, cf. sql_a_executer/guild_journal.sql).
+async function openGuildJournal(){
+  var ov = document.getElementById('guild-journal-overlay');
+  if(ov) ov.remove();
+  ov = document.createElement('div');
+  ov.id = 'guild-journal-overlay';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:900;background:rgba(6,4,3,.82);display:flex;align-items:center;justify-content:center;padding:18px';
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+  ov.innerHTML = '<div style="background:linear-gradient(160deg,#1a130a,#0c0906);border:1px solid rgba(212,160,23,.4);border-radius:12px;max-width:360px;width:100%;max-height:86vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px" id="guild-journal-box"><div style="text-align:center;opacity:.6;font-family:VT323,monospace;padding:14px">Chargement…</div></div>';
+  document.body.appendChild(ov);
+  try{
+    var r = await supa.rpc('guild_journal_list', { p_limit: 50 });
+    var rows = (r && r.data) || [];
+    var h = '<div style="font-family:\'Cinzel\',serif;font-size:15px;color:var(--gold-bright);margin-bottom:10px;text-align:center">📜 Journal de guilde</div>';
+    if(!rows.length){
+      h += '<div style="text-align:center;padding:14px;opacity:.5;font-family:VT323,monospace">Rien à signaler pour l\'instant.</div>';
+    } else {
+      h += rows.map(function(e){
+        return '<div style="padding:7px 8px;border-bottom:1px solid rgba(200,168,110,.1)">'
+          + '<div style="font-family:VT323,monospace;font-size:13px;color:var(--parchment)">'+escapeHtml(e.message)+'</div>'
+          + '<div style="font-family:VT323,monospace;font-size:10px;color:var(--gold);opacity:.5;margin-top:1px">'+journalAgoText(e.created_at)+'</div>'
+        + '</div>';
+      }).join('');
+    }
+    h += '<button class="btn" style="width:100%;font-size:12px;padding:9px;margin-top:12px" onclick="var o=document.getElementById(\'guild-journal-overlay\');if(o)o.remove()">Fermer</button>';
+    document.getElementById('guild-journal-box').innerHTML = h;
+  }catch(e){
+    var box = document.getElementById('guild-journal-box');
+    if(box) box.innerHTML = '<div style="text-align:center;opacity:.6;font-family:VT323,monospace;padding:14px">Journal indisponible (guild_journal.sql exécuté ?).</div>';
+  }
+}
 // Grades de guilde (g1..g4) : rang 1 = le plus gradé. Renvoie null pour
 // 'leader' (hors échelle, toujours au-dessus).
 function guildRankNum(role){ return (role && /^g[1-4]$/.test(role)) ? +role[1] : null; }
@@ -7399,6 +7451,7 @@ function renderMyGuild(data){
     + '<button class="btn" style="flex:1;font-size:11px;padding:7px" onclick="_guildView=\'list\';refreshGuildScreen()">🏆 Autres guildes</button>'
     + '<button class="btn" style="flex:1;font-size:11px;padding:7px" onclick="openGuildTournaments('+g.id+','+isLeader+')">⚔ Défis inter-guildes</button>'
     + '</div>';
+  html += '<button class="btn" style="width:100%;font-size:11px;padding:7px;margin-bottom:10px" onclick="openGuildJournal()">📜 Journal de guilde</button>';
   if(isLeader){
     html += '<button class="btn" style="width:100%;font-size:11px;padding:7px;margin-bottom:10px" onclick="openGuildRanksEditor()">⚙ Gérer les grades</button>';
   }
@@ -8679,7 +8732,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.100.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.101.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -8911,7 +8964,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.100.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.101.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -9134,7 +9187,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.100.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.101.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -13126,7 +13179,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.100.0';
+var DEVLOG_LATEST = 'V0.101.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
