@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.106.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.107.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3943,8 +3943,17 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.106.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.107.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.107.0 &mdash; 17 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; GUILDE — le classement passe &agrave; l'Elo de guilde</li>
+        <li>Le classement des guildes ne trie plus sur le Ryu accumul&eacute; (un cumul qui ne descend jamais) mais sur un vrai Elo de guilde, qui d&eacute;marre &agrave; 1200 et &eacute;volue avec les r&eacute;sultats. Le Ryu reste affich&eacute; comme tr&eacute;sorerie de la guilde. Le D&eacute;fi inter-guildes (48h) fait d&eacute;j&agrave; bouger cet Elo.</li>
+        <li>Neuvi&egrave;me brique (lot G7) du chantier Combat de guilde — voir docs/ROADMAP_GUILD_BATTLE.md.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -7254,7 +7263,7 @@ async function renderGuildList(){
       return '<div class="guild-row" data-gname="'+escapeHtml((g.name||'').toLowerCase())+'" style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.22);border-radius:7px;padding:8px 11px;margin-bottom:5px">'
         + '<span style="font-family:VT323,monospace;font-size:13px;color:var(--gold);width:26px;flex-shrink:0">'+podium+'</span>'
         + '<div style="flex:1;min-width:0"><div style="font-family:\'Cinzel\',serif;font-size:12px;color:var(--gold-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+modeIcon+' '+escapeHtml(g.name)+' <span style="opacity:.5">['+escapeHtml(g.tag||'')+']</span></div>'
-        + '<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.55;white-space:nowrap">🐉 '+g.ryu_total+' · '+g.members+'/20 membres</div></div>'
+        + '<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.55;white-space:nowrap">⚔ '+(g.guild_elo||1200)+' Elo · 🐉 '+g.ryu_total+' · '+g.members+'/20 membres</div></div>'
         + '<button class="btn" style="font-size:10px;padding:5px 8px;width:auto;flex-shrink:0;margin:0;opacity:.85" onclick="openGuildRoster('+g.id+')" title="Voir le roster">👁</button>'
         + '<button class="btn" style="font-size:10px;padding:5px 9px;width:auto;flex-shrink:0;margin:0" onclick="joinGuild('+g.id+')">'+(g.join_mode==='open'?'Rejoindre':'Demander')+'</button>'
       + '</div>';
@@ -7419,7 +7428,7 @@ async function openGuildRoster(gid){
       + '<span style="font-size:26px">'+escapeHtml(em)+'</span>'
       + '<div style="flex:1;min-width:0"><div style="font-family:\'Cinzel\',serif;font-size:15px;color:#ffe9a8">'+escapeHtml(g.name)+' <span style="opacity:.5;font-size:11px">['+escapeHtml(g.tag||'')+']</span></div>'
       + (g.devise?'<div style="font-family:VT323,monospace;font-size:11px;color:#ffe9a8;opacity:.8;font-style:italic">« '+escapeHtml(g.devise)+' »</div>':'')+'</div></div>';
-    h += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.6;margin-bottom:6px">🐉 '+g.ryu_total+' Ryu collectif · '+members.length+'/20 membres</div>';
+    h += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.6;margin-bottom:6px">⚔ '+(g.guild_elo||1200)+' Elo · 🐉 '+g.ryu_total+' Ryu collectif · '+members.length+'/20 membres</div>';
     h += members.map(function(m){
       var crown = m.role==='leader' ? '👑 ' : '';
       return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-bottom:1px solid rgba(200,168,110,.1)">'
@@ -7489,7 +7498,7 @@ function renderMyGuild(data){
   var myRankNum = isLeader ? 0 : guildRankNum(data.my_role);
   var html = '<div style="text-align:center;margin-bottom:8px">'
     + '<div style="font-family:\'Cinzel\',serif;font-size:16px;color:var(--gold-bright)">'+escapeHtml(g.name)+' <span style="opacity:.5;font-size:12px">['+escapeHtml(g.tag||'')+']</span></div>'
-    + '<div style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.6">🐉 '+g.ryu_total+' Ryu collectif · '+(g.join_mode==='open'?'🔓 Ouverte':'🔒 Sur demande')+'</div></div>';
+    + '<div style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.6">⚔ '+(g.guild_elo||1200)+' Elo · 🐉 '+g.ryu_total+' Ryu collectif · '+(g.join_mode==='open'?'🔓 Ouverte':'🔒 Sur demande')+'</div></div>';
   // Identité de guilde (bannière + devise + message d'info du chef), visible
   // de tous les membres ; le chef a en plus le bouton « Gérer ».
   _guildIdentityCache = g;
@@ -9187,7 +9196,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.106.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.107.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -9419,7 +9428,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.106.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.107.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -9642,7 +9651,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.106.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.107.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -13634,7 +13643,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.106.0';
+var DEVLOG_LATEST = 'V0.107.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
