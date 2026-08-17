@@ -99,10 +99,10 @@ Le projet a déjà payé un flottement de nommage avec « Combattant ».
 
 ---
 
-## 3. 🔴 Le prérequis : rendre Monban réactif (lot G0)
+## 3. ✅ Le prérequis : rendre Monban réactif (lot G0) — LIVRÉ le 2026-08-17
 
-**C'est le vrai morceau d'ingénierie de ce chantier, et rien ne peut être
-construit dessus tant qu'il n'est pas validé.**
+**C'était le vrai morceau d'ingénierie de ce chantier — construit et validé.**
+Rien d'autre du chantier Combat de guilde n'est codé (G1-G8 restent à faire).
 
 ### Le problème, chiffré
 
@@ -172,15 +172,47 @@ du projet rappelée dans `CLAUDE.md`, un pseudo étant usurpable.
 ⚠️ Ce débridage vaut aussi, plus tard, pour les cooldowns d'attaque de guilde
 (décision V) : mêmes raisons, même implémentation.
 
-### Ce qu'il reste à trancher au moment de coder
+### Ce qui a été construit et vérifié (2026-08-17)
 
-- `new Function` est-il autorisé dans le runtime Deno de Supabase ? **À
-  éprouver en premier** — si la réponse est non, tout le lot change de forme
-  (repli : un worker long démarré à l'avance, qui ne couvrirait alors PAS les
-  invasions spontanées).
-- Coût d'un `fetch` de 1,4 Mo au démarrage à froid, et fréquence réelle de ces
-  démarrages.
-- Où vit le secret `service_role` de la fonction.
+- **`invasion_admin_unlimited.sql`** (exécuté) : `invasion_authorize` réécrite,
+  bypass admin dans les deux sens, bouclier toujours respecté. Vérifié en base
+  (`profiles.is_admin=true` pour Wurmz et Musashi).
+- **`new Function` fonctionne dans l'Edge Runtime Deno de Supabase** — validé
+  via une fonction jetable (`monban-move-test`, toujours déployée, purement
+  diagnostique) : `fetch()` a chargé les 1,99 Mo d'`index.html` depuis GitHub
+  Pages, extraction + exécution d'une fonction réelle réussies. Le risque #1
+  ci-dessus n'existe plus.
+- **Edge Function `monban-move`** déployée (`verify_jwt=false` + secret
+  partagé statique dans le code — ce n'est PAS une frontière de sécurité, voir
+  commentaire en tête du fichier ; le pire abus possible est de faire jouer un
+  coup Monban légal en avance). Reprend exactement `ENGINE_NAMES`/`extractFn`
+  de `scripts/bot-army.mjs`, source chargée par `fetch` au lieu de
+  `readFileSync`, moteur mis en cache en mémoire (TTL 5 min) entre invocations
+  chaudes. Le `service_role` de la fonction n'est jamais transmis en clair :
+  lu via `Deno.env` (injecté automatiquement par le runtime Edge Function) —
+  la question « où vit le secret » ne se posait donc pas.
+- **`invasion_reactive_monban.sql`** (exécuté) : extension `pg_net` activée,
+  trigger `invasion_dispatch_monban_trg` sur `online_games` (`AFTER UPDATE OF
+  turn`) qui appelle `monban-move` de façon asynchrone dès que le tour passe à
+  Noir sur une partie d'invasion active. Ne remplace PAS le worker existant
+  (fenêtre d'acceptation 15 s + nettoyage inchangés) — vient seulement
+  accélérer le cas où Monban doit déjà jouer.
+- **Test de bout en bout** : trigger confirmé déclenché (`net._http_response`,
+  200, ~2 s après l'écriture) sur une partie d'invasion fabriquée. Le pipeline
+  réseau + auth + garde côté fonction est donc prouvé en conditions réelles.
+  🟡 Nuance honnête : le worker `bot-army.mjs` tournait EN DIRECT pendant le
+  test (job GitHub Actions actif, cron 10 min) et a gagné la course à chaque
+  fois — mon coup n'a donc jamais été le premier à s'exécuter dans ce test
+  précis. La logique de jeu elle-même (`botChooseAndApply` sur cette position)
+  est validée indirectement : c'est le worker qui l'a exécutée avec succès sur
+  le même état, via un algorithme identique. Ce qui reste non prouvé par un
+  test isolé (mais découle directement des deux briques déjà validées
+  séparément) : `monban-move` gagnant effectivement la course et écrivant le
+  coup lui-même. À reconfirmer la prochaine fois qu'une invasion réelle passe
+  par Monban en dehors d'une fenêtre où le worker cron est actif.
+- Coût du `fetch` à froid (~2 Mo) : non mesuré précisément dans ce test, à
+  surveiller si la fréquence d'invasion augmente — le cache 5 min limite déjà
+  l'impact aux démarrages à froid de l'isolate.
 
 ---
 
