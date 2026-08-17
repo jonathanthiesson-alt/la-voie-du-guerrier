@@ -155,8 +155,16 @@ navigation, boucle quotidienne, entraînement, adversaires IA, compétition
 
 **Tournois : résolus et validés en conditions réelles (2026-07-14).**
 Automatisation serveur complète (pg_cron), clôture des inscriptions réservée
-au créateur, forfaits automatiques. **Prochain sujet : les guildes** (test à
-2 comptes). Voir `docs/TESTING.md` pour les protocoles et les leçons apprises.
+au créateur, forfaits automatiques. Voir `docs/TESTING.md` pour les
+protocoles et les leçons apprises.
+
+**Combat de guilde (G0→G8) : fonctionnellement complet, testé bot par bot
+(2026-08-18).** Tournoi interne, Confrontation amicale et Attaque de guilde
+partagent le même moteur de combat séquentiel façon Tekken. **Prochain
+sujet : test à 2 comptes humains** (voir `docs/ROADMAP_GUILD_BATTLE.md` § 10
+pour le détail des lots, et deux limitations connues à traiter avant mise en
+avant publique : substitution Monban en défense d'attaque non construite,
+filtrage des quêtes quotidiennes/1ʳᵉ victoire du jour à corriger).
 
 Voir `docs/ROADMAP.md` pour les 6 axes.
 

@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.107.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.108.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3943,8 +3943,17 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.107.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.108.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.108.0 &mdash; 18 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; GUILDE — Attaque de guilde (le chantier Combat de guilde est complet)</li>
+        <li>Le chef d&eacute;clare une attaque contre une guilde adverse, cibl&eacute;e par tranche de classement (&agrave; son niveau / plus forte / plus faible). Combat d'&eacute;quipe fa&ccedil;on Tekken avec un vrai enjeu cette fois : 10 🐉 vol&eacute;s &agrave; la guilde vaincue, Elo de guilde en jeu. Cooldowns : une guilde attaque au plus 1×/semaine, et ne peut &ecirc;tre attaqu&eacute;e plus d'1×/4 jours.</li>
+        <li>Dixi&egrave;me et derni&egrave;re brique (lot G8) du chantier Combat de guilde — voir docs/ROADMAP_GUILD_BATTLE.md. Une limitation connue reste &agrave; traiter avant mise en avant publique (substitution Monban en d&eacute;fense) : d&eacute;tail dans le fichier.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -7511,6 +7520,7 @@ function renderMyGuild(data){
   html += '<button class="btn" style="width:100%;font-size:11px;padding:7px;margin-bottom:10px" onclick="openGuildJournal()">📜 Journal de guilde</button>';
   html += '<button class="btn" style="width:100%;font-size:11px;padding:7px;margin-bottom:10px" onclick="openGuildInternalTournament('+g.id+','+isLeader+')">🥋 Tournoi interne</button>';
   html += '<button class="btn" style="width:100%;font-size:11px;padding:7px;margin-bottom:10px" onclick="openGuildFriendlyMatches('+g.id+','+isLeader+')">🤝 Confrontation amicale</button>';
+  html += '<button class="btn" style="width:100%;font-size:11px;padding:7px;margin-bottom:10px;border-color:rgba(200,80,80,.35);color:#f0a0a0" onclick="openGuildAttacks('+g.id+','+isLeader+')">⚔ Attaque de guilde</button>';
   if(isLeader){
     html += '<button class="btn" style="width:100%;font-size:11px;padding:7px;margin-bottom:10px" onclick="openGuildRanksEditor()">⚙ Gérer les grades</button>';
   }
@@ -8091,6 +8101,141 @@ async function cancelFriendlyEvent(eventId, myGuildId, isLeader){
   }catch(e){ showToast('Erreur.', true); }
   openGuildFriendlyMatches(myGuildId, isLeader);
 }
+// ── Attaque de guilde (lot G8, docs/ROADMAP_GUILD_BATTLE.md § 7) ───────
+// Contrairement à l'amical, l'attaque ne se négocie PAS : le chef
+// déclare, le cooldown (1×/semaine attaquant, 1×/4j défenseur — décision
+// V) et le ciblage par tranche de classement (décision AG, même patron
+// que les invasions individuelles) remplacent l'étape d'acceptation.
+var _guildAttackTranche = 'near';
+function guildAttackSelectTranche(tr, myGuildId, isLeader){
+  _guildAttackTranche = tr;
+  openGuildAttacks(myGuildId, isLeader);
+}
+async function openGuildAttacks(myGuildId, isLeader){
+  var body = document.getElementById('guild-body');
+  if(!body) return;
+  body.innerHTML='<div style="text-align:center;padding:14px;opacity:.5;font-family:VT323,monospace">Chargement…</div>';
+  try{
+    const { data: events } = await supa.rpc('guild_event_list_mine');
+    var html = '<button class="btn" style="width:100%;font-size:11px;padding:6px;opacity:.7;margin-bottom:8px" onclick="_guildView=\'auto\';refreshGuildScreen()">↩ Ma guilde</button>';
+    html += '<div style="background:rgba(200,80,80,.07);border:1px solid rgba(200,80,80,.25);border-radius:6px;padding:8px 10px;margin-bottom:10px;font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.85;line-height:1.4">'
+      + '⚔ Combat d\'équipe façon Tekken, avec enjeu : la guilde vaincue perd <b>10 🐉</b> (volés par la victorieuse) et de l\'<b>Elo de guilde</b>. Une guilde attaque au plus <b>1×/semaine</b>, et ne peut être attaquée plus d\'<b>1×/4 jours</b>. Défense vide ou effectif attaquant insuffisant : l\'attaque est annulée, 5 🐉 changent de main.</div>';
+
+    var attacks = (events||[]).filter(function(e){ return e.kind==='attack'; });
+
+    if(isLeader){
+      html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.7;margin-bottom:5px;letter-spacing:1px">⚔ CHOISIR UNE CIBLE</div>';
+      html += '<div id="gatk-tranche-row" style="display:flex;gap:6px;margin-bottom:8px">'
+        + ['near','up','down'].map(function(tr){
+            var lbl = tr==='near' ? 'À mon niveau' : tr==='up' ? 'Plus forte' : 'Plus faible';
+            var sel = _guildAttackTranche===tr;
+            return '<button class="btn" style="flex:1;font-size:10px;padding:6px;'+(sel?'border-color:var(--gold-bright);color:var(--gold-bright)':'opacity:.7')+'" onclick="guildAttackSelectTranche(\''+tr+'\','+myGuildId+','+isLeader+')">'+lbl+'</button>';
+          }).join('')
+        + '</div>';
+      html += '<div id="gatk-candidates-list"><div style="text-align:center;padding:8px;opacity:.5;font-family:VT323,monospace;font-size:11px">Chargement des cibles…</div></div>';
+      html += '<div style="display:flex;gap:6px;margin:8px 0 6px">'
+        +   '<input type="datetime-local" id="gatk-starts" style="flex:1;background:rgba(0,0,0,.3);border:1px solid rgba(200,168,110,.3);border-radius:4px;color:var(--parchment);padding:7px;font-family:VT323,monospace;font-size:12px">'
+        +   '<select id="gatk-cadence" style="background:rgba(0,0,0,.3);border:1px solid rgba(200,168,110,.3);border-radius:4px;color:var(--parchment);padding:7px;font-family:VT323,monospace;font-size:12px">'
+        +     '<option value="3">3s</option><option value="5" selected>5s</option><option value="10">10s</option>'
+        +   '</select>'
+        + '</div>';
+      html += '<div style="font-family:VT323,monospace;font-size:10px;color:var(--parchment);opacity:.5;margin-bottom:10px">Choisis une cible ci-dessus, puis une date (15 min à 48h).</div>';
+    }
+
+    html += '<div style="font-family:VT323,monospace;font-size:11px;color:var(--gold);opacity:.6;margin-bottom:5px;letter-spacing:1px">ATTAQUES</div>';
+    if(!attacks.length){ html += '<div style="text-align:center;padding:12px;opacity:.5;font-family:VT323,monospace">Aucune attaque en cours.</div>'; }
+    else {
+      html += attacks.map(function(ev){
+        var d = new Date(ev.starts_at);
+        var dstr = d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'}) + ' à ' + d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+        var iAmAttacker = ev.guild_a===myGuildId;
+        var role = iAmAttacker ? '⚔ vous attaquez' : '🛡 vous défendez';
+        var action = '';
+        if(ev.status==='scheduled'){
+          action = ev.i_am_registered
+            ? '<button class="btn" style="font-size:10px;padding:4px 10px;width:auto;flex-shrink:0;margin:0;opacity:.8" onclick="unregisterFriendlyEvent('+ev.id+','+myGuildId+','+isLeader+')">Se désinscrire</button>'
+            : '<button class="btn" style="font-size:10px;padding:4px 10px;width:auto;flex-shrink:0;margin:0" onclick="registerAttackEvent('+ev.id+','+myGuildId+','+isLeader+')">'+(iAmAttacker?'S\'inscrire (attaque)':'S\'inscrire (défense)')+'</button>';
+        } else {
+          action = '<button class="btn" style="font-size:10px;padding:4px 10px;width:auto;flex-shrink:0;margin:0" onclick="openGuildEventRoster('+ev.id+','+myGuildId+','+isLeader+')">Voir</button>';
+        }
+        var cancelBtn = (isLeader && iAmAttacker && ev.status==='scheduled')
+          ? '<button class="btn" style="font-size:10px;padding:4px 8px;width:auto;flex-shrink:0;margin:0 0 0 4px;border-color:rgba(200,80,80,.4);color:#f08080" onclick="cancelAttackEvent('+ev.id+','+myGuildId+','+isLeader+')" title="Annuler (jusqu\'à 1h avant)">✕</button>'
+          : '';
+        return '<div style="background:rgba(0,0,0,.22);border-radius:6px;padding:8px 10px;margin-bottom:6px">'
+          + '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:3px">'
+          +   '<span style="font-family:\'Cinzel\',serif;font-size:12px;color:var(--gold-bright)">'+role+' · vs '+escapeHtml(ev.opponent_guild_name||'?')+' · '+dstr+'</span>'
+          + '</div>'
+          + '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px">'
+          +   '<span style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.7">'+guildEventStatusLabel(ev.status)+'</span>'
+          +   '<span style="flex-shrink:0">'+action+cancelBtn+'</span>'
+          + '</div>'
+        + '</div>';
+      }).join('');
+    }
+    body.innerHTML = html;
+    if(isLeader) guildAttackLoadCandidates(myGuildId, isLeader);
+  }catch(e){ body.innerHTML='<div style="text-align:center;padding:14px;opacity:.6;font-family:VT323,monospace">Attaque de guilde indisponible (guild_events_g8_attack.sql exécuté ?).</div>'; }
+}
+async function guildAttackLoadCandidates(myGuildId, isLeader){
+  var el = document.getElementById('gatk-candidates-list');
+  if(!el) return;
+  try{
+    const { data: mine } = await supa.from('v_guild_leaderboard').select('guild_elo').eq('id', myGuildId).single();
+    var myElo = (mine && mine.guild_elo) || 1200;
+    var min, max;
+    if(_guildAttackTranche==='near'){ min = myElo-100; max = myElo+100; }
+    else if(_guildAttackTranche==='up'){ min = myElo+100; max = myElo+300; }
+    else { min = myElo-300; max = myElo-100; }
+    const { data: cands } = await supa.rpc('guild_attack_candidates', { p_elo_min: min, p_elo_max: max });
+    if(!cands || !cands.length){ el.innerHTML = '<div style="text-align:center;padding:8px;opacity:.5;font-family:VT323,monospace;font-size:11px">Aucune cible dans cette tranche (protégée, déjà en guerre, ou hors ligne récemment).</div>'; return; }
+    el.innerHTML = cands.map(function(c){
+      return '<div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.22);border-radius:6px;padding:7px 10px;margin-bottom:4px">'
+        + '<span style="flex:1;min-width:0;font-family:VT323,monospace;font-size:12px;color:var(--parchment);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHtml(c.name)+' ['+escapeHtml(c.tag||'')+'] · ⚔ '+c.guild_elo+'</span>'
+        + '<button class="btn" style="font-size:10px;padding:4px 10px;width:auto;flex-shrink:0;margin:0;border-color:rgba(200,80,80,.4);color:#f0a0a0" onclick="declareGuildAttack('+c.id+','+myGuildId+','+isLeader+')">Attaquer</button>'
+      + '</div>';
+    }).join('');
+  }catch(e){ el.innerHTML = '<div style="text-align:center;padding:8px;opacity:.5;font-family:VT323,monospace;font-size:11px">Cibles indisponibles.</div>'; }
+}
+async function declareGuildAttack(targetGuildId, myGuildId, isLeader){
+  var startsEl = document.getElementById('gatk-starts'), cadEl = document.getElementById('gatk-cadence');
+  if(!startsEl || !startsEl.value){ showToast('Choisis une date de début.', true); return; }
+  var starts = new Date(startsEl.value).toISOString();
+  var cadence = parseInt(cadEl.value, 10) || 5;
+  if(!confirm('Déclarer une attaque ? Cooldown d\'1 semaine, engagement définitif au-delà de 1h avant le début.')) return;
+  try{
+    const { data } = await supa.rpc('guild_attack_declare', { p_target_guild_id: targetGuildId, p_cadence: cadence, p_starts_at: starts });
+    if(data && data.ok){ showToast('⚔ Attaque déclarée !', false); }
+    else {
+      var why = (data && data.reason) || '?';
+      var msg = why==='attacker_cooldown' ? 'Votre guilde a déjà attaqué cette semaine.'
+        : why==='target_cooldown' ? 'Cette guilde a déjà été attaquée récemment (protection 4 jours).'
+        : why==='busy' ? 'Une attaque est déjà en cours (ou en attente) pour l\'une des deux guildes.'
+        : why==='too_soon' ? 'La date doit être au moins dans 15 minutes.'
+        : why==='too_far' ? 'La date ne peut pas dépasser 48 h.'
+        : 'Déclaration impossible ('+why+').';
+      showToast(msg, true);
+    }
+  }catch(e){ showToast('Erreur (guild_events_g8_attack.sql exécuté ?).', true); }
+  openGuildAttacks(myGuildId, isLeader);
+}
+async function registerAttackEvent(eventId, myGuildId, isLeader){
+  try{
+    const { data } = await supa.rpc('guild_event_register', { p_event_id: eventId });
+    if(data && data.ok){ showToast('Inscrit !', false); }
+    else showToast('Inscription impossible.', true);
+  }catch(e){ showToast('Erreur.', true); }
+  openGuildAttacks(myGuildId, isLeader);
+}
+async function cancelAttackEvent(eventId, myGuildId, isLeader){
+  if(!confirm('Annuler cette attaque ? 5 🐉 seront versés à la guilde ciblée en dédommagement, le cooldown reste consommé.')) return;
+  try{
+    const { data } = await supa.rpc('guild_attack_cancel', { p_event_id: eventId });
+    if(data && data.ok){ showToast('Attaque annulée.', false); }
+    else if(data && data.reason==='too_late'){ showToast('Trop tard pour annuler (moins d\'1h avant le début).', true); }
+    else showToast('Annulation impossible.', true);
+  }catch(e){ showToast('Erreur.', true); }
+  openGuildAttacks(myGuildId, isLeader);
+}
 // ── Arbre Tekken (lot G5, docs/ROADMAP_GUILD_BATTLE.md décisions B/C) ──
 // Chaque joueur occupe une position FIXE (équipe+siège, jamais réattribuée
 // pendant le combat) : une flèche par duel joué, du perdant vers le
@@ -8158,8 +8303,8 @@ async function openGuildEventRoster(eventId, myGuildId, isLeader){
     var myRow = parts.find(function(p){ return p.player_id===currentUser.id; });
 
     var isInternal = ev.kind==='internal';
-    var backFn = isInternal ? 'openGuildInternalTournament('+myGuildId+','+isLeader+')' : 'openGuildFriendlyMatches('+myGuildId+','+isLeader+')';
-    var backLabel = isInternal ? '↩ Tournoi interne' : '↩ Confrontation amicale';
+    var backFn = isInternal ? 'openGuildInternalTournament('+myGuildId+','+isLeader+')' : ev.kind==='attack' ? 'openGuildAttacks('+myGuildId+','+isLeader+')' : 'openGuildFriendlyMatches('+myGuildId+','+isLeader+')';
+    var backLabel = isInternal ? '↩ Tournoi interne' : ev.kind==='attack' ? '↩ Attaque de guilde' : '↩ Confrontation amicale';
     var labelA = isInternal ? '⚔ ÉQUIPE A' : '⚔ '+(ev.guild_a_name||'Équipe A');
     var labelB = isInternal ? '⚔ ÉQUIPE B' : '⚔ '+(ev.guild_b_name||'Équipe B');
     var svgLabelA = isInternal ? 'ÉQUIPE A' : (ev.guild_a_name||'ÉQUIPE A');
@@ -9196,7 +9341,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.107.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.108.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -9428,7 +9573,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.107.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.108.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -9651,7 +9796,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.107.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.108.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -13643,7 +13788,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.107.0';
+var DEVLOG_LATEST = 'V0.108.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -13722,7 +13867,7 @@ async function villageRefreshBadges(){
   // Un MP crée une notif type 'message' (trigger trg_notify_new_message) →
   // on compte les notifs, PAS direct_messages, sinon on double-compterait
   // chaque MP.
-  try{ var r = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false).in('type',['challenge','tournament_game','invasion_incoming','invasion_won','invasion_lost','invasion_defended','invasion_repelled','guild_war_accepted','guild_war_won','guild_war_lost','guild_war_draw','guild_event_announced','guild_event_registration_closed','guild_event_starting','guild_event_your_turn','guild_event_result','guild_event_challenge_received','guild_event_challenge_declined']); setB('arene', r.count||0); }catch(e){ setB('arene',0); }
+  try{ var r = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false).in('type',['challenge','tournament_game','invasion_incoming','invasion_won','invasion_lost','invasion_defended','invasion_repelled','guild_war_accepted','guild_war_won','guild_war_lost','guild_war_draw','guild_event_announced','guild_event_registration_closed','guild_event_starting','guild_event_your_turn','guild_event_result','guild_event_challenge_received','guild_event_challenge_declined','guild_attack_declared','guild_attack_cancelled']); setB('arene', r.count||0); }catch(e){ setB('arene',0); }
   try{ var m = await supa.from('notifications').select('id',{count:'exact',head:true}).eq('user_id',currentUser.id).eq('read',false).in('type',['message','friend_request']); setB('auberge', m.count||0); }catch(e){ setB('auberge',0); }
 }
 // Aiguillage central : en thème Village, un « retour » d'écran ne doit JAMAIS
@@ -15109,10 +15254,11 @@ async function openNotificationsModal(){
       list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--parchment);opacity:.5;font-family:VT323,monospace">'+t('notif_empty')+'</div>';
     } else {
       list.innerHTML = data.map(function(n){
-        var icon = n.type==='challenge' ? '&#9876;' : n.type==='message' ? '&#128172;' : n.type==='friend_request' ? '&#128101;' : n.type==='rematch' ? '&#128260;' : n.type==='league' ? '&#127942;' : n.type==='devlog'||n.type==='cosmetic'||n.type==='system'||n.type==='tuto' ? '&#128220;' : n.type==='quest'||n.type==='daily_quest' ? '&#128221;' : n.type==='invasion_incoming'||n.type==='invasion_won'||n.type==='invasion_lost' ? '&#9876;' : n.type==='invasion_defended'||n.type==='invasion_repelled' ? '&#128737;' : n.type==='guild_war_accepted' ? '&#9876;' : n.type==='guild_war_won' ? '&#127942;' : n.type==='guild_war_lost'||n.type==='guild_war_draw' ? '&#128737;' : n.type==='guild_event_announced'||n.type==='guild_event_registration_closed' ? '&#128197;' : n.type==='guild_event_starting' ? '&#128682;' : n.type==='guild_event_your_turn' ? '&#9876;' : n.type==='guild_event_result' ? '&#127942;' : n.type==='guild_event_challenge_received' ? '&#129309;' : n.type==='guild_event_challenge_declined' ? '&#128683;' : '&#128276;';
+        var icon = n.type==='challenge' ? '&#9876;' : n.type==='message' ? '&#128172;' : n.type==='friend_request' ? '&#128101;' : n.type==='rematch' ? '&#128260;' : n.type==='league' ? '&#127942;' : n.type==='devlog'||n.type==='cosmetic'||n.type==='system'||n.type==='tuto' ? '&#128220;' : n.type==='quest'||n.type==='daily_quest' ? '&#128221;' : n.type==='invasion_incoming'||n.type==='invasion_won'||n.type==='invasion_lost' ? '&#9876;' : n.type==='invasion_defended'||n.type==='invasion_repelled' ? '&#128737;' : n.type==='guild_war_accepted' ? '&#9876;' : n.type==='guild_war_won' ? '&#127942;' : n.type==='guild_war_lost'||n.type==='guild_war_draw' ? '&#128737;' : n.type==='guild_event_announced'||n.type==='guild_event_registration_closed' ? '&#128197;' : n.type==='guild_event_starting' ? '&#128682;' : n.type==='guild_event_your_turn' ? '&#9876;' : n.type==='guild_event_result' ? '&#127942;' : n.type==='guild_event_challenge_received' ? '&#129309;' : n.type==='guild_event_challenge_declined' ? '&#128683;' : n.type==='guild_attack_declared' ? '&#9876;' : n.type==='guild_attack_cancelled' ? '&#128737;' : '&#128276;';
         var catColor = notifCatColor(n.type);
-        var clickable = (n.type==='message' || n.type==='friend_request' || n.type==='challenge' || n.type==='guild_war_accepted' || n.type==='guild_war_won' || n.type==='guild_war_lost' || n.type==='guild_war_draw' || n.type==='guild_event_announced' || n.type==='guild_event_registration_closed' || n.type==='guild_event_starting' || n.type==='guild_event_your_turn' || n.type==='guild_event_result' || n.type==='guild_event_challenge_received' || n.type==='guild_event_challenge_declined');
-        var onclickAttr = clickable ? ' onclick="handleNotificationClick(\''+n.type+'\',\''+String(n.ref_id||'').replace(/'/g,"\\'")+'\',\''+String(n.title||'').replace(/'/g,"\\'")+'\')"' : '';
+        var clickable = (n.type==='message' || n.type==='friend_request' || n.type==='challenge' || n.type==='guild_war_accepted' || n.type==='guild_war_won' || n.type==='guild_war_lost' || n.type==='guild_war_draw' || n.type==='guild_event_announced' || n.type==='guild_event_registration_closed' || n.type==='guild_event_starting' || n.type==='guild_event_your_turn' || n.type==='guild_event_result' || n.type==='guild_event_challenge_received' || n.type==='guild_event_challenge_declined' || n.type==='guild_attack_declared' || n.type==='guild_attack_cancelled');
+        var evId = (n.payload && n.payload.event_id) ? parseInt(n.payload.event_id,10) : 'null';
+        var onclickAttr = clickable ? ' onclick="handleNotificationClick(\''+n.type+'\',\''+String(n.ref_id||'').replace(/'/g,"\\'")+'\',\''+String(n.title||'').replace(/'/g,"\\'")+'\','+evId+')"' : '';
         return '<div class="'+(clickable?'notif-row-clickable':'')+'"'+onclickAttr+' style="display:flex;gap:10px;padding:10px;border-left:3px solid '+catColor+';border-bottom:1px solid rgba(200,168,110,.12)'+(n.read?'':';background:rgba(212,160,23,.08)')+'">'
           + '<span style="font-size:18px">'+icon+'</span>'
           + '<div><div style="font-family:Cinzel,serif;font-size:12px;color:var(--gold-bright)">'+escapeHtml(n.title||'')+'</div>'
@@ -15138,7 +15284,7 @@ function closeNotificationsModal(){
 // - challenge     → rouvre le popup de défi (avec infos à jour, joueur/
 //   ELO/cadence) si le défi est encore en attente et dans sa fenêtre de
 //   2 minutes, sinon prévient que ce n'est plus disponible.
-async function handleNotificationClick(type, refId, title){
+async function handleNotificationClick(type, refId, title, eventId){
   closeNotificationsModal();
   if(type==='message'){
     if(!refId) return;
@@ -15156,31 +15302,61 @@ async function handleNotificationClick(type, refId, title){
     if(typeof guildOpenWarFromNotification==='function') guildOpenWarFromNotification();
   } else if(type==='guild_event_announced' || type==='guild_event_registration_closed' || type==='guild_event_starting' || type==='guild_event_result'){
     showScreen('guild');
-    if(typeof guildOpenInternalTournamentFromNotification==='function') guildOpenInternalTournamentFromNotification();
+    if(typeof guildOpenEventByKindFromNotification==='function') guildOpenEventByKindFromNotification(eventId);
   } else if(type==='guild_event_your_turn'){
     if(!refId){ showToast('Ce duel n\'est plus disponible.', true); return; }
     if(typeof joinGuildEventDuel==='function') joinGuildEventDuel(refId);
   } else if(type==='guild_event_challenge_received' || type==='guild_event_challenge_declined'){
     showScreen('guild');
     if(typeof guildOpenFriendlyMatchesFromNotification==='function') guildOpenFriendlyMatchesFromNotification();
+  } else if(type==='guild_attack_declared' || type==='guild_attack_cancelled'){
+    showScreen('guild');
+    if(typeof guildOpenAttacksFromNotification==='function') guildOpenAttacksFromNotification();
   }
 }
-// Routage depuis une notif de Tournoi interne : rouvre directement l'écran
-// dédié (pas juste « ma guilde »), même patron que guildOpenWarFromNotification.
-async function guildOpenInternalTournamentFromNotification(){
+// Routage depuis une notif partagée par les 3 systèmes « guild_event_* »
+// (Tournoi interne / Confrontation amicale / Attaque) : ces types ne
+// distinguent pas le kind dans leur nom (contrairement à guild_war_* ou
+// guild_attack_*), donc SANS l'event_id on ne peut pas savoir quel écran
+// rouvrir — décision D : ne jamais laisser le joueur atterrir au mauvais
+// endroit entre les trois systèmes portant le mot « guilde ». L'event_id
+// vient de n.payload.event_id (voir openNotificationsModal), on relit
+// l'événement pour connaître son kind avant de router.
+async function guildOpenEventByKindFromNotification(eventId){
   if(typeof supa==='undefined' || !supa || !currentUser) return;
   try{
     const { data } = await supa.rpc('get_my_guild');
-    if(data && data.in_guild && data.guild){ openGuildInternalTournament(data.guild.id, data.my_role==='leader'); }
+    if(!data || !data.in_guild || !data.guild) return;
+    var gid = data.guild.id, isLeader = data.my_role==='leader';
+    var kind = 'internal';
+    if(eventId){
+      try{
+        const st = await supa.rpc('guild_event_state', { p_event_id: eventId });
+        if(st && st.data && st.data.ok && st.data.event) kind = st.data.event.kind;
+      }catch(e){}
+    }
+    if(kind==='attack') openGuildAttacks(gid, isLeader);
+    else if(kind==='friendly') openGuildFriendlyMatches(gid, isLeader);
+    else openGuildInternalTournament(gid, isLeader);
   }catch(e){}
 }
 // Routage depuis une notif de Confrontation amicale (proposition reçue,
-// proposition déclinée) — même patron que guildOpenInternalTournamentFromNotification.
+// proposition déclinée) — ces deux types SONT propres à l'amical, pas
+// besoin de relire le kind.
 async function guildOpenFriendlyMatchesFromNotification(){
   if(typeof supa==='undefined' || !supa || !currentUser) return;
   try{
     const { data } = await supa.rpc('get_my_guild');
     if(data && data.in_guild && data.guild){ openGuildFriendlyMatches(data.guild.id, data.my_role==='leader'); }
+  }catch(e){}
+}
+// Routage depuis une notif d'Attaque de guilde (déclarée/annulée) — types
+// propres à l'attaque, pas besoin de relire le kind.
+async function guildOpenAttacksFromNotification(){
+  if(typeof supa==='undefined' || !supa || !currentUser) return;
+  try{
+    const { data } = await supa.rpc('get_my_guild');
+    if(data && data.in_guild && data.guild){ openGuildAttacks(data.guild.id, data.my_role==='leader'); }
   }catch(e){}
 }
 // Routage depuis une notif de guerre de guilde : rouvre directement l'écran
