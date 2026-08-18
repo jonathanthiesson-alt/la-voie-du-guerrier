@@ -98,12 +98,13 @@
 - [ ] Vérifier que le bouton ✕ (annuler) est bien ABSENT/inopérant pour le
       chef de la guilde défenseure (l'attaque ne se laisse annuler que côté
       attaquant, décision R) — jamais vérifié à l'écran.
-- [ ] 🔴 **Vérifier consciemment la limitation documentée** : faire forfait
-      un défenseur (ne pas rejoindre sa partie) et CONFIRMER QUE Monban NE
-      prend PAS le relais (comportement actuel, différent de la décision F
-      — voir `docs/ROADMAP_GUILD_BATTLE.md` § 10, lot G8). Le forfait
-      élimine simplement le défenseur absent, comme un Tournoi interne.
-      Si Wurmz veut ce mode public, ce point doit être traité avant.
+- [ ] **Vérifier la substitution Monban en réel** (lot G8b, décision F —
+      déjà prouvée par bots avec le vrai pipeline réactif, mais jamais vue
+      à l'écran) : laisser un vrai défenseur ne pas rejoindre sa partie,
+      attendre les 60s réels, vérifier que Monban prend le relais et que
+      le badge 🤖 apparaît bien dans l'arbre Tekken et sur le duel en cours
+      côté attaquant (qui doit voir la partie démarrer normalement malgré
+      l'absence de l'adversaire humain).
 - [ ] Vérifier le classement des guildes (🏆 Autres guildes) : l'Elo de
       guilde affiché change bien de place au classement après une vraie
       attaque, et le Ryu reste affiché en dessous comme trésorerie.

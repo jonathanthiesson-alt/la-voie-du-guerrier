@@ -158,13 +158,13 @@ Automatisation serveur complète (pg_cron), clôture des inscriptions réservée
 au créateur, forfaits automatiques. Voir `docs/TESTING.md` pour les
 protocoles et les leçons apprises.
 
-**Combat de guilde (G0→G8) : fonctionnellement complet, testé bot par bot
-(2026-08-18).** Tournoi interne, Confrontation amicale et Attaque de guilde
-partagent le même moteur de combat séquentiel façon Tekken. **Sujet en
-cours : substitution Monban en défense d'une attaque** (décision F du
-cadrage, seule limitation connue restante — voir
-`docs/ROADMAP_GUILD_BATTLE.md` § 10). Ensuite : test à 2 comptes humains
-(liste dans `docs/TESTS_MANUELS_COMBAT_GUILDE.md`).
+**Combat de guilde (G0→G8b) : fonctionnellement complet, sans limitation
+connue restante, testé bot par bot (2026-08-18).** Tournoi interne,
+Confrontation amicale et Attaque de guilde partagent le même moteur de
+combat séquentiel façon Tekken ; la substitution Monban en défense
+(décision F) est construite et vérifiée avec le vrai pipeline réactif
+(trigger → Edge Function → coup légal joué). **Prochain sujet : test à
+2 comptes humains** (liste dans `docs/TESTS_MANUELS_COMBAT_GUILDE.md`).
 
 Voir `docs/ROADMAP.md` pour les 6 axes.
 
