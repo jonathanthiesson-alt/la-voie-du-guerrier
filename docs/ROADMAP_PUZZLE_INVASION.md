@@ -317,6 +317,18 @@ l'écrire dans 1,2 Mo, et de re-expliquer le contexte à chaque session.
   `buildEloGridHtml(currentUser)` telle quelle) + `monban_stats`
   (défenses gagnées/perdues) + `monban_profiles` (parties apprises, dernier
   entraînement). Bouton `monbanTrainToday()` → RPC `monban_mark_trained`.
+  **Changé le 2026-08-18 (V0.112.0, décision Wurmz)** : le clic quotidien ne
+  donne plus un +2 instantané — `monban_mark_trained()` ne fait plus que
+  poser la garde 1×/jour (admin bypass inchangé), et déclenche un vrai duel
+  local (`monbanStartTrainingDuel(cadence)`, adversaire local id 13 dans
+  `ADVERSARIES`, couleur tirée au sort via `startCoinFlipSequence`, sans
+  passer par `showColorPicker`) contre son propre Monban. `monbanTrainingPlay`
+  rejoue localement la même logique de clone que l'Edge Function `monban-move`
+  (profil préchargé dans `_monbanTrainingProfile`, synchrone). Résultat
+  appliqué en fin de partie (`endGame()`, garde `_monbanDuelCadence`) via la
+  nouvelle RPC `monban_apply_training_duel(cadence, monbanWon)` :
+  Monban gagne → +7/+5/+3 selon la cadence (3s/5s/10s) ; Monban perd →
+  aucune perte, bonus pur. SQL : `sql_a_executer/monban_training_duel.sql`.
 - `monbanRecordGameResult(playerWon)` : câblée dans `endGame()`, juste
   après le `logJournalEvent` online existant (même garde `G.onlineGameId`).
   **V1 minimale, décision prise avec Wurmz avant de coder** : pas de suivi

@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.111.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.112.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3214,7 +3214,15 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div class="menu-divider"></div>
     <div class="elo-grid" id="monban-elo-grid" style="margin-bottom:10px"></div>
     <div id="monban-stats-line" style="font-family:VT323,monospace;font-size:13px;color:var(--parchment);margin-bottom:14px">—</div>
-    <button class="adm-btn" style="width:100%;padding:9px" onclick="monbanTrainToday()">⚔ Entraîner Monban aujourd'hui</button>
+    <button class="adm-btn" id="monban-train-btn" style="width:100%;padding:9px" onclick="monbanTrainToday()">⚔ Entraîner Monban aujourd'hui</button>
+    <div id="monban-cadence-picker" style="display:none;margin-top:8px">
+      <div style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.7;margin-bottom:6px">Choisis la cadence du duel — couleur tirée au sort :</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn" style="flex:1;padding:8px" onclick="monbanStartTrainingDuel(3)">⚡ 3s<br><span style="font-size:10px;opacity:.6">+7 si Monban gagne</span></button>
+        <button class="btn" style="flex:1;padding:8px" onclick="monbanStartTrainingDuel(5)">🗡 5s<br><span style="font-size:10px;opacity:.6">+5 si Monban gagne</span></button>
+        <button class="btn" style="flex:1;padding:8px" onclick="monbanStartTrainingDuel(10)">🛡 10s<br><span style="font-size:10px;opacity:.6">+3 si Monban gagne</span></button>
+      </div>
+    </div>
     <div id="monban-train-status" style="font-family:VT323,monospace;font-size:11px;color:var(--gold-bright);margin-top:6px;min-height:14px"></div>
   </div>
   </div>
@@ -3943,8 +3951,17 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.111.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.112.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.112.0 &mdash; 18 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; MONBAN — d&eacute;fie ton propre clone en duel</li>
+        <li>Le bouton « Entra&icirc;ner Monban aujourd'hui » (Dojo &gt; D&eacute;fendre) ne donne plus un simple +2 instantan&eacute; : il lance un vrai duel local contre TON Monban, couleur tir&eacute;e au sort, cadence au choix (3s/5s/10s).</li>
+        <li>Si Monban gagne le duel, il gagne des points de niveau (+7 en 3s, +5 en 5s, +3 en 10s — plus la cadence est rapide, plus la victoire compte). S'il perd, aucune perte : c'est du pur bonus.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -9369,7 +9386,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.111.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.112.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -9601,7 +9618,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.111.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.112.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -9824,7 +9841,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.111.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.112.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -10928,6 +10945,14 @@ ADVERSARIES=[
   {id:10,icon:'傀',isTrainingBot:true,fullName:'Karakuri',botLevel:1,play:(moves,board,stacks,lm,lp)=>trainingBotPlay(1,moves,board,stacks,lm,lp)},
   {id:11,icon:'傀',isTrainingBot:true,fullName:'Karakuri',botLevel:2,play:(moves,board,stacks,lm,lp)=>trainingBotPlay(2,moves,board,stacks,lm,lp)},
   {id:12,icon:'傀',isTrainingBot:true,fullName:'Karakuri',botLevel:3,play:(moves,board,stacks,lm,lp)=>trainingBotPlay(3,moves,board,stacks,lm,lp)},
+  // Duel d'entraînement contre SON PROPRE Monban (Dojo > Défendre, décision
+  // Wurmz 2026-08-18) : pas de galerie, pas de déblocage — exclu de
+  // buildAdvGrid via isMonbanDuel, lancé uniquement depuis
+  // monbanStartTrainingDuel(). play() délègue à monbanTrainingPlay, qui
+  // rejoue localement la même logique de clone (skillRating→profondeur,
+  // faiblesse dominante→erreur reproduite) que l'Edge Function monban-move,
+  // à partir du profil préchargé dans _monbanTrainingProfile.
+  {id:13,icon:'門',isMonbanDuel:true,play:(moves,board,stacks,lm,lp)=>monbanTrainingPlay(moves,board,stacks,lm,lp)},
 ];
 // Reglages de Karakuri : profondeur clemente + une part de coups non-optimaux
 // (luck) pour rester accessible, meme au niveau "Sage". evalTrainer existe
@@ -11058,7 +11083,7 @@ function buildAdvGrid(){
   var lbl=document.getElementById('adv-grid-label');
   if(lbl){lbl.textContent=t('local_choose_adv');lbl.style.color='';}
   ADVERSARIES.forEach(a=>{
-    if(a.isTrainingBot||a.isNotable) return; // entraînement et notables : menus séparés
+    if(a.isTrainingBot||a.isNotable||a.isMonbanDuel) return; // entraînement, notables et duel Monban : menus séparés
     grid.appendChild(buildAdvCard(a));
   });
 }
@@ -13816,7 +13841,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.111.0';
+var DEVLOG_LATEST = 'V0.112.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -17803,6 +17828,14 @@ function endGame(winner,reason){
     // Décision O : Monban apprend de TOUTES mes parties en ligne, pas
     // seulement de l'entraînement quotidien (qui reste un rituel bonus).
     if(typeof monbanRecordGameResult==='function') monbanRecordGameResult(playerWon);
+  }
+  // Duel d'entraînement contre son propre Monban (décision Wurmz 2026-08-18) :
+  // bonus de niveau UNIQUEMENT si Monban (toujours topColor ici) gagne le
+  // duel — jamais de perte en cas de défaite. _monbanDuelCadence n'est posé
+  // QUE par monbanStartTrainingDuel(), jamais pour une autre partie locale.
+  if(_monbanDuelCadence){
+    var _duelCadence = _monbanDuelCadence; _monbanDuelCadence = null;
+    if(typeof monbanApplyTrainingDuelResult==='function') monbanApplyTrainingDuelResult(_duelCadence, !playerWon);
   }
 
   // Statistiques par cadence de jeu (3s/5s/10s) et par couleur — c'est
@@ -22459,6 +22492,13 @@ function monbanRecordGameResult(playerWon){
 function monbanRefreshHub(){
   var eloEl = document.getElementById('monban-elo-grid');
   var statsEl = document.getElementById('monban-stats-line');
+  // Remet le bouton/sélecteur dans leur état de repos à chaque ouverture de
+  // l'écran (ex. retour arrière en plein choix de cadence, sans avoir lancé
+  // le duel) — sinon le bouton resterait caché indéfiniment.
+  var picker0 = document.getElementById('monban-cadence-picker');
+  var btn0 = document.getElementById('monban-train-btn');
+  if(picker0) picker0.style.display = 'none';
+  if(btn0) btn0.style.display = '';
   if(typeof supa==='undefined' || !supa || typeof currentUser==='undefined' || !currentUser) return;
   // currentUser ne porte que {id,pseudo} (voir onlineLoadSession) — l'Elo se
   // relit depuis profiles, comme le fait déjà loadAndShowMyElo() pour l'écran Profil.
@@ -22478,17 +22518,97 @@ function monbanRefreshHub(){
     });
   });
 }
+// Décision Wurmz 2026-08-18 : le clic quotidien ne donne plus un +2 instantané,
+// il DÉCLENCHE un vrai duel local contre son propre Monban (couleur tirée au
+// sort, cadence au choix). monban_mark_trained() ne fait plus que poser la
+// garde 1×/jour (illimité pour Wurmz/Musashi, is_admin_user()) — les points
+// viennent du résultat du duel, voir monbanApplyTrainingDuelResult().
 function monbanTrainToday(){
   var st = document.getElementById('monban-train-status');
+  var picker = document.getElementById('monban-cadence-picker');
+  var btn = document.getElementById('monban-train-btn');
   if(typeof supa==='undefined' || !supa){ if(st) st.textContent = 'Connecte-toi pour entraîner Monban.'; return; }
   supa.rpc('monban_mark_trained').then(function(res){
     if(res.error){ if(st) st.textContent = res.error.message; return; }
     var data = res.data;
-    if(data && data.ok){ if(st) st.textContent = '✅ Entraînement terminé — skillRating '+data.skill_rating+'/100.'; }
-    else if(data && data.reason==='already_trained'){ if(st) st.textContent = 'Monban s\'est déjà entraîné aujourd\'hui — reviens demain.'; }
-    else { if(st) st.textContent = 'Entraînement impossible.'; }
-    _monbanProfileCache = null; // le skillRating a changé, ne pas servir le cache périmé
-    monbanRefreshHub();
+    if(data && data.ok){
+      if(st) st.textContent = 'Choisis la cadence du duel ci-dessous.';
+      if(picker) picker.style.display = '';
+      if(btn) btn.style.display = 'none';
+    } else if(data && data.reason==='already_trained'){
+      if(st) st.textContent = 'Monban s\'est déjà entraîné aujourd\'hui — reviens demain.';
+    } else { if(st) st.textContent = 'Entraînement impossible.'; }
+  });
+}
+// Choix de cadence forcément aléatoire côté couleur (demande explicite de
+// Wurmz) : on saute showColorPicker (qui proposerait Blanc/Noir/Aléatoire)
+// et on va droit au tirage au sort de startCoinFlipSequence.
+var _monbanDuelCadence = null;
+function monbanStartTrainingDuel(cadence){
+  var picker = document.getElementById('monban-cadence-picker');
+  if(picker) picker.style.display = 'none';
+  var st = document.getElementById('monban-train-status');
+  if(st) st.textContent = '';
+  monbanLoadProfile(true).then(function(cur){
+    _monbanTrainingProfile = (cur && cur.profile) || {skillRating:50, dominantWeakness:null, dominantWeaknessRate:0};
+    _monbanDuelCadence = cadence;
+    settings.vsAI = true;
+    selectedAdvId = 13;
+    settings.gameMode = 'rempart-v2';
+    settings.timerSeconds = cadence;
+    settings._playerColor = null; // force le tirage au sort, pas de choix
+    showScreen('game');
+    startCoinFlipSequence(function(){ initGame(); });
+  });
+}
+// Même logique de clone que monban-move (Edge Function déployée côté
+// Supabase) mais rejouée localement, à partir du profil préchargé dans
+// _monbanTrainingProfile (adv.play() est synchrone, pas d'accès réseau
+// possible ici). Toute modification de cette logique doit être répercutée
+// côté Edge Function pour rester cohérente entre duel local et défense en
+// ligne — pas de fichier partagé entre les deux runtimes (Deno vs navigateur).
+var _monbanTrainingProfile = null;
+function monbanTrainingPlay(moves, board, stacks, lm, lp){
+  if(!moves || !moves.length) return null;
+  var prof = _monbanTrainingProfile || {skillRating:50, dominantWeakness:null, dominantWeaknessRate:0};
+  var sr = prof.skillRating!=null ? prof.skillRating : 50;
+  var depth = Math.min(5, Math.max(2, Math.round(2 + sr/27)));
+  var pool = moves;
+  var color = G.topColor;
+  if(prof.dominantWeakness && prof.dominantWeaknessRate && Math.random() < Math.min(0.6, prof.dominantWeaknessRate)){
+    if(prof.dominantWeakness === 'missedWin'){
+      var nonWinning = moves.filter(function(m){ return !(m.action && (m.action.isCapture || m.action.pushCaptures)); });
+      if(nonWinning.length) pool = nonWinning;
+    } else if(prof.dominantWeakness === 'exposure'){
+      depth = Math.max(1, depth - 2);
+    } else if(prof.dominantWeakness === 'passivity'){
+      var oppColor = color==='white' ? 'black' : 'white';
+      var oppMaster = findMaster(oppColor, board);
+      if(oppMaster){
+        var cautious = moves.filter(function(m){
+          var before = Math.abs(m.fr-oppMaster.r)+Math.abs(m.fc-oppMaster.c);
+          var after = Math.abs(m.tr-oppMaster.r)+Math.abs(m.tc-oppMaster.c);
+          return after >= before;
+        });
+        if(cautious.length) pool = cautious;
+      }
+    }
+  }
+  var mv = null;
+  try { mv = minimaxPlay(pool, board, stacks, lm, lp, depth, evalTrainer, color); } catch(e){}
+  return mv || pool[Math.floor(Math.random()*pool.length)];
+}
+// Appelée depuis endGame() quand _monbanDuelCadence est posé. Aucune perte
+// de points en cas de défaite de Monban — bonus pur (décision Wurmz).
+function monbanApplyTrainingDuelResult(cadence, monbanWon){
+  if(typeof supa==='undefined' || !supa) return;
+  supa.rpc('monban_apply_training_duel', { p_cadence: cadence, p_monban_won: monbanWon }).then(function(res){
+    _monbanProfileCache = null;
+    if(res.error) return;
+    var data = res.data;
+    if(data && data.gain>0 && typeof showToast==='function'){
+      showToast('⚔ Monban a gagné le duel — +'+data.gain+' de niveau ('+data.skill_rating+'/100)', false);
+    }
   });
 }
 // ══════════════════════════════════════════════════════════════════════
