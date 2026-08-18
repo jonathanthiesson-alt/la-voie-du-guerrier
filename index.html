@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.114.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.115.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3953,8 +3953,16 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.114.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.115.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.115.0 &mdash; 18 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; AUDIO — musique de combat qui restait sur le village</li>
+        <li>Corrig&eacute; : apr&egrave;s un Combat rapide, le bouton &laquo; &#8617; Retour &raquo; ramenait au village SANS couper la musique de combat, qui continuait &agrave; jouer par-dessus la carte. Elle est maintenant coup&eacute;e comme sur n'importe quel retour au menu.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -9407,7 +9415,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.114.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.115.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -9639,7 +9647,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.114.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.115.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -9862,7 +9870,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.114.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.115.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -13705,6 +13713,16 @@ function showScreen(id){
   }
   if(id==='game'){ if(typeof stopMenuMusic==='function') stopMenuMusic(); }
   if(id==='home'){ if(typeof stopMenuMusic==='function') stopMenuMusic(); if(typeof stopFightMusic==='function') stopFightMusic(); if(typeof refreshHomeOnlineCount==='function') refreshHomeOnlineCount(); if(typeof applyHomeLogoAura==='function') applyHomeLogoAura(); }
+  // 🔴 Skill audit-audio, règle 7/8 étendue à l'écran Village (2026-08-18) :
+  // bug vécu « musique de combat qui joue sur le menu village ». Cause :
+  // après un Combat rapide (matchmaking), le bouton « ↩ Retour » de l'overlay
+  // de fin appelle endgameToVillage() → villageMenuReturn() → showScreen
+  // ('village') — un chemin qui ne passait JAMAIS par le nettoyage audio fait
+  // pour id==='menu' (ajouté avant que 'village' existe comme hub). La
+  // musique de combat restait donc active indéfiniment sur la carte. Même
+  // patron que 'menu' : on coupe le combat, on relance le menu (la carte n'a
+  // pas d'ambiance sonore propre).
+  if(id==='village'){ if(typeof stopFightMusic==='function') stopFightMusic(); if(typeof startMenuMusic==='function') startMenuMusic(); }
   if(id==='home-logo-cfg'){ renderHomeLogoCfg(); }
   if(id==='arena'){ refreshKokuDisplays(); refreshArenaKokuProgress(); refreshAllCurrencyDisplays(); }
   if(id==='sumo'){ refreshAllCurrencyDisplays(); }
@@ -13862,7 +13880,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.114.0';
+var DEVLOG_LATEST = 'V0.115.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.

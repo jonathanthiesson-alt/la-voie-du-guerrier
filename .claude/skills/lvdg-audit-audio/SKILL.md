@@ -9,7 +9,7 @@ description: Audit complet du son de La Voie du Guerrier (musiques, SFX, déclen
 > **chaque bug audio trouvé DOIT devenir une règle ci-dessous**, sinon il
 > reviendra. C'est la même mécanique que les pièges Supabase de `CLAUDE.md`,
 > et c'est ce qui a fini par rendre ces pièges-là inoffensifs.
-> Dernière passe : 2026-08-05.
+> Dernière passe : 2026-08-18.
 
 ## Pourquoi ce skill existe
 
@@ -131,6 +131,32 @@ Contre-épreuve obligatoire : sur `screen-menu`, la musique de menu DOIT toujour
 partir (sinon on a supprimé au lieu de corriger) ; sur `screen-game`, un
 `startMenuMusic()` parasite ne doit RIEN jouer alors que `fight-music` continue.
 
+### 9. 🔴 Un NOUVEL écran d'accueil doit reprendre le même nettoyage que 'menu'/'home' — sinon les règles 7/8 ne le couvrent pas
+**Vécu (2026-08-18)** : « musique de combat qui joue sur le menu village ».
+Après un Combat rapide (matchmaking), le bouton « ↩ Retour » de l'overlay de
+fin appelle `endgameToVillage()` → `villageMenuReturn()` → `showScreen
+('village')`. L'écran `'village'` (thème Village, ajouté après les règles 7/8)
+n'était couvert par AUCUN des points d'arrêt centralisés de `showScreen()` —
+seuls `id==='menu'` et `id==='home'` coupaient `fight-music`/relançaient
+`menu-music`. La musique de combat restait donc active indéfiniment sur la
+carte du village.
+
+Les règles 7/8 protègent contre un son qui *démarre* au mauvais endroit ; ce
+bug est différent — un son qui *continue* faute d'un point de sortie sur un
+écran qui n'existait pas quand ces règles ont été écrites. La règle 2 le
+disait déjà : *« point d'annulation unique : `showScreen()` »* — encore
+faut-il que TOUS les écrans « hub »/accueil y soient représentés, pas
+seulement ceux qui existaient au moment du dernier audit.
+
+Correctif : dans `showScreen()`, `if(id==='village'){ stopFightMusic();
+startMenuMusic(); }` — même patron que `'menu'`.
+**Réflexe à ajouter à la procédure (§ ci-dessous)** : avant de conclure,
+lister TOUS les écrans qui peuvent servir de point d'arrivée après une
+partie (grep `showScreen('` dans les fonctions de fin de partie/overlay :
+`handleMenuClick`, `endgameToVillage`, `endgameNewCombat`, tout futur bouton
+similaire) et vérifier que CHACUN de leurs écrans cibles a son propre
+nettoyage dans `showScreen()` — pas seulement `'menu'` et `'home'`.
+
 ## Matrice de test (navigateur, tabId de la Browser pane)
 
 Espionner `play()` plutôt qu'écouter : on teste le **déclenchement**, sans
@@ -161,11 +187,17 @@ premier test — c'est le second qui prouve qu'on a corrigé au lieu de casser.
 | Retour à l'accueil | menu + combat coupés |
 | `startFightMusic()` résolu hors écran de jeu (match avorté, login) | **aucune** musique de combat ; contre-épreuve sur `screen-game` = musique OK |
 | `startMenuMusic()` parasite pendant le combat (sur `screen-game`) | **aucune** musique de menu ; contre-épreuve sur `screen-menu` = musique OK |
+| Fin de Combat rapide → bouton « ↩ Retour » (`villageMenuReturn()`) | fight-music coupée, menu-music relancée, comme via `showScreen('menu')` |
 
 ## Procédure
 
 1. Lancer le script de la règle 1 (doublons).
 2. Chercher tout `setTimeout` proche d'un `play()` : chacun doit être annulable (règle 2).
-3. Dérouler la matrice dans le navigateur, contre-épreuves comprises.
-4. **Consigner tout nouveau bug ici en règle numérotée**, avec le symptôme
+3. **Lister tous les écrans d'arrivée possibles après une partie** (grep
+   `showScreen('` dans les fonctions de fin/overlay : `handleMenuClick`,
+   `endgameToVillage`, `endgameNewCombat`, tout futur bouton similaire) et
+   vérifier que chacun a son propre nettoyage dans `showScreen()` — pas
+   seulement `'menu'`/`'home'` (règle 9).
+4. Dérouler la matrice dans le navigateur, contre-épreuves comprises.
+5. **Consigner tout nouveau bug ici en règle numérotée**, avec le symptôme
    observé — c'est le seul mécanisme d'amélioration de ce fichier.
