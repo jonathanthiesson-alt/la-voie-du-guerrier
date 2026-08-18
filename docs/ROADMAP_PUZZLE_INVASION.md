@@ -406,10 +406,28 @@ duplication de l'infrastructure de partie en ligne.
 - **Décision L (exclusion tournoi/guerre de guilde) non implémentée** :
   `invasion_candidates` ne filtre pas encore les joueurs actuellement engagés
   ailleurs.
-- **Suivi fin des faiblesses de Monban pour les parties en ligne** (parité
-  complète avec `NT2_PROFILE`) reste un chantier ouvert (choix validé avec
-  Wurmz avant de coder, voir plus haut) — V1 = ajustement `skillRating` +
-  répertoire d'ouvertures uniquement.
+- ~~Suivi fin des faiblesses de Monban pour les parties en ligne (parité
+  complète avec `NT2_PROFILE`) reste un chantier ouvert~~ **Fait le
+  2026-08-18 (V0.111.0)** : `monbanComputeWeaknessDeltas`/`monbanDominantWeakness`
+  (index.html ~22370) calculent exposition/occasions manquées/passivité sur
+  chaque partie en ligne, envoyés à `monban_learn_from_game`. Décision Wurmz
+  explicite : Monban est un **clone** du joueur (forces ET défauts reproduits,
+  jamais corrigés) — contrairement à NT2 qui EXPLOITE la faiblesse d'un
+  adversaire humain, Monban REPRODUIT sa propre faiblesse dominante quand il
+  joue à la place du joueur absent. Implémenté côté Edge Function `monban-move`
+  uniquement (pas de modification d'`evalTrainer`, équilibre validé le
+  2026-07-26 non touché) : avec une probabilité dérivée du taux réel observé
+  (plafonnée à 60%), la liste de coups candidats passée à `minimaxPlay` est
+  filtrée (occasion manquée → coups gagnants exclus ; passivité → coups qui
+  approchent l'Épéiste adverse exclus) ou la profondeur de recherche réduite
+  (exposition). Vérifié par harnais Node rejouant le moteur réel extrait
+  d'`index.html` (pas seulement par lecture de code) : sur une position avec
+  capture disponible, `missedWin` forcé fait effectivement manquer la
+  capture ; sur la position initiale, `passivity` forcé réduit le pool de 8
+  à 4 coups (exactement les coups qui rapprochaient de l'adversaire) ;
+  `exposure` forcé réduit la profondeur de 2. Pas de migration SQL requise
+  (`monban_learn_from_game` fait déjà un merge superficiel qui absorbe les
+  nouvelles clés du profil).
 - **`presenceTier()` ne renvoie toujours pas `'combat'`** (trou identifié
   §1) — non nécessaire dans l'architecture retenue (le 15s d'acceptation
   s'applique uniformément, sans distinguer présence), mais reste un état mort

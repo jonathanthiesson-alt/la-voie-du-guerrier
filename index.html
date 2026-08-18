@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.110.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.111.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3943,8 +3943,17 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.110.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.111.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.111.0 &mdash; 18 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; MONBAN — un vrai clone du joueur, forces ET d&eacute;fauts</li>
+        <li>Monban rep&egrave;re d&eacute;sormais SA faiblesse dominante (expose son Combattant, rate des occasions, ou reste trop passif) en observant tes vraies parties en ligne, et la reproduit fid&egrave;lement quand il d&eacute;fend le dojo &agrave; ta place — un clone assum&eacute;, pas une version id&eacute;alis&eacute;e de toi.</li>
+        <li>Visible sur l'&eacute;cran Monban (Dojo &gt; D&eacute;fendre) d&egrave;s que 3 parties ont &eacute;t&eacute; apprises.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -9360,7 +9369,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.110.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.111.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -9592,7 +9601,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.110.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.111.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -9815,7 +9824,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.110.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.111.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -13807,7 +13816,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.110.0';
+var DEVLOG_LATEST = 'V0.111.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -22348,9 +22357,13 @@ function pzSkipRating(){
 // MONBAN — profil serveur (I0) + écran de consultation (I1).
 // docs/ROADMAP_PUZZLE_INVASION.md, lot I0/I1. Décision M : PAS d'Elo
 // indépendant — l'écran affiche mon propre Elo (buildEloGridHtml).
-// Décision O, V1 minimale (voir commentaire de monbanRecordGameResult) :
-// pas de suivi fin coup par coup pour les parties en ligne, contrairement à
-// NT2_PROFILE qui ne tourne qu'en local — chantier futur, pas cette passe.
+// Décision Wurmz 2026-08-18 : Monban est un CLONE du joueur qu'il défend —
+// forces (skillRating) ET défauts (weaknesses) reproduits, jamais corrigés.
+// Faiblesses calculées après-coup sur HISTORY à la fin de chaque partie en
+// ligne (même seuils que NT2_PROFILE/nt2DominantWeakness ~ligne 10578), puis
+// exploitées côté Edge Function monban-move (voir son code déployé côté
+// Supabase, pas dans ce fichier) pour faire commettre à Monban le même type
+// d'erreur, avec une probabilité dérivée du taux observé.
 // ══════════════════════════════════════════════════════════════════════
 var _monbanProfileCache = null;
 function monbanLoadProfile(force){
@@ -22367,6 +22380,52 @@ function monbanLoadProfile(force){
 // V1 minimale : un léger ajustement de skillRating (+3 victoire / -1 défaite,
 // plus prudent que NT2 car le signal est plus grossier) + la première case
 // atteinte par mon Combattant, pour amorcer un petit répertoire d'ouvertures.
+// Rejoue HISTORY après la partie pour repérer les coups DU JOUEUR (couleur
+// G.bottomColor) qui ont exposé son propre Combattant ou laissé filer une
+// capture gagnante — même définitions que nt2AnalyzePlayerMove (~ligne 10789)
+// mais recalculées après-coup faute d'accès aux objets de coup complets
+// (action.isCapture) une fois réduits dans HISTORY. lastPush n'étant pas
+// conservé par pushHistory(), on l'approxime à null : impact négligeable,
+// même simplification déjà faite pour la détection d'ouverture ci-dessous.
+function monbanComputeWeaknessDeltas(myColor){
+  var d = { exposure:0, missedWin:0, passivity:0 };
+  if(typeof HISTORY==='undefined' || !HISTORY || HISTORY.length<2) return d;
+  var everClose = false;
+  var oppColor = myColor==='white' ? 'black' : 'white';
+  for(var hi=1; hi<HISTORY.length; hi++){
+    var fr = HISTORY[hi], prev = HISTORY[hi-1];
+    var lm = fr.lastMoved;
+    if(!lm || lm.color!==myColor) continue;
+    if(typeof masterInDanger==='function' && masterInDanger(myColor, fr.board, fr.stacks)) d.exposure++;
+    try{
+      if(typeof allMoves==='function'){
+        var movesBefore = allMoves(myColor, prev.board, prev.stacks, prev.lastMoved, null, prev.lastMovedByColor);
+        var hadWin = movesBefore.some(function(m){ return m.action && (m.action.isCapture || m.action.pushCaptures); });
+        var chosen = movesBefore.find(function(m){ return m.fr===lm.fromR && m.fc===lm.fromC && m.tr===lm.toR && m.tc===lm.toC; });
+        var tookWin = chosen && chosen.action && (chosen.action.isCapture || chosen.action.pushCaptures);
+        if(hadWin && !tookWin) d.missedWin++;
+      }
+    }catch(e){}
+    if(typeof findMaster==='function'){
+      var oppMaster = findMaster(oppColor, fr.board);
+      if(oppMaster){
+        var dd = Math.abs(lm.toR-oppMaster.r)+Math.abs(lm.toC-oppMaster.c);
+        if(dd<=1) everClose = true;
+      }
+    }
+  }
+  if(!everClose) d.passivity = 1;
+  return d;
+}
+// Même seuils que nt2DominantWeakness (~ligne 10578) : pas de verdict avant
+// 3 parties apprises, faiblesse dominante seulement si son taux dépasse 15%.
+function monbanDominantWeakness(w, gamesLearned){
+  if(!gamesLearned || gamesLearned<3) return { key:null, rate:0 };
+  var rates = { exposure:(w.exposure||0)/gamesLearned, missedWin:(w.missedWin||0)/gamesLearned, passivity:(w.passivity||0)/gamesLearned };
+  var best=null, bestRate=0.15;
+  for(var k in rates){ if(rates[k]>bestRate){ bestRate=rates[k]; best=k; } }
+  return { key:best, rate:best?bestRate:0 };
+}
 function monbanRecordGameResult(playerWon){
   if(typeof supa==='undefined' || !supa) return;
   monbanLoadProfile().then(function(cur){
@@ -22383,7 +22442,16 @@ function monbanRecordGameResult(playerWon){
       var key = myFirstMove.type+'@'+myFirstMove.toR+','+myFirstMove.toC;
       openings[key] = (openings[key]||0) + 1;
     }
-    supa.rpc('monban_learn_from_game', { p_delta: { skillRating: sr, openings: openings } }).then(function(){
+    var deltas = monbanComputeWeaknessDeltas(G.bottomColor);
+    var wPrev = p.weaknesses || {exposure:0,missedWin:0,passivity:0};
+    var weaknesses = {
+      exposure: (wPrev.exposure||0) + deltas.exposure,
+      missedWin: (wPrev.missedWin||0) + deltas.missedWin,
+      passivity: (wPrev.passivity||0) + deltas.passivity
+    };
+    var gamesLearned = ((cur && cur.games_learned) || 0) + 1;
+    var dom = monbanDominantWeakness(weaknesses, gamesLearned);
+    supa.rpc('monban_learn_from_game', { p_delta: { skillRating: sr, openings: openings, weaknesses: weaknesses, dominantWeakness: dom.key, dominantWeaknessRate: dom.rate } }).then(function(){
       _monbanProfileCache = null; // se rafraîchit à la prochaine lecture (écran Monban)
     });
   });
@@ -22403,7 +22471,10 @@ function monbanRefreshHub(){
       if(!statsEl) return;
       var lastTrained = prof.last_trained_at ? new Date(prof.last_trained_at).toLocaleDateString() : 'jamais';
       var sr = (prof.profile && prof.profile.skillRating!=null) ? prof.profile.skillRating : 50;
-      statsEl.textContent = '⚔ Niveau '+sr+'/100 · 🛡 Défenses : '+won+' gagnées / '+lost+' perdues · '+(prof.games_learned||0)+' parties apprises · dernier entraînement : '+lastTrained;
+      var domKey = prof.profile && prof.profile.dominantWeakness;
+      var domLabels = { exposure:'expose son Combattant', missedWin:'rate des occasions', passivity:'reste trop passif' };
+      var domTxt = domKey && domLabels[domKey] ? ' · point faible cloné : '+domLabels[domKey] : '';
+      statsEl.textContent = '⚔ Niveau '+sr+'/100 · 🛡 Défenses : '+won+' gagnées / '+lost+' perdues · '+(prof.games_learned||0)+' parties apprises · dernier entraînement : '+lastTrained+domTxt;
     });
   });
 }
