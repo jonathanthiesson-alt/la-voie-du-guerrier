@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.112.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.113.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3176,6 +3176,8 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
         <option value="survive_turns">Survivre N tours</option>
         <option value="reach_cell">Atteindre une case</option>
       </select>
+      <div style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.65;margin:-4px 0 8px">Pour « Atteindre une case » : choisis l'outil 🎯 Cible ci-dessus, puis clique la case visée sur le plateau.</div>
+      <input id="pz-max-turns" type="number" min="1" max="99" placeholder="Limite de tours (optionnel)" style="width:100%;box-sizing:border-box;padding:7px;margin-bottom:8px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:5px;font-family:VT323,monospace;font-size:13px">
       <div class="option-label" style="margin-bottom:4px">Cadence</div>
       <div class="option-row" id="pz-timer-row" style="margin-bottom:8px">
         <div class="opt-btn" data-t="0" onclick="pzSelectTimer(0)">∞</div>
@@ -3951,8 +3953,19 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.112.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.113.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.113.0 &mdash; 18 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; SUMO — les mains poussent, elles ne tuent plus</li>
+        <li>En mode Sumo, une &eacute;p&eacute;e (main) qui atteint le Combattant adverse ne le capture plus : elle le POUSSE. Seule l'&eacute;jection hors du ring fait gagner, comme au vrai sumo. Valable partout o&ugrave; le sumo est actif (Ar&egrave;ne SUMO class&eacute;e, Labo, Puzzle).</li>
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; PUZZLE — case cible et limite de tours</li>
+        <li>&Eacute;diteur de puzzle : nouvel outil &#127919; Cible pour poser la case &agrave; atteindre (objectif &laquo; Atteindre une case &raquo;, jusqu'ici sans effet). Nouveau champ &laquo; Limite de tours &raquo; optionnel, combinable avec &laquo; &Eacute;liminer &raquo; ou &laquo; Atteindre une case &raquo; (ex: capturer ou rejoindre la cible avant le tour X).</li>
+        <li>En mode Sumo, l'&eacute;diteur affiche d&eacute;sormais Combattant/Main au lieu d'&Eacute;p&eacute;iste/&Eacute;p&eacute;e pour rester coh&eacute;rent avec la nouvelle r&egrave;gle.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -9386,7 +9399,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.112.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.113.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -9618,7 +9631,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.112.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.113.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -9841,7 +9854,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.112.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.113.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -13841,7 +13854,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.112.0';
+var DEVLOG_LATEST = 'V0.113.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -18069,6 +18082,10 @@ function endGame(winner,reason){
 
 function switchTurn(){
   if(G.gameOver)return;
+  // Objectif de puzzle (reach_cell / maxTurns) — ne s'applique QUE pendant
+  // un test/une partie de puzzle (garde interne à pzCheckObjective), donc
+  // sans coût ni effet sur tout autre mode de jeu.
+  if(typeof pzCheckObjective==='function' && pzCheckObjective()) return;
   // Champ de bataille EN LIGNE : je viens de jouer mon siège → je pousse
   // l'état au serveur, et c'est le retour realtime (applyRemote) qui avance
   // le siège pour tous. Prioritaire sur la rotation locale.
@@ -18931,8 +18948,27 @@ function legalMoves(color,board,stacks,sel,lastMoved,lastPush){
         moves.push({r:tr,c:tc,isCapture:false,isPush:false});
       }else if(tgt&&!tStk){
         if(tgt.type==='epeiste'&&tgt.color!==color){
-          // Capture directe de l'épeiste adverse — toujours valide
-          moves.push({r:tr,c:tc,isCapture:true,isPush:false});
+          if(G.sumoMode){
+            // SUMO (décision Wurmz 2026-08-19) : les mains (épées) ne tuent
+            // plus — elles POUSSENT le Combattant adverse, seule l'éjection
+            // hors du ring (comme l'épéiste et le bouclier) fait gagner.
+            // Même patron que le bouclier pousse-épéiste (~ligne 18995).
+            const pr=tr+d.dr,pc=tc+d.dc;
+            const antiPush=lastPush&&lastPush.pushedToR===r&&lastPush.pushedToC===c&&lastPush.pusherToR===tr&&lastPush.pusherToC===tc&&d.dr===-lastPush.dr&&d.dc===-lastPush.dc;
+            if(!antiPush&&isValid(pr,pc)&&!stacks[pr][pc]){
+              if(!board[pr][pc]){
+                moves.push({r:tr,c:tc,isCapture:false,isPush:true,pushesEpeiste:true});
+              }else if(board[pr][pc].type==='sword'&&board[pr][pc].color===color&&bfSameUnit(p,board[pr][pc])){
+                moves.push({r:tr,c:tc,isCapture:false,isPush:true,pushesEpeiste:true,pushCaptures:true,pushCaptureOnAlly:true});
+              }
+            }else if(!antiPush&&!isValid(pr,pc)){
+              // Case derrière hors du ring → éjection = victoire immédiate
+              moves.push({r:tr,c:tc,isCapture:false,isPush:true,pushesEpeiste:true,pushCaptures:true,pushOut:true});
+            }
+          }else{
+            // Capture directe de l'épeiste adverse — toujours valide (hors sumo)
+            moves.push({r:tr,c:tc,isCapture:true,isPush:false});
+          }
         }else if(tgt.type==='sword'||tgt.type==='shield'){
           // Pousse pion non-épeiste (sword ou shield allié/adverse)
           // Liste explicite (cf. épéiste) : les pièces custom ne sont pas
@@ -18973,7 +19009,7 @@ function legalMoves(color,board,stacks,sel,lastMoved,lastPush){
             }
           }
         }
-        // Sword NE pousse PAS l'épeiste adverse en V2 — il le CAPTURE (déjà traité ci-dessus)
+        // Sword capture l'épeiste adverse hors sumo, le pousse en sumo (déjà traité ci-dessus)
       }
     }
     else if(p.type==='shield'){
@@ -21614,8 +21650,13 @@ var LAB_ED_DIRSET=['ortho','diag','forward','back','fdiag','bdiag','sideways'];
 function labEdDefaultState(){
   return {name:'Mon mode', rows:5, cols:5, v2:true, sumo:false, voids:[], pieces:{},
     setup:[{type:'epeiste',color:'white',r:0,c:2},{type:'epeiste',color:'black',r:4,c:2}],
-    tool:'place', brushColor:'white', brushType:'epeiste', sel:null, previewMoves:[], editingType:null};
+    tool:'place', brushColor:'white', brushType:'epeiste', sel:null, previewMoves:[], editingType:null,
+    targetCell:null}; // case cible de l'objectif "Atteindre une case" (Puzzle uniquement)
 }
+// Distingue le contexte de montage du widget partagé (Labo dev vs Puzzle
+// joueur) — posé par labEdMountWidget(). Seul le contexte 'puzzle' affiche
+// l'outil "Cible" (le Labo n'a pas de notion d'objectif).
+var _labEdContext = 'lab';
 // Compile un moteur JETABLE (mêmes fonctions VIVANTES que le jeu, via toString)
 // avec un isValid piloté par le format : le legalMoves LIVE est câblé en 5×5, on
 // ne peut donc PAS l'utiliser tel quel pour prévisualiser un plateau d'une autre
@@ -21642,6 +21683,7 @@ function labEdMountWidget(targetId){
   var w=document.getElementById('lab-ed-widget'); var t=document.getElementById(targetId);
   if(!w||!t) return;
   t.appendChild(w); w.style.display='';
+  _labEdContext = (targetId==='pz-ed-anchor') ? 'puzzle' : 'lab';
 }
 function labEdInit(){
   if(_labEd){ labEdRender(); return; }
@@ -21665,7 +21707,11 @@ function labEdPieceAt(r,c){ for(var i=0;i<_labEd.setup.length;i++){ var p=_labEd
 function labEdIsVoid(r,c){ return _labEd.voids.indexOf(r+','+c)>=0; }
 function labEdEmptyGrid(){ var g=[]; for(var r=0;r<_labEd.rows;r++){ var row=[]; for(var c=0;c<_labEd.cols;c++) row.push(null); g.push(row); } return g; }
 function labEdBuildBoard(){ var b=labEdEmptyGrid(); _labEd.setup.forEach(function(p){ if(p.r<_labEd.rows&&p.c<_labEd.cols) b[p.r][p.c]={type:p.type,color:p.color}; }); return b; }
-function labEdTypeLabel(t){ var g=LAB_ED_GLYPH[t]||(_labEd.pieces[t]&&_labEd.pieces[t].glyph)||''; var n=(t==='epeiste'?'Épéiste':t==='sword'?'Épée':t==='shield'?'Bouclier':(_labEd.pieces[t]&&_labEd.pieces[t].name)||t); return (g?g+' ':'')+n; }
+// En mode Sumo (décision Wurmz 2026-08-19) : l'Épéiste devient le Combattant
+// (poussé hors du ring = victoire) et l'Épée devient une Main (pousse, ne
+// capture plus) — mêmes types techniques (epeiste/sword), juste le libellé
+// et le comportement qui changent (voir legalMoves, branche G.sumoMode).
+function labEdTypeLabel(t){ var g=LAB_ED_GLYPH[t]||(_labEd.pieces[t]&&_labEd.pieces[t].glyph)||''; var n=(t==='epeiste'?(_labEd.sumo?'Combattant (sumo)':'Épéiste'):t==='sword'?(_labEd.sumo?'Main (sumo)':'Épée'):t==='shield'?'Bouclier':(_labEd.pieces[t]&&_labEd.pieces[t].name)||t); return (g?g+' ':'')+n; }
 function labEdSetInfo(msg){ var el=document.getElementById('lab-ed-info'); if(el) el.textContent=msg||''; }
 
 function labEdRender(){ if(!_labEd) return; labEdRenderDims(); labEdRenderToolbar(); labEdRenderBoard(); labEdRenderTypes(); }
@@ -21685,7 +21731,9 @@ function labEdRenderToolbar(){
   var types=['epeiste','sword','shield'].concat(Object.keys(_labEd.pieces));
   var typeOpts=types.map(function(t){ return '<option value="'+t+'"'+(t===_labEd.brushType?' selected':'')+'>'+labEdTypeLabel(t)+'</option>'; }).join('');
   function toolBtn(id,label){ var on=_labEd.tool===id; return '<button onclick="labEdSetTool(\''+id+'\')" style="flex:1;padding:5px;font-size:11px;border-radius:4px;cursor:pointer;border:1px solid rgba(212,160,23,.35);background:'+(on?'var(--gold-bright)':'rgba(0,0,0,.3)')+';color:'+(on?'#1a1206':'var(--parchment)')+'">'+label+'</button>'; }
-  var html='<div style="display:flex;gap:4px;margin-bottom:6px">'+toolBtn('place','Poser')+toolBtn('void','Case morte')+toolBtn('erase','Effacer')+toolBtn('preview','Coups')+'</div>';
+  // "Cible" : uniquement en contexte Puzzle (objectif "Atteindre une case"),
+  // absent du Labo qui n'a pas de notion d'objectif.
+  var html='<div style="display:flex;gap:4px;margin-bottom:6px">'+toolBtn('place','Poser')+toolBtn('void','Case morte')+toolBtn('erase','Effacer')+toolBtn('preview','Coups')+(_labEdContext==='puzzle'?toolBtn('target','🎯 Cible'):'')+'</div>';
   html+='<div style="display:flex;gap:6px;align-items:center;font-size:12px;font-family:\'VT323\',monospace;color:var(--parchment)">';
   html+='<span>Pièce</span><select onchange="labEdSetType(this.value)" style="flex:1;padding:4px;background:rgba(0,0,0,.35);color:var(--parchment);border:1px solid rgba(212,160,23,.35);border-radius:4px">'+typeOpts+'</select>';
   html+='<button onclick="labEdSetColor(\'white\')" style="padding:4px 8px;border-radius:4px;cursor:pointer;border:1px solid rgba(212,160,23,.35);background:'+(_labEd.brushColor==='white'?'#f0e6c8':'rgba(0,0,0,.3)')+';color:'+(_labEd.brushColor==='white'?'#1a1206':'var(--parchment)')+'">Blanc</button>';
@@ -21704,9 +21752,11 @@ function labEdRenderBoard(){
     var mark=pv[r+','+c];
     var bg=isv?'rgba(0,0,0,.75)':'rgba(255,255,255,.05)';
     if(mark==='move') bg='rgba(80,180,90,.4)'; else if(mark==='cap') bg='rgba(200,60,60,.5)'; else if(mark==='push') bg='rgba(210,150,30,.5)';
-    var border=sel?'2px solid var(--gold-bright)':'1px solid rgba(212,160,23,.2)';
+    var isTarget=_labEd.targetCell&&_labEd.targetCell.r===r&&_labEd.targetCell.c===c;
+    var border=isTarget?'2px dashed var(--gold-bright)':(sel?'2px solid var(--gold-bright)':'1px solid rgba(212,160,23,.2)');
     var glyph='', col='';
     if(p){ glyph=LAB_ED_GLYPH[p.type]||(_labEd.pieces[p.type]&&_labEd.pieces[p.type].glyph)||'?'; col=(p.color==='white')?'#f0e6c8':'#e0706a'; }
+    else if(isTarget){ glyph='🎯'; }
     html+='<div onclick="labEdCellClick('+r+','+c+')" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:3px;background:'+bg+';border:'+border+';font-family:serif;font-size:17px;color:'+col+'">'+(isv?'✕':glyph)+'</div>';
   }
   html+='</div>';
@@ -21727,7 +21777,7 @@ function labEdRenderTypes(){
 }
 function labEdDescribe(d){ var parts=[]; if(d.slide)parts.push('glisse'); if(d.step)parts.push('pas'); if(d.jumps)parts.push('saut'); if(d.captureStep||d.captureSlide||d.captureJumps)parts.push('capt.≠dépl.'); if(d.push)parts.push('pousse'); if(d.pushable)parts.push('poussable'); if(d.king)parts.push('roi'); if(d.capture===false&&!(d.captureStep||d.captureSlide||d.captureJumps))parts.push('pacifique'); return parts.join(' · '); }
 
-function labEdSetTool(t){ _labEd.tool=t; if(t!=='preview'){ _labEd.previewMoves=[]; _labEd.sel=null; } labEdSetInfo(t==='preview'?'Clique une pièce pour voir ses coups.':(t==='void'?'Clique pour (dé)tracer une case morte.':(t==='erase'?'Clique une pièce pour la retirer.':'Clique pour poser la pièce choisie.'))); labEdRender(); }
+function labEdSetTool(t){ _labEd.tool=t; if(t!=='preview'){ _labEd.previewMoves=[]; _labEd.sel=null; } labEdSetInfo(t==='preview'?'Clique une pièce pour voir ses coups.':(t==='void'?'Clique pour (dé)tracer une case morte.':(t==='erase'?'Clique une pièce pour la retirer.':(t==='target'?'Clique pour poser la case cible (reclique dessus pour la retirer).':'Clique pour poser la pièce choisie.')))); labEdRender(); }
 function labEdSetColor(c){ _labEd.brushColor=c; labEdRender(); }
 function labEdSetType(t){ _labEd.brushType=t; labEdRender(); }
 function labEdFlag(f,val){ _labEd[f]=val; _labEd.previewMoves=[]; labEdRender(); }
@@ -21747,6 +21797,10 @@ function labEdCellClick(r,c){
     var k=r+','+c, i=_labEd.voids.indexOf(k);
     if(i>=0) _labEd.voids.splice(i,1); else _labEd.voids.push(k);
   } else if(t==='erase'){ labEdRemoveAt(r,c); }
+  else if(t==='target'){
+    var isSame=_labEd.targetCell&&_labEd.targetCell.r===r&&_labEd.targetCell.c===c;
+    _labEd.targetCell = isSame ? null : {r:r,c:c};
+  }
   else if(t==='place'){
     if(labEdIsVoid(r,c)){ labEdSetInfo('Impossible de poser sur une case morte.'); labEdRender(); return; }
     labEdRemoveAt(r,c);
@@ -22033,6 +22087,10 @@ function labPlayCurrentModeVsAI(){
 // ══════════════════════════════════════════════════════════════════════
 var _pzCurrentId = null;   // id du puzzle en cours d'édition (null = nouveau)
 var _pzTimer = 3;          // cadence choisie (0 = illimité)
+// Objectif de la partie de puzzle EN COURS (test ou vraie partie jouée),
+// posé par pzTestPuzzle/pzPlayPuzzle avant initGame(). Lu par
+// pzCheckObjective(), appelée depuis switchTurn() — voir plus bas.
+var _pzActiveObjective = null;
 
 function pzOnShowScreen(){
   if(typeof labEdMountWidget==='function') labEdMountWidget('pz-ed-anchor');
@@ -22056,6 +22114,25 @@ function pzSelectTimer(sec){
     b.classList.toggle('selected', parseInt(b.getAttribute('data-t'),10)===sec);
   });
 }
+// Construit l'objectif depuis l'état courant de l'éditeur — partagé entre
+// pzSaveDraft (enregistrement) et pzTestPuzzle (lancement du test), pour
+// qu'un test corresponde TOUJOURS à ce qui sera réellement enregistré.
+// Retourne {ok:false,err} si "Atteindre une case" n'a pas de case cible
+// posée (outil 🎯 Cible) — décision Wurmz : impossible de publier un puzzle
+// dont l'objectif ne peut jamais être vérifié.
+function pzBuildObjective(){
+  var objSel = document.getElementById('pz-objective-type');
+  var type = objSel ? objSel.value : 'eliminate';
+  var objective = { type: type };
+  if(type==='reach_cell'){
+    if(!_labEd || !_labEd.targetCell) return { ok:false, err:'Choisis l\'outil 🎯 Cible et clique la case à atteindre.' };
+    objective.cell = { r:_labEd.targetCell.r, c:_labEd.targetCell.c };
+  }
+  var mtEl = document.getElementById('pz-max-turns');
+  var maxTurns = mtEl ? parseInt(mtEl.value, 10) : NaN;
+  if(!isNaN(maxTurns) && maxTurns>0) objective.maxTurns = maxTurns;
+  return { ok:true, objective:objective };
+}
 // Enregistre un brouillon (jamais publié tant que puzzle_publish n'a pas été
 // appelé — décision N : le slot n'est consommé qu'à la publication). L'IA
 // est TOUJOURS déterministe (décision A) : profondeur fixe, aucun hasard —
@@ -22069,8 +22146,9 @@ function pzSaveDraft(){
   var fmt = labEdCurrentFormat(); fmt.v = 1;
   var v = labValidateFormat(fmt);
   if(!v.ok){ if(statusEl) statusEl.textContent = 'Format invalide : '+v.err; return; }
-  var objSel = document.getElementById('pz-objective-type');
-  var objective = { type: objSel ? objSel.value : 'eliminate' };
+  var ov = pzBuildObjective();
+  if(!ov.ok){ if(statusEl) statusEl.textContent = ov.err; return; }
+  var objective = ov.objective;
   var ai = { depth: 3, luck: 0 };
   if(typeof supa==='undefined' || !supa || typeof currentUser==='undefined' || !currentUser){
     if(statusEl) statusEl.textContent = 'Connecte-toi pour enregistrer.'; return;
@@ -22092,6 +22170,11 @@ function pzTestPuzzle(){
   var fmt = labEdCurrentFormat();
   var v = labValidateFormat(fmt);
   if(!v.ok){ if(statusEl) statusEl.textContent = 'Format invalide : '+v.err; return; }
+  var ov = pzBuildObjective();
+  if(!ov.ok){ if(statusEl) statusEl.textContent = ov.err; return; }
+  // Posé AVANT initGame() : _pzActiveObjective n'est pas un champ de G, le
+  // reset de G par initGame() ne l'affecte pas — inutile d'attendre.
+  _pzActiveObjective = ov.objective;
   // Slot 98 : IA de test de puzzle, jamais de hasard (décision A).
   ADVERSARIES[98] = { id:98, icon:'🧩', isPuzzleTest:true,
     play:function(moves,board,stacks,lm,lp){ return minimaxPlay(moves,board,stacks,lm,lp,3,evalTrainer,G.topColor); } };
@@ -22108,6 +22191,34 @@ function pzTestPuzzle(){
   // Posé APRÈS initGame() : la fonction réinitialise G en un objet neuf
   // (G={...}), tout drapeau posé avant serait perdu silencieusement.
   G._puzzleTestActive = true;
+}
+// Vérifie l'objectif du puzzle EN COURS (reach_cell / maxTurns) — appelée
+// depuis switchTurn() juste après chaque coup qui n'a PAS déjà fait gagner
+// via la victoire standard (capture de l'épéiste, qui appelle endGame()
+// directement sans passer par switchTurn — voir scheduleAI/executeDrop).
+// Retourne true si elle a forcé la fin de partie (le joueur est TOUJOURS
+// G.bottomColor, l'IA du puzzle TOUJOURS G.topColor — mêmes conventions que
+// pzTestPuzzle/pzPlayPuzzle qui figent settings._playerColor='white').
+function pzCheckObjective(){
+  var obj = _pzActiveObjective;
+  if(!obj || !(G._puzzleTestActive || G._pzPlayId)) return false;
+  if(obj.type==='reach_cell' && obj.cell && typeof findMaster==='function'){
+    var mine = findMaster(G.bottomColor, G.board);
+    if(mine && mine.r===obj.cell.r && mine.c===obj.cell.c){
+      endGame(G.bottomColor, 'Case atteinte !');
+      return true;
+    }
+  }
+  if(obj.maxTurns){
+    var playerHalfMoves = 0;
+    for(var i=1;i<HISTORY.length;i++){ if(HISTORY[i].lastMoved && HISTORY[i].lastMoved.color===G.bottomColor) playerHalfMoves++; }
+    if(playerHalfMoves>=obj.maxTurns){
+      var oppColor = G.bottomColor==='white' ? 'black' : 'white';
+      endGame(oppColor, 'Limite de tours dépassée.');
+      return true;
+    }
+  }
+  return false;
 }
 // Appelée depuis endGame() — court-circuite tout le flux normal (stats/XP/
 // succès), une partie de test ne doit rien affecter d'autre que le puzzle
@@ -22311,11 +22422,12 @@ function pzUnpublishFromMine(id){
 // pzHandlePlayEnd, qui compte l'essai côté serveur (puzzle_record_attempt).
 function pzPlayPuzzle(id){
   if(typeof supa==='undefined' || !supa) return;
-  supa.from('puzzles').select('format,ai,timer_seconds').eq('id',id).single().then(function(res){
+  supa.from('puzzles').select('format,ai,timer_seconds,objective').eq('id',id).single().then(function(res){
     if(res.error || !res.data){ if(typeof showToast==='function') showToast('Puzzle introuvable — rafraîchis la liste.', true); return; }
     var row = res.data;
     var v = labValidateFormat(row.format);
     if(!v.ok){ if(typeof showToast==='function') showToast('Format invalide.', true); return; }
+    _pzActiveObjective = row.objective || { type:'eliminate' };
     var depth = (row.ai && row.ai.depth) || 3;
     ADVERSARIES[98] = { id:98, icon:'🧩', isPuzzleTest:true,
       play:function(moves,board,stacks,lm,lp){ return minimaxPlay(moves,board,stacks,lm,lp,depth,evalTrainer,G.topColor); } };

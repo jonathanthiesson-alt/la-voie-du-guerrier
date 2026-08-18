@@ -453,3 +453,52 @@ P8 (modération UI — les RPC existent déjà côté SQL) — écran de consult
 de l'historique d'invasions subies/menées, achat de bouclier côté UI (la RPC
 `monban_buy_shield` existe, pas de bouton), et les simplifications V1
 ci-dessus.
+
+### Objectifs de puzzle — case cible + limite de tours (2026-08-18, V0.113.0)
+
+**Découverte en creusant le retour de Thomas** : le menu « Objectif »
+(Éliminer/Survivre N tours/Atteindre une case) était **purement décoratif**
+— quel que soit le choix, la seule victoire réellement vérifiée était la
+capture standard de l'épéiste adverse. `reach_cell` n'avait même pas de
+mécanisme pour poser la case cible (bug confirmé par Thomas).
+
+**Fait** : nouvel outil `🎯 Cible` dans l'éditeur partagé (`lab-ed-widget`,
+visible uniquement en contexte Puzzle via `_labEdContext`, jamais dans le
+Labo) — `_labEd.targetCell`, rendu sur le plateau. Nouveau champ « Limite de
+tours » (optionnel, `objective.maxTurns`), combinable avec `eliminate` OU
+`reach_cell` — décision Wurmz : « capturer avant X tours » et « rejoindre la
+case avant X tours » sont deux objectifs distincts, tous deux couverts par
+ce même champ appliqué à des types différents. `pzBuildObjective()` valide
+qu'une case cible existe avant d'enregistrer/tester (sinon un puzzle
+publié serait à jamais impossible à réussir). `pzCheckObjective()`, appelée
+depuis `switchTurn()` (garde interne, aucun effet hors puzzle), vérifie
+l'atteinte de la case et la limite de tours à chaque coup qui n'a pas déjà
+gagné par capture standard. Aucune migration SQL : `objective` est déjà une
+colonne jsonb, ce sont seulement de nouvelles clés.
+
+**Non fait** : `survive_turns` reste tout aussi décoratif qu'avant (gap
+préexistant, hors périmètre de cette passe — pas demandé, pas touché).
+
+**« Plusieurs adversaires » (Thomas)** : vérifié dans le code — l'éditeur
+permet déjà de poser autant de pièces Noires que voulu (outil « Poser » +
+sélecteur de couleur), et `labValidateFormat` ne limite QUE le nombre
+d'épéistes (exactement 1 par camp, hors Champ de bataille). Aucune
+restriction technique trouvée → pas de fix appliqué, le blocage réel de
+Thomas reste à identifier avec lui (repro exacte ou capture d'écran) avant
+de coder quoi que ce soit ici.
+
+### Sumo — les mains poussent, ne tuent plus (2026-08-18, V0.113.0)
+
+Décision Wurmz : en mode sumo, une épée (« main ») qui atteint le Combattant
+(épéiste) adverse ne le capture plus directement — elle le POUSSE, sur le
+même patron que l'épéiste et le bouclier (déjà existant). Seule l'éjection
+hors du plateau (`!isValid(...)`) fait gagner (`pushOut`+`pushCaptures`).
+Appliqué globalement partout où `G.sumoMode` est actif (décision confirmée) :
+le mode SUMO classé en Arène, ET tout format custom/puzzle avec la case
+« Sumo » cochée. Un seul et même réglage différencie Épéiste/Combattant et
+Épée/Main (`labEdTypeLabel`, selon `_labEd.sumo`) — pas de piste de pièce
+séparée (décision confirmée). Modification dans `legalMoves` (branche
+`sword`), zéro changement pour les formats non-sumo (vérifié par harnais
+Node sur le moteur réel extrait d'`index.html` : capture directe intacte
+hors sumo, poussée simple + éjection = victoire en sumo, poussée d'une
+épée adverse inchangée).
