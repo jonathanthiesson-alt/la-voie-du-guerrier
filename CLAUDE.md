@@ -160,11 +160,11 @@ protocoles et les leçons apprises.
 
 **Combat de guilde (G0→G8) : fonctionnellement complet, testé bot par bot
 (2026-08-18).** Tournoi interne, Confrontation amicale et Attaque de guilde
-partagent le même moteur de combat séquentiel façon Tekken. **Prochain
-sujet : test à 2 comptes humains** (voir `docs/ROADMAP_GUILD_BATTLE.md` § 10
-pour le détail des lots, et deux limitations connues à traiter avant mise en
-avant publique : substitution Monban en défense d'attaque non construite,
-filtrage des quêtes quotidiennes/1ʳᵉ victoire du jour à corriger).
+partagent le même moteur de combat séquentiel façon Tekken. **Sujet en
+cours : substitution Monban en défense d'une attaque** (décision F du
+cadrage, seule limitation connue restante — voir
+`docs/ROADMAP_GUILD_BATTLE.md` § 10). Ensuite : test à 2 comptes humains
+(liste dans `docs/TESTS_MANUELS_COMBAT_GUILDE.md`).
 
 Voir `docs/ROADMAP.md` pour les 6 axes.
 
