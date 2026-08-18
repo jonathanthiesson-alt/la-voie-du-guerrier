@@ -479,13 +479,26 @@ colonne jsonb, ce sont seulement de nouvelles clés.
 **Non fait** : `survive_turns` reste tout aussi décoratif qu'avant (gap
 préexistant, hors périmètre de cette passe — pas demandé, pas touché).
 
-**« Plusieurs adversaires » (Thomas)** : vérifié dans le code — l'éditeur
-permet déjà de poser autant de pièces Noires que voulu (outil « Poser » +
-sélecteur de couleur), et `labValidateFormat` ne limite QUE le nombre
-d'épéistes (exactement 1 par camp, hors Champ de bataille). Aucune
-restriction technique trouvée → pas de fix appliqué, le blocage réel de
-Thomas reste à identifier avec lui (repro exacte ou capture d'écran) avant
-de coder quoi que ce soit ici.
+**« Plusieurs adversaires » (Thomas) — RÉSOLU (2026-08-19, V0.114.0)** :
+confirmé par Thomas, c'était bien la règle « exactement un épéiste par
+camp » (`labValidateFormat`) qui bloquait. Retirée, sur le même patron que
+Champ de bataille qui l'autorisait déjà (`kings.white<1||kings.black<1`
+au lieu de `!==1`) — plus de branche séparée `if(f.battlefield)`, une seule
+règle « au moins un par camp » pour tous les formats.
+**Effet de bord assumé, pas un bug** : hors Champ de bataille, capturer
+N'IMPORTE LEQUEL des épéistes d'un camp reste une victoire IMMÉDIATE
+(`execMove` : `if(!victim||victim.type==='epeiste')return true;` —
+inconditionnel, ce n'est QUE dans battlefield, via `bfRotation`/
+`battlefieldResolve`, que « éliminer TOUS les combattants » est la vraie
+condition). Et `findMaster()` ne voit que le PREMIER épéiste trouvé en
+balayant le plateau : un second épéiste du même camp est invisible aux
+heuristiques IA (`evalTrainer`, distance, danger) et à `pzCheckObjective`
+(reach_cell) — au créateur de tester son puzzle pour s'en rendre compte,
+comme toute règle de decision A (IA déterministe, test obligatoire avant
+publication).
+Confirmé au passage : le joueur joue toujours Blancs en test/en vraie
+partie de puzzle (`settings._playerColor='white'`, déjà le cas dans
+`pzTestPuzzle`/`pzPlayPuzzle` avant cette passe — rien à changer).
 
 ### Sumo — les mains poussent, ne tuent plus (2026-08-18, V0.113.0)
 

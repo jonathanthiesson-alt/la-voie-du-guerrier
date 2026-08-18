@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.113.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.114.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3953,8 +3953,16 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.113.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.114.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.114.0 &mdash; 18 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; LABO/PUZZLE — plusieurs Combattants par camp</li>
+        <li>La r&egrave;gle &laquo; exactement un Combattant par camp &raquo; est retir&eacute;e (retour Thomas) : on peut d&eacute;sormais poser plusieurs &eacute;p&eacute;istes du m&ecirc;me camp, comme en Champ de bataille. Capturer N'IMPORTE LEQUEL reste une victoire imm&eacute;diate (hors Champ de bataille).</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -9399,7 +9407,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.113.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.114.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -9631,7 +9639,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.113.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.114.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -9854,7 +9862,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.113.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.114.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -13854,7 +13862,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.113.0';
+var DEVLOG_LATEST = 'V0.114.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -21582,10 +21590,18 @@ function labValidateFormat(f){
     seen[r+','+c]=1;
     if(p.type==='epeiste') kings[p.color]++;
   }
-  if(f.battlefield){
-    // Champ de bataille : plusieurs combattants par camp (chacun = une escouade).
-    if(kings.white<1||kings.black<1) return {ok:false,err:'Au moins un Combattant par camp requis (blanc:'+kings.white+', noir:'+kings.black+').'};
-  } else if(kings.white!==1||kings.black!==1) return {ok:false,err:'Exactement un Combattant par camp requis (blanc:'+kings.white+', noir:'+kings.black+').'};
+  // "Exactement un Combattant par camp" retiré le 2026-08-19 (retour Thomas,
+  // via Puzzle mais valable partout — même patron que Champ de bataille qui
+  // acceptait déjà plusieurs combattants par camp). ATTENTION si plusieurs
+  // épéistes par camp HORS Champ de bataille : capturer N'IMPORTE LEQUEL des
+  // siens reste une victoire IMMÉDIATE (execMove : `if(!victim||victim.type
+  // ==='epeiste')return true;` — jamais "éliminer TOUS les épéistes", ça ne
+  // vaut que dans battlefield via bfRotation/battlefieldResolve). Et
+  // findMaster() ne voit que LE PREMIER épéiste trouvé sur le plateau — un
+  // second épéiste du même camp est invisible aux heuristiques IA
+  // (evalTrainer, distance, danger) et à pzCheckObjective (reach_cell) :
+  // effet de bord assumé, pas un bug — au créateur de tester son puzzle.
+  if(kings.white<1||kings.black<1) return {ok:false,err:'Au moins un Combattant par camp requis (blanc:'+kings.white+', noir:'+kings.black+').'};
   var out={id:'custom', name:(f.name||'Format personnalisé'), rows:rows, cols:cols, v2:(f.v2!==false), sumo:!!f.sumo, voids:voids, setup:f.setup.map(function(p){var q={type:p.type,color:p.color,r:+p.r,c:+p.c}; if(p.unit!=null)q.unit=p.unit; return q;})};
   if(pieces) out.pieces=pieces; // transmis tel quel au Worker (G.pieceDefs)
   if(f.battlefield) out.battlefield=true; // mode 3v3 : élimination d'unité (cf. G.battlefieldMode)
