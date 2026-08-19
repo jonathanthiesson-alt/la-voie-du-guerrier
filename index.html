@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.117.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.118.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3953,8 +3953,17 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.117.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.118.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.118.0 &mdash; 19 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; MONBAN — deux trous de farm colmat&eacute;s</li>
+        <li>Le niveau de Monban pouvait &ecirc;tre mont&eacute; &agrave; 100 en un seul appel technique, sans jouer une seule partie. C'est d&eacute;sormais le serveur qui v&eacute;rifie la vraie partie et calcule lui-m&ecirc;me le gain.</li>
+        <li>Le duel d'entra&icirc;nement quotidien pouvait &ecirc;tre rejou&eacute; en boucle pour du gain infini. Un seul duel compte d&eacute;sormais par jour, m&ecirc;me en contournant le bouton.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -9431,7 +9440,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.117.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.118.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -9663,7 +9672,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.117.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.118.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -9886,7 +9895,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.117.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.118.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -13896,7 +13905,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.117.0';
+var DEVLOG_LATEST = 'V0.118.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -17882,7 +17891,9 @@ function endGame(winner,reason){
     logJournalEvent(playerWon?'victory':'defeat', playerWon?'Victoire en ligne !':'Défaite en ligne.');
     // Décision O : Monban apprend de TOUTES mes parties en ligne, pas
     // seulement de l'entraînement quotidien (qui reste un rituel bonus).
-    if(typeof monbanRecordGameResult==='function') monbanRecordGameResult(playerWon);
+    // playerWon n'est plus transmis : monban_learn_from_game() le
+    // recalcule elle-même côté serveur depuis G.onlineGameId (audit 2026-08-19).
+    if(typeof monbanRecordGameResult==='function') monbanRecordGameResult();
   }
   // Duel d'entraînement contre son propre Monban (décision Wurmz 2026-08-18,
   // sens inversé le 2026-08-19 : c'est en le BATTANT qu'on l'améliore — un
@@ -22623,22 +22634,22 @@ function monbanDominantWeakness(w, gamesLearned){
   for(var k in rates){ if(rates[k]>bestRate){ bestRate=rates[k]; best=k; } }
   return { key:best, rate:best?bestRate:0 };
 }
-function monbanRecordGameResult(playerWon){
-  if(typeof supa==='undefined' || !supa) return;
+// Audit 2026-08-19 : skillRating n'est plus calculé/envoyé par le client —
+// monban_learn_from_game() le recalcule elle-même côté serveur à partir de
+// G.onlineGameId (vérifie que j'ai bien participé à CETTE partie FINIE et
+// que mon côté n'a pas déjà été compté). Fermait un trou de farm total :
+// avant, un simple appel console avec un skillRating inventé suffisait.
+function monbanRecordGameResult(){
+  if(typeof supa==='undefined' || !supa || !G.onlineGameId) return;
+  var myFirstMove = null;
+  if(typeof HISTORY!=='undefined' && HISTORY){
+    for(var hi=1; hi<HISTORY.length; hi++){
+      if(HISTORY[hi].lastMoved && HISTORY[hi].lastMoved.color===G.bottomColor){ myFirstMove = HISTORY[hi].lastMoved; break; }
+    }
+  }
+  var openingKey = myFirstMove ? (myFirstMove.type+'@'+myFirstMove.toR+','+myFirstMove.toC) : null;
   monbanLoadProfile().then(function(cur){
-    var p = (cur && cur.profile) || {skillRating:50,weaknesses:{exposure:0,missedWin:0,passivity:0},openings:{}};
-    var sr = Math.max(0, Math.min(100, (p.skillRating||50) + (playerWon ? 3 : -1)));
-    var openings = p.openings || {};
-    var myFirstMove = null;
-    if(typeof HISTORY!=='undefined' && HISTORY){
-      for(var hi=1; hi<HISTORY.length; hi++){
-        if(HISTORY[hi].lastMoved && HISTORY[hi].lastMoved.color===G.bottomColor){ myFirstMove = HISTORY[hi].lastMoved; break; }
-      }
-    }
-    if(myFirstMove){
-      var key = myFirstMove.type+'@'+myFirstMove.toR+','+myFirstMove.toC;
-      openings[key] = (openings[key]||0) + 1;
-    }
+    var p = (cur && cur.profile) || {weaknesses:{exposure:0,missedWin:0,passivity:0}};
     var deltas = monbanComputeWeaknessDeltas(G.bottomColor);
     var wPrev = p.weaknesses || {exposure:0,missedWin:0,passivity:0};
     var weaknesses = {
@@ -22648,7 +22659,13 @@ function monbanRecordGameResult(playerWon){
     };
     var gamesLearned = ((cur && cur.games_learned) || 0) + 1;
     var dom = monbanDominantWeakness(weaknesses, gamesLearned);
-    supa.rpc('monban_learn_from_game', { p_delta: { skillRating: sr, openings: openings, weaknesses: weaknesses, dominantWeakness: dom.key, dominantWeaknessRate: dom.rate } }).then(function(){
+    supa.rpc('monban_learn_from_game', {
+      p_game_id: G.onlineGameId,
+      p_weaknesses: weaknesses,
+      p_dominant_weakness: dom.key,
+      p_dominant_weakness_rate: dom.rate,
+      p_opening_key: openingKey
+    }).then(function(){
       _monbanProfileCache = null; // se rafraîchit à la prochaine lecture (écran Monban)
     });
   });

@@ -500,6 +500,61 @@ Confirmé au passage : le joueur joue toujours Blancs en test/en vraie
 partie de puzzle (`settings._playerColor='white'`, déjà le cas dans
 `pzTestPuzzle`/`pzPlayPuzzle` avant cette passe — rien à changer).
 
+### Monban — audit anti-farm (2026-08-19, V0.118.0)
+
+Demande Wurmz : « pas de farm possible ? il sera toujours représentatif du
+niveau du joueur ? ». Réponse honnête après lecture du code : NON, deux vrais
+trous exploitables existaient, corrigés dans la foulée (`sql_a_executer/
+monban_antifarm.sql`).
+
+**Trou 1 (le pire)** : `monban_learn_from_game(p_delta jsonb)` faisait
+`cur || p_delta` sans AUCUNE vérification serveur — n'importe quel client
+authentifié pouvait appeler `supa.rpc('monban_learn_from_game',{p_delta:
+{skillRating:100}})` depuis la console et maxer Monban en un seul appel,
+zéro partie jouée. Fix : nouvelle signature `(p_game_id, p_weaknesses,
+p_dominant_weakness, p_dominant_weakness_rate, p_opening_key)` — le serveur
+vérifie que l'appelant a bien participé à CETTE partie `finished`, calcule
+lui-même le +3/-1 depuis `online_games.winner`, et marque la partie comptée
+(`monban_counted_white`/`monban_counted_black` — **deux flags**, pas un
+seul : un premier jet avec un flag unique par partie bloquait à tort le
+second joueur légitime qui appelait après le premier, piège repéré en
+testant). Le client ne contrôle plus `skillRating`, seulement les données
+qualitatives (faiblesses/ouvertures — enjeu bien moindre qu'un plafond
+numérique, restent en confiance V1 comme le reste du système).
+
+**Trou 2** : `monban_apply_training_duel(cadence, player_won)` n'avait
+AUCUNE limite en elle-même — la garde « 1×/jour » ne vivait que dans
+`monban_mark_trained()`, une fonction séparée que rien n'obligeait à
+appeler avant. Bouclage possible pour +7 illimité. Fix : jeton à usage
+unique (`monban_profiles.pending_duel_date`) posé par `monban_mark_trained()`
+au clic, consommé par `monban_apply_training_duel()` qu'on gagne ou qu'on
+perde — sans jeton valide du jour, zéro gain quel que soit `p_player_won`.
+Bypass admin inchangé.
+
+Vérifié par impersonation SQL : ancien exploit confirmé impossible
+(fonction n'existe plus sous cette signature), vraie partie créée et
+comptée correctement des DEUX côtés indépendamment, rejeu de la même
+partie/du même jour bloqué dans les deux cas, perdant ne peut pas mentir
+sur son propre résultat (plus de paramètre `won` — le serveur le déduit
+seul de `online_games.winner`).
+
+**Ce qui N'A PAS été traité (accepté comme trust model existant, pas un
+oubli)** : le client peut toujours choisir SON PROPRE ressenti de faiblesse
+dominante (`p_dominant_weakness`) et le taux d'ouverture — un joueur pourrait
+en théorie envoyer une fausse faiblesse pour faire "mentir" son clone sur un
+point cosmétique. Enjeu jugé trop faible pour justifier de réécrire tout le
+calcul de faiblesses côté serveur (recalculer `HISTORY` complet avec le vrai
+moteur serait un chantier à part) — seul le plafond numérique (`skillRating`,
+qui affecte concrètement la force de jeu et les enjeux économiques
+invasion/guilde) a été durci.
+
+**Asymétrie structurelle qui RESTE (signalée, pas corrigée, hors scope
+"farm")** : un joueur à 50% de winrate en ligne dérive quand même vers le
+haut avec le temps (+3/-1 par partie n'est pas symétrique), et le duel
+d'entraînement est un bonus pur jamais négatif. Ce n'est pas un trou de
+sécurité — c'est un choix de design encore ouvert, voir le bilan donné à
+Wurmz en conversation.
+
 ### Monban — pénalité de niveau sur une défense perdue (2026-08-19, V0.117.0)
 
 Décision Wurmz, complète le tableau gains/pertes établi en session : « gagner
