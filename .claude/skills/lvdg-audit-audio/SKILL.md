@@ -9,7 +9,7 @@ description: Audit complet du son de La Voie du Guerrier (musiques, SFX, déclen
 > **chaque bug audio trouvé DOIT devenir une règle ci-dessous**, sinon il
 > reviendra. C'est la même mécanique que les pièges Supabase de `CLAUDE.md`,
 > et c'est ce qui a fini par rendre ces pièges-là inoffensifs.
-> Dernière passe : 2026-08-18.
+> Dernière passe : 2026-08-19.
 
 ## Pourquoi ce skill existe
 
@@ -157,6 +157,38 @@ partie (grep `showScreen('` dans les fonctions de fin de partie/overlay :
 similaire) et vérifier que CHACUN de leurs écrans cibles a son propre
 nettoyage dans `showScreen()` — pas seulement `'menu'` et `'home'`.
 
+### 10. 🔴 Un ABANDON en pleine partie ne passe pas par `endGame()` — donc pas par son nettoyage audio non plus
+**Vécu (2026-08-19, trouvé lors d'une passe d'audit générale, pas signalé
+par un joueur)** : `quitOnlineGame(destScreen)` — le bouton « ✕ Quitter »
+de la barre de partie en ligne — écrit `status='finished'` en base et
+appelle `showScreen(destScreen)` **directement**, dans la branche « partie
+encore en cours » (`!G.gameOver`). Cette branche ne passe **jamais** par
+`endGame()`, qui est pourtant l'endroit qui coupe `fight-music` (dès sa 2e
+ligne) et relance `menu-music` sur les écrans qui le prévoient. Résultat :
+après un abandon volontaire, `fight-music` restait active indéfiniment, et
+`menu-music` ne repartait pas non plus (silence total) — `destScreen` vaut
+`'online-menu'` ou `'sumo'`, deux écrans que `showScreen()` ne couvre pas
+(règle 9 ne couvre que les écrans-hub village/menu/home).
+
+Différent de la règle 9 : là, c'était un écran d'arrivée manquant dans
+`showScreen()`. Ici, c'est un **point de sortie qui contourne carrément
+`endGame()`** — aucun nettoyage centralisé ne peut le rattraper puisqu'il
+n'y passe pas. La règle 2 (« point d'annulation unique : `showScreen()` »)
+a une exception implicite qu'il fallait documenter : un abandon AVANT la fin
+naturelle d'une partie n'est pas un simple changement d'écran, c'est un
+second chemin de sortie qui doit refaire lui-même ce que `endGame()` aurait
+fait.
+
+Correctif : `stopFightMusic()` + `startMenuMusic()` ajoutés directement
+dans `quitOnlineGame()`, juste avant `showScreen(destScreen)` — à la
+source, plutôt que d'énumérer tous les `destScreen` possibles présents et
+futurs dans `showScreen()`.
+**Réflexe supplémentaire pour la procédure** : chercher aussi les fonctions
+qui écrivent `status='finished'`/appellent une RPC de forfait/abandon SANS
+appeler `endGame()` derrière (`quitOnlineGame`, `invasion_forfeit` côté
+client, tout futur bouton d'abandon) — ce sont des points de sortie
+parallèles à `endGame()`, pas seulement des destinations d'écran.
+
 ## Matrice de test (navigateur, tabId de la Browser pane)
 
 Espionner `play()` plutôt qu'écouter : on teste le **déclenchement**, sans
@@ -188,6 +220,7 @@ premier test — c'est le second qui prouve qu'on a corrigé au lieu de casser.
 | `startFightMusic()` résolu hors écran de jeu (match avorté, login) | **aucune** musique de combat ; contre-épreuve sur `screen-game` = musique OK |
 | `startMenuMusic()` parasite pendant le combat (sur `screen-game`) | **aucune** musique de menu ; contre-épreuve sur `screen-menu` = musique OK |
 | Fin de Combat rapide → bouton « ↩ Retour » (`villageMenuReturn()`) | fight-music coupée, menu-music relancée, comme via `showScreen('menu')` |
+| Abandon en pleine partie (`quitOnlineGame()`, bouton « ✕ Quitter ») | fight-music coupée, menu-music relancée, même si `destScreen` n'est ni menu/home/village |
 
 ## Procédure
 
@@ -198,6 +231,10 @@ premier test — c'est le second qui prouve qu'on a corrigé au lieu de casser.
    `endgameToVillage`, `endgameNewCombat`, tout futur bouton similaire) et
    vérifier que chacun a son propre nettoyage dans `showScreen()` — pas
    seulement `'menu'`/`'home'` (règle 9).
-4. Dérouler la matrice dans le navigateur, contre-épreuves comprises.
-5. **Consigner tout nouveau bug ici en règle numérotée**, avec le symptôme
+4. **Chercher les chemins d'ABANDON qui contournent `endGame()`**
+   (`quitOnlineGame`, toute fonction qui écrit `status='finished'` ou
+   appelle une RPC de forfait SANS appeler `endGame()` derrière) et
+   vérifier qu'ils font eux-mêmes le nettoyage audio (règle 10).
+5. Dérouler la matrice dans le navigateur, contre-épreuves comprises.
+6. **Consigner tout nouveau bug ici en règle numérotée**, avec le symptôme
    observé — c'est le seul mécanisme d'amélioration de ce fichier.
