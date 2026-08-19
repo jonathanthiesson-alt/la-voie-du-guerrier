@@ -500,6 +500,44 @@ Confirmé au passage : le joueur joue toujours Blancs en test/en vraie
 partie de puzzle (`settings._playerColor='white'`, déjà le cas dans
 `pzTestPuzzle`/`pzPlayPuzzle` avant cette passe — rien à changer).
 
+### Monban — plafond Elo + moyenne mobile (2026-08-19, V0.120.0)
+
+Suite directe de l'audit anti-farm : plus de triche possible, mais restait
+une dérive structurelle honnête (+3/-1 asymétrique dérive vers le haut même
+à 50% de winrate ; le duel d'entraînement ne fait jamais perdre). Demande
+Wurmz : « comment faire pour que le Monban d'un joueur soit au plus près de
+lui, mais jamais plus puissant ? ».
+
+**Deux mécanismes combinés**, `sql_a_executer/monban_elo_anchor.sql` :
+1. **Plafond** (`monban_elo_ceiling(uid)`, interne, jamais exposé client) :
+   `clamp((meilleur_elo_3s/5s/10s - 800) / 8, 0, 100)` — Elo 1200 → 50,
+   2000 → 100 (clampé). Re-synchronisé et **re-appliqué à la baisse** à
+   chaque événement Monban (partie, duel, défense) — pas juste un plafond
+   qui bloque la suite : si le stocké dépasse le nouveau plafond (Elo qui a
+   chuté depuis), il est immédiatement ramené dessus.
+2. **Moyenne mobile** : `new = old + alpha*(cible - old)` remplace les
+   gains/pertes fixes partout. Parties en ligne : symétrique, cible
+   100/0, alpha=0.1. Duel d'entraînement : cible 100 sur victoire
+   UNIQUEMENT (alpha 0.15/0.10/0.07 selon cadence 3s/5s/10s — asymétrie
+   voulue par Wurmz intacte, aucun appel sur défaite). Défense perdue :
+   cible 0 sur défaite UNIQUEMENT (alpha 0.08, asymétrie intacte, aucun
+   appel sur victoire). Diminue mécaniquement près des bornes (contrairement
+   à l'ancien +3 fixe qui "collait" au plafond dès qu'on l'approchait).
+
+Vérifié par impersonation SQL : victoire à Elo 1200 (plafond 50) bloquée
+pile à 50 malgré l'EMA qui aurait donné 55 ; skillRating forcé à 90 avec
+Elo bas → re-synchronisé à 50 (plafond) PUIS -5 pour la défaite qui a suivi
+(45) ; Elo relevé à 2000 (plafond 100) → progression 45→51→58→53 sur
+victoire/duel/défense successifs, chaque delta cohérent avec la formule.
+Aucun changement client : entièrement calculé côté serveur, le client
+affiche juste la valeur retournée.
+
+**Explicitement non traité, "on ajustera avec une vraie flotte de
+joueurs"** (mots de Wurmz) : les constantes (alpha=0.1/0.08/0.15-0.10-0.07,
+formule du plafond `/8`) sont des choix V1 raisonnables mais non calibrés
+sur de vraies données (Elo moyen réel, distribution). À revisiter une fois
+des statistiques joueurs disponibles.
+
 ### Monban — audit anti-farm (2026-08-19, V0.118.0)
 
 Demande Wurmz : « pas de farm possible ? il sera toujours représentatif du
