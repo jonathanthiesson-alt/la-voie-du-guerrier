@@ -120,8 +120,11 @@ passe, soit rien. Toujours revérifier après une erreur.
 ### `create or replace view` ne peut pas réordonner les colonnes
 Erreur `42P16`. Il faut `drop view if exists ... ;` **avant** de recréer.
 
-### `create or replace function` ne peut pas changer le type de retour
-Il faut `drop function if exists nom(types);` **avant**.
+### `create or replace function` ne peut pas changer le type de retour NI le nom d'un paramètre
+Il faut `drop function if exists nom(types);` **avant**. Même erreur `42P13`
+si on renomme juste un paramètre (ex. `p_monban_won` → `p_player_won`) en
+gardant le même type — on pourrait croire que ça passe puisque la signature
+(types, ordre) ne change pas, mais Postgres refuse quand même.
 
 ### 🔴 Ne jamais nommer une colonne toute neuve dans un `select` critique
 **Cause d'un bug majeur** : ajouter `wurmz_skin` à la liste des colonnes du

@@ -1,18 +1,19 @@
 -- ═══════════════════════════════════════════════════════════════════
 -- DUEL D'ENTRAÎNEMENT CONTRE SON PROPRE MONBAN — décision Wurmz 2026-08-18
+-- Sens du gain INVERSÉ le 2026-08-19 (Wurmz) : c'est en le BATTANT qu'on
+-- l'améliore, pas l'inverse — un sparring-partner progresse en encaissant.
 --
 -- Le clic quotidien "Entraîner Monban" ne donne plus un +2 instantané : il
--- déclenche maintenant un vrai duel local (couleur tirée au sort, cadence
--- au choix 3s/5s/10s). monban_mark_trained() ne fait donc plus QUE poser
--- la garde 1×/jour (illimité pour Wurmz/Musashi via is_admin_user(), même
--- patron que sql_a_executer/monban_daily_training.sql) — les points
--- viennent maintenant du résultat réel du duel, appliqués par la nouvelle
--- RPC monban_apply_training_duel().
+-- déclenche un vrai duel local (couleur tirée au sort, cadence au choix
+-- 3s/5s/10s). monban_mark_trained() ne fait que poser la garde 1×/jour
+-- (illimité pour Wurmz/Musashi via is_admin_user(), même patron que
+-- sql_a_executer/monban_daily_training.sql) — les points viennent du
+-- résultat réel du duel, appliqués par monban_apply_training_duel().
 --
--- Barème : Monban gagne le duel → +7 (3s, le plus dur pour lui) / +5 (5s) /
--- +3 (10s, le plus confortable). Monban perd → AUCUNE pénalité, c'est un
--- pur bonus (demande explicite de Wurmz : "en cas de défaite, pas de perte
--- de points, c'est que du bonus").
+-- Barème : le JOUEUR gagne le duel → +7 (3s, cadence la plus dure) / +5
+-- (5s) / +3 (10s, la plus confortable). Le joueur perd (Monban gagne) →
+-- AUCUNE pénalité, c'est un pur bonus (demande explicite de Wurmz : "en
+-- cas de défaite, pas de perte de points, c'est que du bonus").
 -- ═══════════════════════════════════════════════════════════════════
 
 -- Signature/type de retour inchangés (jsonb) depuis monban_daily_training.sql
@@ -40,7 +41,12 @@ begin
 end $$;
 grant execute on function public.monban_mark_trained() to authenticated;
 
-create or replace function public.monban_apply_training_duel(p_cadence integer, p_monban_won boolean)
+-- Renommage p_monban_won → p_player_won : contrairement au type de retour,
+-- Postgres refuse aussi de renommer un paramètre via create or replace
+-- (42P13) — drop obligatoire, piège CLAUDE.md étendu au nom des paramètres.
+drop function if exists public.monban_apply_training_duel(integer, boolean);
+
+create function public.monban_apply_training_duel(p_cadence integer, p_player_won boolean)
 returns jsonb language plpgsql security definer set search_path to 'public' as $$
 declare uid uuid := auth.uid(); cur jsonb; new_sr int; gain int;
 begin
@@ -53,7 +59,7 @@ begin
 
   select profile into cur from monban_profiles where user_id = uid;
 
-  if not p_monban_won then
+  if not p_player_won then
     return jsonb_build_object('ok', true, 'gain', 0, 'skill_rating', coalesce((cur->>'skillRating')::int, 50));
   end if;
 

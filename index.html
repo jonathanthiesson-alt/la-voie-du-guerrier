@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.115.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.117.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -3220,9 +3220,9 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
     <div id="monban-cadence-picker" style="display:none;margin-top:8px">
       <div style="font-family:VT323,monospace;font-size:12px;color:var(--parchment);opacity:.7;margin-bottom:6px">Choisis la cadence du duel — couleur tirée au sort :</div>
       <div style="display:flex;gap:6px">
-        <button class="btn" style="flex:1;padding:8px" onclick="monbanStartTrainingDuel(3)">⚡ 3s<br><span style="font-size:10px;opacity:.6">+7 si Monban gagne</span></button>
-        <button class="btn" style="flex:1;padding:8px" onclick="monbanStartTrainingDuel(5)">🗡 5s<br><span style="font-size:10px;opacity:.6">+5 si Monban gagne</span></button>
-        <button class="btn" style="flex:1;padding:8px" onclick="monbanStartTrainingDuel(10)">🛡 10s<br><span style="font-size:10px;opacity:.6">+3 si Monban gagne</span></button>
+        <button class="btn" style="flex:1;padding:8px" onclick="monbanStartTrainingDuel(3)">⚡ 3s<br><span style="font-size:10px;opacity:.6">+7 si tu gagnes</span></button>
+        <button class="btn" style="flex:1;padding:8px" onclick="monbanStartTrainingDuel(5)">🗡 5s<br><span style="font-size:10px;opacity:.6">+5 si tu gagnes</span></button>
+        <button class="btn" style="flex:1;padding:8px" onclick="monbanStartTrainingDuel(10)">🛡 10s<br><span style="font-size:10px;opacity:.6">+3 si tu gagnes</span></button>
       </div>
     </div>
     <div id="monban-train-status" style="font-family:VT323,monospace;font-size:11px;color:var(--gold-bright);margin-top:6px;min-height:14px"></div>
@@ -3953,8 +3953,24 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.115.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.117.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.117.0 &mdash; 19 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; MONBAN — perdre une d&eacute;fense lui co&ucirc;te un peu de niveau</li>
+        <li>Quand Monban d&eacute;fend r&eacute;ellement &agrave; ta place (invasion ou attaque de guilde) et perd, il perd 1 point de niveau. Gagner ne lui en donne pas &mdash; sym&eacute;trique du duel d'entra&icirc;nement, o&ugrave; c'est l'inverse. Ne s'applique jamais si tu as d&eacute;fendu toi-m&ecirc;me.</li>
+      </ul>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.116.0 &mdash; 19 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; MONBAN — le duel d'entra&icirc;nement change de sens</li>
+        <li>C'est d&eacute;sormais en LE BATTANT que Monban progresse (+7 en 3s / +5 en 5s / +3 en 10s), pas l'inverse &mdash; comme un sparring-partner qui apprend en encaissant. Aucune perte s'il gagne, toujours un pur bonus.</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -9415,7 +9431,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.115.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.117.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -9647,7 +9663,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.115.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.117.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -9870,7 +9886,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.115.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.117.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -13880,7 +13896,7 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.115.0';
+var DEVLOG_LATEST = 'V0.117.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
@@ -17868,13 +17884,15 @@ function endGame(winner,reason){
     // seulement de l'entraînement quotidien (qui reste un rituel bonus).
     if(typeof monbanRecordGameResult==='function') monbanRecordGameResult(playerWon);
   }
-  // Duel d'entraînement contre son propre Monban (décision Wurmz 2026-08-18) :
-  // bonus de niveau UNIQUEMENT si Monban (toujours topColor ici) gagne le
-  // duel — jamais de perte en cas de défaite. _monbanDuelCadence n'est posé
-  // QUE par monbanStartTrainingDuel(), jamais pour une autre partie locale.
+  // Duel d'entraînement contre son propre Monban (décision Wurmz 2026-08-18,
+  // sens inversé le 2026-08-19 : c'est en le BATTANT qu'on l'améliore — un
+  // sparring-partner progresse en encaissant, pas en gagnant). Bonus de
+  // niveau UNIQUEMENT si le JOUEUR gagne le duel — jamais de perte si
+  // Monban gagne. _monbanDuelCadence n'est posé QUE par
+  // monbanStartTrainingDuel(), jamais pour une autre partie locale.
   if(_monbanDuelCadence){
     var _duelCadence = _monbanDuelCadence; _monbanDuelCadence = null;
-    if(typeof monbanApplyTrainingDuelResult==='function') monbanApplyTrainingDuelResult(_duelCadence, !playerWon);
+    if(typeof monbanApplyTrainingDuelResult==='function') monbanApplyTrainingDuelResult(_duelCadence, playerWon);
   }
 
   // Statistiques par cadence de jeu (3s/5s/10s) et par couleur — c'est
@@ -22744,16 +22762,17 @@ function monbanTrainingPlay(moves, board, stacks, lm, lp){
   try { mv = minimaxPlay(pool, board, stacks, lm, lp, depth, evalTrainer, color); } catch(e){}
   return mv || pool[Math.floor(Math.random()*pool.length)];
 }
-// Appelée depuis endGame() quand _monbanDuelCadence est posé. Aucune perte
-// de points en cas de défaite de Monban — bonus pur (décision Wurmz).
-function monbanApplyTrainingDuelResult(cadence, monbanWon){
+// Appelée depuis endGame() quand _monbanDuelCadence est posé. C'est en le
+// BATTANT qu'on l'améliore (décision Wurmz 2026-08-19) — aucune perte de
+// points s'il gagne, le duel reste un bonus pur, jamais punitif.
+function monbanApplyTrainingDuelResult(cadence, playerWon){
   if(typeof supa==='undefined' || !supa) return;
-  supa.rpc('monban_apply_training_duel', { p_cadence: cadence, p_monban_won: monbanWon }).then(function(res){
+  supa.rpc('monban_apply_training_duel', { p_cadence: cadence, p_player_won: playerWon }).then(function(res){
     _monbanProfileCache = null;
     if(res.error) return;
     var data = res.data;
     if(data && data.gain>0 && typeof showToast==='function'){
-      showToast('⚔ Monban a gagné le duel — +'+data.gain+' de niveau ('+data.skill_rating+'/100)', false);
+      showToast('⚔ Tu as battu Monban — il progresse : +'+data.gain+' de niveau ('+data.skill_rating+'/100)', false);
     }
   });
 }

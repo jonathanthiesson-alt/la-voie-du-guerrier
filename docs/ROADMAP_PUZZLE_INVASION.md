@@ -500,6 +500,29 @@ Confirmé au passage : le joueur joue toujours Blancs en test/en vraie
 partie de puzzle (`settings._playerColor='white'`, déjà le cas dans
 `pzTestPuzzle`/`pzPlayPuzzle` avant cette passe — rien à changer).
 
+### Monban — pénalité de niveau sur une défense perdue (2026-08-19, V0.117.0)
+
+Décision Wurmz, complète le tableau gains/pertes établi en session : « gagner
+ne lui fait pas prendre de skill, perdre lui fait perdre du skill » pour ses
+PROPRES défenses (invasion, attaque de guilde) — asymétrique avec le duel
+d'entraînement (`monban_training_duel.sql`), où c'est l'inverse (jamais de
+perte). Nouveau helper partagé `monban_apply_defense_loss(p_user_id)`
+(-1 skillRating, plancher 0), appelé depuis `invasion_resolve_internal`
+(condition : `not v_was_live` — Monban a réellement joué, pas le défenseur
+en personne — ET défaite) et depuis `guild_events_combat_tick` (condition :
+`g.is_monban_defense` sur CE duel précis ET Noir, toujours Monban en
+substitution, a perdu). Ne touche jamais `skillRating` quand le joueur a
+défendu en personne — seul `monban_stats` (compteur d'affichage
+gagnées/perdues, distinct) compte ce cas-là, comme avant.
+SQL : `sql_a_executer/monban_defense_penalty.sql`. Piège rencontré :
+renommer un paramètre existant (`p_monban_won`→ pas ici, mais le même piège
+a été touché juste avant sur `monban_apply_training_duel` — voir CLAUDE.md,
+`create or replace function` refuse aussi de renommer un paramètre, pas
+seulement de changer le type de retour, erreur 42P13).
+Vérifié par appel SQL direct (le helper est `revoke` pour tout rôle client,
+seul un appelant `SECURITY DEFINER` interne peut le déclencher) : 50→49 sur
+une perte, plancher confirmé à 0 (jamais négatif).
+
 ### Sumo — les mains poussent, ne tuent plus (2026-08-18, V0.113.0)
 
 Décision Wurmz : en mode sumo, une épée (« main ») qui atteint le Combattant
