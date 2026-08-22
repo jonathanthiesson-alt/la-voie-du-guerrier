@@ -8,7 +8,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
-<title>La Voie du Guerrier — ONLINE alpha V0.120.0</title>
+<title>La Voie du Guerrier — ONLINE alpha V0.121.0</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Cinzel+Decorative:wght@400;700&family=Noto+Serif+JP:wght@300;400;700&family=Shippori+Mincho+B1:wght@400;700;800&family=VT323&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -1654,6 +1654,13 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 .devlog-list{margin:0;padding:8px 12px 8px 24px;list-style:disc}
 .devlog-list li{font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.75);line-height:1.6;padding:1px 0}
 .devlog-list li code{font-family:'VT323',monospace;color:#c090f0;font-size:13px}
+
+/* ── News (annonces joueur — même patron que DevLog, teinte or au lieu de violet
+   pour ne pas les confondre : DevLog = technique/dev, News = annonces jeu) ── */
+.news-entry{margin-bottom:14px;border:1px solid rgba(212,160,23,.2);border-radius:6px;overflow:hidden}
+.news-title{font-family:'Cinzel',serif;font-size:13px;color:var(--gold-bright);letter-spacing:1px;padding:9px 12px;background:rgba(212,160,23,.08);border-bottom:1px solid rgba(212,160,23,.12);display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.news-date{font-family:'VT323',monospace;font-size:11px;opacity:.55;color:var(--parchment);white-space:nowrap}
+.news-body{margin:0;padding:10px 12px;font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.85);line-height:1.55}
 
 /* ── Journal d'activité : rouleau de registre japonais ancien ────────
    Fond papier vieilli (dégradés sépia superposés en guise de grain/
@@ -3953,8 +3960,17 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
   <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
 
     <div style="text-align:center;margin-bottom:18px;padding:10px;background:rgba(160,80,240,.08);border:1px solid rgba(160,80,240,.2);border-radius:6px">
-      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.120.0</div>
+      <div style="font-family:'Cinzel',serif;font-size:16px;color:#c090f0;letter-spacing:3px">ONLINE alpha V0.121.0</div>
       <div style="font-family:'VT323',monospace;font-size:14px;color:rgba(200,168,110,.5);margin-top:2px">La Voie du Guerrier — Journal de d&#233;veloppement</div>
+    </div>
+
+    <div class="devlog-entry">
+      <div class="devlog-version">ONLINE alpha V0.121.0 &mdash; 22 ao&ucirc;t 2026</div>
+      <ul class="devlog-list">
+        <li style="list-style:none;margin-left:-14px;color:#c090f0;font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding-top:6px">&#9670; NEWS — nouvel onglet Auberge, et SUMO prolong&#233;</li>
+        <li>Nouvel &#233;cran <strong>News</strong> (Auberge) : annonces joueur, qui s'ouvrent automatiquement &#224; la prochaine connexion au village d&#232;s qu'il y a du nouveau, et restent consultables &#224; tout moment.</li>
+        <li>L'&#233;v&#233;nement SUMO est prolong&#233; jusqu'&#224; <strong>fin septembre</strong> (au lieu du 31 ao&#251;t).</li>
+      </ul>
     </div>
 
     <div class="devlog-entry">
@@ -5359,6 +5375,32 @@ body.board-circles.theme-terre    .cell.playable{background:radial-gradient(circ
 
 </div>
 
+<!-- ═══ NEWS — annonces joueur (Auberge > News) ═══════════════════════
+     Même patron que DevLog (entrées statiques dans l'HTML + popup au
+     village), mais pour TOUS les joueurs, pas seulement les devs — voir
+     NEWS_LATEST/villageMaybeShowNews(). Contrairement à DevLog, pas de
+     table SQL : aussi simple à maintenir qu'un nouvel article devlog. -->
+<div id="screen-news" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
+  <div style="width:100%;padding:10px 14px 8px;background:rgba(0,0,0,.6);border-bottom:1px solid rgba(212,160,23,.3);display:flex;align-items:center;gap:10px;flex-shrink:0">
+    <button class="tuto-nav-btn" onclick="showScreen('menu')" style="padding:5px 10px;font-size:11px;border-color:rgba(212,160,23,.5);color:var(--gold-bright)">&#8617; Menu</button>
+    <div>
+      <div style="font-family:'Cinzel',serif;font-size:13px;color:var(--gold-bright);letter-spacing:2px">&#128240; NEWS</div>
+      <div style="font-family:'VT323',monospace;font-size:13px;color:rgba(212,160,23,.4)">Annonces &amp; &#233;v&#233;nements</div>
+    </div>
+  </div>
+  <div style="width:100%;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 28px">
+
+    <div class="news-entry">
+      <div class="news-title"><span>&#127942; SUMO prolong&#233;</span><span class="news-date">22 ao&#251;t 2026</span></div>
+      <div class="news-body">L'&#233;v&#233;nement d'&#233;t&#233; SUMO est prolong&#233; jusqu'&#224; <strong>fin septembre</strong> ! Continue &#224; affronter des adversaires sur le dohy&#244; sans murs, &#224; gagner de la Fame &#128153; et &#224; grimper au classement &#8212; tu as un mois de plus pour t'y frotter.</div>
+    </div>
+
+    <div style="text-align:center;margin-top:20px;font-family:'VT323',monospace;font-size:13px;color:rgba(212,160,23,.25);letter-spacing:1px">
+      La Voie du Guerrier
+    </div>
+  </div>
+</div>
+
 <div id="screen-piece-skins" class="screen" style="justify-content:flex-start;padding:0;overflow:hidden">
   <div style="width:100%;padding:10px 14px 8px;background:rgba(0,0,0,.6);border-bottom:1px solid rgba(200,168,110,.25);display:flex;align-items:center;gap:10px;flex-shrink:0">
     <button class="tuto-nav-btn" onclick="villageMenuReturn()" style="padding:5px 10px;font-size:11px">&#8617; Retour</button>
@@ -6454,7 +6496,7 @@ var MODE_INFO = {
     titre: '🌗 SUMO',
     monnaie: '💗 Fame (心)',
     sections: [
-      ['But', 'Événement d\'été, jusqu\'au 31 août. Le plateau perd ses murs : le combat se joue dans un dohyō circulaire, et les poussées peuvent faire TOMBER les pions hors du ring.'],
+      ['But', 'Événement d\'été, prolongé jusqu\'à fin septembre. Le plateau perd ses murs : le combat se joue dans un dohyō circulaire, et les poussées peuvent faire TOMBER les pions hors du ring.'],
       ['Règle du ring', 'Un pion éjecté ne revient JAMAIS en jeu (il reste visible en transparence au bord du cercle). Éjecter le Combattant adverse hors du ring fait gagner la manche — exactement comme une capture.'],
       ['Format', 'Match en 3 manches (BO3), comme l\'Arène : le premier à 2 manches gagnées l\'emporte.'],
       ['Appariement', 'Le matchmaking te met SYSTÉMATIQUEMENT face au joueur au niveau (ELO) le plus proche du tien.'],
@@ -8720,7 +8762,7 @@ function buildWurmzSkinFor(role, type, piece, col){
   return s;
 }
 
-// ── Skin SUMO (événement, jusqu'au 31 août) ─────────────────────────
+// ── Skin SUMO (événement, jusqu'à fin septembre) ─────────────────────
 // Pendant une partie SUMO, ce skin est IMPOSÉ aux deux camps : aucun
 // skin personnel (même le WurmzSkin s'efface). Il n'apparaît dans AUCUN
 // réglage d'apparence — à la fin de l'événement il deviendra déblocable
@@ -9457,7 +9499,7 @@ const LANGS={
     menu_clock:'🕐 Pendule',
     menu_tutorial:'📜 Tutoriel',
     menu_settings:'⚙ Paramètres',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.120.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.121.0 ♜',
     // Settings
     settings_title:'⚙ PARAMÈTRES',
     settings_lang:'🌍 Langues',
@@ -9689,7 +9731,7 @@ const LANGS={
     menu_clock:'🕐 Clock',
     menu_tutorial:'📜 Tutorial',
     menu_settings:'⚙ Settings',
-    version:'♜ La Voie du Guerrier — ONLINE alpha V0.120.0 ♜',
+    version:'♜ La Voie du Guerrier — ONLINE alpha V0.121.0 ♜',
     settings_title:'⚙ SETTINGS',
     settings_lang:'🌍 Languages',
     settings_display:'📱 Display',
@@ -9912,7 +9954,7 @@ const LANGS={
     menu_clock:'🕐 時計',
     menu_tutorial:'📜 チュートリアル',
     menu_settings:'⚙ 設定',
-    version:'♜ 武士の道 — ONLINE alpha V0.120.0 ♜',
+    version:'♜ 武士の道 — ONLINE alpha V0.121.0 ♜',
     settings_title:'⚙ 設定',
     settings_lang:'🌍 言語',
     settings_display:'📱 表示',
@@ -11531,7 +11573,7 @@ function renderSumoAdBannerHtml(){
       +'<div style="font-family:\'Cinzel\',serif;font-size:15px;color:var(--gold-bright)">SUMO <span style="font-family:\'Noto Serif JP\',serif;font-size:12px;opacity:.7">相撲</span></div>'
       +'<div style="font-family:VT323,monospace;font-size:12px;line-height:1.25;color:var(--parchment);opacity:.7">Le ring sans murs · éjecte le Combattant adverse · 💗 Fame</div>'
     +'</div>'
-    +'<div style="font-family:VT323,monospace;font-size:12px;color:#ff9dbf;text-align:right;flex-shrink:0">jusqu\'au<br>31 août</div>'
+    +'<div style="font-family:VT323,monospace;font-size:12px;color:#ff9dbf;text-align:right;flex-shrink:0">jusqu\'à<br>fin sept.</div>'
   +'</div>';
 }
 function renderPlayAdBanner(){
@@ -13712,7 +13754,7 @@ function showScreen(id){
   // Thème Village : construire la carte à la première visite, rafraîchir le
   // grisage online/dev à chaque visite, et masquer le bouton flottant «⛩
   // Village» quand on EST sur la carte (via la classe village-map-open).
-  if(id==='village'){ if(typeof buildVillageMap==='function') buildVillageMap(); if(typeof villageRefreshLocks==='function') villageRefreshLocks(); if(typeof villageRefreshBanner==='function') villageRefreshBanner(); if(typeof villageRefreshBadges==='function') villageRefreshBadges(); if(typeof villageUpdateSumoTimer==='function') villageUpdateSumoTimer(); if(typeof villageMaybeGuildInfoPopup==='function') villageMaybeGuildInfoPopup(); if(typeof villageMaybeShowDevlog==='function') villageMaybeShowDevlog(); if(typeof refreshNotificationBadge==='function') refreshNotificationBadge(); if(typeof refreshMessagingBadge==='function') refreshMessagingBadge(); }
+  if(id==='village'){ if(typeof buildVillageMap==='function') buildVillageMap(); if(typeof villageRefreshLocks==='function') villageRefreshLocks(); if(typeof villageRefreshBanner==='function') villageRefreshBanner(); if(typeof villageRefreshBadges==='function') villageRefreshBadges(); if(typeof villageUpdateSumoTimer==='function') villageUpdateSumoTimer(); if(typeof villageMaybeGuildInfoPopup==='function') villageMaybeGuildInfoPopup(); var _devlogJustShown = (typeof villageMaybeShowDevlog==='function') ? villageMaybeShowDevlog() : false; if(typeof villageMaybeShowNews==='function') villageMaybeShowNews(_devlogJustShown); if(typeof refreshNotificationBadge==='function') refreshNotificationBadge(); if(typeof refreshMessagingBadge==='function') refreshMessagingBadge(); }
   document.body.classList.toggle('village-map-open', id==='village');
   // On masque le retour ⛩ Village : en plein-jeu (partie/pile-ou-face) pour ne
   // pas polluer le plateau, ET sur l'accueil / l'écran de connexion — car le
@@ -13847,7 +13889,7 @@ var VILLAGE_BUILDINGS = [
       {label:'Amis', ico:'👥', screen:'amis', online:true},
       {label:'Messagerie', ico:'✉', screen:'messaging', online:true},
       {label:'Forums', ico:'💬', soon:true},
-      {label:'News', ico:'📰', soon:true},
+      {label:'News', ico:'📰', screen:'news'},
       {label:'DevLog (mises à jour)', ico:'📓', screen:'devlog'} ] },
   // Compaction /lvdg-ui-optimiser (2026-08-16) : « Série de connexion » et
   // « Journal d'activité » retirées — toutes deux routaient vers screen:'play'
@@ -13903,9 +13945,13 @@ var VILLAGE_BUILDINGS = [
   { id:'chariot', label:'Quitter le village', cx:6, cy:53, w:14, h:20, items:[
       {label:'Quitter le village', ico:'🐴', fn:'quitVillageToHome'} ] }
 ];
-// Fin de l'événement Sumo : 31 août 2026 (cf. bannière pub « jusqu'au 31 août »).
-// Source unique du compte à rebours affiché sur le bouton Sumo de la carte.
-var SUMO_EVENT_END = Date.UTC(2026, 7, 31, 23, 59, 59);
+// Fin de l'événement Sumo : 30 septembre 2026 (prolongation décidée par Wurmz
+// le 2026-08-22, cf. bannière pub « jusqu'à fin septembre »). Source unique du
+// compte à rebours affiché sur le bouton Sumo de la carte — DOIT rester
+// synchronisée avec la date en dur dans record_sumo_round_win() côté serveur
+// (sql_a_executer/sumo_event_extend_sept.sql), qui décide seule si la Fame
+// est réellement versée.
+var SUMO_EVENT_END = Date.UTC(2026, 8, 30, 23, 59, 59);
 // Met à jour le petit timer au-dessus du bouton Sumo (temps restant), et masque
 // le raccourci quand l'événement est terminé. Appelé à l'ouverture de la carte.
 function villageUpdateSumoTimer(){
@@ -13922,17 +13968,35 @@ function villageUpdateSumoTimer(){
 }
 // Dernière version publiée au devlog. À BUMPER à chaque nouvelle entrée devlog :
 // c'est ce qui déclenche l'ouverture automatique du journal pour les devs.
-var DEVLOG_LATEST = 'V0.120.0';
+var DEVLOG_LATEST = 'V0.121.0';
 // À l'arrivée au village, si on est DEV et que le devlog a du nouveau depuis la
 // dernière fois qu'on l'a vu, on l'ouvre automatiquement (les devs suivent ainsi
 // les changements sans y penser). Marque la version comme vue pour ne pas répéter.
+// Retourne true si le devlog vient de s'ouvrir — utilisé par
+// villageMaybeShowNews() pour ne pas lui disputer l'écran le même passage.
 function villageMaybeShowDevlog(){
-  if(!(typeof isDevUser==='function' && isDevUser())) return;
+  if(!(typeof isDevUser==='function' && isDevUser())) return false;
   var seen; try{ seen = localStorage.getItem('vtl_devlog_seen'); }catch(e){ seen = null; }
-  if(seen === DEVLOG_LATEST) return;
+  if(seen === DEVLOG_LATEST) return false;
   try{ localStorage.setItem('vtl_devlog_seen', DEVLOG_LATEST); }catch(e){}
   // Différé pour ne pas ré-entrer dans showScreen pendant l'ouverture du village.
   setTimeout(function(){ if(typeof showScreen==='function') showScreen('devlog'); }, 60);
+  return true;
+}
+// Dernière news publiée (Auberge > News). À BUMPER à chaque nouvelle entrée —
+// même patron que DEVLOG_LATEST, mais pour TOUS les joueurs (pas dev-only) :
+// ouvre automatiquement l'écran News à la prochaine connexion au village tant
+// qu'elle n'a pas été vue. Consultable à tout moment via Auberge > News sinon.
+var NEWS_LATEST = 'N1';
+function villageMaybeShowNews(devlogJustShown){
+  var seen; try{ seen = localStorage.getItem('vtl_news_seen'); }catch(e){ seen = null; }
+  if(seen === NEWS_LATEST) return;
+  try{ localStorage.setItem('vtl_news_seen', NEWS_LATEST); }catch(e){}
+  // Le devlog (dev only) a déjà pris l'écran cette visite : la news reste
+  // marquée vue (pas de reproposition en boucle) mais attend la prochaine
+  // connexion pour s'afficher — cas rare, ne concerne que les comptes dev.
+  if(devlogJustShown) return;
+  setTimeout(function(){ if(typeof showScreen==='function') showScreen('news'); }, 60);
 }
 var _villageBuilt = false;
 function buildVillageMap(){
@@ -14846,7 +14910,7 @@ function stopArenaMatchmakingSearch(resetUI){
 }
 
 // ══════════════════════════════════════════════════════
-// SUMO — événement estival (jusqu'au 31 août)
+// SUMO — événement estival (jusqu'à fin septembre)
 // ══════════════════════════════════════════════════════
 // Réutilise TOUTE l'infrastructure Arène (mêmes tables, mêmes manches BO3,
 // même enchaînement "Prêt"/15s) avec mode='sumo' — seule la physique du
@@ -27124,7 +27188,7 @@ var CURRENCY_LORE = {
     icon: '💗',
     name: 'Fame 心 — la Gloire',
     mode: 'Événement SUMO',
-    lore: 'Le kanji 心 (kokoro) désigne le cœur, le courage qu\'on met dans chaque affrontement. Sur le dohyō, chaque combat forge ta légende : la Fame grandit à chaque victoire (et un peu à chaque défaite), et plus ton ratio de victoires est haut, plus ta gloire enfle vite. Monnaie propre à l\'événement SUMO, jusqu\'au 31 août.'
+    lore: 'Le kanji 心 (kokoro) désigne le cœur, le courage qu\'on met dans chaque affrontement. Sur le dohyō, chaque combat forge ta légende : la Fame grandit à chaque victoire (et un peu à chaque défaite), et plus ton ratio de victoires est haut, plus ta gloire enfle vite. Monnaie propre à l\'événement SUMO, prolongé jusqu\'à fin septembre.'
   }
 };
 function showCurrencyTooltip(key){
@@ -29913,7 +29977,7 @@ window.addEventListener('beforeunload', () => {
   </div>
 </div>
 
-<!-- ═══════════ SUMO — événement d'été (jusqu'au 31 août) ═══════════ -->
+<!-- ═══════════ SUMO — événement d'été (jusqu'à fin septembre) ═══════════ -->
 <div id="screen-sumo" class="screen">
   <div class="screen-nav-bar"><button class="tuto-nav-btn" onclick="sumoMenuBack()" data-i18n="btn_menu_back">&#8617; MENU</button></div>
   <div class="panel" style="max-width:420px">
@@ -29939,7 +30003,7 @@ window.addEventListener('beforeunload', () => {
     </div>
     <!-- Intro du tournoi -->
     <div style="font-family:'VT323',monospace;font-size:13px;color:var(--parchment);opacity:.75;text-align:center;line-height:1.45;margin-bottom:8px">Le grand basho d'été est ouvert à tous les guerriers. Plus de murs, plus de refuge : seul le cercle décide. Éjecte l'Épéiste adverse hors du dohyō et ta légende grandira — chaque combat rapporte de la Fame 心, et plus ton ratio de victoires est haut, plus elle enfle.</div>
-    <div style="font-family:VT323,monospace;font-size:11px;color:#ff9dbf;opacity:.8;text-align:center;margin-bottom:6px">Jusqu'au 31 août · BO3 · 💗 +2 victoire / +1 défaite · appariement au plus proche niveau</div>
+    <div style="font-family:VT323,monospace;font-size:11px;color:#ff9dbf;opacity:.8;text-align:center;margin-bottom:6px">Prolongé jusqu'à fin septembre · BO3 · 💗 +2 victoire / +1 défaite · appariement au plus proche niveau</div>
     <div class="menu-divider"></div>
     <div class="option-label" data-i18n="config_timer">Timer par coup</div>
     <div class="option-row">
@@ -30061,7 +30125,7 @@ window.addEventListener('beforeunload', () => {
         <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--gold-bright)">SUMO <span style="font-family:'Noto Serif JP',serif;font-size:12px;opacity:.7">相撲</span></div>
         <div style="font-family:VT323,monospace;font-size:11px;color:var(--parchment);opacity:.65">Le ring sans murs · éjecte l'Épéiste adverse · 💗 Fame</div>
       </div>
-      <div style="text-align:right"><div style="font-family:VT323,monospace;font-size:11px;color:#ff9dbf">jusqu'au<br>31 août</div></div>
+      <div style="text-align:right"><div style="font-family:VT323,monospace;font-size:11px;color:#ff9dbf">jusqu'à<br>fin sept.</div></div>
     </div>
     <div style="font-family:'VT323',monospace;font-size:11px;color:var(--parchment);opacity:.4;text-align:center;margin-bottom:4px">Événements saisonniers · Défis limités · Collections exclusives</div>
   </div>
