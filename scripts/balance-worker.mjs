@@ -32,7 +32,7 @@ const ENGINE_NAMES = [
   "labResolveDirs", "labGenericMoves", "labPieceValue", "legalMoves", "execMove",
   "evalPosition", "evalTrainer", "evalBalanceCurrent", "evalBalanceMobilityFixed",
   "evalBalanceSymmetric", "evalBalanceAgDfFixed", "minimaxFn", "minimaxPlay",
-  "devSimTopMoves",
+  "devSimTopMoves", "bfSameUnit",
 ];
 
 // Extracteur conscient des chaînes et commentaires : `function name(` puis
